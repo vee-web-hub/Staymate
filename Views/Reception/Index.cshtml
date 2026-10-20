@@ -1,0 +1,144 @@
+
+@{
+    ViewData["Title"] = "Reception Dashboard";
+}
+
+<div class="container-fluid py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold">Reception Dashboard</h2>
+            <p class="text-secondary mb-0">
+                ภาพรวมงานต้อนรับและสถานะห้องพัก
+            </p>
+        </div>
+        <span class="badge bg-primary">Front Office</span>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <p class="text-secondary">ห้องทั้งหมด</p>
+                    <h2>40</h2>
+                    <span>ห้องพักในโรงแรม</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <p class="text-secondary">ห้องมีผู้เข้าพัก</p>
+                    <h2 class="text-primary">24</h2>
+                    <span>Occupied</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <p class="text-secondary">ห้องว่างพร้อมขาย</p>
+                    <h2 class="text-success">10</h2>
+                    <span>Available</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <p class="text-secondary">รอทำความสะอาด</p>
+                    <h2 class="text-warning">6</h2>
+                    <span>Needs Cleaning</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="fw-bold mb-3">ค้นหารายการจอง</h5>
+
+            <form asp-controller="Reception"
+                  asp-action="Index"
+                  method="get"
+                  class="row g-3">
+
+                <div class="col-md-8">
+                    <input type="text"
+                           name="search"
+                           class="form-control"
+                           placeholder="ค้นหารหัสจอง ชื่อลูกค้า หรือเลขห้อง" />
+                </div>
+
+                <div class="col-md-4">
+                    <button class="btn btn-primary" type="submit">
+                        ค้นหา
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <h5 class="fw-bold mb-3">รายการงานวันนี้</h5>
+
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>รหัสจอง</th>
+                            <th>ลูกค้า</th>
+                            <th>ห้อง</th>
+                            <th>สถานะ</th>
+                            <th>การดำเนินการ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>BK-1001</td>
+                            <td>ตัวอย่างลูกค้า A</td>
+                            <td>Deluxe</td>
+                            <td>
+                                <span class="badge bg-success">
+                                    Confirmed
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-primary"
+                                        disabled
+                                        title="รอเชื่อมต่อระบบจริง">
+                                    Check-in
+                                </button>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>BK-1002</td>
+                            <td>ตัวอย่างลูกค้า B</td>
+                            <td>Family</td>
+                            <td>
+                                <span class="badge bg-warning text-dark">
+                                    Checked-in
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary"
+                                        disabled
+                                        title="รอเชื่อมต่อระบบจริง">
+                                    Check-out
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="text-secondary small mb-0">
+                ข้อมูลนี้เป็นข้อมูลตัวอย่าง ไม่ใช่รายการจองจริง
+            </p>
+        </div>
+    </div>
+</div>

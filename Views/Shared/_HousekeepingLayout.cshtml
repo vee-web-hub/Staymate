@@ -1,0 +1,43 @@
+
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - StayMate Housekeeping</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/staymate-layout.css" asp-append-version="true" />
+</head>
+<body class="staff-page">
+    <header class="staff-header">
+        <a class="staff-logo" asp-controller="Home" asp-action="Index">🏨 StayMate</a>
+        <span class="staff-portal-name">Housekeeping Portal</span>
+        <span class="staff-profile">🧹 Housekeeping Staff</span>
+    </header>
+
+    <div class="staff-container">
+        <aside class="staff-sidebar">
+            <div class="sidebar-role">HOUSEKEEPING</div>
+            <nav>
+                <a asp-controller="Housekeeping" asp-action="Index">🏠 Dashboard</a>
+                <a asp-controller="Housekeeping" asp-action="Index">🧹 Cleaning Tasks</a>
+                <a asp-controller="Housekeeping" asp-action="Index">🛏 Room Status</a>
+                <a asp-controller="Housekeeping" asp-action="Index">✅ Ready Rooms</a>
+            </nav>
+            <div class="sidebar-bottom">
+                <a asp-controller="Home" asp-action="Index">↪ Back to Home</a>
+            </div>
+        </aside>
+
+        <main class="staff-content">@RenderBody()</main>
+    </div>
+
+    <footer class="staff-footer">
+        <span>© 2569 StayMate</span>
+        <span>Housekeeping Portal</span>
+    </footer>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

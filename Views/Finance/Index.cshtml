@@ -1,0 +1,92 @@
+
+@{
+    ViewData["Title"] = "Finance Dashboard";
+}
+
+<div class="container-fluid py-3">
+    <h2 class="fw-bold">Finance Dashboard</h2>
+    <p class="text-secondary">
+        ตรวจสอบธุรกรรมและหลักฐานการชำระเงิน
+    </p>
+
+    <div class="row g-3 my-3">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <p class="text-secondary">รายรับที่บันทึก</p>
+                    <h3>฿125,000.00</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <p class="text-secondary">รอตรวจสอบ</p>
+                    <h3 class="text-warning">8 รายการ</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <p class="text-secondary">รายจ่ายที่บันทึก</p>
+                    <h3>฿42,000.00</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <h5 class="fw-bold mb-3">Payment Review</h5>
+
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>รหัสจอง</th>
+                            <th>ยอดที่ต้องชำระ</th>
+                            <th>สถานะ</th>
+                            <th>หลักฐาน</th>
+                            <th>การดำเนินการ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>BK-1003</td>
+                            <td>฿3,500.00</td>
+                            <td>
+                                <span class="badge bg-warning text-dark">
+                                    Pending
+                                </span>
+                            </td>
+                            <td>
+                                <span class="text-secondary">
+                                    ยังไม่ได้เชื่อมต่อ
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-success"
+                                        disabled>
+                                    Approve
+                                </button>
+
+                                <button class="btn btn-sm btn-danger"
+                                        disabled>
+                                    Reject
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert alert-info mb-0">
+                การอนุมัติจริงต้องตรวจสอบสลิป ยอดเงิน และสิทธิ์ผู้ใช้
+                ผ่าน Server ก่อนบันทึกผล
+            </div>
+        </div>
+    </div>
+</div>

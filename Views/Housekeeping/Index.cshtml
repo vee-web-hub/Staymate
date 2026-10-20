@@ -1,0 +1,109 @@
+
+@{
+    ViewData["Title"] = "Housekeeping Dashboard";
+}
+
+<div class="container-fluid py-3">
+    <h2 class="fw-bold">Housekeeping Board</h2>
+    <p class="text-secondary">
+        รายการห้องที่ต้องทำความสะอาดและห้องที่พร้อมใช้งาน
+    </p>
+
+    <div class="row g-3 my-3">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <p class="text-secondary">รอทำความสะอาด</p>
+                    <h2 class="text-danger">6 ห้อง</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <p class="text-secondary">กำลังทำความสะอาด</p>
+                    <h2 class="text-warning">3 ห้อง</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <p class="text-secondary">พร้อมใช้งาน</p>
+                    <h2 class="text-success">10 ห้อง</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <h5 class="fw-bold mb-3">Cleaning Tasks</h5>
+
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>เลขห้อง</th>
+                            <th>ประเภทห้อง</th>
+                            <th>สถานะความสะอาด</th>
+                            <th>การดำเนินการ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>101</td>
+                            <td>Standard</td>
+                            <td>
+                                <span class="badge bg-danger">
+                                    Needs Cleaning
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-primary"
+                                        disabled>
+                                    เริ่มทำความสะอาด
+                                </button>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>205</td>
+                            <td>Deluxe</td>
+                            <td>
+                                <span class="badge bg-warning text-dark">
+                                    Cleaning
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-success"
+                                        disabled>
+                                    ทำความสะอาดเสร็จ
+                                </button>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>301</td>
+                            <td>Family</td>
+                            <td>
+                                <span class="badge bg-success">
+                                    Ready
+                                </span>
+                            </td>
+                            <td>
+                                <span class="text-secondary">ไม่มีงาน</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="text-secondary small mb-0">
+                ตัวอย่างสถานะเท่านั้น ยังไม่ได้เชื่อมต่อข้อมูลห้องจริง
+            </p>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,14 @@
+﻿
+@{
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+
+    Layout = controller switch
+    {
+        "Reception" => "~/Views/Shared/_ReceptionLayout.cshtml",
+        "Finance" => "~/Views/Shared/_FinanceLayout.cshtml",
+        "Housekeeping" => "~/Views/Shared/_HousekeepingLayout.cshtml",
+        "Manager" => "~/Views/Shared/_ManagerLayout.cshtml",
+        "Owner" => "~/Views/Shared/_OwnerLayout.cshtml",
+        _ => "~/Views/Shared/_CustomerLayout.cshtml"
+    };
+}

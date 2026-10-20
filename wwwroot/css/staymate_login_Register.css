@@ -1,0 +1,304 @@
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap');
+
+/* ===========================================
+   STAYMATE - Login / Register / User pages
+   ธีม: Orbit (Urban Boutique x Business x Hi-tech)
+   Every rule is scoped under body.staymate-auth
+   =========================================== */
+
+body.staymate-auth {
+    --sm-ink: #0b1630;          /* น้ำเงินห้วงอวกาศ */
+    --sm-ink-soft: #1c2b52;
+    --sm-cobalt: #2f5bff;       /* สีหลักของปุ่ม/ลิงก์ */
+    --sm-cobalt-deep: #1f40c9;
+    --sm-signal: #ffb547;       /* จุดเน้นเดียว: สีสัญญาณ */
+    --sm-mist: #eef1f8;         /* พื้นหลัง */
+    --sm-white: #ffffff;
+    --sm-line: #cfd6e6;
+    --sm-text: #16203a;         /* เข้มพอสำหรับผู้สูงอายุ (คอนทราสต์สูง) */
+    --sm-text-light: #4a5675;
+    --sm-shadow: 0 1px 2px rgba(11, 22, 48, 0.08), 0 16px 40px rgba(11, 22, 48, 0.10);
+
+    margin: 0;
+    min-height: 100vh;
+    color: var(--sm-text);
+    font-family: 'Prompt', 'Space Grotesk', 'Segoe UI', Tahoma, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    background:
+        radial-gradient(circle at 12% 8%, rgba(47, 91, 255, 0.10), transparent 40%),
+        radial-gradient(circle at 92% 92%, rgba(255, 181, 71, 0.10), transparent 35%),
+        var(--sm-mist);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Layout ---------- */
+.staymate-auth .container {
+    padding: 24px 20px;
+}
+
+/* ---------- Card ---------- */
+.staymate-auth .card {
+    max-width: 100%;
+    border: 1px solid var(--sm-line);
+    border-radius: 24px;
+    overflow: hidden;
+    background: var(--sm-white);
+    box-shadow: var(--sm-shadow);
+    animation: sm-rise 0.5s ease-out both;
+}
+
+/* ส่วนหัว: ท้องฟ้าอวกาศ ดาวกระจาย + วงโคจรบางๆ  (จุดเด่นเดียวของธีม) */
+.staymate-auth .card-header {
+    position: relative;
+    overflow: hidden;
+    padding: 32px 36px;
+    border: none;
+    border-bottom: 4px solid var(--sm-signal);
+    background:
+        radial-gradient(1.5px 1.5px at 18% 30%, #fff, transparent 60%),
+        radial-gradient(1px 1px at 42% 70%, rgba(255, 255, 255, 0.8), transparent 60%),
+        radial-gradient(1.5px 1.5px at 66% 24%, #fff, transparent 60%),
+        radial-gradient(1px 1px at 84% 62%, rgba(255, 255, 255, 0.8), transparent 60%),
+        radial-gradient(1px 1px at 92% 18%, rgba(255, 255, 255, 0.7), transparent 60%),
+        linear-gradient(135deg, var(--sm-ink) 0%, var(--sm-ink-soft) 60%, #26398a 100%) !important;
+}
+
+.staymate-auth .card-header::after {
+    content: "";
+    position: absolute;
+    right: -70px;
+    top: -90px;
+    width: 220px;
+    height: 220px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.staymate-auth .card-header h3 {
+    position: relative;
+    margin: 0;
+    color: var(--sm-white);
+    font-family: 'Space Grotesk', 'Prompt', sans-serif;
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+}
+
+.staymate-auth .card-body {
+    padding: 40px;
+}
+
+.staymate-auth .card-footer {
+    padding: 20px 40px;
+    border-top: 1px solid var(--sm-line);
+    background: #f7f9fd;
+}
+
+.staymate-auth .card-footer small {
+    color: var(--sm-text-light);
+    font-size: 14px;
+}
+
+/* ---------- Labels ---------- */
+.staymate-auth .form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--sm-ink);
+}
+
+/* ---------- Inputs ---------- */
+.staymate-auth .form-control,
+.staymate-auth .form-select {
+    min-height: 52px;
+    padding: 12px 16px;
+    border: 2px solid var(--sm-line);
+    border-radius: 14px;
+    background-color: var(--sm-white);
+    font-size: 16px;
+    color: var(--sm-text);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.staymate-auth .form-control::placeholder {
+    color: #8591ad;
+}
+
+.staymate-auth .form-control:focus,
+.staymate-auth .form-select:focus {
+    background-color: var(--sm-white);
+    border-color: var(--sm-cobalt);
+    box-shadow: 0 0 0 4px rgba(47, 91, 255, 0.18);
+    outline: none;
+}
+
+.staymate-auth .mb-3 {
+    margin-bottom: 24px !important;
+}
+
+/* ---------- Buttons ---------- */
+.staymate-auth .btn {
+    min-height: 48px;
+    padding: 12px 28px;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    transition: background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+/* ปุ่มหลัก (จอง / เข้าสู่ระบบ) ต้องเด่นและกดง่าย */
+.staymate-auth .btn-primary {
+    border: none;
+    background: var(--sm-cobalt);
+    color: var(--sm-white);
+    box-shadow: 0 6px 18px rgba(47, 91, 255, 0.32);
+}
+
+.staymate-auth .btn-primary:hover,
+.staymate-auth .btn-primary:focus-visible {
+    background: var(--sm-cobalt-deep);
+    color: var(--sm-white);
+    box-shadow: 0 8px 24px rgba(31, 64, 201, 0.42);
+}
+
+.staymate-auth .btn-primary:active {
+    background: #17339f;
+}
+
+.staymate-auth .btn-secondary {
+    border: 2px solid var(--sm-line);
+    background: var(--sm-white);
+    color: var(--sm-ink);
+}
+
+.staymate-auth .btn-secondary:hover {
+    border-color: var(--sm-cobalt);
+    background: #f4f7ff;
+    color: var(--sm-cobalt-deep);
+}
+
+/* ปุ่มลบ */
+.staymate-auth .btn-danger {
+    border: none;
+    border-radius: 10px;
+    background: #d6334a;
+    color: var(--sm-white);
+}
+
+.staymate-auth .btn-danger:hover {
+    background: #b02338;
+    color: var(--sm-white);
+}
+
+.staymate-auth .btn-sm {
+    min-height: 40px;
+    padding: 8px 16px;
+    font-size: 14px;
+}
+
+/* ---------- Table ---------- */
+.staymate-auth .table {
+    margin-bottom: 0;
+    font-size: 15px;
+}
+
+.staymate-auth .table thead th {
+    padding: 14px;
+    border: none;
+    background: var(--sm-ink);
+    color: var(--sm-white);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.staymate-auth .table td {
+    padding: 14px;
+    border-color: #e3e8f3;
+    vertical-align: middle;
+}
+
+.staymate-auth .table-hover tbody tr:hover {
+    background: rgba(47, 91, 255, 0.06);
+}
+
+/* ---------- Badges ---------- */
+.staymate-auth .badge {
+    padding: 7px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* ---------- Links ---------- */
+.staymate-auth a {
+    color: var(--sm-cobalt-deep);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.staymate-auth a:hover {
+    color: var(--sm-cobalt);
+    text-decoration: underline;
+}
+
+/* ---------- Focus ring for keyboard users ---------- */
+.staymate-auth a:focus-visible,
+.staymate-auth button:focus-visible {
+    outline: 3px solid var(--sm-signal);
+    outline-offset: 2px;
+}
+
+/* ---------- Animation (เล่นครั้งเดียวตอนโหลด) ---------- */
+@keyframes sm-rise {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 520px) {
+    .staymate-auth .card-header {
+        padding: 24px;
+    }
+
+    .staymate-auth .card-header h3 {
+        font-size: 24px;
+    }
+
+    .staymate-auth .card-body {
+        padding: 24px;
+    }
+
+    .staymate-auth .card-footer {
+        padding: 16px 24px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .staymate-auth .card {
+        animation: none;
+    }
+
+    .staymate-auth .btn,
+    .staymate-auth .form-control,
+    .staymate-auth .form-select {
+        transition: none;
+    }
+}
+
+/* ---------- ยกเว้นหัวการ์ดสีเขียวในหน้า Result ---------- */
+.staymate-auth .card-header.bg-success {
+    background: #1f7a55 !important;
+}
+
+.staymate-auth .card-header.bg-success::after {
+    display: none;
+}

@@ -1,0 +1,149 @@
+
+@{
+    ViewData["Title"] = "Manager Dashboard";
+}
+
+<div class="container-fluid py-3">
+    <h2 class="fw-bold">Hotel Manager Dashboard</h2>
+    <p class="text-secondary">
+        จัดการห้องพัก ราคา โปรโมชั่น และผลการดำเนินงาน
+    </p>
+
+    <div class="row g-3 my-3">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <p class="text-secondary">อัตราการเข้าพัก</p>
+                    <h2>65%</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <p class="text-secondary">รายได้วันนี้</p>
+                    <h4>฿28,500</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <p class="text-secondary">โปรโมชั่นที่เปิดใช้</p>
+                    <h2>5</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <p class="text-secondary">Feedback ใหม่</p>
+                    <h2>12</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="fw-bold">Room Pricing</h5>
+                    <p class="text-secondary">
+                        ตัวอย่างแบบฟอร์มสำหรับกำหนดราคาห้อง
+                    </p>
+
+                    <form asp-controller="Manager"
+                          asp-action="Index"
+                          method="post">
+
+                        <div class="mb-3">
+                            <label for="roomType" class="form-label">
+                                ประเภทห้อง
+                            </label>
+                            <select id="roomType"
+                                    name="roomType"
+                                    class="form-select">
+                                <option value="Standard">Standard</option>
+                                <option value="Deluxe">Deluxe</option>
+                                <option value="Family">Family</option>
+                                <option value="Suite">Suite</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="price" class="form-label">
+                                ราคาต่อคืน (บาท)
+                            </label>
+                            <input id="price"
+                                   name="price"
+                                   type="number"
+                                   min="0"
+                                   step="0.01"
+                                   class="form-control"
+                                   required />
+                        </div>
+
+                        <button type="submit"
+                                class="btn btn-primary"
+                                disabled>
+                            บันทึกราคา
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="fw-bold">Promotion Management</h5>
+
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item d-flex justify-content-between">
+                            <span>มา 3 จ่าย 2</span>
+                            <span class="badge bg-success">Active</span>
+                        </div>
+
+                        <div class="list-group-item d-flex justify-content-between">
+                            <span>Family & Gang Pack</span>
+                            <span class="badge bg-success">Active</span>
+                        </div>
+
+                        <div class="list-group-item d-flex justify-content-between">
+                            <span>Stay 3+ Nights Saver</span>
+                            <span class="badge bg-success">Active</span>
+                        </div>
+
+                        <div class="list-group-item d-flex justify-content-between">
+                            <span>Weekly Escape</span>
+                            <span class="badge bg-secondary">Inactive</span>
+                        </div>
+
+                        <div class="list-group-item d-flex justify-content-between">
+                            <span>Festival & Long Weekend</span>
+                            <span class="badge bg-secondary">Inactive</span>
+                        </div>
+                    </div>
+
+                    <p class="text-secondary small mt-3 mb-0">
+                        สถานะโปรโมชั่นเป็นข้อมูลตัวอย่าง
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mt-4">
+        <div class="card-body">
+            <h5 class="fw-bold">Customer Feedback</h5>
+            <p class="text-secondary mb-0">
+                ส่วนนี้สามารถเพิ่มรายการรีวิว คะแนนความพึงพอใจ
+                และการตอบกลับลูกค้าจากฐานข้อมูลได้
+            </p>
+        </div>
+    </div>
+</div>

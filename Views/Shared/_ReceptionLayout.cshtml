@@ -1,0 +1,48 @@
+
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - StayMate Reception</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/staymate-layout.css" asp-append-version="true" />
+</head>
+<body class="staff-page">
+    <header class="staff-header">
+        <a class="staff-logo" asp-controller="Home" asp-action="Index">🏨 StayMate</a>
+        <span class="staff-portal-name">Reception / Admin Portal</span>
+        <span class="staff-profile">🔔 Reception</span>
+    </header>
+
+    <div class="staff-container">
+        <aside class="staff-sidebar">
+            <div class="sidebar-role">RECEPTION ADMIN</div>
+            <nav>
+                <a asp-controller="Reception" asp-action="Index">🏠 Dashboard</a>
+                <a asp-controller="Reception" asp-action="Index">📅 Room Calendar</a>
+                <a asp-controller="Reception" asp-action="Index">🛏 Room Status</a>
+                <a asp-controller="Reception" asp-action="Index">🛎 Check-in</a>
+                <a asp-controller="Reception" asp-action="Index">🚪 Check-out</a>
+                <a asp-controller="Reception" asp-action="Index">📋 Booking</a>
+            </nav>
+            <div class="sidebar-bottom">
+                <a asp-controller="Reception" asp-action="Index">⚙ Settings</a>
+                <a asp-controller="Home" asp-action="Index">↪ Back to Home</a>
+            </div>
+        </aside>
+
+        <main class="staff-content">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="staff-footer">
+        <span>© 2569 StayMate Hotel Booking System</span>
+        <span>Reception / Admin Portal</span>
+    </footer>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

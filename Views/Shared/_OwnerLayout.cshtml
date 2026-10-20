@@ -1,0 +1,48 @@
+
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - StayMate Executive</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/staymate-layout.css" asp-append-version="true" />
+</head>
+<body class="staff-page owner-page">
+    <header class="staff-header">
+        <a class="staff-logo" asp-controller="Home" asp-action="Index">🏨 StayMate</a>
+        <span class="staff-portal-name">Executive Dashboard</span>
+        <span class="staff-profile">👑 Owner / Investor · Read-only</span>
+    </header>
+
+    <div class="staff-container">
+        <aside class="staff-sidebar">
+            <div class="sidebar-role">EXECUTIVE VIEW</div>
+            <nav>
+                <a asp-controller="Owner" asp-action="Index">📊 Executive Dashboard</a>
+                <a asp-controller="Owner" asp-action="Index">🏨 Occupancy Overview</a>
+                <a asp-controller="Owner" asp-action="Index">💰 Revenue Summary</a>
+                <a asp-controller="Owner" asp-action="Index">📈 Profit & Loss</a>
+            </nav>
+            <div class="sidebar-bottom">
+                <a asp-controller="Home" asp-action="Index">↪ Back to Home</a>
+            </div>
+        </aside>
+
+        <main class="staff-content">
+            <div class="readonly-notice">
+                🔒 Executive read-only view — ไม่มีสิทธิ์แก้ไขข้อมูล
+            </div>
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="staff-footer">
+        <span>© 2569 StayMate Hotel Booking System</span>
+        <span>Executive Dashboard · Read-only</span>
+    </footer>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,175 @@
+
+@{
+    ViewData["Title"] = "ค้นหาห้องพัก";
+
+    var today = DateTime.Today.ToString("yyyy-MM-dd");
+    var tomorrow = DateTime.Today.AddDays(1).ToString("yyyy-MM-dd");
+}
+
+<section class="py-4">
+    <div class="container">
+        <h1 class="fw-bold">ค้นหาห้องพัก</h1>
+        <p class="text-secondary">
+            เลือกวันเข้าพักและประเภทห้องที่ต้องการ
+        </p>
+
+        <div class="card border-0 shadow-sm mb-5">
+            <div class="card-body p-4">
+                <form asp-controller="Customer"
+                      asp-action="Index"
+                      method="get">
+
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label for="checkIn" class="form-label">
+                                วันเข้าพัก
+                            </label>
+                            <input id="checkIn"
+                                   name="checkIn"
+                                   type="date"
+                                   class="form-control"
+                                   value="@today"
+                                   min="@today"
+                                   required />
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="checkOut" class="form-label">
+                                วันออก
+                            </label>
+                            <input id="checkOut"
+                                   name="checkOut"
+                                   type="date"
+                                   class="form-control"
+                                   value="@tomorrow"
+                                   min="@tomorrow"
+                                   required />
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="guests" class="form-label">
+                                จำนวนผู้เข้าพัก
+                            </label>
+                            <input id="guests"
+                                   name="guests"
+                                   type="number"
+                                   class="form-control"
+                                   min="1"
+                                   max="20"
+                                   value="2"
+                                   required />
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="roomType" class="form-label">
+                                ประเภทห้อง
+                            </label>
+                            <select id="roomType"
+                                    name="roomType"
+                                    class="form-select">
+                                <option value="">ทุกประเภท</option>
+                                <option value="Standard">Standard</option>
+                                <option value="Deluxe">Deluxe</option>
+                                <option value="Family">Family</option>
+                                <option value="Suite">Suite</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <button type="submit"
+                                    class="btn btn-primary">
+                                ค้นหาห้องว่าง
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <h2 class="fw-bold mb-4">ประเภทห้องพัก</h2>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="fs-1">🛏️</div>
+                        <h4>Standard Room</h4>
+                        <p>สำหรับ 1–2 ท่าน</p>
+                        <p class="text-secondary">
+                            เหมาะสำหรับนักเดินทางเดี่ยวหรือคู่เพื่อน
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="fs-1">🌇</div>
+                        <h4>Deluxe Room</h4>
+                        <p>2 ท่านหลัก และรองรับเตียงเสริมตามเงื่อนไข</p>
+                        <p class="text-secondary">
+                            เหมาะสำหรับผู้ที่ต้องการพื้นที่และวิวพิเศษ
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="fs-1">👨‍👩‍👧‍👦</div>
+                        <h4>Family Room</h4>
+                        <p>รองรับ 4–6 ท่าน</p>
+                        <p class="text-secondary">
+                            เหมาะสำหรับครอบครัวและกลุ่มเพื่อน
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="fs-1">🛁</div>
+                        <h4>Suite Room</h4>
+                        <p>สำหรับ 2 ท่าน</p>
+                        <p class="text-secondary">
+                            ห้องสวีทสำหรับคู่รัก พร้อมบริการพิเศษ
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-info mt-4">
+            <strong>หมายเหตุ:</strong>
+            รายการห้องด้านบนเป็นข้อมูลตัวอย่างสำหรับส่วนติดต่อผู้ใช้
+            ต้องเชื่อมต่อฐานข้อมูลและระบบตรวจสอบห้องว่างก่อนใช้งานจริง
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        const checkIn = document.getElementById("checkIn");
+        const checkOut = document.getElementById("checkOut");
+
+        checkIn.addEventListener("change", function () {
+            const date = new Date(this.value + "T00:00:00");
+            date.setDate(date.getDate() + 1);
+
+            const nextDay = [
+                date.getFullYear(),
+                String(date.getMonth() + 1).padStart(2, "0"),
+                String(date.getDate()).padStart(2, "0")
+            ].join("-");
+
+            checkOut.min = nextDay;
+
+            if (!checkOut.value || checkOut.value <= this.value) {
+                checkOut.value = nextDay;
+            }
+        });
+    </script>
+}
