@@ -194,113 +194,50 @@ public class AccountController : Controller
         return View(users);
     }
 
-    // ---- UPDATE (ส่วนแสดงผล) ----
+    // ---- UPDATE ขั้นที่ 1 : ดึงข้อมูลเดิมมาแสดงในฟอร์ม ----
     [HttpGet]
     [Authorize]
-    public async Task<IActionResult> Edit(uint id)
+    public IActionResult Edit(uint id)
     {
-        var user = await _db.Users
-            .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
-            .FirstOrDefaultAsync(u => u.UserId == id);
+        var user = _db.Users.Find(id);      // ค้นหาด้วย Primary Key
+        if (user == null)
+            return NotFound();
 
-        if (user == null) return NotFound();
-
-        var model = new UserEditViewModel
-        {
-            UserId = user.UserId,
-            Username = user.Username,
-            FullName = user.FullName,
-            Email = user.Email,
-            Phone = user.Phone,
-            IsActive = user.IsActive == true,
-            RoleCode = user.UserRoles.Select(ur => ur.Role.RoleCode).FirstOrDefault() ?? "",
-            Roles = await GetRoleItemsAsync()
-        };
-        return View(model);
+        return View(user);                  // ส่งข้อมูลไปแสดงที่ Edit.cshtml
     }
 
-    // ---- UPDATE (ส่วนประมวลผล) ----
+    // ---- UPDATE ขั้นที่ 2 : บันทึกข้อมูลที่แก้ไขลงฐานข้อมูล ----
     [HttpPost]
     [Authorize]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(UserEditViewModel model)
+    public IActionResult Edit(User model)
     {
-        var user = await _db.Users
-            .Include(u => u.UserRoles)
-            .FirstOrDefaultAsync(u => u.UserId == model.UserId);
+        var user = _db.Users.Find(model.UserId);   // ดึงข้อมูลเดิมจากฐานข้อมูล
+        if (user == null)
+            return NotFound();
 
-        if (user == null) return NotFound();
-
-        await CheckDuplicatesAsync(null, model.Email, model.UserId);
-        if (!ModelState.IsValid)
-        {
-            model.Username = user.Username;
-            model.Roles = await GetRoleItemsAsync();
-            return View(model);
-        }
-
-        var role = await _db.Roles.FirstOrDefaultAsync(r => r.RoleCode == model.RoleCode);
-        if (role == null)
-        {
-            ModelState.AddModelError(nameof(model.RoleCode), "ไม่พบ Role ที่เลือก");
-            model.Username = user.Username;
-            model.Roles = await GetRoleItemsAsync();
-            return View(model);
-        }
-
-        user.FullName = model.FullName.Trim();
-        user.Email = model.Email.Trim();
-        user.Phone = string.IsNullOrWhiteSpace(model.Phone) ? null : model.Phone.Trim();
+        user.FullName = model.FullName;            // แก้ไขเฉพาะช่องที่ต้องการ
+        user.Email = model.Email;
+        user.Phone = model.Phone;
         user.IsActive = model.IsActive;
 
-        if (!string.IsNullOrEmpty(model.NewPassword))
-            user.PasswordHash = _hasher.HashPassword(user, model.NewPassword);
+        _db.SaveChanges();                         // บันทึกลงฐานข้อมูล
 
-        // เปลี่ยน Role ถ้าต่างจากเดิม
-        var current = user.UserRoles.FirstOrDefault();
-        if (current == null || current.RoleId != role.RoleId)
-        {
-            _db.UserRoles.RemoveRange(user.UserRoles);
-            user.UserRoles.Add(new UserRole { RoleId = role.RoleId });
-        }
-
-        await _db.SaveChangesAsync();
-
-        TempData["Success"] = $"แก้ไขข้อมูล {user.Username} เรียบร้อยแล้ว";
-        return RedirectToAction(nameof(UserList));
+        return RedirectToAction("UserList");
     }
 
-    // ---- DELETE ----
+    // ---- DELETE : ลบข้อมูลออกจากฐานข้อมูล ----
     [HttpPost]
     [Authorize]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Delete(uint id)
+    public IActionResult Delete(uint id)
     {
-        if (User.FindFirstValue(ClaimTypes.NameIdentifier) == id.ToString())
+        var user = _db.Users.Find(id);
+        if (user != null)
         {
-            TempData["Error"] = "ไม่สามารถลบบัญชีที่กำลังใช้งานอยู่ได้";
-            return RedirectToAction(nameof(UserList));
+            _db.Users.Remove(user);                // สั่งลบ
+            _db.SaveChanges();                     // บันทึกลงฐานข้อมูล
         }
 
-        var user = await _db.Users.FindAsync(id);
-        if (user == null)
-        {
-            TempData["Error"] = "ไม่พบผู้ใช้ที่ต้องการลบ";
-            return RedirectToAction(nameof(UserList));
-        }
-
-        try
-        {
-            _db.Users.Remove(user);
-            await _db.SaveChangesAsync();
-            TempData["Success"] = $"ลบผู้ใช้ {user.Username} เรียบร้อยแล้ว";
-        }
-        catch (DbUpdateException)
-        {
-            TempData["Error"] = "ลบไม่ได้ เนื่องจากผู้ใช้นี้มีข้อมูลที่เกี่ยวข้องอยู่ในระบบ";
-        }
-
-        return RedirectToAction(nameof(UserList));
+        return RedirectToAction("UserList");
     }
 
     // =====================================================================

@@ -6,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 
-// อ่าน Connection String จาก appsettings.json
+
 var connectionString =
     builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("ไม่พบ ConnectionStrings:DefaultConnection");
@@ -14,7 +14,7 @@ var connectionString =
 builder.Services.AddDbContext<StayMateDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
-// ระบบ Login แบบ Cookie
+
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -35,7 +35,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 
-app.UseAuthentication();   // ต้องมาก่อน UseAuthorization
+app.UseAuthentication();   
 app.UseAuthorization();
 
 app.MapStaticAssets();
