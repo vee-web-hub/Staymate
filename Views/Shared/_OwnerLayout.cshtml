@@ -1,45 +1,89 @@
-
 <!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - StayMate Executive</title>
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="stylesheet" href="~/css/staymate-layout.css" asp-append-version="true" />
 </head>
 <body class="staff-page owner-page">
-    <header class="staff-header">
-        <a class="staff-logo" asp-controller="Home" asp-action="Index">🏨 StayMate</a>
-        <span class="staff-portal-name">Executive Dashboard</span>
-        <span class="staff-profile">👑 Owner / Investor · Read-only</span>
+
+    <header class="staff-header" style="background: linear-gradient(130deg, #050B18 0%, #0E172E 60%, #152244 100%);">
+        <div class="brand-group">
+            <a asp-controller="Owner" asp-action="Index" class="brand-group text-decoration-none">
+                <img src="~/images/Logo/LogoStayMate.jpg" 
+                     alt="StayMate Logo" 
+                     class="brand-logo-img" 
+                     onerror="this.onerror=null; this.src='https://placehold.co/76x76/070D1E/00E5FF?text=SM';" />
+                <span class="brand-text">StayMate</span>
+            </a>
+            <span class="staff-portal-badge ms-2" style="border-color: rgba(0, 229, 255, 0.4); color: var(--sm-cyan);">
+                <i class="fa-solid fa-crown text-warning"></i> Executive Dashboard
+            </span>
+        </div>
+
+        <div class="header-actions">
+            <!-- ปุ่มแจ้งเตือน (วงสีเหลือง) -->
+            <div class="notification-btn-wrapper">
+                <button type="button" class="btn-header-notification" title="รายงานผลประกอบการประจำวัน">
+                    <i class="fa-regular fa-bell"></i>
+                    <span class="notification-pulse-dot"></span>
+                </button>
+            </div>
+
+            <div class="user-badge-chip" style="background: rgba(0, 229, 255, 0.1); border-color: rgba(0, 229, 255, 0.3);">
+                <i class="fa-solid fa-gem text-warning"></i>
+                <span>@(User.Identity?.Name ?? "Owner / Investor") (Read-only)</span>
+            </div>
+
+            <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline m-0">
+                <button type="submit" class="btn-header-logout">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> ออกจากระบบ
+                </button>
+            </form>
+        </div>
     </header>
 
     <div class="staff-container">
         <aside class="staff-sidebar">
-            <div class="sidebar-role">EXECUTIVE VIEW</div>
+            <div class="sidebar-category-title">EXECUTIVE INTELLIGENCE</div>
             <nav>
-                <a asp-controller="Owner" asp-action="Index">📊 Executive Dashboard</a>
-                <a asp-controller="Owner" asp-action="Index">🏨 Occupancy Overview</a>
-                <a asp-controller="Owner" asp-action="Index">💰 Revenue Summary</a>
-                <a asp-controller="Owner" asp-action="Index">📈 Profit & Loss</a>
+                <!-- ครบ 4 เมนูตาม SRS ข้อ 7 -->
+                <a asp-controller="Owner" asp-action="Index">
+                    <i class="fa-solid fa-chart-line text-info"></i> แดชบอร์ดผู้บริหาร
+                </a>
+                <a asp-controller="Owner" asp-action="FinancialOverview">
+                    <i class="fa-solid fa-sack-dollar text-warning"></i> สรุปรายรับ-ต้นทุน
+                </a>
+                <a asp-controller="Owner" asp-action="PerformanceReports">
+                    <i class="fa-solid fa-scale-balanced text-primary"></i> วิเคราะห์ผลประกอบการ
+                </a>
+                <a asp-controller="Owner" asp-action="StaffOverview">
+                    <i class="fa-solid fa-id-card-clip text-success"></i> สรุปภาพรวมพนักงาน
+                </a>
             </nav>
-            <div class="sidebar-bottom">
-                <a asp-controller="Home" asp-action="Index">↪ Back to Home</a>
-            </div>
+
+          
         </aside>
 
         <main class="staff-content">
             <div class="readonly-notice">
-                🔒 Executive read-only view — ไม่มีสิทธิ์แก้ไขข้อมูล
+                <i class="fa-solid fa-lock text-primary fs-5"></i>
+                <div>
+                    <strong>Executive Read-Only View:</strong> หน้านี้สำหรับแสดงผลตัวชี้วัดทางการเงินและสถิติภาพรวม ไม่สามารถแก้ไขหรือบันทึกข้อมูลธุรกรรมได้
+                </div>
             </div>
+
             @RenderBody()
         </main>
     </div>
 
     <footer class="staff-footer">
-        <span>© 2569 StayMate Hotel Booking System</span>
-        <span>Executive Dashboard · Read-only</span>
+        <span>© 2026 StayMate Hotel Booking System</span>
+        <span>Executive Command Space · Highly Confidential</span>
     </footer>
 
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

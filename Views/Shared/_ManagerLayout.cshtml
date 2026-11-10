@@ -1,42 +1,91 @@
-
 <!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - StayMate Manager</title>
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="stylesheet" href="~/css/staymate-layout.css" asp-append-version="true" />
 </head>
 <body class="staff-page">
+
     <header class="staff-header">
-        <a class="staff-logo" asp-controller="Home" asp-action="Index">🏨 StayMate</a>
-        <span class="staff-portal-name">Hotel Manager Portal</span>
-        <span class="staff-profile">👔 Hotel Manager</span>
+        <div class="brand-group">
+            <a asp-controller="Manager" asp-action="Index" class="brand-group text-decoration-none">
+                <img src="~/images/Logo/LogoStayMate.jpg" 
+                     alt="StayMate Logo" 
+                     class="brand-logo-img" 
+                     onerror="this.onerror=null; this.src='https://placehold.co/76x76/070D1E/00E5FF?text=SM';" />
+                <span class="brand-text">StayMate</span>
+            </a>
+            <span class="staff-portal-badge ms-2">
+                <i class="fa-solid fa-user-gear text-info"></i> Hotel Manager Portal
+            </span>
+        </div>
+
+        <div class="header-actions">
+            <!-- ปุ่มแจ้งเตือน (วงสีเหลือง) -->
+            <div class="notification-btn-wrapper">
+                <button type="button" class="btn-header-notification" title="การแจ้งเตือนระดับบริหาร">
+                    <i class="fa-regular fa-bell"></i>
+                    <span class="notification-pulse-dot"></span>
+                </button>
+            </div>
+
+            <div class="user-badge-chip">
+                <i class="fa-solid fa-briefcase text-warning"></i>
+                <span>@(User.Identity?.Name ?? "Hotel Manager")</span>
+            </div>
+
+            <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline m-0">
+                <button type="submit" class="btn-header-logout">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> ออกจากระบบ
+                </button>
+            </form>
+        </div>
     </header>
 
     <div class="staff-container">
         <aside class="staff-sidebar">
-            <div class="sidebar-role">MANAGEMENT</div>
+            <div class="sidebar-category-title">OPERATIONS CONTROL</div>
             <nav>
-                <a asp-controller="Manager" asp-action="Index">📊 Dashboard</a>
-                <a asp-controller="Manager" asp-action="Index">🛏 Room Management</a>
-                <a asp-controller="Manager" asp-action="Index">💲 Room Pricing</a>
-                <a asp-controller="Manager" asp-action="Index">🎁 Promotions</a>
-                <a asp-controller="Manager" asp-action="Index">📈 Occupancy Reports</a>
-                <a asp-controller="Manager" asp-action="Index">⭐ Feedback & Reviews</a>
+                <!-- ครบ 7 เมนูตาม SRS ข้อ 6 -->
+                <a asp-controller="Manager" asp-action="Index">
+                    <i class="fa-solid fa-chart-pie"></i> ภาพรวมการดำเนินงาน
+                </a>
+                <a asp-controller="Manager" asp-action="Rooms">
+                    <i class="fa-solid fa-hotel"></i> จัดการประเภทห้องพัก
+                </a>
+                <a asp-controller="Manager" asp-action="Pricing">
+                    <i class="fa-solid fa-tags text-primary"></i> กำหนดราคาตามช่วงเวลา
+                </a>
+                <a asp-controller="Manager" asp-action="Promotions">
+                    <i class="fa-solid fa-gift text-danger"></i> จัดการโปรโมชั่น 
+                </a>
+                <a asp-controller="Manager" asp-action="Holidays">
+                    <i class="fa-regular fa-calendar-check text-warning"></i> จัดการวันหยุด/เทศกาล
+                </a>
+                <a asp-controller="Manager" asp-action="Reviews">
+                    <i class="fa-solid fa-star text-warning"></i> ตรวจสอบรีวิว Feedback
+                </a>
+                <a asp-controller="Manager" asp-action="Staff">
+                    <i class="fa-solid fa-users text-info"></i> จัดการพนักงานในระบบ
+                </a>
             </nav>
-            <div class="sidebar-bottom">
-                <a asp-controller="Home" asp-action="Index">↪ Back to Home</a>
-            </div>
+
+           
         </aside>
 
-        <main class="staff-content">@RenderBody()</main>
+        <main class="staff-content">
+            @RenderBody()
+        </main>
     </div>
 
     <footer class="staff-footer">
-        <span>© 2569 StayMate</span>
-        <span>Hotel Manager Portal</span>
+        <span>© 2026 StayMate Hotel Management</span>
+        <span>Business Intelligence & Dynamic RMS</span>
     </footer>
 
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

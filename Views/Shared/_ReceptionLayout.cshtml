@@ -1,35 +1,78 @@
-
 <!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - StayMate Reception</title>
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="stylesheet" href="~/css/staymate-layout.css" asp-append-version="true" />
 </head>
 <body class="staff-page">
+
     <header class="staff-header">
-        <a class="staff-logo" asp-controller="Home" asp-action="Index">🏨 StayMate</a>
-        <span class="staff-portal-name">Reception / Admin Portal</span>
-        <span class="staff-profile">🔔 Reception</span>
+        <div class="brand-group">
+            <a asp-controller="Reception" asp-action="Index" class="brand-group text-decoration-none">
+                <img src="~/images/Logo/LogoStayMate.jpg" 
+                     alt="StayMate Logo" 
+                     class="brand-logo-img" 
+                     onerror="this.onerror=null; this.src='https://placehold.co/76x76/070D1E/00E5FF?text=SM';" />
+                <span class="brand-text">StayMate</span>
+            </a>
+            <span class="staff-portal-badge ms-2">
+                <i class="fa-solid fa-bell-concierge text-warning"></i> Reception Portal
+            </span>
+        </div>
+
+        <div class="header-actions">
+            <!-- ปุ่มแจ้งเตือน (วงสีเหลือง) -->
+            <div class="notification-btn-wrapper">
+                <button type="button" class="btn-header-notification" title="การแจ้งเตือนงานใหม่">
+                    <i class="fa-regular fa-bell"></i>
+                    <span class="notification-pulse-dot"></span>
+                </button>
+            </div>
+
+            <div class="user-badge-chip">
+                <i class="fa-solid fa-user-check text-info"></i>
+                <span>@(User.Identity?.Name ?? "Front Desk Staff")</span>
+            </div>
+
+            <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline m-0">
+                <button type="submit" class="btn-header-logout">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> ออกจากระบบ
+                </button>
+            </form>
+        </div>
     </header>
 
     <div class="staff-container">
         <aside class="staff-sidebar">
-            <div class="sidebar-role">RECEPTION ADMIN</div>
+            <div class="sidebar-category-title">RECEPTION ADMIN</div>
             <nav>
-                <a asp-controller="Reception" asp-action="Index">🏠 Dashboard</a>
-                <a asp-controller="Reception" asp-action="Index">📅 Room Calendar</a>
-                <a asp-controller="Reception" asp-action="Index">🛏 Room Status</a>
-                <a asp-controller="Reception" asp-action="Index">🛎 Check-in</a>
-                <a asp-controller="Reception" asp-action="Index">🚪 Check-out</a>
-                <a asp-controller="Reception" asp-action="Index">📋 Booking</a>
+                <!-- ครบ 6 เมนูตาม SRS ข้อ 3 -->
+                <a asp-controller="Reception" asp-action="Index">
+                    <i class="fa-solid fa-chart-line"></i> แดชบอร์ดภาพรวม
+                </a>
+                <a asp-controller="Reception" asp-action="Calendar">
+                    <i class="fa-regular fa-calendar-days"></i> ปฏิทินห้องพัก
+                </a>
+                <a asp-controller="Reception" asp-action="Bookings">
+                    <i class="fa-solid fa-clipboard-list"></i> จัดการการจอง (QR)
+                </a>
+                <a asp-controller="Reception" asp-action="CheckIn">
+                    <i class="fa-solid fa-key text-success"></i> บริการ Check-in
+                </a>
+                <a asp-controller="Reception" asp-action="CheckOut">
+                    <i class="fa-solid fa-arrow-right-from-bracket text-danger"></i> บริการ Check-out
+                </a>
+                <a asp-controller="Reception" asp-action="GuestServices">
+                    <i class="fa-solid fa-headset text-info"></i> คำขอบริการลูกค้า
+                </a>
             </nav>
-            <div class="sidebar-bottom">
-                <a asp-controller="Reception" asp-action="Index">⚙ Settings</a>
-                <a asp-controller="Home" asp-action="Index">↪ Back to Home</a>
-            </div>
+
+           
         </aside>
 
         <main class="staff-content">
@@ -38,8 +81,8 @@
     </div>
 
     <footer class="staff-footer">
-        <span>© 2569 StayMate Hotel Booking System</span>
-        <span>Reception / Admin Portal</span>
+        <span>© 2026 StayMate Hotel Booking System</span>
+        <span>Reception Operations Desk · Non-financial Authority</span>
     </footer>
 
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

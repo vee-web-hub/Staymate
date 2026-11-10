@@ -1,46 +1,108 @@
-
 <!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - StayMate</title>
+    <title>@ViewData["Title"] - StayMate Hotel</title>
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/staymate-layout.css" asp-append-version="true" />
 </head>
 <body class="customer-page">
-    <header class="customer-header">
-        <a class="customer-logo" asp-controller="Home" asp-action="Index">
-            🏨 StayMate
-        </a>
 
-        <nav class="customer-navbar">
-            <a asp-controller="Home" asp-action="Index">Home</a>
-            <a asp-controller="Customer" asp-action="Index">Rooms</a>
-            <a asp-controller="Customer" asp-action="Index">Promotions</a>
-            <a asp-controller="Customer" asp-action="Index">My Booking</a>
-            <a asp-controller="Home" asp-action="Index">Contact</a>
+    <!-- Header: Navigation + Notification + Profile -->
+    <header class="customer-header">
+        <div class="brand-group">
+            <a asp-controller="Home" asp-action="Index" class="brand-group text-decoration-none">
+                <img src="~/images/Logo/LogoStayMate.jpg" 
+                     alt="StayMate Logo" 
+                     class="brand-logo-img" 
+                     onerror="this.onerror=null; this.src='https://placehold.co/76x76/070D1E/00E5FF?text=SM';" />
+                <span class="brand-text">StayMate</span>
+            </a>
+        </div>
+
+        <nav class="customer-navbar d-none d-lg-flex">
+            <a asp-controller="Home" asp-action="Index"><i class="fa-solid fa-house me-1"></i> หน้าแรก</a>
+            <a asp-controller="Customer" asp-action="RoomAvailability"><i class="fa-solid fa-magnifying-glass me-1"></i> ค้นหาห้องว่าง</a>
+            <a asp-controller="Customer" asp-action="Rooms"><i class="fa-solid fa-bed me-1"></i> ประเภทห้องพัก</a>
+            <a asp-controller="Customer" asp-action="Promotions"><i class="fa-solid fa-tags me-1"></i> โปรโมชั่น</a>
+            <a asp-controller="Customer" asp-action="MyBookings"><i class="fa-solid fa-receipt me-1"></i> การจองของฉัน</a>
+            <a asp-controller="Customer" asp-action="Reviews"><i class="fa-solid fa-star me-1"></i> รีวิว</a>
         </nav>
 
-        <div class="customer-profile">👤 Customer</div>
+        <div class="header-actions">
+            <!-- ปุ่มแจ้งเตือนลูกค้า (วงสีเหลือง) -->
+            <div class="notification-btn-wrapper">
+                <button type="button" class="btn-header-notification" title="การแจ้งเตือน">
+                    <i class="fa-regular fa-bell"></i>
+                    <span class="notification-pulse-dot"></span>
+                </button>
+            </div>
+
+            @if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                <a asp-controller="Customer" asp-action="Profile" class="user-badge-chip text-decoration-none" title="ข้อมูลโปรไฟล์">
+                    <i class="fa-regular fa-circle-user text-info"></i>
+                    <span>@User.Identity.Name</span>
+                </a>
+                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline m-0">
+                    <button type="submit" class="btn-header-logout">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i> ออกจากระบบ
+                    </button>
+                </form>
+            }
+            else
+            {
+                <a asp-controller="Account" asp-action="Login" class="btn btn-sm btn-outline-light rounded-pill px-3">
+                    <i class="fa-regular fa-user"></i> เข้าสู่ระบบ
+                </a>
+            }
+        </div>
     </header>
 
-    <main class="customer-content container">
+    <main class="customer-content">
         @RenderBody()
     </main>
 
     <footer class="customer-footer">
-        <div><strong>🏨 StayMate</strong><p>Hotel Booking System</p></div>
-        <div><strong>Quick Links</strong><p>Rooms · Promotions · Booking</p></div>
-        <div><strong>Contact</strong><p>02-xxx-xxxx</p></div>
-        <div><strong>Copyright</strong><p>© 2569 StayMate</p></div>
+        <div class="customer-footer-grid">
+            <div class="footer-col">
+                <h5>🏨 StayMate Hotel</h5>
+                <p>ระบบจองห้องพัก Future Urban Hotel สัมผัสความสะดวกสบาย โปรโมชั่นสุดคุ้ม และระบบจัดการห้องพักแบบครบวงจร</p>
+            </div>
+            <div class="footer-col">
+                <h5>เมนูลูกค้า</h5>
+                <ul class="list-unstyled">
+                    <li><a asp-controller="Customer" asp-action="RoomAvailability">ค้นหาห้องว่าง</a></li>
+                    <li><a asp-controller="Customer" asp-action="Promotions">โปรโมชั่นพิเศษ</a></li>
+                    <li><a asp-controller="Customer" asp-action="MyBookings">ประวัติการจองห้องพัก</a></li>
+                    <li><a asp-controller="Customer" asp-action="Profile">โปรไฟล์ส่วนตัว</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h5>ฝ่ายบริการลูกค้า</h5>
+                <ul class="list-unstyled">
+                    <li><a href="#">นโยบายการจองและยกเลิก</a></li>
+                    <li><a href="#">เงื่อนไขการใช้โปรโมชั่น</a></li>
+                    <li><a href="#">คำถามที่พบบ่อย (FAQ)</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h5>ติดต่อเรา</h5>
+                <p><i class="fa-solid fa-phone me-2 text-warning"></i> 02-xxx-xxxx</p>
+                <p><i class="fa-solid fa-envelope me-2 text-warning"></i> booking@staymate-hotel.com</p>
+            </div>
+        </div>
+        <div class="footer-bottom-bar">
+            <span>© 2026 StayMate Hotel Booking System</span>
+            <span>Secured Smart Booking Engine</span>
+        </div>
     </footer>
 
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

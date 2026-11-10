@@ -2,7 +2,7 @@
 
 @{
     Layout = null;
-    ViewData["Title"] = "Login - StayMate";
+    ViewData["Title"] = "เข้าสู่ระบบ - StayMate";
 }
 
 <!DOCTYPE html>
@@ -10,54 +10,195 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login - StayMate</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <title>@ViewData["Title"]</title>
+
+    <!-- Bootstrap (Grid + Utilities เท่านั้น ไม่ทับ reboot) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap-grid.min.css" />
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.14.5/dist/sweetalert2.min.css" />
+    <!-- StayMate Theme -->
     <link rel="stylesheet" href="~/css/staymate_login_Register.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/staymate_motion.css" asp-append-version="true" />
 </head>
-<body class="staymate-auth login-page">
-    <div class="container d-flex justify-content-center align-items-center py-5" style="min-height: 100vh;">
-        <div class="card shadow mx-auto" style="width: 100%; max-width: 450px;">
-            <div class="card-header text-center bg-primary text-white">
-                <h3 class="mb-0">🏨 StayMate Login</h3>
+<body class="staymate-auth">
+
+    <div class="auth-container" style="max-width: 940px;">
+        <div class="master-auth-card" id="authCard">
+
+            <!-- Top Bar -->
+            <div class="master-top-bar">
+                <div class="brand-logo-group">
+                    <img src="~/images/Logo/LogoStayMate.jpg"
+                         alt="StayMate Logo"
+                         class="brand-logo-img"
+                         onerror="this.onerror=null; this.src='https://placehold.co/72x72/0076FF/FFFFFF?text=SM';" />
+                    <span class="brand-name-text">StayMate</span>
+                </div>
+                <div class="system-tagline">HOTEL BOOKING LOGIN</div>
             </div>
 
-            <div class="card-body">
-                @if (TempData["Success"] != null)
-                {
-                    <div class="alert alert-success">@TempData["Success"]</div>
-                }
+            <div class="split-layout">
 
-                <form asp-controller="Account" asp-action="Login"
-                      asp-route-returnUrl="@Context.Request.Query["returnUrl"]" method="post">
-                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                <!-- Left Showcase -->
+                <div class="left-showcase">
+                    <div>
+                        <div class="pill-tag animate__animated animate__fadeInDown">YOUR JOURNEY STARTS HERE</div>
+                        <h2 class="headline-title" data-anim="left">
+                            Stay Better.
+                            <span class="cyan-highlight">Live Better.</span>
+                        </h2>
+                        <p class="headline-desc" data-anim="left">
+                            สัมผัสประสบการณ์การจองห้องพักที่ง่าย สะดวก และตอบโจทย์ทุกการเดินทาง
+                        </p>
 
-                    <div class="mb-3">
-                        <label asp-for="Username" class="form-label"></label>
-                        <input asp-for="Username" class="form-control" placeholder="Enter your Username" autofocus />
-                        <span asp-validation-for="Username" class="text-danger"></span>
+                        <!-- Hotel image (เปลี่ยนเป็นโรงแรมรีสอร์ทสระว่ายน้ำยามเย็น) -->
+                        <div class="room-preview-box" id="roomBox">
+                            <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1000&q=80"
+                                 alt="StayMate Hotel"
+                                 class="room-preview-img"
+                                 onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=1000&q=80';" />
+                            <div class="room-caption">
+                                <span class="dot"></span>
+                                <span>ห้องพักว่างพร้อมให้จองวันนี้</span>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="Password" class="form-label"></label>
-                        <input asp-for="Password" class="form-control" placeholder="Enter your Password" />
-                        <span asp-validation-for="Password" class="text-danger"></span>
+                    <div class="badge-secure animate__animated animate__fadeInUp animate__delay-1s">
+                        <!-- วาง URL .json จาก LottieFiles ที่ data-lottie (ถ้าว่างจะแสดงไอคอนเดิม) -->
+                        <span class="lottie-slot" id="lottieSecure" data-lottie=""></span>
+                        <i class="fa-solid fa-shield-halved" id="secureIcon"></i>
+                        <span>Secure &amp; Smart Booking</span>
+                    </div>
+                </div>
+
+                <!-- Right Form -->
+                <div class="right-form-panel">
+                    <div class="form-header-center">
+                        <div class="pill-tag animate__animated animate__fadeInDown animate__delay-1s" style="background: rgba(0, 118, 255, 0.22); color: #60A5FA;">WELCOME BACK</div>
+                        <h1 class="form-welcome-title" data-anim="form">ยินดีต้อนรับกลับ</h1>
+                        <p class="form-welcome-sub" data-anim="form">เข้าสู่ระบบ StayMate</p>
                     </div>
 
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">Login</button>
-                    </div>
-                </form>
+                    @if (TempData["Success"] != null)
+                    {
+                        <span id="tempSuccess" data-msg="@TempData["Success"]" hidden></span>
+                    }
+
+                    <form id="loginForm" asp-controller="Account" asp-action="Login"
+                          asp-route-returnUrl="@Context.Request.Query["returnUrl"]" method="post">
+
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="form-field-group" data-anim="form">
+                            <label asp-for="Username" class="form-field-label">Username</label>
+                            <div class="input-icon-box">
+                                <input asp-for="Username" class="styled-input" placeholder="กรอกชื่อผู้ใช้งาน" autofocus autocomplete="username" />
+                                <i class="fa-regular fa-user"></i>
+                            </div>
+                            <span asp-validation-for="Username" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-field-group" data-anim="form">
+                            <label asp-for="Password" class="form-field-label">Password</label>
+                            <div class="input-icon-box">
+                                <input asp-for="Password" type="password" class="styled-input" placeholder="••••••••" autocomplete="current-password" />
+                                <i class="fa-solid fa-lock"></i>
+                            </div>
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                        </div>
+
+                        <button type="submit" class="btn-action-primary" id="btnLogin" data-anim="form">
+                            <span>เข้าสู่ระบบ →</span>
+                        </button>
+
+                        <div class="switch-link-center" data-anim="form">
+                            <a asp-controller="Account" asp-action="Register">ลงทะเบียนสมัครใหม่</a>
+                        </div>
+                    </form>
+                </div>
+
             </div>
 
-            <div class="card-footer text-center">
-                <span>Don't have an account?</span>
-                <a asp-controller="Account" asp-action="Register">Register</a>
+            <!-- Footer -->
+            <div class="master-bottom-bar">
+                <div>© 2026 StayMate</div>
+                <div>
+                    <a href="#">Privacy</a><span>·</span>
+                    <a href="#">Security</a><span>·</span>
+                    <a href="#">Support</a>
+                </div>
             </div>
+
         </div>
     </div>
 
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery-validation-unobtrusive@4.0.0/dist/jquery.validate.unobtrusive.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.14.5/dist/sweetalert2.all.min.js"></script>
+
+    <script>
+        (function () {
+            const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            /* ---------- GSAP: จังหวะเข้าฉากเดียวแบบนุ่ม ๆ ---------- */
+            if (!reduce && window.gsap) {
+                const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+                tl.from('#authCard', { opacity: 0, y: 24, scale: .985, duration: .7 })
+                  .from('[data-anim="left"]', { opacity: 0, x: -22, duration: .6, stagger: .1 }, '-=.35')
+                  .from('#roomBox', { opacity: 0, y: 18, clipPath: 'inset(0 0 100% 0 round 18px)', duration: .9, ease: 'power2.inOut' }, '-=.45')
+                  .from('[data-anim="form"]', { opacity: 0, y: 16, duration: .5, stagger: .08 }, '-=.7');
+
+                // ปุ่มกดแล้วยุบเล็กน้อย
+                const btn = document.getElementById('btnLogin');
+                btn.addEventListener('mousedown', () => gsap.to(btn, { scale: .975, duration: .12 }));
+                ['mouseup', 'mouseleave'].forEach(e =>
+                    btn.addEventListener(e, () => gsap.to(btn, { scale: 1, duration: .35, ease: 'elastic.out(1, .5)' })));
+            }
+
+            /* ---------- Lottie (ใส่ URL ที่ data-lottie เพื่อเปิดใช้) ---------- */
+            const slot = document.getElementById('lottieSecure');
+            const url = slot && slot.dataset.lottie;
+            if (url && window.lottie) {
+                lottie.loadAnimation({ container: slot, renderer: 'svg', loop: true, autoplay: true, path: url });
+                slot.classList.add('is-ready');
+                document.getElementById('secureIcon').style.display = 'none';
+            }
+
+            /* ---------- SweetAlert2 ---------- */
+            const swalBase = { customClass: { popup: 'sm-swal' }, confirmButtonText: 'ตกลง', buttonsStyling: true };
+
+            // สมัครสมาชิกสำเร็จ (TempData["Success"])
+            const ok = document.getElementById('tempSuccess');
+            if (ok) {
+                Swal.fire({ ...swalBase, icon: 'success', title: 'สำเร็จ', text: ok.dataset.msg,
+                            timer: 2800, timerProgressBar: true, showConfirmButton: false,
+                            showClass: { popup: 'animate__animated animate__fadeInUp animate__faster' },
+                            hideClass: { popup: 'animate__animated animate__fadeOutDown animate__faster' } });
+            }
+
+            // Login ผิดพลาด (ModelState จาก Controller)
+            const errItems = document.querySelectorAll('.validation-summary-errors li');
+            if (errItems.length) {
+                Swal.fire({ ...swalBase, icon: 'error', title: 'เข้าสู่ระบบไม่สำเร็จ',
+                            text: errItems[0].textContent.trim(),
+                            showClass: { popup: 'animate__animated animate__headShake' } });
+                gsap && !reduce && gsap.fromTo('#authCard', { x: -8 }, { x: 0, duration: .6, ease: 'elastic.out(1, .25)' });
+            }
+
+            /* ---------- Loading state ตอนกดส่งฟอร์ม ---------- */
+            $('#loginForm').on('submit', function () {
+                if ($(this).valid()) $('#btnLogin').addClass('is-loading');
+            });
+        })();
+    </script>
 </body>
 </html>

@@ -1,0 +1,159 @@
+@{
+    // ---- ตรวจหน้าปัจจุบันเพื่อใส่ class active ----
+    var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+    bool Is(params string[] names) => names.Any(n => string.Equals(n, action, StringComparison.OrdinalIgnoreCase));
+    string Act(params string[] names) => Is(names) ? "active" : "";
+
+    // ---- ปรับชื่อ Controller ตรงนี้ที่เดียว ถ้าหน้าเหล่านี้ไม่ได้อยู่ใน HomeController ----
+    const string C = "Home";
+}
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - StayMate Hotel</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/staymate-layout.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body class="customer-page">
+
+    <!-- Header (Public: ไม่ต้อง login) -->
+    <header class="customer-header" id="siteHeader">
+        <div class="brand-group">
+            <!-- ปุ่มเมนูมือถือ / จอเล็ก -->
+            <button class="btn-header-menu d-xl-none" type="button" data-bs-toggle="offcanvas"
+                    data-bs-target="#mobileMenu" aria-controls="mobileMenu" aria-label="เปิดเมนู">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+
+            <a asp-controller="Home" asp-action="Index" class="brand-group text-decoration-none">
+                <img src="~/images/Logo/LogoStayMate.jpg"
+                     alt="StayMate Logo"
+                     class="brand-logo-img"
+                     onerror="this.onerror=null; this.src='https://placehold.co/76x76/070D1E/00E5FF?text=SM';" />
+                <span class="brand-text">StayMate</span>
+            </a>
+        </div>
+
+        <!-- Desktop Navigation: 1 Home · 2-3 Rooms · 4 Promotions · 5 Facilities · 6 About · 7 Contact · 8 FAQ -->
+        <nav class="customer-navbar d-none d-xl-flex" aria-label="เมนูหลัก">
+            <a asp-controller="@C" asp-action="Index" class="@Act("Index")">หน้าแรก</a>
+
+            <div class="nav-dropdown @(Is("Rooms", "RoomDetails") ? "active" : "")">
+                <a asp-controller="@C" asp-action="Rooms" class="nav-dropdown-toggle @Act("Rooms", "RoomDetails")">
+                    ห้องพัก <i class="fa-solid fa-chevron-down nav-caret"></i>
+                </a>
+                <div class="nav-dropdown-menu">
+                    <a asp-controller="@C" asp-action="Rooms" class="@Act("Rooms")">
+                        <i class="fa-solid fa-bed"></i>
+                        <span><b>ประเภทห้องพัก</b><small>ดูห้องพักทั้งหมด</small></span>
+                    </a>
+                    <a asp-controller="@C" asp-action="RoomDetails" class="@Act("RoomDetails")">
+                        <i class="fa-solid fa-door-open"></i>
+                        <span><b>รายละเอียดห้อง</b><small>รูปภาพ ราคา สิ่งอำนวยความสะดวก</small></span>
+                    </a>
+                </div>
+            </div>
+
+            <a asp-controller="@C" asp-action="Promotions" class="@Act("Promotions")">โปรโมชั่น</a>
+            <a asp-controller="@C" asp-action="Facilities" class="@Act("Facilities")">สิ่งอำนวยความสะดวก</a>
+            <a asp-controller="@C" asp-action="About" class="@Act("About")">เกี่ยวกับเรา</a>
+            <a asp-controller="@C" asp-action="Contact" class="@Act("Contact")">ติดต่อเรา</a>
+            <a asp-controller="@C" asp-action="FAQ" class="@Act("FAQ")">FAQ</a>
+        </nav>
+
+        <!-- Actions: เฉพาะเข้าสู่ระบบ / สมัครสมาชิก -->
+        <div class="header-actions">
+            <a asp-controller="Account" asp-action="Login"
+               class="btn btn-sm btn-outline-light rounded-pill px-3">
+                <i class="fa-regular fa-user"></i> เข้าสู่ระบบ
+            </a>
+            <a asp-controller="Account" asp-action="Register"
+               class="btn-header-register d-none d-sm-inline-flex">
+                สมัครสมาชิก
+            </a>
+        </div>
+    </header>
+
+    <!-- Mobile Menu (Offcanvas) -->
+    <div class="offcanvas offcanvas-start sm-offcanvas" tabindex="-1" id="mobileMenu" aria-labelledby="mobileMenuLabel">
+        <div class="offcanvas-header">
+            <span class="brand-text" id="mobileMenuLabel">StayMate</span>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="ปิด"></button>
+        </div>
+        <div class="offcanvas-body">
+            <nav class="sm-mobile-nav">
+                <a asp-controller="@C" asp-action="Index" class="@Act("Index")"><i class="fa-solid fa-house"></i> หน้าแรก</a>
+                <a asp-controller="@C" asp-action="Rooms" class="@Act("Rooms")"><i class="fa-solid fa-bed"></i> ประเภทห้องพัก</a>
+                <a asp-controller="@C" asp-action="RoomDetails" class="@Act("RoomDetails")"><i class="fa-solid fa-door-open"></i> รายละเอียดห้อง</a>
+                <a asp-controller="@C" asp-action="Promotions" class="@Act("Promotions")"><i class="fa-solid fa-tags"></i> โปรโมชั่น</a>
+                <a asp-controller="@C" asp-action="Facilities" class="@Act("Facilities")"><i class="fa-solid fa-spa"></i> สิ่งอำนวยความสะดวก</a>
+                <a asp-controller="@C" asp-action="About" class="@Act("About")"><i class="fa-solid fa-hotel"></i> เกี่ยวกับเรา</a>
+                <a asp-controller="@C" asp-action="Contact" class="@Act("Contact")"><i class="fa-solid fa-location-dot"></i> ติดต่อเรา</a>
+                <a asp-controller="@C" asp-action="FAQ" class="@Act("FAQ")"><i class="fa-solid fa-circle-question"></i> FAQ</a>
+            </nav>
+
+            <div class="sm-mobile-auth">
+                <a asp-controller="Account" asp-action="Login" class="btn btn-outline-light rounded-pill">เข้าสู่ระบบ</a>
+                <a asp-controller="Account" asp-action="Register" class="btn-header-register justify-content-center">สมัครสมาชิก</a>
+            </div>
+        </div>
+    </div>
+
+    <main class="customer-content page-enter">
+        @RenderBody()
+    </main>
+
+    <footer class="customer-footer">
+        <div class="customer-footer-grid">
+            <div class="footer-col">
+                <h5>🏨 StayMate Hotel</h5>
+                <p>ระบบจองห้องพัก Future Urban Hotel สัมผัสความสะดวกสบาย โปรโมชั่นสุดคุ้ม และระบบจัดการห้องพักแบบครบวงจร</p>
+            </div>
+            <div class="footer-col">
+                <h5>สำรวจโรงแรม</h5>
+                <ul class="list-unstyled">
+                    <li><a asp-controller="@C" asp-action="Rooms">ประเภทห้องพัก</a></li>
+                    <li><a asp-controller="@C" asp-action="Promotions">โปรโมชั่นพิเศษ</a></li>
+                    <li><a asp-controller="@C" asp-action="Facilities">สิ่งอำนวยความสะดวก</a></li>
+                    <li><a asp-controller="@C" asp-action="About">เกี่ยวกับเรา</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h5>ฝ่ายบริการลูกค้า</h5>
+                <ul class="list-unstyled">
+                    <li><a asp-controller="@C" asp-action="FAQ">คำถามที่พบบ่อย (FAQ)</a></li>
+                    <li><a asp-controller="@C" asp-action="Contact">ติดต่อเรา</a></li>
+                    <li><a asp-controller="Account" asp-action="Login">เข้าสู่ระบบ</a></li>
+                    <li><a asp-controller="Account" asp-action="Register">สมัครสมาชิก</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h5>ติดต่อเรา</h5>
+                <p><i class="fa-solid fa-phone me-2 text-warning"></i> 02-xxx-xxxx</p>
+                <p><i class="fa-solid fa-envelope me-2 text-warning"></i> booking@staymate-hotel.com</p>
+            </div>
+        </div>
+        <div class="footer-bottom-bar">
+            <span>© 2026 StayMate Hotel Booking System</span>
+            <span>Secured Smart Booking Engine</span>
+        </div>
+    </footer>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // เงาเข้มขึ้นเมื่อเลื่อนหน้า
+        (function () {
+            const h = document.getElementById('siteHeader');
+            const on = () => h.classList.toggle('is-scrolled', window.scrollY > 8);
+            on(); window.addEventListener('scroll', on, { passive: true });
+        })();
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,261 +1,412 @@
-@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap');
 
-/* ===========================================
-   STAYMATE - Login / Register / User pages
-   ธีม: Orbit (Urban Boutique x Business x Hi-tech)
-   Every rule is scoped under body.staymate-auth
-   =========================================== */
+/* ==========================================================
+   STAYMATE - Future Urban Hotel Auth Theme
+   ========================================================== */
+:root {
+    --sm-bg-dark: #070D1E;
+    --sm-card-bg: #0B132B;
+    --sm-panel-right: #0E1838;
+    --sm-border-subtle: rgba(255, 255, 255, 0.08);
+    --sm-border-focus: #00E5FF;
+    --sm-blue-accent: #0076FF;
+    --sm-blue-hover: #005FCC;
+    --sm-cyan: #00E5FF;
+    --sm-cyan-glow: rgba(0, 229, 255, 0.35);
+    --sm-text-white: #FFFFFF;
+    --sm-text-muted: #8E9DB7;
+    --sm-text-secondary: #CBD5E1;
+    --sm-input-bg: #131F3F;
+    --sm-input-border: #1E2D56;
+    --sm-danger: #F87171;
+    --sm-success: #34D399;
+}
 
 body.staymate-auth {
-    --sm-ink: #0b1630;          /* น้ำเงินห้วงอวกาศ */
-    --sm-ink-soft: #1c2b52;
-    --sm-cobalt: #2f5bff;       /* สีหลักของปุ่ม/ลิงก์ */
-    --sm-cobalt-deep: #1f40c9;
-    --sm-signal: #ffb547;       /* จุดเน้นเดียว: สีสัญญาณ */
-    --sm-mist: #eef1f8;         /* พื้นหลัง */
-    --sm-white: #ffffff;
-    --sm-line: #cfd6e6;
-    --sm-text: #16203a;         /* เข้มพอสำหรับผู้สูงอายุ (คอนทราสต์สูง) */
-    --sm-text-light: #4a5675;
-    --sm-shadow: 0 1px 2px rgba(11, 22, 48, 0.08), 0 16px 40px rgba(11, 22, 48, 0.10);
-
     margin: 0;
     min-height: 100vh;
-    color: var(--sm-text);
-    font-family: 'Prompt', 'Space Grotesk', 'Segoe UI', Tahoma, sans-serif;
-    font-size: 16px;
-    line-height: 1.6;
-    background:
-        radial-gradient(circle at 12% 8%, rgba(47, 91, 255, 0.10), transparent 40%),
-        radial-gradient(circle at 92% 92%, rgba(255, 181, 71, 0.10), transparent 35%),
-        var(--sm-mist);
-    -webkit-font-smoothing: antialiased;
-}
-
-/* ---------- Layout ---------- */
-.staymate-auth .container {
-    padding: 24px 20px;
-}
-
-/* ---------- Card ---------- */
-.staymate-auth .card {
-    max-width: 100%;
-    border: 1px solid var(--sm-line);
-    border-radius: 24px;
-    overflow: hidden;
-    background: var(--sm-white);
-    box-shadow: var(--sm-shadow);
-    animation: sm-rise 0.5s ease-out both;
-}
-
-/* ส่วนหัว: ท้องฟ้าอวกาศ ดาวกระจาย + วงโคจรบางๆ  (จุดเด่นเดียวของธีม) */
-.staymate-auth .card-header {
+    font-family: 'Prompt', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--sm-bg-dark);
+    color: var(--sm-text-white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     position: relative;
-    overflow: hidden;
-    padding: 32px 36px;
-    border: none;
-    border-bottom: 4px solid var(--sm-signal);
-    background:
-        radial-gradient(1.5px 1.5px at 18% 30%, #fff, transparent 60%),
-        radial-gradient(1px 1px at 42% 70%, rgba(255, 255, 255, 0.8), transparent 60%),
-        radial-gradient(1.5px 1.5px at 66% 24%, #fff, transparent 60%),
-        radial-gradient(1px 1px at 84% 62%, rgba(255, 255, 255, 0.8), transparent 60%),
-        radial-gradient(1px 1px at 92% 18%, rgba(255, 255, 255, 0.7), transparent 60%),
-        linear-gradient(135deg, var(--sm-ink) 0%, var(--sm-ink-soft) 60%, #26398a 100%) !important;
+    overflow-x: hidden;
+    padding: 24px 16px;
+    box-sizing: border-box;
 }
 
-.staymate-auth .card-header::after {
+/* Background Cosmic Ambient Lights */
+body.staymate-auth::before,
+body.staymate-auth::after {
     content: "";
-    position: absolute;
-    right: -70px;
-    top: -90px;
-    width: 220px;
-    height: 220px;
-    border: 1px solid rgba(255, 255, 255, 0.22);
+    position: fixed;
     border-radius: 50%;
+    filter: blur(140px);
+    z-index: 0;
     pointer-events: none;
 }
 
-.staymate-auth .card-header h3 {
+body.staymate-auth::before {
+    width: 450px;
+    height: 450px;
+    background: radial-gradient(circle, rgba(0, 118, 255, 0.35), transparent 70%);
+    top: -100px;
+    left: -100px;
+}
+
+body.staymate-auth::after {
+    width: 480px;
+    height: 480px;
+    background: radial-gradient(circle, rgba(124, 58, 237, 0.28), transparent 70%);
+    bottom: -100px;
+    right: -80px;
+}
+
+.staymate-auth .auth-container {
     position: relative;
-    margin: 0;
-    color: var(--sm-white);
-    font-family: 'Space Grotesk', 'Prompt', sans-serif;
-    font-size: 30px;
+    z-index: 1;
+    width: 100%;
+}
+
+/* Outer Master Card (ตามแบบภาพ) */
+.staymate-auth .master-auth-card {
+    background: var(--sm-card-bg);
+    border: 1px solid var(--sm-border-subtle);
+    border-radius: 20px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.65), 0 0 30px rgba(0, 118, 255, 0.12);
+    overflow: hidden;
+    animation: sm-fade-up 0.5s ease-out both;
+}
+
+/* Top App Header inside card */
+.staymate-auth .master-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 28px;
+    border-bottom: 1px solid var(--sm-border-subtle);
+}
+
+.staymate-auth .brand-logo-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.staymate-auth .brand-logo-img {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    object-fit: cover;
+    box-shadow: 0 0 12px rgba(0, 229, 255, 0.3);
+    border: 1px solid rgba(0, 229, 255, 0.3);
+}
+
+.staymate-auth .brand-name-text {
+    font-size: 1.15rem;
     font-weight: 700;
-    letter-spacing: 0.2px;
+    color: #FFFFFF;
+    letter-spacing: 0.3px;
+    font-family: 'Space Grotesk', 'Prompt', sans-serif;
 }
 
-.staymate-auth .card-body {
-    padding: 40px;
+.staymate-auth .system-tagline {
+    font-size: 0.78rem;
+    color: var(--sm-text-muted);
+    letter-spacing: 1.2px;
+    font-weight: 600;
+    text-transform: uppercase;
 }
 
-.staymate-auth .card-footer {
-    padding: 20px 40px;
-    border-top: 1px solid var(--sm-line);
-    background: #f7f9fd;
+/* Split Main Content */
+.staymate-auth .split-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
 }
 
-.staymate-auth .card-footer small {
-    color: var(--sm-text-light);
-    font-size: 14px;
+/* Left Hero Showcase */
+.staymate-auth .left-showcase {
+    padding: 36px 32px 28px 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border-right: 1px solid var(--sm-border-subtle);
 }
 
-/* ---------- Labels ---------- */
-.staymate-auth .form-label {
+.staymate-auth .pill-tag {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: rgba(0, 118, 255, 0.18);
+    color: #38BDF8;
+    margin-bottom: 16px;
+    width: fit-content;
+}
+
+.staymate-auth .headline-title {
+    font-size: 2.15rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin: 0 0 12px 0;
+    letter-spacing: -0.5px;
+}
+
+.staymate-auth .cyan-highlight {
+    color: var(--sm-cyan);
     display: block;
+}
+
+.staymate-auth .headline-desc {
+    color: var(--sm-text-secondary);
+    font-size: 0.88rem;
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+
+.staymate-auth .room-preview-box {
+    border-radius: 14px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+    margin-bottom: 24px;
+}
+
+.staymate-auth .room-preview-img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    display: block;
+}
+
+.staymate-auth .badge-secure {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #38BDF8;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+/* Right Form Panel */
+.staymate-auth .right-form-panel {
+    background: var(--sm-panel-right);
+    padding: 44px 38px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.staymate-auth .form-header-center {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.staymate-auth .form-welcome-title {
+    font-size: 1.7rem;
+    font-weight: 700;
+    margin: 10px 0 6px 0;
+    color: #FFFFFF;
+}
+
+.staymate-auth .form-welcome-sub {
+    color: var(--sm-text-muted);
+    font-size: 0.88rem;
+    margin: 0;
+}
+
+/* Custom Input Field with Icon */
+.staymate-auth .form-field-group {
+    margin-bottom: 20px;
+}
+
+.staymate-auth .form-field-label {
+    display: block;
+    font-size: 0.86rem;
+    font-weight: 500;
+    color: #E2E8F0;
     margin-bottom: 8px;
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--sm-ink);
 }
 
-/* ---------- Inputs ---------- */
-.staymate-auth .form-control,
-.staymate-auth .form-select {
-    min-height: 52px;
-    padding: 12px 16px;
-    border: 2px solid var(--sm-line);
-    border-radius: 14px;
-    background-color: var(--sm-white);
-    font-size: 16px;
-    color: var(--sm-text);
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+.staymate-auth .input-icon-box {
+    position: relative;
+    display: flex;
+    align-items: center;
 }
 
-.staymate-auth .form-control::placeholder {
-    color: #8591ad;
+.staymate-auth .input-icon-box i {
+    position: absolute;
+    left: 16px;
+    color: #38BDF8;
+    font-size: 0.95rem;
+    pointer-events: none;
+    transition: color 0.2s ease;
 }
 
-.staymate-auth .form-control:focus,
-.staymate-auth .form-select:focus {
-    background-color: var(--sm-white);
-    border-color: var(--sm-cobalt);
-    box-shadow: 0 0 0 4px rgba(47, 91, 255, 0.18);
+.staymate-auth .styled-input {
+    width: 100%;
+    height: 48px;
+    background: var(--sm-input-bg);
+    border: 1.5px solid var(--sm-input-border);
+    border-radius: 10px;
+    padding: 8px 16px 8px 44px;
+    color: #FFFFFF;
+    font-family: inherit;
+    font-size: 0.92rem;
     outline: none;
+    box-sizing: border-box;
+    transition: all 0.25s ease;
 }
 
-.staymate-auth .mb-3 {
-    margin-bottom: 24px !important;
+.staymate-auth .styled-input::placeholder {
+    color: #556987;
+    font-weight: 300;
 }
 
-/* ---------- Buttons ---------- */
-.staymate-auth .btn {
-    min-height: 48px;
-    padding: 12px 28px;
-    border-radius: 14px;
-    font-size: 16px;
-    font-weight: 600;
-    transition: background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+.staymate-auth .styled-input:focus {
+    border-color: var(--sm-cyan);
+    background: #172750;
+    box-shadow: 0 0 14px var(--sm-cyan-glow);
 }
 
-/* ปุ่มหลัก (จอง / เข้าสู่ระบบ) ต้องเด่นและกดง่าย */
-.staymate-auth .btn-primary {
-    border: none;
-    background: var(--sm-cobalt);
-    color: var(--sm-white);
-    box-shadow: 0 6px 18px rgba(47, 91, 255, 0.32);
-}
-
-.staymate-auth .btn-primary:hover,
-.staymate-auth .btn-primary:focus-visible {
-    background: var(--sm-cobalt-deep);
-    color: var(--sm-white);
-    box-shadow: 0 8px 24px rgba(31, 64, 201, 0.42);
-}
-
-.staymate-auth .btn-primary:active {
-    background: #17339f;
-}
-
-.staymate-auth .btn-secondary {
-    border: 2px solid var(--sm-line);
-    background: var(--sm-white);
-    color: var(--sm-ink);
-}
-
-.staymate-auth .btn-secondary:hover {
-    border-color: var(--sm-cobalt);
-    background: #f4f7ff;
-    color: var(--sm-cobalt-deep);
-}
-
-/* ปุ่มลบ */
-.staymate-auth .btn-danger {
+/* Primary Action Button (Blue Pill) */
+.staymate-auth .btn-action-primary {
+    width: 100%;
+    height: 48px;
     border: none;
     border-radius: 10px;
-    background: #d6334a;
-    color: var(--sm-white);
-}
-
-.staymate-auth .btn-danger:hover {
-    background: #b02338;
-    color: var(--sm-white);
-}
-
-.staymate-auth .btn-sm {
-    min-height: 40px;
-    padding: 8px 16px;
-    font-size: 14px;
-}
-
-/* ---------- Table ---------- */
-.staymate-auth .table {
-    margin-bottom: 0;
-    font-size: 15px;
-}
-
-.staymate-auth .table thead th {
-    padding: 14px;
-    border: none;
-    background: var(--sm-ink);
-    color: var(--sm-white);
-    font-size: 14px;
+    background: var(--sm-blue-accent);
+    color: #FFFFFF;
+    font-size: 1rem;
     font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(0, 118, 255, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.25s ease;
+    text-decoration: none;
+    margin-top: 10px;
 }
 
-.staymate-auth .table td {
-    padding: 14px;
-    border-color: #e3e8f3;
-    vertical-align: middle;
+.staymate-auth .btn-action-primary:hover {
+    background: var(--sm-blue-hover);
+    box-shadow: 0 10px 24px rgba(0, 118, 255, 0.55);
+    transform: translateY(-1px);
+    color: #FFFFFF;
 }
 
-.staymate-auth .table-hover tbody tr:hover {
-    background: rgba(47, 91, 255, 0.06);
+.staymate-auth .btn-action-primary:active {
+    transform: translateY(0);
 }
 
-/* ---------- Badges ---------- */
-.staymate-auth .badge {
-    padding: 7px 14px;
-    border-radius: 999px;
-    font-size: 13px;
-    font-weight: 600;
+/* Link Switch Mode */
+.staymate-auth .switch-link-center {
+    text-align: center;
+    margin-top: 20px;
 }
 
-/* ---------- Links ---------- */
-.staymate-auth a {
-    color: var(--sm-cobalt-deep);
+.staymate-auth .switch-link-center a {
+    color: #00B4D8;
+    font-size: 0.92rem;
     font-weight: 600;
     text-decoration: none;
+    transition: color 0.2s ease;
 }
 
-.staymate-auth a:hover {
-    color: var(--sm-cobalt);
+.staymate-auth .switch-link-center a:hover {
+    color: var(--sm-cyan);
     text-decoration: underline;
 }
 
-/* ---------- Focus ring for keyboard users ---------- */
-.staymate-auth a:focus-visible,
-.staymate-auth button:focus-visible {
-    outline: 3px solid var(--sm-signal);
-    outline-offset: 2px;
+/* Bottom Footer Bar */
+.staymate-auth .master-bottom-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 28px;
+    background: rgba(0, 0, 0, 0.25);
+    border-top: 1px solid var(--sm-border-subtle);
+    font-size: 0.8rem;
+    color: #64748B;
 }
 
-/* ---------- Animation (เล่นครั้งเดียวตอนโหลด) ---------- */
-@keyframes sm-rise {
+.staymate-auth .master-bottom-bar a {
+    color: #64748B;
+    text-decoration: none;
+    margin-left: 14px;
+    transition: color 0.2s;
+}
+
+.staymate-auth .master-bottom-bar a:hover {
+    color: #94A3B8;
+}
+
+/* Register Split Page Hero Feature */
+.staymate-auth .register-hero {
+    background: linear-gradient(145deg, rgba(11, 19, 43, 0.95), rgba(0, 118, 255, 0.7)),
+                url('https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1000&q=80') center/cover;
+    padding: 44px 36px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border-right: 1px solid var(--sm-border-subtle);
+}
+
+.staymate-auth .hero-feature {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.staymate-auth .hero-feature-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: rgba(0, 229, 255, 0.15);
+    color: var(--sm-cyan);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+/* Validation Styling */
+.staymate-auth .field-validation-error,
+.staymate-auth .text-danger {
+    color: var(--sm-danger) !important;
+    font-size: 0.8rem;
+    margin-top: 5px;
+    display: block;
+}
+
+.staymate-auth .alert-custom-success {
+    background: rgba(52, 211, 153, 0.15);
+    border: 1px solid rgba(52, 211, 153, 0.4);
+    color: var(--sm-success);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.88rem;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Fade Up Animation */
+@keyframes sm-fade-up {
     from {
         opacity: 0;
-        transform: translateY(16px);
+        transform: translateY(18px);
     }
     to {
         opacity: 1;
@@ -263,42 +414,147 @@ body.staymate-auth {
     }
 }
 
-/* ---------- Mobile ---------- */
-@media (max-width: 520px) {
-    .staymate-auth .card-header {
-        padding: 24px;
+/* Responsive */
+@media (max-width: 860px) {
+    .staymate-auth .split-layout {
+        grid-template-columns: 1fr;
     }
-
-    .staymate-auth .card-header h3 {
-        font-size: 24px;
+    .staymate-auth .left-showcase,
+    .staymate-auth .register-hero {
+        display: none;
     }
-
-    .staymate-auth .card-body {
-        padding: 24px;
-    }
-
-    .staymate-auth .card-footer {
-        padding: 16px 24px;
+    .staymate-auth .right-form-panel {
+        padding: 32px 24px;
     }
 }
+/* ==========================================================
+   StayMate - Motion layer (โหลดต่อจาก staymate_login_Register.css)
+   ========================================================== */
 
+/* ---------- Smoother surfaces ---------- */
+.staymate-auth .master-auth-card {
+    border-radius: 24px;
+    background: linear-gradient(180deg, #0C1530 0%, #0A1229 100%);
+}
+
+.staymate-auth .right-form-panel {
+    background: linear-gradient(160deg, #101C42 0%, #0C1634 100%);
+}
+
+.staymate-auth .styled-input,
+.staymate-auth .btn-action-primary,
+.staymate-auth .switch-link-center a {
+    transition: border-color .3s cubic-bezier(.22,.61,.36,1),
+                background .3s cubic-bezier(.22,.61,.36,1),
+                box-shadow .3s cubic-bezier(.22,.61,.36,1),
+                transform .3s cubic-bezier(.22,.61,.36,1),
+                color .2s ease;
+}
+
+/* ไอคอนในช่องกรอกขยับเมื่อ focus */
+.staymate-auth .input-icon-box:focus-within i {
+    color: var(--sm-cyan);
+    transform: scale(1.12);
+}
+.staymate-auth .input-icon-box i { transition: color .25s ease, transform .3s cubic-bezier(.34,1.56,.64,1); }
+
+/* ---------- Hotel image (Login) ---------- */
+.staymate-auth .room-preview-box {
+    height: 240px;
+    border-radius: 18px;
+}
+.staymate-auth .room-preview-img {
+    height: 100%;
+    transform-origin: 60% 50%;
+    animation: sm-kenburns 18s ease-in-out infinite alternate;
+}
+.staymate-auth .room-preview-box::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 45%, rgba(7,13,30,.75) 100%);
+    pointer-events: none;
+}
+.staymate-auth .room-caption {
+    position: absolute;
+    left: 16px; bottom: 14px; z-index: 2;
+    display: flex; align-items: center; gap: 8px;
+    font-size: .82rem; color: #E2E8F0;
+}
+.staymate-auth .room-caption .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--sm-success);
+    animation: sm-pulse 2.2s ease-out infinite;
+}
+
+@keyframes sm-kenburns {
+    from { transform: scale(1)    translate(0, 0); }
+    to   { transform: scale(1.12) translate(-2%, -1.5%); }
+}
+@keyframes sm-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(52,211,153,.55); }
+    100% { box-shadow: 0 0 0 10px rgba(52,211,153,0); }
+}
+
+/* ---------- Ambient glow ลอยช้า ๆ ---------- */
+body.staymate-auth::before { animation: sm-drift-a 16s ease-in-out infinite alternate; }
+body.staymate-auth::after  { animation: sm-drift-b 20s ease-in-out infinite alternate; }
+@keyframes sm-drift-a { to { transform: translate(90px, 60px); } }
+@keyframes sm-drift-b { to { transform: translate(-80px, -50px); } }
+
+/* ---------- ปุ่มหลัก: shine + loading ---------- */
+.staymate-auth .btn-action-primary { position: relative; overflow: hidden; }
+.staymate-auth .btn-action-primary::after {
+    content: "";
+    position: absolute; top: 0; left: -60%;
+    width: 40%; height: 100%;
+    background: linear-gradient(100deg, transparent, rgba(255,255,255,.28), transparent);
+    transform: skewX(-20deg);
+}
+.staymate-auth .btn-action-primary:hover::after { left: 130%; transition: left .8s ease; }
+
+.staymate-auth .btn-action-primary.is-loading { pointer-events: none; opacity: .85; }
+.staymate-auth .btn-action-primary.is-loading span { opacity: 0; }
+.staymate-auth .btn-action-primary.is-loading::before {
+    content: "";
+    position: absolute; left: 50%; top: 50%;
+    width: 20px; height: 20px; margin: -10px 0 0 -10px;
+    border: 2.5px solid rgba(255,255,255,.35);
+    border-top-color: #fff; border-radius: 50%;
+    animation: sm-spin .7s linear infinite;
+}
+@keyframes sm-spin { to { transform: rotate(360deg); } }
+
+/* ---------- Lottie slot ---------- */
+.staymate-auth .lottie-slot { width: 28px; height: 28px; display: none; }
+.staymate-auth .lottie-slot.is-ready { display: inline-block; }
+
+/* ---------- SweetAlert2 ธีมมืด ---------- */
+.swal2-popup.sm-swal {
+    background: #0E1838;
+    color: #fff;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 18px;
+    font-family: 'Prompt', sans-serif;
+    box-shadow: 0 25px 60px rgba(0,0,0,.6), 0 0 30px rgba(0,118,255,.18);
+}
+.swal2-popup.sm-swal .swal2-title { color: #fff; font-size: 1.3rem; }
+.swal2-popup.sm-swal .swal2-html-container { color: #CBD5E1; }
+.swal2-popup.sm-swal .swal2-confirm {
+    background: #0076FF; border-radius: 10px; box-shadow: 0 8px 20px rgba(0,118,255,.4);
+}
+.swal2-popup.sm-swal .swal2-confirm:focus { box-shadow: 0 0 0 3px rgba(0,229,255,.35); }
+
+/* ---------- Register: พื้นหลังรูปขยับเบา ๆ ---------- */
+.staymate-auth .register-hero { background-size: 112%; animation: sm-hero-pan 22s ease-in-out infinite alternate; }
+@keyframes sm-hero-pan { from { background-position: 40% 50%; } to { background-position: 60% 50%; } }
+.staymate-auth .hero-feature { transition: transform .3s cubic-bezier(.22,.61,.36,1); }
+.staymate-auth .hero-feature:hover { transform: translateX(6px); }
+
+/* ---------- เคารพผู้ใช้ที่ปิด animation ---------- */
 @media (prefers-reduced-motion: reduce) {
-    .staymate-auth .card {
-        animation: none;
+    .staymate-auth *, .staymate-auth *::before, .staymate-auth *::after,
+    body.staymate-auth::before, body.staymate-auth::after {
+        animation: none !important;
+        transition-duration: .01ms !important;
     }
-
-    .staymate-auth .btn,
-    .staymate-auth .form-control,
-    .staymate-auth .form-select {
-        transition: none;
-    }
-}
-
-/* ---------- ยกเว้นหัวการ์ดสีเขียวในหน้า Result ---------- */
-.staymate-auth .card-header.bg-success {
-    background: #1f7a55 !important;
-}
-
-.staymate-auth .card-header.bg-success::after {
-    display: none;
 }

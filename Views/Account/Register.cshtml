@@ -2,7 +2,7 @@
 
 @{
     Layout = null;
-    ViewData["Title"] = "Register - StayMate";
+    ViewData["Title"] = "สมัครสมาชิก - StayMate";
 }
 
 <!DOCTYPE html>
@@ -10,72 +10,199 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Register - StayMate</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <title>@ViewData["Title"]</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap-grid.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.14.5/dist/sweetalert2.min.css" />
     <link rel="stylesheet" href="~/css/staymate_login_Register.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/staymate_motion.css" asp-append-version="true" />
 </head>
 <body class="staymate-auth">
-    <div class="container my-5">
-        <div class="card shadow mx-auto" style="max-width: 500px;">
-            <div class="card-header text-center bg-success text-white">
-                <h3 class="mb-0">🏨 StayMate Register</h3>
+
+    <div class="auth-container" style="max-width: 960px;">
+        <div class="master-auth-card" id="authCard">
+
+            <div class="master-top-bar">
+                <div class="brand-logo-group">
+                    <img src="~/images/Logo/LogoStayMate.jpg"
+                         alt="StayMate Logo"
+                         class="brand-logo-img"
+                         onerror="this.onerror=null; this.src='https://placehold.co/72x72/0076FF/FFFFFF?text=SM';" />
+                    <span class="brand-name-text">StayMate</span>
+                </div>
+                <div class="system-tagline">MEMBER REGISTRATION</div>
             </div>
 
-            <div class="card-body">
-                <form asp-controller="Account" asp-action="Register" method="post">
-                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            <div class="split-layout">
 
-                    <div class="mb-3">
-                        <label asp-for="Username" class="form-label"></label>
-                        <input asp-for="Username" class="form-control" placeholder="Enter your Username" />
-                        <span asp-validation-for="Username" class="text-danger"></span>
+                <!-- Left Hero -->
+                <div class="register-hero">
+                    <div>
+                        <div class="pill-tag animate__animated animate__fadeInDown">
+                            <i class="fa-solid fa-star"></i> สิทธิพิเศษระดับพรีเมียม
+                        </div>
+                        <h2 data-anim="left" style="font-size: 1.85rem; font-weight: 700; line-height: 1.35; margin: 16px 0 12px 0;">
+                            เริ่มต้นพักผ่อนในสไตล์ <br /><span style="color: var(--sm-cyan);">Future Urban Hotel</span>
+                        </h2>
+                        <p data-anim="left" style="color: #CBD5E1; font-size: 0.9rem; line-height: 1.6;">
+                            ลงทะเบียนกับ StayMate เพื่อปลดล็อกราคาพิเศษ ส่วนลดโปรโมชั่น และระบบเช็คอินดิจิทัลสะดวกรวดเร็ว
+                        </p>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="FullName" class="form-label"></label>
-                        <input asp-for="FullName" class="form-control" placeholder="Enter your full name" />
-                        <span asp-validation-for="FullName" class="text-danger"></span>
+                    <div style="margin: 24px 0;">
+                        <div class="hero-feature" data-anim="feature">
+                            <div class="hero-feature-icon"><i class="fa-solid fa-bed"></i></div>
+                            <div>
+                                <div style="font-weight: 600; font-size: 0.95rem;">โปรโมชั่น มา 3 จ่าย 2</div>
+                                <div style="font-size: 0.82rem; color: #94A3B8;">รับสิทธิ์เตียงเสริมและอาหารเช้าฟรีทันที</div>
+                            </div>
+                        </div>
+                        <div class="hero-feature" data-anim="feature">
+                            <div class="hero-feature-icon"><i class="fa-solid fa-users"></i></div>
+                            <div>
+                                <div style="font-weight: 600; font-size: 0.95rem;">Family &amp; Gang Pack</div>
+                                <div style="font-size: 0.82rem; color: #94A3B8;">ส่วนลด On-Top และ E-Voucher คาเฟ่พาร์ทเนอร์</div>
+                            </div>
+                        </div>
+                        <div class="hero-feature" data-anim="feature">
+                            <div class="hero-feature-icon"><i class="fa-solid fa-qrcode"></i></div>
+                            <div>
+                                <div style="font-weight: 600; font-size: 0.95rem;">Digital Smart Pass</div>
+                                <div style="font-size: 0.82rem; color: #94A3B8;">รับ QR Code ส่วนตัวสำหรับเข้าพักหน้าเคาน์เตอร์</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Form -->
+                <div class="right-form-panel" style="padding: 36px 36px 28px 36px;">
+                    <div style="margin-bottom: 20px;" data-anim="form">
+                        <h1 class="form-welcome-title" style="font-size: 1.65rem; margin: 0 0 6px 0;">สร้างบัญชีใหม่</h1>
+                        <p class="form-welcome-sub">กรอกข้อมูลเพื่อเริ่มต้นใช้งานระบบ</p>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="Email" class="form-label"></label>
-                        <input asp-for="Email" type="email" class="form-control" placeholder="Enter your email" />
-                        <span asp-validation-for="Email" class="text-danger"></span>
-                    </div>
+                    <form id="registerForm" asp-controller="Account" asp-action="Register" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-                    <div class="mb-3">
-                        <label asp-for="Phone" class="form-label"></label>
-                        <input asp-for="Phone" class="form-control" placeholder="Enter your phone (optional)" />
-                        <span asp-validation-for="Phone" class="text-danger"></span>
-                    </div>
+                        <div class="row gx-3">
+                            <div class="col-12 col-sm-6 form-field-group" data-anim="form">
+                                <label asp-for="Username" class="form-field-label">ชื่อผู้ใช้งาน</label>
+                                <div class="input-icon-box">
+                                    <input asp-for="Username" class="styled-input" placeholder="Username" />
+                                    <i class="fa-solid fa-user-tag"></i>
+                                </div>
+                                <span asp-validation-for="Username" class="text-danger"></span>
+                            </div>
+                            <div class="col-12 col-sm-6 form-field-group" data-anim="form">
+                                <label asp-for="FullName" class="form-field-label">ชื่อ - นามสกุล</label>
+                                <div class="input-icon-box">
+                                    <input asp-for="FullName" class="styled-input" placeholder="ชื่อ-นามสกุลจริง" />
+                                    <i class="fa-regular fa-id-card"></i>
+                                </div>
+                                <span asp-validation-for="FullName" class="text-danger"></span>
+                            </div>
+                        </div>
 
-                    <div class="mb-3">
-                        <label asp-for="Password" class="form-label"></label>
-                        <input asp-for="Password" class="form-control" placeholder="At least 6 characters" />
-                        <span asp-validation-for="Password" class="text-danger"></span>
-                    </div>
+                        <div class="row gx-3">
+                            <div class="col-12 col-sm-6 form-field-group" data-anim="form">
+                                <label asp-for="Email" class="form-field-label">อีเมล</label>
+                                <div class="input-icon-box">
+                                    <input asp-for="Email" type="email" class="styled-input" placeholder="name@email.com" />
+                                    <i class="fa-regular fa-envelope"></i>
+                                </div>
+                                <span asp-validation-for="Email" class="text-danger"></span>
+                            </div>
+                            <div class="col-12 col-sm-6 form-field-group" data-anim="form">
+                                <label asp-for="Phone" class="form-field-label">เบอร์โทรศัพท์</label>
+                                <div class="input-icon-box">
+                                    <input asp-for="Phone" class="styled-input" placeholder="08x-xxx-xxxx" />
+                                    <i class="fa-solid fa-phone"></i>
+                                </div>
+                                <span asp-validation-for="Phone" class="text-danger"></span>
+                            </div>
+                        </div>
 
-                    <div class="mb-3">
-                        <label asp-for="ConfirmPassword" class="form-label"></label>
-                        <input asp-for="ConfirmPassword" class="form-control" placeholder="Re-enter your password" />
-                        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
-                    </div>
+                        <div class="row gx-3">
+                            <div class="col-12 col-sm-6 form-field-group" data-anim="form">
+                                <label asp-for="Password" class="form-field-label">รหัสผ่าน</label>
+                                <div class="input-icon-box">
+                                    <input asp-for="Password" type="password" class="styled-input" placeholder="อย่างน้อย 6 ตัวอักษร" />
+                                    <i class="fa-solid fa-lock"></i>
+                                </div>
+                                <span asp-validation-for="Password" class="text-danger"></span>
+                            </div>
+                            <div class="col-12 col-sm-6 form-field-group" data-anim="form">
+                                <label asp-for="ConfirmPassword" class="form-field-label">ยืนยันรหัสผ่าน</label>
+                                <div class="input-icon-box">
+                                    <input asp-for="ConfirmPassword" type="password" class="styled-input" placeholder="พิมพ์ซ้ำอีกครั้ง" />
+                                    <i class="fa-solid fa-shield-halved"></i>
+                                </div>
+                                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                            </div>
+                        </div>
 
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-success">Register</button>
+                        <button type="submit" class="btn-action-primary" id="btnRegister" data-anim="form" style="margin-top: 10px;">
+                            <span>ลงทะเบียนเข้าใช้งาน →</span>
+                        </button>
+                    </form>
+
+                    <div class="switch-link-center" data-anim="form" style="margin-top: 18px;">
+                        <span style="color: var(--sm-text-muted); font-size: 0.9rem;">มีบัญชีสมาชิกอยู่แล้ว?</span>
+                        <a asp-controller="Account" asp-action="Login">เข้าสู่ระบบที่นี่</a>
                     </div>
-                </form>
+                </div>
+
             </div>
 
-            <div class="card-footer text-center">
-                <span>Already have an account?</span>
-                <a asp-controller="Account" asp-action="Login">Login</a>
+            <div class="master-bottom-bar">
+                <div>© 2026 StayMate Hotel Management. All rights reserved.</div>
+                <div>
+                    <a href="#">Privacy</a><span>·</span>
+                    <a href="#">Security</a><span>·</span>
+                    <a href="#">Support</a>
+                </div>
             </div>
+
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery-validation-unobtrusive@4.0.0/dist/jquery.validate.unobtrusive.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.14.5/dist/sweetalert2.all.min.js"></script>
+
+    <script>
+        (function () {
+            const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            if (!reduce && window.gsap) {
+                gsap.timeline({ defaults: { ease: 'power3.out' } })
+                    .from('#authCard', { opacity: 0, y: 24, scale: .985, duration: .7 })
+                    .from('[data-anim="left"]', { opacity: 0, x: -22, duration: .6, stagger: .1 }, '-=.35')
+                    .from('[data-anim="feature"]', { opacity: 0, x: -26, duration: .55, stagger: .12 }, '-=.3')
+                    .from('[data-anim="form"]', { opacity: 0, y: 16, duration: .5, stagger: .07 }, '-=.8');
+
+                const btn = document.getElementById('btnRegister');
+                btn.addEventListener('mousedown', () => gsap.to(btn, { scale: .975, duration: .12 }));
+                ['mouseup', 'mouseleave'].forEach(e =>
+                    btn.addEventListener(e, () => gsap.to(btn, { scale: 1, duration: .35, ease: 'elastic.out(1, .5)' })));
+            }
+
+            // สมัครไม่สำเร็จ (ModelState จาก Controller เช่น Username ซ้ำ)
+            const errItems = document.querySelectorAll('.validation-summary-errors li');
+            if (errItems.length) {
+                Swal.fire({ customClass: { popup: 'sm-swal' }, icon: 'error', title: 'สมัครสมาชิกไม่สำเร็จ',
+                            text: errItems[0].textContent.trim(), confirmButtonText: 'ตกลง',
+                            showClass: { popup: 'animate__animated animate__headShake' } });
+            }
+
+            $('#registerForm').on('submit', function () {
+                if ($(this).valid()) $('#btnRegister').addClass('is-loading');
+            });
+        })();
+    </script>
 </body>
 </html>
