@@ -1,6 +1,8 @@
 
+@model StayMate_Kavinvee_0576.Models.User
+
 @{
-    ViewData["Title"] = "ค้นหาห้องพัก";
+    ViewData["Title"] = "หน้าหลักลูกค้า";
 
     var today = DateTime.Today.ToString("yyyy-MM-dd");
     var tomorrow = DateTime.Today.AddDays(1).ToString("yyyy-MM-dd");
@@ -8,9 +10,63 @@
 
 <section class="py-4">
     <div class="container">
-        <h1 class="fw-bold">ค้นหาห้องพัก</h1>
-        <p class="text-secondary">
-            เลือกวันเข้าพักและประเภทห้องที่ต้องการ
+        <!-- ส่วนที่ 1: ต้อนรับผู้ใช้ และ ปุ่มออกจากระบบ -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold mb-1">สวัสดี, @Model.FullName</h2>
+                <p class="text-secondary mb-0">ยินดีต้อนรับสู่ระบบบริหารและจองห้องพัก StayMate</p>
+            </div>
+
+            <form asp-controller="Account" asp-action="Logout" method="post">
+                <button type="submit" class="btn btn-outline-danger">
+                    <i class="bi bi-box-arrow-right me-1"></i> ออกจากระบบ
+                </button>
+            </form>
+        </div>
+
+        <!-- ส่วนที่ 2: สรุปข้อมูลบัญชีผู้ใช้ และการจอง -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-8">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-primary text-white fw-bold py-3">
+                        <i class="bi bi-person-badge me-2"></i>ข้อมูลบัญชี
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+                            <div class="col-sm-4">
+                                <span class="text-secondary d-block">Username</span>
+                                <strong class="fs-6">@Model.Username</strong>
+                            </div>
+                            <div class="col-sm-4">
+                                <span class="text-secondary d-block">Email</span>
+                                <strong class="fs-6">@Model.Email</strong>
+                            </div>
+                            <div class="col-sm-4">
+                                <span class="text-secondary d-block">เบอร์โทรศัพท์</span>
+                                <strong class="fs-6">@(Model.Phone ?? "-")</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100 bg-light">
+                    <div class="card-header bg-dark text-white fw-bold py-3">
+                        <i class="bi bi-journal-bookmark me-2"></i>การจองของฉัน
+                    </div>
+                    <div class="card-body p-4 text-center d-flex flex-column justify-content-center">
+                        <h2 class="fw-bold text-primary display-5 mb-0">@(Model.Bookings?.Count ?? 0)</h2>
+                        <p class="text-secondary mb-0">รายการจองทั้งหมด</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ส่วนที่ 3: ฟอร์มค้นหาห้องพัก -->
+        <h3 class="fw-bold mb-3">ค้นหาห้องพัก</h3>
+        <p class="text-secondary mb-4">
+            เลือกวันเข้าพัก วันออก จำนวนผู้เข้าพัก และประเภทห้องที่ต้องการ
         </p>
 
         <div class="card border-0 shadow-sm mb-5">
@@ -21,7 +77,7 @@
 
                     <div class="row g-3 align-items-end">
                         <div class="col-md-3">
-                            <label for="checkIn" class="form-label">
+                            <label for="checkIn" class="form-label font-weight-bold">
                                 วันเข้าพัก
                             </label>
                             <input id="checkIn"
@@ -34,7 +90,7 @@
                         </div>
 
                         <div class="col-md-3">
-                            <label for="checkOut" class="form-label">
+                            <label for="checkOut" class="form-label font-weight-bold">
                                 วันออก
                             </label>
                             <input id="checkOut"
@@ -47,7 +103,7 @@
                         </div>
 
                         <div class="col-md-3">
-                            <label for="guests" class="form-label">
+                            <label for="guests" class="form-label font-weight-bold">
                                 จำนวนผู้เข้าพัก
                             </label>
                             <input id="guests"
@@ -61,7 +117,7 @@
                         </div>
 
                         <div class="col-md-3">
-                            <label for="roomType" class="form-label">
+                            <label for="roomType" class="form-label font-weight-bold">
                                 ประเภทห้อง
                             </label>
                             <select id="roomType"
@@ -75,9 +131,9 @@
                             </select>
                         </div>
 
-                        <div class="col-12">
+                        <div class="col-12 mt-4">
                             <button type="submit"
-                                    class="btn btn-primary">
+                                    class="btn btn-primary px-4 py-2">
                                 ค้นหาห้องว่าง
                             </button>
                         </div>
@@ -86,16 +142,17 @@
             </div>
         </div>
 
-        <h2 class="fw-bold mb-4">ประเภทห้องพัก</h2>
+        <!-- ส่วนที่ 4: ประเภทห้องพักทั้ง 4 ประเภท -->
+        <h3 class="fw-bold mb-4">ประเภทห้องพัก</h3>
 
         <div class="row g-4">
             <div class="col-md-6">
-                <div class="card h-100 shadow-sm">
+                <div class="card h-100 shadow-sm border-0">
                     <div class="card-body p-4">
-                        <div class="fs-1">🛏️</div>
+                        <div class="fs-1 mb-2">🛏️</div>
                         <h4>Standard Room</h4>
-                        <p>สำหรับ 1–2 ท่าน</p>
-                        <p class="text-secondary">
+                        <p class="fw-bold text-primary mb-1">สำหรับ 1–2 ท่าน</p>
+                        <p class="text-secondary mb-0">
                             เหมาะสำหรับนักเดินทางเดี่ยวหรือคู่เพื่อน
                         </p>
                     </div>
@@ -103,12 +160,12 @@
             </div>
 
             <div class="col-md-6">
-                <div class="card h-100 shadow-sm">
+                <div class="card h-100 shadow-sm border-0">
                     <div class="card-body p-4">
-                        <div class="fs-1">🌇</div>
+                        <div class="fs-1 mb-2">🌇</div>
                         <h4>Deluxe Room</h4>
-                        <p>2 ท่านหลัก และรองรับเตียงเสริมตามเงื่อนไข</p>
-                        <p class="text-secondary">
+                        <p class="fw-bold text-primary mb-1">2 ท่านหลัก และรองรับเตียงเสริมตามเงื่อนไข</p>
+                        <p class="text-secondary mb-0">
                             เหมาะสำหรับผู้ที่ต้องการพื้นที่และวิวพิเศษ
                         </p>
                     </div>
@@ -116,12 +173,12 @@
             </div>
 
             <div class="col-md-6">
-                <div class="card h-100 shadow-sm">
+                <div class="card h-100 shadow-sm border-0">
                     <div class="card-body p-4">
-                        <div class="fs-1">👨‍👩‍👧‍👦</div>
+                        <div class="fs-1 mb-2">👨‍👩‍👧‍👦</div>
                         <h4>Family Room</h4>
-                        <p>รองรับ 4–6 ท่าน</p>
-                        <p class="text-secondary">
+                        <p class="fw-bold text-primary mb-1">รองรับ 4–6 ท่าน</p>
+                        <p class="text-secondary mb-0">
                             เหมาะสำหรับครอบครัวและกลุ่มเพื่อน
                         </p>
                     </div>
@@ -129,12 +186,12 @@
             </div>
 
             <div class="col-md-6">
-                <div class="card h-100 shadow-sm">
+                <div class="card h-100 shadow-sm border-0">
                     <div class="card-body p-4">
-                        <div class="fs-1">🛁</div>
+                        <div class="fs-1 mb-2">🛁</div>
                         <h4>Suite Room</h4>
-                        <p>สำหรับ 2 ท่าน</p>
-                        <p class="text-secondary">
+                        <p class="fw-bold text-primary mb-1">สำหรับ 2 ท่าน</p>
+                        <p class="text-secondary mb-0">
                             ห้องสวีทสำหรับคู่รัก พร้อมบริการพิเศษ
                         </p>
                     </div>
@@ -142,7 +199,7 @@
             </div>
         </div>
 
-        <div class="alert alert-info mt-4">
+        <div class="alert alert-info mt-4 border-0 shadow-sm">
             <strong>หมายเหตุ:</strong>
             รายการห้องด้านบนเป็นข้อมูลตัวอย่างสำหรับส่วนติดต่อผู้ใช้
             ต้องเชื่อมต่อฐานข้อมูลและระบบตรวจสอบห้องว่างก่อนใช้งานจริง

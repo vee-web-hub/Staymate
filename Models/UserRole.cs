@@ -1,4 +1,5 @@
-﻿using System;
+﻿//Models/UserRole.cs
+using System;
 using System.Collections.Generic;
 
 namespace StayMate_Kavinvee_0576.Models;

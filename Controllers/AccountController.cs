@@ -1,10 +1,10 @@
+
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using StayMate_Kavinvee_0576.Models;
 using StayMate_Kavinvee_0576.Models.ViewModels;
@@ -21,158 +21,258 @@ public class AccountController : Controller
         _db = db;
     }
 
-    // =====================================================================
-    // 1. LOGIN
-    // =====================================================================
+    // =========================================================
+    // LOGIN
+    // =========================================================
 
-    // ---- ส่วนแสดงผล (GET) ----
     [HttpGet]
-    public IActionResult Login()
+    public IActionResult Login(string? returnUrl = null)
     {
         if (User.Identity?.IsAuthenticated == true)
-            return RedirectToAction(nameof(UserList));
+        {
+            return RedirectByRole(
+                User.FindAll(ClaimTypes.Role).Select(c => c.Value)
+            );
+        }
 
+        ViewBag.ReturnUrl = returnUrl;
         return View(new LoginViewModel());
     }
 
-    // ---- ส่วนประมวลผล (POST) : READ ข้อมูลจากตาราง users ----
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
+    public async Task<IActionResult> Login(
+        LoginViewModel model,
+        string? returnUrl = null)
     {
         if (!ModelState.IsValid)
+        {
+            ViewBag.ReturnUrl = returnUrl;
             return View(model);
+        }
 
-        // ดึงผู้ใช้จากฐานข้อมูลพร้อม Role
+        var username = model.Username.Trim();
+
         var user = await _db.Users
-            .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
-            .FirstOrDefaultAsync(u => u.Username == model.Username.Trim());
+            .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+            .FirstOrDefaultAsync(u => u.Username == username);
 
+        // ตรวจสอบ Username
         if (user == null)
         {
-            ModelState.AddModelError("", "Username หรือ Password ไม่ถูกต้อง");
+            ModelState.AddModelError(
+                "",
+                "Username หรือ Password ไม่ถูกต้อง"
+            );
+
+            ViewBag.ReturnUrl = returnUrl;
             return View(model);
         }
 
-        if (user.IsActive != true)
-        {
-            ModelState.AddModelError("", "บัญชีนี้ถูกปิดการใช้งาน");
-            return View(model);
-        }
+        // ตรวจสอบ Password
+        var result = _hasher.VerifyHashedPassword(
+            user,
+            user.PasswordHash,
+            model.Password
+        );
 
-        var result = _hasher.VerifyHashedPassword(user, user.PasswordHash, model.Password);
         if (result == PasswordVerificationResult.Failed)
         {
-            ModelState.AddModelError("", "Username หรือ Password ไม่ถูกต้อง");
+            ModelState.AddModelError(
+                "",
+                "Username หรือ Password ไม่ถูกต้อง"
+            );
+
+            ViewBag.ReturnUrl = returnUrl;
             return View(model);
         }
 
-        // สร้าง Cookie การเข้าสู่ระบบ
+        // ตรวจสอบสถานะบัญชี
+        if (user.IsActive != true)
+        {
+            ModelState.AddModelError(
+                "",
+                "บัญชีนี้ถูกปิดการใช้งาน"
+            );
+
+            ViewBag.ReturnUrl = returnUrl;
+            return View(model);
+        }
+
+        // ดึง Role ของผู้ใช้
+        var roleCodes = user.UserRoles
+            .Select(ur => ur.Role.RoleCode)
+            .ToList();
+
+        if (roleCodes.Count == 0)
+        {
+            ModelState.AddModelError(
+                "",
+                "บัญชีนี้ยังไม่ได้กำหนดสิทธิ์การใช้งาน"
+            );
+
+            ViewBag.ReturnUrl = returnUrl;
+            return View(model);
+        }
+
+        // สร้าง Claims
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
-            new Claim(ClaimTypes.Name, user.Username),
-            new Claim("FullName", user.FullName)
-        };
-        foreach (var ur in user.UserRoles)
-            claims.Add(new Claim(ClaimTypes.Role, ur.Role.RoleCode));
+            new Claim(
+                ClaimTypes.NameIdentifier,
+                user.UserId.ToString()
+            ),
 
-        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            new Claim(
+                ClaimTypes.Name,
+                user.Username
+            ),
+
+            new Claim(
+                "FullName",
+                user.FullName
+            )
+        };
+
+        claims.AddRange(
+            roleCodes.Select(role =>
+                new Claim(ClaimTypes.Role, role)
+            )
+        );
+
+        // สร้าง Authentication Cookie
+        var identity = new ClaimsIdentity(
+            claims,
+            CookieAuthenticationDefaults.AuthenticationScheme
+        );
+
+        var principal = new ClaimsPrincipal(identity);
+
         await HttpContext.SignInAsync(
             CookieAuthenticationDefaults.AuthenticationScheme,
-            new ClaimsPrincipal(identity));
+            principal
+        );
 
-        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+        // Redirect CUSTOMER ไปหน้าลูกค้าเสมอ
+        if (roleCodes.Contains("CUSTOMER"))
+        {
+            return RedirectToAction(
+                "Index",
+                "Customer"
+            );
+        }
+
+        // Role อื่นสามารถใช้ ReturnUrl ได้
+        if (!string.IsNullOrEmpty(returnUrl)
+            && Url.IsLocalUrl(returnUrl))
+        {
             return Redirect(returnUrl);
+        }
 
-        return RedirectToAction(nameof(UserList));
+        return RedirectByRole(roleCodes);
     }
 
-    [HttpPost]
-    [Authorize]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Logout()
-    {
-        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        return RedirectToAction(nameof(Login));
-    }
+    // =========================================================
+    // LOGOUT
+    // =========================================================
 
-    // =====================================================================
-    // 2. REGISTER (สมัครเอง = Role CUSTOMER)  /  ADD USER (ผู้ดูแลเลือก Role)
-    // =====================================================================
+   [HttpPost]
+[Authorize]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> Logout()
+{
+    await HttpContext.SignOutAsync(
+        CookieAuthenticationDefaults.AuthenticationScheme
+    );
 
-    // ---- ส่วนแสดงผล ----
+    return RedirectToAction("Index", "Home");
+}
+
+    // =========================================================
+    // ACCESS DENIED
+    // =========================================================
+
     [HttpGet]
-    public IActionResult Register() => View(new RegisterViewModel());
+    public IActionResult AccessDenied()
+    {
+        return View();
+    }
 
-    // ---- ส่วนประมวลผล : CREATE ลงตาราง users + user_roles ----
+    // =========================================================
+    // REGISTER
+    // สมัครสมาชิกใหม่เป็น CUSTOMER เท่านั้น
+    // =========================================================
+
+    [HttpGet]
+    public IActionResult Register()
+    {
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            return RedirectByRole(
+                User.FindAll(ClaimTypes.Role).Select(c => c.Value)
+            );
+        }
+
+        return View(new RegisterViewModel());
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Register(RegisterViewModel model)
+    public async Task<IActionResult> Register(
+        RegisterViewModel model)
     {
-        await CheckDuplicatesAsync(model.Username, model.Email);
+        await CheckDuplicatesAsync(
+            model.Username,
+            model.Email
+        );
+
         if (!ModelState.IsValid)
             return View(model);
 
-        if (!await AddUserAsync(model, "CUSTOMER"))
+        var success = await AddUserAsync(
+            model,
+            "CUSTOMER"
+        );
+
+        if (!success)
         {
-            ModelState.AddModelError("", "ไม่พบ Role CUSTOMER ในฐานข้อมูล (ตรวจสอบตาราง roles)");
+            ModelState.AddModelError(
+                "",
+                "ไม่พบ Role CUSTOMER ในฐานข้อมูล"
+            );
+
             return View(model);
         }
 
         TempData["Success"] = "สมัครสมาชิกสำเร็จ กรุณาเข้าสู่ระบบ";
+
         return RedirectToAction(nameof(Login));
     }
 
-    // ---- Add User (ส่วนแสดงผล) ----
+    // =========================================================
+    // USER LIST
+    // =========================================================
+
     [HttpGet]
-    [Authorize]
-    public async Task<IActionResult> Create()
+[Authorize]
+public async Task<IActionResult> UserList(string? q)
     {
-        return View(new UserCreateViewModel { Roles = await GetRoleItemsAsync() });
-    }
+        var query = _db.Users
+            .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+            .AsQueryable();
 
-    // ---- Add User (ส่วนประมวลผล) ----
-    [HttpPost]
-    [Authorize]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(UserCreateViewModel model)
-    {
-        await CheckDuplicatesAsync(model.Username, model.Email);
-        if (!ModelState.IsValid)
-        {
-            model.Roles = await GetRoleItemsAsync();
-            return View(model);
-        }
-
-        if (!await AddUserAsync(model, model.RoleCode))
-        {
-            ModelState.AddModelError(nameof(model.RoleCode), "ไม่พบ Role ที่เลือก");
-            model.Roles = await GetRoleItemsAsync();
-            return View(model);
-        }
-
-        TempData["Success"] = $"เพิ่มผู้ใช้ {model.Username} เรียบร้อยแล้ว";
-        return RedirectToAction(nameof(UserList));
-    }
-
-    // =====================================================================
-    // 3. USER LIST  (READ / UPDATE / DELETE)
-    // =====================================================================
-
-    // ---- READ : ดึงรายชื่อผู้ใช้ทั้งหมดจากฐานข้อมูล ----
-    [HttpGet]
-    [Authorize]
-    public async Task<IActionResult> UserList(string? q)
-    {
-        var query = _db.Users.AsNoTracking().AsQueryable();
-
+        // ค้นหาผู้ใช้
         if (!string.IsNullOrWhiteSpace(q))
         {
             q = q.Trim();
-            query = query.Where(u => u.Username.Contains(q)
-                                  || u.FullName.Contains(q)
-                                  || u.Email.Contains(q));
+
+            query = query.Where(u =>
+                u.Username.Contains(q) ||
+                u.FullName.Contains(q) ||
+                u.Email.Contains(q)
+            );
         }
 
         var users = await query
@@ -184,109 +284,131 @@ public class AccountController : Controller
                 FullName = u.FullName,
                 Email = u.Email,
                 Phone = u.Phone,
-                IsActive = u.IsActive == true,
-                RoleCode = u.UserRoles.Select(ur => ur.Role.RoleCode).FirstOrDefault(),
-                RoleName = u.UserRoles.Select(ur => ur.Role.RoleName).FirstOrDefault()
+
+                // แก้ CS8629 และ CS0266
+                IsActive = u.IsActive ?? false,
+
+                RoleCode = u.UserRoles
+                    .Select(ur => ur.Role.RoleCode)
+                    .FirstOrDefault(),
+
+                RoleName = u.UserRoles
+                    .Select(ur => ur.Role.RoleName)
+                    .FirstOrDefault()
             })
             .ToListAsync();
 
         ViewBag.Search = q;
+
         return View(users);
     }
 
-    // ---- UPDATE ขั้นที่ 1 : ดึงข้อมูลเดิมมาแสดงในฟอร์ม ----
-    [HttpGet]
-    [Authorize]
-    public IActionResult Edit(uint id)
+    // =========================================================
+    // REDIRECT BY ROLE
+    // =========================================================
+
+    private IActionResult RedirectByRole(
+        IEnumerable<string> roleCodes)
     {
-        var user = _db.Users.Find(id);      // ค้นหาด้วย Primary Key
-        if (user == null)
-            return NotFound();
+        var roles = roleCodes.ToList();
 
-        return View(user);                  // ส่งข้อมูลไปแสดงที่ Edit.cshtml
-    }
-
-    // ---- UPDATE ขั้นที่ 2 : บันทึกข้อมูลที่แก้ไขลงฐานข้อมูล ----
-    [HttpPost]
-    [Authorize]
-    public IActionResult Edit(User model)
-    {
-        var user = _db.Users.Find(model.UserId);   // ดึงข้อมูลเดิมจากฐานข้อมูล
-        if (user == null)
-            return NotFound();
-
-        user.FullName = model.FullName;            // แก้ไขเฉพาะช่องที่ต้องการ
-        user.Email = model.Email;
-        user.Phone = model.Phone;
-        user.IsActive = model.IsActive;
-
-        _db.SaveChanges();                         // บันทึกลงฐานข้อมูล
-
-        return RedirectToAction("UserList");
-    }
-
-    // ---- DELETE : ลบข้อมูลออกจากฐานข้อมูล ----
-    [HttpPost]
-    [Authorize]
-    public IActionResult Delete(uint id)
-    {
-        var user = _db.Users.Find(id);
-        if (user != null)
+        if (roles.Contains("CUSTOMER"))
         {
-            _db.Users.Remove(user);                // สั่งลบ
-            _db.SaveChanges();                     // บันทึกลงฐานข้อมูล
+            return RedirectToAction(
+                "Index",
+                "Customer"
+            );
         }
 
-        return RedirectToAction("UserList");
+        if (roles.Contains("MANAGER") ||
+            roles.Contains("OWNER") ||
+            roles.Contains("FRONT_ADMIN"))
+        {
+            return RedirectToAction(
+                "UserList",
+                "Account"
+            );
+        }
+
+        return RedirectToAction(
+            "Index",
+            "Home"
+        );
     }
 
-    // =====================================================================
-    // Helper
-    // =====================================================================
+    // =========================================================
+    // CHECK DUPLICATES
+    // =========================================================
 
-    private async Task<List<SelectListItem>> GetRoleItemsAsync()
-    {
-        return await _db.Roles
-            .OrderBy(r => r.RoleId)
-            .Select(r => new SelectListItem { Value = r.RoleCode, Text = r.RoleName })
-            .ToListAsync();
-    }
-
-    private async Task CheckDuplicatesAsync(string? username, string email, uint? ignoreUserId = null)
+    private async Task CheckDuplicatesAsync(
+        string? username,
+        string email)
     {
         email = email.Trim();
 
         if (!string.IsNullOrWhiteSpace(username) &&
-            await _db.Users.AnyAsync(u => u.Username == username.Trim()))
+            await _db.Users.AnyAsync(
+                u => u.Username == username.Trim()))
         {
-            ModelState.AddModelError("Username", "Username นี้ถูกใช้งานแล้ว");
+            ModelState.AddModelError(
+                "Username",
+                "Username นี้ถูกใช้งานแล้ว"
+            );
         }
 
-        if (await _db.Users.AnyAsync(u => u.Email == email && u.UserId != ignoreUserId))
+        if (await _db.Users.AnyAsync(
+            u => u.Email == email))
         {
-            ModelState.AddModelError("Email", "Email นี้ถูกใช้งานแล้ว");
+            ModelState.AddModelError(
+                "Email",
+                "Email นี้ถูกใช้งานแล้ว"
+            );
         }
     }
 
-    // CREATE: บันทึก users + user_roles
-    private async Task<bool> AddUserAsync(RegisterViewModel m, string roleCode)
+    // =========================================================
+    // CREATE USER
+    // =========================================================
+
+    private async Task<bool> AddUserAsync(
+        RegisterViewModel model,
+        string roleCode)
     {
-        var role = await _db.Roles.FirstOrDefaultAsync(r => r.RoleCode == roleCode);
-        if (role == null) return false;
+        var role = await _db.Roles
+            .FirstOrDefaultAsync(r => r.RoleCode == roleCode);
+
+        if (role == null)
+            return false;
 
         var user = new User
         {
-            Username = m.Username.Trim(),
-            Email = m.Email.Trim(),
-            FullName = m.FullName.Trim(),
-            Phone = string.IsNullOrWhiteSpace(m.Phone) ? null : m.Phone.Trim(),
+            Username = model.Username.Trim(),
+            Email = model.Email.Trim(),
+            FullName = model.FullName.Trim(),
+
+            Phone = string.IsNullOrWhiteSpace(model.Phone)
+                ? null
+                : model.Phone.Trim(),
+
             IsActive = true
         };
-        user.PasswordHash = _hasher.HashPassword(user, m.Password);
-        user.UserRoles.Add(new UserRole { Role = role });
+
+        user.PasswordHash = _hasher.HashPassword(
+            user,
+            model.Password
+        );
+
+        user.UserRoles.Add(
+            new UserRole
+            {
+                Role = role
+            }
+        );
 
         _db.Users.Add(user);
+
         await _db.SaveChangesAsync();
+
         return true;
     }
 }
