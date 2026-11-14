@@ -1,0 +1,536 @@
+@{
+    Layout = "~/Views/Shared/_HomeLayout.cshtml";
+    ViewData["Title"] = "ประเภทห้องพัก";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" />
+    <link rel="stylesheet" href="~/css/Home.css" asp-append-version="true" />
+}
+
+<div class="sm-home-wrapper">
+
+    <!-- =========================================================
+         1. PAGE HERO BANNER (Rooms Collection)
+         ========================================================= -->
+    <section class="sm-subpage-hero sm-full-bleed">
+        <div class="sm-subpage-hero-bg"
+             style="background-image: url('https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=2000&q=85');">
+        </div>
+        <div class="sm-hero-overlay"></div>
+        <div class="sm-hero-glow-orb sm-orb-cyan"></div>
+
+        <div class="container position-relative z-2 py-4">
+            <nav aria-label="breadcrumb" class="mb-3" data-aos="fade-down">
+                <ol class="breadcrumb sm-breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index"><i class="fa-solid fa-house me-1"></i>หน้าแรก</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">ประเภทห้องพัก</li>
+                </ol>
+            </nav>
+
+            <div class="row align-items-end g-4">
+                <div class="col-lg-12" data-aos="fade-up">
+                    <div class="sm-hero-badge mb-2">
+                        <span class="sm-badge-pulse"></span>
+                        <span>SMART ACCOMMODATION SERIES</span>
+                    </div>
+                    <h1 class="sm-subpage-title text-white">
+                        Our Rooms &amp; Suites<br />
+                        <span class="sm-text-gradient">เลือกพื้นที่พักผ่อนระดับอนาคตของคุณ</span>
+                    </h1>
+                    <p class="text-light opacity-75 mb-0" style="max-width: 620px;">
+                        ห้องพักทุกห้องของ StayMate ติดตั้งระบบ Smart Room Automation ควบคุมแสงไฟ อุณหภูมิ และความบันเทิงได้เพียงปลายนิ้ว พร้อมเตียงนอนเกรดพรีเมียมเพื่อการหลับลึกตลอดคืน
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         2. INTERACTIVE FILTER & SEARCH BAR
+         ========================================================= -->
+    <section class="sm-rooms-filter-wrap" data-aos="fade-up">
+        <div class="container">
+            <div class="sm-filter-bar">
+                <div class="d-flex align-items-center flex-wrap gap-2">
+                    <span class="sm-filter-label"><i class="fa-solid fa-sliders text-primary me-1"></i> กรองตามสไตล์:</span>
+                    <button type="button" class="sm-filter-btn active" data-filter="all">
+                        ทั้งหมด (4)
+                    </button>
+                    <button type="button" class="sm-filter-btn" data-filter="couple">
+                        <i class="fa-solid fa-user-group me-1"></i> คู่รัก / มาเดี่ยว (1–2 ท่าน)
+                    </button>
+                    <button type="button" class="sm-filter-btn" data-filter="extrabed">
+                        <i class="fa-solid fa-gift me-1"></i> รองรับเตียงเสริม (มา 3 จ่าย 2)
+                    </button>
+                    <button type="button" class="sm-filter-btn" data-filter="group">
+                        <i class="fa-solid fa-people-roof me-1"></i> ครอบครัว &amp; กลุ่มเพื่อน (4 ท่าน)
+                    </button>
+                </div>
+
+                <div class="d-flex align-items-center gap-2 ms-auto">
+                    <span class="text-secondary small d-none d-md-inline">เรียงตาม:</span>
+                    <select id="roomSortSelect" class="form-select form-select-sm sm-sort-select" aria-label="เรียงลำดับห้องพัก">
+                        <option value="recommended" selected>แนะนำโดย StayMate</option>
+                        <option value="price-asc">ราคา: ต่ำ ไป สูง</option>
+                        <option value="price-desc">ราคา: สูง ไป ต่ำ</option>
+                        <option value="size-desc">พื้นที่ห้อง: กว้างที่สุด</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         3. ROOM SHOWCASE LIST (4 Room Types)
+         ========================================================= -->
+    <section class="sm-section pt-3">
+        <div class="container">
+            <div class="row g-4" id="roomsGridContainer">
+
+                <!-- 1. STANDARD ROOM -->
+                <div class="col-12 sm-room-item" data-category="couple" data-price="1200" data-size="28" data-order="1" data-aos="fade-up">
+                    <article class="sm-room-showcase-card">
+                        <div class="row g-0">
+                            <div class="col-lg-5 position-relative">
+                                <div class="sm-room-showcase-img-wrap">
+                                    <img src="https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=1000&q=80"
+                                         alt="Standard Room" class="sm-room-showcase-img" />
+                                    <span class="sm-room-badge">01 · SMART VALUE</span>
+                                    <span class="sm-room-status-pill"><span class="sm-live-dot"></span> มีห้องว่างพร้อมเข้าพัก</span>
+                                </div>
+                            </div>
+                            <div class="col-lg-7">
+                                <div class="sm-room-showcase-body">
+                                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+                                        <div>
+                                            <span class="sm-room-code">TYPE A · URBAN MINIMAL</span>
+                                            <h2 class="sm-room-showcase-title">Standard Room</h2>
+                                        </div>
+                                        <div class="sm-room-price-box text-end">
+                                            <small>ราคาเริ่มต้น</small>
+                                            <div class="sm-price-num">฿1,200 <span>/ คืน</span></div>
+                                            <span class="sm-tax-note">รวมภาษีและ Free Wi-Fi 6</span>
+                                        </div>
+                                    </div>
+
+                                    <p class="sm-room-showcase-desc">
+                                        ห้องพักมาตรฐานดีไซน์โมเดิร์น มินิมอล ออกแบบพื้นที่ใช้สอยอย่างชาญฉลาด มาพร้อมแผงควบคุมไฟ Ambient Light ข้างหัวเตียง โต๊ะทำงาน Ergonomic และสมาร์ททีวี 55 นิ้ว เหมาะสำหรับนักเดินทางยุคดิจิทัลและคู่รัก
+                                    </p>
+
+                                    <!-- Room Key Specs Grid -->
+                                    <div class="sm-room-specs-grid">
+                                        <div class="sm-spec-chip">
+                                            <i class="fa-solid fa-maximize"></i>
+                                            <div><small>ขนาดพื้นที่</small><strong>28 ตร.ม.</strong></div>
+                                        </div>
+                                        <div class="sm-spec-chip">
+                                            <i class="fa-solid fa-user-group"></i>
+                                            <div><small>จำนวนผู้เข้าพัก</small><strong>ผู้ใหญ่ 1–2 ท่าน</strong></div>
+                                        </div>
+                                        <div class="sm-spec-chip">
+                                            <i class="fa-solid fa-bed"></i>
+                                            <div><small>ประเภทเตียง</small><strong>1 Queen หรือ 2 Twin</strong></div>
+                                        </div>
+                                        <div class="sm-spec-chip">
+                                            <i class="fa-solid fa-city"></i>
+                                            <div><small>ทิวทัศน์</small><strong>Urban Street View</strong></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Highlights & Compatible Promotions -->
+                                    <div class="sm-room-tags-row">
+                                        <span class="sm-feat-pill"><i class="fa-solid fa-wifi text-info"></i> Gigabit Wi-Fi 6</span>
+                                        <span class="sm-feat-pill"><i class="fa-solid fa-tv text-info"></i> 55" 4K Smart TV</span>
+                                        <span class="sm-feat-pill"><i class="fa-solid fa-shower text-info"></i> Rain Shower</span>
+                                        <span class="sm-promo-match-pill"><i class="fa-solid fa-moon"></i> ร่วมโปร Stay 3+ Nights</span>
+                                    </div>
+
+                                    <div class="sm-room-showcase-footer">
+                                        <div class="text-secondary small">
+                                            <i class="fa-solid fa-circle-check text-success me-1"></i> ฟรีเช็คอินด้วย Digital Key ผ่านสมาร์ตโฟน
+                                        </div>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <a asp-controller="Home" asp-action="RoomDetails" asp-route-type="standard" class="sm-btn-outline-dark">
+                                                <i class="fa-regular fa-eye me-1"></i> ดูรายละเอียดห้อง
+                                            </a>
+                                            <a asp-controller="Home" asp-action="RoomDetails" asp-route-type="standard" class="sm-btn-primary py-2 px-4">
+                                                <span>เลือกห้องนี้</span>
+                                                <i class="fa-solid fa-arrow-right"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+
+                <!-- 2. DELUXE ROOM -->
+                <div class="col-12 sm-room-item" data-category="couple extrabed" data-price="1800" data-size="36" data-order="2" data-aos="fade-up">
+                    <article class="sm-room-showcase-card sm-card-featured">
+                        <div class="row g-0">
+                            <div class="col-lg-5 position-relative">
+                                <div class="sm-room-showcase-img-wrap">
+                                    <img src="https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1000&q=80"
+                                         alt="Deluxe Room" class="sm-room-showcase-img" />
+                                    <span class="sm-room-badge sm-badge-cyan">02 · MOST POPULAR</span>
+                                    <span class="sm-room-status-pill"><span class="sm-live-dot"></span> รองรับโปร มา 3 จ่าย 2</span>
+                                </div>
+                            </div>
+                            <div class="col-lg-7">
+                                <div class="sm-room-showcase-body">
+                                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+                                        <div>
+                                            <span class="sm-room-code">TYPE B · SKYLINE PANORAMA</span>
+                                            <h2 class="sm-room-showcase-title">Deluxe Room</h2>
+                                        </div>
+                                        <div class="sm-room-price-box text-end">
+                                            <small>ราคาเริ่มต้น</small>
+                                            <div class="sm-price-num">฿1,800 <span>/ คืน</span></div>
+                                            <span class="sm-tax-note">เสริมเตียงได้ (+1 ท่าน)</span>
+                                        </div>
+                                    </div>
+
+                                    <p class="sm-room-showcase-desc">
+                                        ยกระดับการพักผ่อนด้วยห้องพักวิวเมืองมุมสูงผ่านกระจกบานใหญ่แบบ Full-Height พื้นที่กว้างขวางพร้อมโซฟาเดย์เบดริมหน้าต่าง รองรับการเพิ่มเตียงเสริมมาตรฐานโรงแรมโดยไม่ทำให้ห้องอึดอัด และเข้าร่วมโปรโมชั่น "มา 3 จ่าย 2"
+                                    </p>
+
+                                    <div class="sm-room-specs-grid">
+                                        <div class="sm-spec-chip">
+                                            <i class="fa-solid fa-maximize"></i>
+                                            <div><small>ขนาดพื้นที่</small><strong>36 ตร.ม.</strong></div>
+                                        </div>
+                                        <div class="sm-spec-chip">
+                                            <i class="fa-solid fa-user-plus"></i>
+                                            <div><small>จำนวนผู้เข้าพัก</small><strong>2 ท่าน (เสริมเตียงได้รวม 3)</strong></div>
+                                        </div>
+                                        <div class="sm-spec-chip">
+                                            <i class="fa-solid fa-bed"></i>
+                                            <div><small>ประเภทเตียง</small><strong>1 King Bed + Sofa Bed</strong></div>
+                                        </div>
+                                        <div class="sm-spec-chip">
+                                            <i class="fa-solid fa-mountain-city"></i>
+                                            <div><small>ทิวทัศน์</small><strong>High-Floor City Skyline</strong></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="sm-room-tags-row">
+                                        <span class="sm-feat-pill"><i class="fa-solid fa-couch text-info"></i> Window Lounge Sofa</span>
+                                        <span class="sm-feat-pill"><i class="fa-solid fa-mug-hot text-info"></i> เครื่องชงกาแฟแคปซูล</span>
+                                        <span class="sm-promo-match-pill"><i class="fa-solid fa-gift"></i> ร่วมโปร มา 3 จ่าย 2</span>
+                                        <span class="sm-promo-match-pill"><i class="fa-solid fa-moon"></i> ร่วมโปร Stay 3+ Nights</span>
+                                    </div>
+
+                                    <div class="sm-room-showcase-footer">
+                                        <div class="text-secondary small">
+                                            <i class="fa-solid fa-fire text-warning me-1"></i> ห้องพักยอดนิยมสำหรับกลุ่มเพื่อน 3 ท่าน และคู่รัก
+                                        </div>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <a asp-controller="Home" asp-action="RoomDetails" asp-route-type="deluxe" class="sm-btn-outline-dark">
+                                                <i class="fa-regular fa-eye me-1"></i> ดูรายละเอียดห้อง
+                                            </a>
+                                            <a asp-controller="Home" asp-action="RoomDetails" asp-route-type="deluxe" class="sm-btn-primary py-2 px-4">
+                                                <span>เลือกห้องนี้</span>
+                                                <i class="fa-solid fa-arrow-right"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+
+                <!-- 3. FAMILY ROOM -->
+                <div class="col-12 sm-room-item" data-category="group" data-price="2600" data-size="50" data-order="3" data-aos="fade-up">
+                    <article class="sm-room-showcase-card">
+                        <div class="row g-0">
+                            <div class="col-lg-5 position-relative">
+                                <div class="sm-room-showcase-img-wrap">
+                                    <img src="https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=1000&q=80"
+                                         alt="Family Room" class="sm-room-showcase-img" />
+                                    <span class="sm-room-badge sm-badge-violet">03 · FAMILY &amp; GANG</span>
+                                    <span class="sm-room-status-pill"><span class="sm-live-dot"></span> เหมาะสำหรับ 4 ท่าน</span>
+                                </div>
+                            </div>
+                            <div class="col-lg-7">
+                                <div class="sm-room-showcase-body">
+                                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+                                        <div>
+                                            <span class="sm-room-code">TYPE C · SHARED HAPPINESS SPACE</span>
+                                            <h2 class="sm-room-showcase-title">Family Room</h2>
+                                        </div>
+                                        <div class="sm-room-price-box text-end">
+                                            <small>ราคาเริ่มต้น</small>
+                                            <div class="sm-price-num">฿2,600 <span>/ คืน</span></div>
+                                            <span class="sm-tax-note">เฉลี่ยเพียง ฿650 / ท่าน</span>
+                                        </div>
+                                    </div>
+
+                                    <p class="sm-room-showcase-desc">
+                                        พื้นที่ความสุขขนาด 50 ตร.ม. สำหรับครอบครัวและแก๊งเพื่อน ประกอบด้วยเตียง King Size ถึง 2 เตียง มุมนั่งเล่นพร้อมโต๊ะทานอาหาร สมาร์ททีวีจอยักษ์ 65 นิ้ว และห้องน้ำขนาดใหญ่ที่มีอ่างล้างหน้าคู่ (Double Vanity) ไม่ต้องรอคิวตอนเช้า
+                                    </p>
+
+                                    <div class="sm-room-specs-grid">
+                                        <div class="sm-spec-chip">
+                                            <i class="fa-solid fa-maximize"></i>
+                                            <div><small>ขนาดพื้นที่</small><strong>50 ตร.ม.</strong></div>
+                                        </div>
+                                        <div class="sm-spec-chip">
+                                            <i class="fa-solid fa-people-roof"></i>
+                                            <div><small>จำนวนผู้เข้าพัก</small><strong>4 ท่าน (ครอบครัว/กลุ่ม)</strong></div>
+                                        </div>
+                                        <div class="sm-spec-chip">
+                                            <i class="fa-solid fa-bed"></i>
+                                            <div><small>ประเภทเตียง</small><strong>2 King Size Beds</strong></div>
+                                        </div>
+                                        <div class="sm-spec-chip">
+                                            <i class="fa-solid fa-sink"></i>
+                                            <div><small>ห้องน้ำ</small><strong>Double Basin &amp; Bathtub</strong></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="sm-room-tags-row">
+                                        <span class="sm-feat-pill"><i class="fa-solid fa-gamepad text-info"></i> มุมสังสรรค์ &amp; บอร์ดเกม</span>
+                                        <span class="sm-feat-pill"><i class="fa-solid fa-tv text-info"></i> 65" Home Theater TV</span>
+                                        <span class="sm-promo-match-pill"><i class="fa-solid fa-users"></i> ร่วมโปร Family &amp; Gang Pack</span>
+                                    </div>
+
+                                    <div class="sm-room-showcase-footer">
+                                        <div class="text-secondary small">
+                                            <i class="fa-solid fa-utensils text-primary me-1"></i> แนะนำจับคู่กับแพ็กเกจ Family &amp; Gang Pack เพื่อรับเซ็ตอาหารเช้า
+                                        </div>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <a asp-controller="Home" asp-action="RoomDetails" asp-route-type="family" class="sm-btn-outline-dark">
+                                                <i class="fa-regular fa-eye me-1"></i> ดูรายละเอียดห้อง
+                                            </a>
+                                            <a asp-controller="Home" asp-action="RoomDetails" asp-route-type="family" class="sm-btn-primary py-2 px-4">
+                                                <span>เลือกห้องนี้</span>
+                                                <i class="fa-solid fa-arrow-right"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+
+                <!-- 4. SUITE ROOM -->
+                <div class="col-12 sm-room-item" data-category="couple extrabed group" data-price="3900" data-size="68" data-order="4" data-aos="fade-up">
+                    <article class="sm-room-showcase-card">
+                        <div class="row g-0">
+                            <div class="col-lg-5 position-relative">
+                                <div class="sm-room-showcase-img-wrap">
+                                    <img src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1000&q=80"
+                                         alt="Suite Room" class="sm-room-showcase-img" />
+                                    <span class="sm-room-badge sm-badge-gold">04 · FUTURISTIC LUXURY</span>
+                                    <span class="sm-room-status-pill"><span class="sm-live-dot"></span> รวมสิทธิ์ Sky Lounge</span>
+                                </div>
+                            </div>
+                            <div class="col-lg-7">
+                                <div class="sm-room-showcase-body">
+                                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+                                        <div>
+                                            <span class="sm-room-code">TYPE D · EXECUTIVE HORIZON SUITE</span>
+                                            <h2 class="sm-room-showcase-title">Suite Room</h2>
+                                        </div>
+                                        <div class="sm-room-price-box text-end">
+                                            <small>ราคาเริ่มต้น</small>
+                                            <div class="sm-price-num">฿3,900 <span>/ คืน</span></div>
+                                            <span class="sm-tax-note">พร้อม Executive Benefits</span>
+                                        </div>
+                                    </div>
+
+                                    <p class="sm-room-showcase-desc">
+                                        ที่สุดแห่งความหรูหราบนชั้นสูงสุดของโรงแรม แบ่งสัดส่วนห้องนอนและห้องรับรองแขกอย่างชัดเจน มาพร้อมอ่างจากุซซี่ริมหน้าต่างชมวิวเมือง 180 องศา ระบบสั่งงานด้วยเสียง (Voice-Controlled Smart Room) และเครื่องเสียง Hi-Res รอบทิศทาง
+                                    </p>
+
+                                    <div class="sm-room-specs-grid">
+                                        <div class="sm-spec-chip">
+                                            <i class="fa-solid fa-maximize"></i>
+                                            <div><small>ขนาดพื้นที่</small><strong>68 ตร.ม. (แยกห้องนั่งเล่น)</strong></div>
+                                        </div>
+                                        <div class="sm-spec-chip">
+                                            <i class="fa-solid fa-crown"></i>
+                                            <div><small>จำนวนผู้เข้าพัก</small><strong>2–4 ท่าน (เสริมเตียงได้)</strong></div>
+                                        </div>
+                                        <div class="sm-spec-chip">
+                                            <i class="fa-solid fa-hot-tub-person"></i>
+                                            <div><small>ไฮไลท์ห้องน้ำ</small><strong>Panorama Jacuzzi Tub</strong></div>
+                                        </div>
+                                        <div class="sm-spec-chip">
+                                            <i class="fa-solid fa-champagne-glasses"></i>
+                                            <div><small>สิทธิพิเศษ</small><strong>Executive Sky Lounge</strong></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="sm-room-tags-row">
+                                        <span class="sm-feat-pill"><i class="fa-solid fa-microphone-lines text-info"></i> Voice Control AI</span>
+                                        <span class="sm-feat-pill"><i class="fa-solid fa-music text-info"></i> Surround Sound System</span>
+                                        <span class="sm-promo-match-pill"><i class="fa-solid fa-bolt"></i> ร่วมได้ทุกโปรโมชั่น (1–5)</span>
+                                    </div>
+
+                                    <div class="sm-room-showcase-footer">
+                                        <div class="text-secondary small">
+                                            <i class="fa-solid fa-gem text-info me-1"></i> ฟรีมินิบาร์พรีเมียม และบริการเช็คเอาท์ล่วงเวลาถึง 15:00 น.
+                                        </div>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <a asp-controller="Home" asp-action="RoomDetails" asp-route-type="suite" class="sm-btn-outline-dark">
+                                                <i class="fa-regular fa-eye me-1"></i> ดูรายละเอียดห้อง
+                                            </a>
+                                            <a asp-controller="Home" asp-action="RoomDetails" asp-route-type="suite" class="sm-btn-primary py-2 px-4">
+                                                <span>เลือกห้องนี้</span>
+                                                <i class="fa-solid fa-arrow-right"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         4. ROOM COMPARISON TABLE (เปรียบเทียบสเปกทั้ง 4 ห้อง)
+         ========================================================= -->
+    <section class="sm-section pt-0" data-aos="fade-up">
+        <div class="container">
+            <div class="sm-comparison-box">
+                <div class="text-center mb-4">
+                    <span class="sm-eyebrow"><i class="fa-solid fa-table-columns me-1"></i> SPEC COMPARISON</span>
+                    <h3 class="sm-section-title">เปรียบเทียบจุดเด่นห้องพักทั้ง 4 ประเภท</h3>
+                    <p class="text-secondary mb-0">เลือกห้องพักที่ตรงกับจำนวนผู้เข้าพักและโปรโมชั่นที่คุณต้องการใช้สิทธิ์</p>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table sm-compare-table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>คุณสมบัติห้องพัก</th>
+                                <th>Standard Room</th>
+                                <th class="sm-th-highlight">Deluxe Room</th>
+                                <th>Family Room</th>
+                                <th>Suite Room</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="fw-semibold">ขนาดพื้นที่</td>
+                                <td>28 ตร.ม.</td>
+                                <td class="sm-td-highlight fw-bold">36 ตร.ม.</td>
+                                <td>50 ตร.ม.</td>
+                                <td>68 ตร.ม.</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-semibold">จำนวนผู้เข้าพักแนะนำ</td>
+                                <td>1–2 ท่าน</td>
+                                <td class="sm-td-highlight">2–3 ท่าน</td>
+                                <td>4 ท่าน</td>
+                                <td>2–4 ท่าน</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-semibold">การรองรับเตียงเสริม (Extra Bed)</td>
+                                <td><span class="text-muted">—</span></td>
+                                <td class="sm-td-highlight"><i class="fa-solid fa-circle-check text-success"></i> รองรับ 1 เตียง</td>
+                                <td><i class="fa-solid fa-circle-check text-success"></i> รองรับ 1 เตียง</td>
+                                <td><i class="fa-solid fa-circle-check text-success"></i> รองรับ 1 เตียง</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-semibold">อ่างอาบน้ำ (Bathtub / Jacuzzi)</td>
+                                <td>Rain Shower</td>
+                                <td class="sm-td-highlight">Rain Shower</td>
+                                <td>Soaking Bathtub</td>
+                                <td><strong class="text-primary">Panorama Jacuzzi</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-semibold">โปรโมชั่นที่แนะนำ</td>
+                                <td>Stay 3+ Nights</td>
+                                <td class="sm-td-highlight"><span class="badge bg-primary">มา 3 จ่าย 2</span></td>
+                                <td><span class="badge bg-info text-dark">Family &amp; Gang</span></td>
+                                <td>ทุกโปรโมชั่น + Weekly</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-semibold">ราคาเริ่มต้น / คืน</td>
+                                <td class="fw-bold">฿1,200</td>
+                                <td class="sm-td-highlight fw-bold text-primary">฿1,800</td>
+                                <td class="fw-bold">฿2,600</td>
+                                <td class="fw-bold">฿3,900</td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td><a asp-controller="Home" asp-action="RoomDetails" asp-route-type="standard" class="btn btn-sm btn-outline-primary rounded-pill px-3">ดูห้องนี้</a></td>
+                                <td class="sm-td-highlight"><a asp-controller="Home" asp-action="RoomDetails" asp-route-type="deluxe" class="btn btn-sm btn-primary rounded-pill px-3">ดูห้องนี้</a></td>
+                                <td><a asp-controller="Home" asp-action="RoomDetails" asp-route-type="family" class="btn btn-sm btn-outline-primary rounded-pill px-3">ดูห้องนี้</a></td>
+                                <td><a asp-controller="Home" asp-action="RoomDetails" asp-route-type="suite" class="btn btn-sm btn-outline-primary rounded-pill px-3">ดูห้องนี้</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            if (typeof AOS !== "undefined") {
+                AOS.init({ duration: 700, once: true, offset: 50 });
+            }
+
+            const filterBtns = document.querySelectorAll(".sm-filter-btn");
+            const roomItems = document.querySelectorAll(".sm-room-item");
+
+            filterBtns.forEach(btn => {
+                btn.addEventListener("click", function () {
+                    filterBtns.forEach(b => b.classList.remove("active"));
+                    this.classList.add("active");
+
+                    const filterVal = this.getAttribute("data-filter");
+                    roomItems.forEach(item => {
+                        const categories = item.getAttribute("data-category") || "";
+                        if (filterVal === "all" || categories.includes(filterVal)) {
+                            item.classList.remove("d-none");
+                        } else {
+                            item.classList.add("d-none");
+                        }
+                    });
+                });
+            });
+
+            const sortSelect = document.getElementById("roomSortSelect");
+            const gridContainer = document.getElementById("roomsGridContainer");
+
+            if (sortSelect && gridContainer) {
+                sortSelect.addEventListener("change", function () {
+                    const itemsArray = Array.from(roomItems);
+                    const mode = this.value;
+
+                    itemsArray.sort((a, b) => {
+                        const priceA = parseInt(a.getAttribute("data-price"), 10);
+                        const priceB = parseInt(b.getAttribute("data-price"), 10);
+                        const sizeA = parseInt(a.getAttribute("data-size"), 10);
+                        const sizeB = parseInt(b.getAttribute("data-size"), 10);
+                        const orderA = parseInt(a.getAttribute("data-order"), 10);
+                        const orderB = parseInt(b.getAttribute("data-order"), 10);
+
+                        if (mode === "price-asc") return priceA - priceB;
+                        if (mode === "price-desc") return priceB - priceA;
+                        if (mode === "size-desc") return sizeB - sizeA;
+                        return orderA - orderB;
+                    });
+
+                    itemsArray.forEach(el => gridContainer.appendChild(el));
+                });
+            }
+        });
+    </script>
+}

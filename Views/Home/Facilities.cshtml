@@ -1,0 +1,461 @@
+
+@{
+    Layout = "~/Views/Shared/_HomeLayout.cshtml";
+    ViewData["Title"] = "สิ่งอำนวยความสะดวก";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" />
+    <link rel="stylesheet" href="~/css/Home.css" asp-append-version="true" />
+}
+
+<div class="sm-home-wrapper">
+
+    <!-- HERO BANNER -->
+    <section class="sm-subpage-hero sm-full-bleed">
+        <div class="sm-subpage-hero-bg"
+             style="background-image: url('https://media.eoding.com/media/travelagent/285/imagecontent/Rooftop_pool_2_D7wifaF.jpg');">
+        </div>
+
+        <div class="sm-hero-overlay"></div>
+        <div class="sm-hero-glow-orb sm-orb-cyan"></div>
+
+        <div class="container position-relative z-2 py-4">
+            <nav aria-label="breadcrumb" class="mb-3" data-aos="fade-down">
+                <ol class="breadcrumb sm-breadcrumb mb-0">
+                    <li class="breadcrumb-item">
+                        <a asp-controller="Home" asp-action="Index">
+                            <i class="fa-solid fa-house me-1"></i>หน้าแรก
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">
+                        สิ่งอำนวยความสะดวก
+                    </li>
+                </ol>
+            </nav>
+
+            <div class="row align-items-end g-4">
+                <div class="col-lg-12" data-aos="fade-up">
+                    <div class="sm-hero-badge mb-2">
+                        <span class="sm-badge-pulse"></span>
+                        <span>SMART URBAN FACILITIES &amp; LIVING</span>
+                    </div>
+
+                    <h1 class="sm-subpage-title text-white">
+                        Facilities &amp; Services<br />
+                        <span class="sm-text-gradient">
+                            พื้นที่กิจกรรมอัจฉริยะแบบครบวงจร
+                        </span>
+                    </h1>
+
+                    <p class="text-light opacity-75 mb-0" style="max-width: 620px;">
+                        สัมผัสบริการระดับห้าดาวที่ผสานสไตล์โมเดิร์นและเทคโนโลยี
+                        Smart Hotel ยกระดับความสะดวกสบายในทุกมิติ
+                        ทั้งพื้นที่ดาดฟ้า ห้องอาหารออร์แกนิก และสปาบำบัดร่างกาย
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- MAIN FACILITIES -->
+    <section class="sm-section">
+        <div class="container">
+
+            <!-- FACILITY 01: SWIMMING POOL -->
+            <div class="row g-5 align-items-center mb-5" data-aos="fade-up">
+
+                <div class="col-lg-6">
+                    <div class="sm-facility-show-gallery">
+                        <img src="https://media.eoding.com/media/travelagent/285/imagecontent/Rooftop_pool_2_D7wifaF.jpg"
+                             alt="Luxury Rooftop Infinity Swimming Pool"
+                             class="img-fluid rounded-4 shadow-lg"
+                             loading="lazy" />
+
+                        <span class="sm-gallery-badge">
+                            <i class="fa-solid fa-water"></i>
+                            ROOFTOP SKY POOL
+                        </span>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <span class="sm-eyebrow">FACILITY 01 · 28TH FLOOR</span>
+
+                    <h2 class="sm-section-title mt-2">
+                        สระว่ายน้ำลอยฟ้าระบบเกลือ (Swimming Pool)
+                    </h2>
+
+                    <p class="text-secondary lh-lg mb-4">
+                        แหวกว่ายท่ามกลางเส้นขอบฟ้า ณ สระว่ายน้ำ Infinity Edge Pool
+                        บนชั้น 28 ของ StayMate สระน้ำระบบเกลืออุ่นอัจฉริยะ
+                        ที่ช่วยปรับอุณหภูมิร่างกายของคุณอย่างนุ่มนวล
+                        พร้อมไฟแอลอีดีเปลี่ยนสีตามจังหวะดนตรียามค่ำคืน
+                        เสิร์ฟเครื่องดื่มค็อกเทลจาก Sky Bar ริมฝั่งน้ำ
+                    </p>
+
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <div class="p-3 rounded-3 bg-light border-start border-4 border-info">
+                                <strong class="text-dark d-block small mb-1">
+                                    <i class="fa-regular fa-clock me-1 text-primary"></i>
+                                    เวลาทำการ
+                                </strong>
+                                06:00 น. – 22:00 น. ทุกวัน
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <div class="p-3 rounded-3 bg-light border-start border-4 border-info">
+                                <strong class="text-dark d-block small mb-1">
+                                    <i class="fa-solid fa-temperature-arrow-up me-1 text-primary"></i>
+                                    อุณหภูมิน้ำอัจฉริยะ
+                                </strong>
+                                ปรับอัตโนมัติตามอากาศ
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- FACILITY 02: RESTAURANT -->
+            <div class="row g-5 align-items-center mb-5 flex-row-reverse"
+                 data-aos="fade-up">
+
+                <div class="col-lg-6">
+                    <div class="sm-facility-show-gallery">
+                        <img src="https://tblg.k-img.com/resize/640x640r/restaurant/images/Rvw/103557/103557598.jpg?api=v2&token=fb4284e"
+                             alt="Luxury International Hotel Buffet Restaurant"
+                             class="img-fluid rounded-4 shadow-lg"
+                             loading="lazy" />
+
+                        <span class="sm-gallery-badge">
+                            <i class="fa-solid fa-utensils"></i>
+                            FUTURISTIC DINING
+                        </span>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <span class="sm-eyebrow">FACILITY 02 · LOBBY LEVEL</span>
+
+                    <h2 class="sm-section-title mt-2">
+                        ห้องอาหารนานาชาติ (All-Day Dining Restaurant)
+                    </h2>
+
+                    <p class="text-secondary lh-lg mb-4">
+                        เริ่มต้นเช้าวันใหม่ด้วยเซ็ตอาหารเช้านานาชาติระดับพรีเมียม
+                        (International Breakfast Buffet)
+                        คัดสรรวัตถุดิบปลอดสารพิษสดใหม่จากเกษตรกรไทย
+                        เสิร์ฟกาแฟบดมือหอมกรุ่น และอาหารอิตาเลียน-เอเชียนฟิวชั่นจานร้อน
+                        ตลอดจนบริการจัดเสิร์ฟสไตล์อินรูมถึงห้องพัก
+                        เพียงสั่งผ่านหน้าจอแท็บเล็ตส่วนตัว
+                    </p>
+
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <div class="p-3 rounded-3 bg-light border-start border-4 border-info">
+                                <strong class="text-dark d-block small mb-1">
+                                    <i class="fa-regular fa-clock me-1 text-primary"></i>
+                                    เวลาทำการ
+                                </strong>
+                                06:00 น. – 23:00 น. ทุกวัน
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <div class="p-3 rounded-3 bg-light border-start border-4 border-info">
+                                <strong class="text-dark d-block small mb-1">
+                                    <i class="fa-solid fa-bowl-food me-1 text-primary"></i>
+                                    บริการรูมเซอร์วิส
+                                </strong>
+                                สั่งล่วงหน้าผ่านแท็บเล็ตในห้อง
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- FACILITY 03: FITNESS -->
+            <div class="row g-5 align-items-center mb-5" data-aos="fade-up">
+
+                <div class="col-lg-6">
+                    <div class="sm-facility-show-gallery">
+                        <img src="https://images-cdn.qantashotels.com/insecure/xlarge/plain/media/8556870b-b3b0-4435-8853-d3176c4dc14b.jpg"
+                             alt="Modern Hotel Fitness Center with Gym Equipment"
+                             class="img-fluid rounded-4 shadow-lg"
+                             loading="lazy" />
+
+                        <span class="sm-gallery-badge">
+                            <i class="fa-solid fa-dumbbell"></i>
+                            BIOMETRIC GYM
+                        </span>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <span class="sm-eyebrow">FACILITY 03 · 5TH FLOOR</span>
+
+                    <h2 class="sm-section-title mt-2">
+                        ศูนย์ออกกำลังกายอัจฉริยะ (Fitness Center)
+                    </h2>
+
+                    <p class="text-secondary lh-lg mb-4">
+                        ฟิตเนสแบบเปิดรับวิวเมืองกว้างขวาง
+                        รวบรวมเครื่องออกกำลังกายและเครื่องคาร์ดิโอนวัตกรรมล่าสุด
+                        เชื่อมต่อติดตามการเต้นของหัวใจผ่าน Apple Watch
+                        หรือสมาร์ตวอทช์ของคุณได้โดยอัตโนมัติ
+                        มีบริการเครื่องดื่มเกลือแร่และชุดผ้าขนหนูสดชื่นรองรับตลอด 24 ชั่วโมง
+                    </p>
+
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <div class="p-3 rounded-3 bg-light border-start border-4 border-info">
+                                <strong class="text-dark d-block small mb-1">
+                                    <i class="fa-regular fa-clock me-1 text-primary"></i>
+                                    เวลาทำการ
+                                </strong>
+                                เปิดทำการ 24 ชั่วโมง (ใช้คีย์การ์ด)
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <div class="p-3 rounded-3 bg-light border-start border-4 border-info">
+                                <strong class="text-dark d-block small mb-1">
+                                    <i class="fa-solid fa-tv me-1 text-primary"></i>
+                                    อุปกรณ์ระดับโปร
+                                </strong>
+                                ซิงค์ระบบล็อกโปรไฟล์คลาวด์
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- FACILITY 04: SPA -->
+            <div class="row g-5 align-items-center mb-5 flex-row-reverse"
+                 data-aos="fade-up">
+
+                <div class="col-lg-6">
+                    <div class="sm-facility-show-gallery">
+                        <img src="https://1.bp.blogspot.com/--HnYwl3bvn0/XkigYUfufXI/AAAAAAABfk4/LvqDL0fc43cAXdQ75fUbvcop_tza88WCwCLcBGAsYHQ/s1600/Iridium%2BSpa%2BSt%2BRegis%2BLangkawi%2B1.jpg"
+                             alt="Luxury Spa Massage Treatment Room"
+                             class="img-fluid rounded-4 shadow-lg"
+                             loading="lazy" />
+
+                        <span class="sm-gallery-badge">
+                            <i class="fa-solid fa-spa"></i>
+                            SPA SANCTUARY
+                        </span>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <span class="sm-eyebrow">FACILITY 04 · 6TH FLOOR</span>
+
+                    <h2 class="sm-section-title mt-2">
+                        สปาบำบัดและศาสตร์นวดธรรมชาติ (Spa &amp; Wellness)
+                    </h2>
+
+                    <p class="text-secondary lh-lg mb-4">
+                        ผ่อนคลายร่างกายจิตใจไปกับสปาศาสตร์ธรรมชาติบำบัด
+                        คลื่นเสียงเพื่อความผ่อนคลาย (Sound Therapy)
+                        และการพอกสมุนไพรสดออร์แกนิก
+                        รวมถึงระบบปรับแสงไฟแบบนุ่มนวล Ambient Light
+                        เพื่อให้เวลาแห่งการฟื้นฟูร่างกายของคุณเป็นไปอย่างมีประสิทธิภาพที่สุด
+                    </p>
+
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <div class="p-3 rounded-3 bg-light border-start border-4 border-info">
+                                <strong class="text-dark d-block small mb-1">
+                                    <i class="fa-regular fa-clock me-1 text-primary"></i>
+                                    เวลาทำการ
+                                </strong>
+                                10:00 น. – 21:00 น. ทุกวัน
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <div class="p-3 rounded-3 bg-light border-start border-4 border-info">
+                                <strong class="text-dark d-block small mb-1">
+                                    <i class="fa-solid fa-ticket-simple me-1 text-primary"></i>
+                                    สิทธิ์ส่วนลด
+                                </strong>
+                                รองรับคูปอง Resort Credit ฿500
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- FACILITY 05: WIFI & COWORKING -->
+            <div class="row g-5 align-items-center" data-aos="fade-up">
+
+                <div class="col-lg-6">
+                    <div class="sm-facility-show-gallery">
+                        <img src="https://assets.hyatt.com/content/dam/hyatt/hyattdam/images/2019/01/29/0822/Hyatt-House-SNAXI-P332-Working-in-Business-Center.jpg/Hyatt-House-SNAXI-P332-Working-in-Business-Center.16x9.jpg"
+                             alt="Modern Hotel Co-working Space and Business Center"
+                             class="img-fluid rounded-4 shadow-lg"
+                             loading="lazy" />
+
+                        <span class="sm-gallery-badge">
+                            <i class="fa-solid fa-wifi"></i>
+                            ENTERPRISE MESH WI-FI
+                        </span>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <span class="sm-eyebrow">FACILITY 05 · HOTEL WIDE</span>
+
+                    <h2 class="sm-section-title mt-2">
+                        อินเทอร์เน็ตความเร็วสูง (Free Gigabit Wi-Fi 6)
+                    </h2>
+
+                    <p class="text-secondary lh-lg mb-4">
+                        เชื่อมต่อแบบไร้รอยต่อกับอินเทอร์เน็ต Gigabit Mesh Wi-Fi
+                        ครอบคลุมทั่วทุกอาคารและห้องพักของคุณ
+                        รองรับการสตรีมความบันเทิงระดับ 4K
+                        การประชุมงานออนไลน์วิดีโอคอลลื่นไหล
+                        และมีบริการ Co-working Pods โต๊ะทำงานส่วนตัวในพื้นที่ล็อบบี้
+                        เพื่ออำนวยความสะดวกสูงสุด
+                    </p>
+
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <div class="p-3 rounded-3 bg-light border-start border-4 border-info">
+                                <strong class="text-dark d-block small mb-1">
+                                    <i class="fa-solid fa-wifi me-1 text-primary"></i>
+                                    สปีดสูงสุด
+                                </strong>
+                                สปีดเฉลี่ยสูงสุด 1,000 Mbps
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <div class="p-3 rounded-3 bg-light border-start border-4 border-info">
+                                <strong class="text-dark d-block small mb-1">
+                                    <i class="fa-solid fa-user-lock me-1 text-primary"></i>
+                                    เทคโนโลยีความปลอดภัย
+                                </strong>
+                                เครือข่ายความลับส่วนบุคคล (VLAN)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+
+    <!-- HOTEL DIRECTORY -->
+    <section class="sm-section pt-0" data-aos="fade-up">
+        <div class="container">
+
+            <div class="sm-comparison-box text-center">
+
+                <span class="sm-eyebrow">
+                    <i class="fa-solid fa-map-location-dot me-1"></i>
+                    HOTEL DIRECTORY
+                </span>
+
+                <h3 class="sm-section-title">
+                    ผังชั้นและการเดินทางในอาคาร StayMate
+                </h3>
+
+                <p class="text-secondary mb-4 mx-auto" style="max-width: 600px;">
+                    ตรวจสอบข้อมูลตำแหน่งชั้นต่าง ๆ เพื่อการค้นหาห้องพัก
+                    และสิ่งอำนวยความสะดวกต่าง ๆ ในโรงแรมได้อย่างง่ายดาย
+                </p>
+
+                <div class="row g-3 justify-content-center text-start">
+
+                    <!-- FLOOR 28 -->
+                    <div class="col-md-4">
+                        <div class="p-3 border rounded-3 bg-light h-100">
+                            <strong class="text-primary d-block mb-2">
+                                ชั้น 28 (Rooftop Level)
+                            </strong>
+
+                            <ul class="list-unstyled mb-0 small text-secondary d-grid gap-1">
+                                <li>
+                                    <i class="fa-solid fa-circle-check text-success me-2"></i>
+                                    Infinity salt Swimming Pool
+                                </li>
+                                <li>
+                                    <i class="fa-solid fa-circle-check text-success me-2"></i>
+                                    Sky Lounge Bar
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- FLOOR 5-6 -->
+                    <div class="col-md-4">
+                        <div class="p-3 border rounded-3 bg-light h-100">
+                            <strong class="text-primary d-block mb-2">
+                                ชั้น 5 - 6 (Wellness &amp; Fitness)
+                            </strong>
+
+                            <ul class="list-unstyled mb-0 small text-secondary d-grid gap-1">
+                                <li>
+                                    <i class="fa-solid fa-circle-check text-success me-2"></i>
+                                    24 Hours Fitness Gym (ชั้น 5)
+                                </li>
+                                <li>
+                                    <i class="fa-solid fa-circle-check text-success me-2"></i>
+                                    Spa &amp; Wellness Sanctuary (ชั้น 6)
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- FLOOR 1 -->
+                    <div class="col-md-4">
+                        <div class="p-3 border rounded-3 bg-light h-100">
+                            <strong class="text-primary d-block mb-2">
+                                ชั้น 1 (Lobby Level)
+                            </strong>
+
+                            <ul class="list-unstyled mb-0 small text-secondary d-grid gap-1">
+                                <li>
+                                    <i class="fa-solid fa-circle-check text-success me-2"></i>
+                                    Smart All-Day Dining Restaurant
+                                </li>
+                                <li>
+                                    <i class="fa-solid fa-circle-check text-success me-2"></i>
+                                    Co-Working Area &amp; Pods
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            if (typeof AOS !== "undefined") {
+                AOS.init({
+                    duration: 700,
+                    once: true
+                });
+            }
+        });
+    </script>
+}

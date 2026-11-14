@@ -11,6 +11,41 @@ public class HomeController : Controller
         return View();
     }
 
+    public IActionResult Rooms()
+    {
+        return View();
+    }
+
+    public IActionResult RoomDetails(int? id)
+    {
+        return View();
+    }
+
+    public IActionResult Promotions()
+    {
+        return View();
+    }
+
+    public IActionResult Facilities()
+    {
+        return View();
+    }
+
+    public IActionResult About()
+    {
+        return View();
+    }
+
+    public IActionResult Contact()
+    {
+        return View();
+    }
+
+    public IActionResult FAQ()
+    {
+        return View();
+    }
+
     public IActionResult Privacy()
     {
         return View();

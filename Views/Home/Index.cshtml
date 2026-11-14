@@ -2,142 +2,888 @@
     Layout = "~/Views/Shared/_HomeLayout.cshtml";
     ViewData["Title"] = "หน้าแรก";
 }
-<section class="py-5">
-    <div class="container">
-        <div class="row align-items-center g-4">
-            <div class="col-lg-7">
-                <span class="badge bg-primary mb-3">
-                    Welcome to StayMate
-                </span>
 
-                <h1 class="display-4 fw-bold">
-                    Your Perfect Stay<br />
-                    Starts Here.
-                </h1>
+@section Styles {
+    <!-- AOS: Scroll Reveal CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" />
+    <!-- Swiper.js: Carousel CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <!-- StayMate Home Page Specific CSS -->
+    <link rel="stylesheet" href="~/css/Home.css" asp-append-version="true" />
+}
 
-                <p class="lead text-secondary mt-3">
-                    ค้นหาห้องพักที่ใช่ พร้อมโปรโมชั่นสุดพิเศษ
-                    และบริการที่ตอบโจทย์ทุกการเดินทาง
-                </p>
+<div class="sm-home-wrapper">
 
-                <a asp-controller="Customer"
-                   asp-action="Index"
-                   class="btn btn-primary btn-lg mt-3">
-                    ค้นหาห้องพัก
+    <!-- =========================================================
+         SECTION 1: QUICK SUB-NAVBAR (ทางลัดอัจฉริยะใต้ Header หลัก)
+         ========================================================= -->
+    <div class="sm-quick-subnav d-none d-lg-flex" aria-label="ทางลัดภายในหน้าแรก">
+        <div class="sm-subnav-inner">
+            <span class="sm-subnav-status">
+                <span class="sm-live-dot"></span> SMART HOTEL SYSTEM ONLINE
+            </span>
+            <div class="sm-subnav-links">
+                <a href="#bookingSearch"><i class="fa-solid fa-magnifying-glass"></i> ค้นหาห้องว่าง</a>
+                <a href="#featuredRooms"><i class="fa-solid fa-bed"></i> ห้องพักแนะนำ</a>
+                <a href="#specialPromotions"><i class="fa-solid fa-bolt"></i> โปรโมชั่น (5)</a>
+                <a href="#hotelFacilities"><i class="fa-solid fa-microchip"></i> บริการอัจฉริยะ</a>
+                <a href="#aboutStayMate"><i class="fa-solid fa-building-shield"></i> รู้จัก StayMate</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         SECTION 2: HERO SECTION (Full-Width ภาพโรงแรมขนาดใหญ่พร้อมเอฟเฟกต์ซูม)
+         ========================================================= -->
+    <section class="sm-hero-section sm-full-bleed" id="heroSection">
+        <!-- Background Image Layer for GSAP Zoom -->
+        <div class="sm-hero-bg" id="heroBgImage"
+             style="background-image: url('https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=2000&q=85');">
+        </div>
+        <!-- Futuristic Mesh & Dark Gradient Overlay -->
+        <div class="sm-hero-overlay"></div>
+        <div class="sm-hero-glow-orb sm-orb-cyan"></div>
+        <div class="sm-hero-glow-orb sm-orb-violet"></div>
+
+        <div class="container position-relative z-2">
+            <div class="row align-items-center min-vh-hero py-5">
+                <div class="col-lg-8 col-xl-7">
+                    <div class="sm-hero-badge gsap-hero-item">
+                        <span class="sm-badge-pulse"></span>
+                        <span>WELCOME TO STAYMATE · FUTURE URBAN HOTEL</span>
+                    </div>
+
+                    <h1 class="sm-hero-title gsap-hero-item">
+                        มิติใหม่แห่งการพักผ่อน<br />
+                        <span class="sm-text-gradient">โรงแรมอัจฉริยะแห่งอนาคต</span>
+                    </h1>
+
+                    <p class="sm-hero-desc gsap-hero-item">
+                        สัมผัสประสบการณ์ Boutique Luxury ผสานเทคโนโลยี Smart Hospitality ใจกลางเมือง 
+                        เลือกห้องพักที่ตอบโจทย์ทุกไลฟ์สไตล์ พร้อมโปรโมชั่นสุดคุ้มและบริการระดับพรีเมียมตลอด 24 ชั่วโมง
+                    </p>
+
+                    <div class="sm-hero-actions gsap-hero-item">
+                        <a asp-controller="Home" asp-action="Rooms" class="sm-btn-primary">
+                            <span>Explore Rooms</span>
+                            <i class="fa-solid fa-arrow-right-long"></i>
+                        </a>
+                        <a href="#specialPromotions" class="sm-btn-glass">
+                            <i class="fa-solid fa-wand-magic-sparkles text-info"></i>
+                            <span>ดูโปรโมชั่นพิเศษ</span>
+                        </a>
+                    </div>
+
+                    <!-- Trust Metrics -->
+                    <div class="sm-hero-metrics gsap-hero-item">
+                        <div class="sm-metric-item">
+                            <span class="sm-metric-val">4.9<small>/5</small></span>
+                            <span class="sm-metric-lbl">คะแนนรีวิวผู้เข้าพักจริง</span>
+                        </div>
+                        <div class="sm-metric-divider"></div>
+                        <div class="sm-metric-item">
+                            <span class="sm-metric-val">100<small>%</small></span>
+                            <span class="sm-metric-lbl">Smart Room Automation</span>
+                        </div>
+                        <div class="sm-metric-divider"></div>
+                        <div class="sm-metric-item">
+                            <span class="sm-metric-val">24<small>/7</small></span>
+                            <span class="sm-metric-lbl">Digital Concierge Care</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Floating Glass Showcase Card (Desktop Only) -->
+                <div class="col-lg-4 col-xl-5 d-none d-lg-block">
+                    <div class="sm-hero-showcase-card gsap-hero-card">
+                        <div class="sm-showcase-header">
+                            <div>
+                                <span class="sm-showcase-tag">SMART AMBIENCE CONTROL</span>
+                                <h4 class="mb-0 text-white fw-bold mt-1">StayMate Horizon Suite</h4>
+                            </div>
+                            <span class="sm-showcase-icon"><i class="fa-solid fa-wifi"></i></span>
+                        </div>
+                        <div class="sm-showcase-img-wrap">
+                            <img src="https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=900&q=80"
+                                 alt="StayMate Luxury Room" class="img-fluid rounded-3" />
+                            <span class="sm-showcase-price-pill">เริ่มต้น ฿1,200 / คืน</span>
+                        </div>
+                        <div class="sm-showcase-specs">
+                            <span><i class="fa-solid fa-key text-info"></i> Digital Keyless</span>
+                            <span><i class="fa-solid fa-bolt text-warning"></i> High-Speed Wi-Fi 6</span>
+                            <span><i class="fa-solid fa-shield-halved text-success"></i> Best Rate</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         SECTION 3: BOOKING SEARCH BAR (กล่องจองห้องสไตล์ Futuristic Console)
+         ========================================================= -->
+    <section class="sm-booking-section" id="bookingSearch" data-aos="fade-up" data-aos-duration="700">
+        <div class="container">
+            <div class="sm-booking-card">
+                <div class="sm-booking-top-bar">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-calendar-check text-info"></i>
+                        <span class="fw-semibold">SMART BOOKING CONSOLE</span>
+                        <span class="sm-booking-badge">Instant Availability Check</span>
+                    </div>
+                    <span class="sm-booking-hint d-none d-md-inline">
+                        <i class="fa-solid fa-circle-info me-1"></i> จองตรงกับโรงแรม รับสิทธิ์ใช้โปรโมชั่นสูงสุด 5 รายการ
+                    </span>
+                </div>
+
+                <form class="sm-booking-form" id="demoBookingForm" onsubmit="return false;">
+                    <div class="row g-3 align-items-end">
+                        <!-- Check-in Date -->
+                        <div class="col-12 col-md-6 col-lg-3">
+                            <label for="checkInDate" class="sm-form-label">
+                                <i class="fa-regular fa-calendar-plus text-primary me-1"></i> วันเช็คอิน (Check-in Date)
+                            </label>
+                            <div class="sm-input-group">
+                                <input type="date" id="checkInDate" class="form-control sm-input" required />
+                            </div>
+                        </div>
+
+                        <!-- Check-out Date -->
+                        <div class="col-12 col-md-6 col-lg-3">
+                            <label for="checkOutDate" class="sm-form-label">
+                                <i class="fa-regular fa-calendar-minus text-primary me-1"></i> วันเช็คเอาท์ (Check-out Date)
+                            </label>
+                            <div class="sm-input-group">
+                                <input type="date" id="checkOutDate" class="form-control sm-input" required />
+                            </div>
+                        </div>
+
+                        <!-- Guests Count -->
+                        <div class="col-12 col-md-6 col-lg-3">
+                            <label for="guestCount" class="sm-form-label">
+                                <i class="fa-solid fa-user-group text-primary me-1"></i> จำนวนผู้เข้าพัก (Guests)
+                            </label>
+                            <div class="sm-input-group">
+                                <select id="guestCount" class="form-select sm-input">
+                                    <option value="1">ผู้ใหญ่ 1 ท่าน (Standard / Deluxe)</option>
+                                    <option value="2" selected>ผู้ใหญ่ 2 ท่าน (ยอดนิยม)</option>
+                                    <option value="3">ผู้ใหญ่ 3 ท่าน (รองรับเตียงเสริม)</option>
+                                    <option value="4">4 ท่าน (Family / Gang Pack)</option>
+                                    <option value="5">5–6 ท่าน (Suite / Connecting)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Search Rooms Button -->
+                        <div class="col-12 col-md-6 col-lg-3">
+                            <a asp-controller="Home" asp-action="Rooms" id="btnSearchRooms" class="sm-btn-search w-100">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <span>Search Rooms</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Quick Filter Pills -->
+                    <div class="sm-booking-quick-tags">
+                        <span class="sm-tag-label">ยอดนิยม:</span>
+                        <a asp-controller="Home" asp-action="Rooms" class="sm-quick-pill">🛏️ ห้องเตียงเสริม (มา 3 จ่าย 2)</a>
+                        <a asp-controller="Home" asp-action="Rooms" class="sm-quick-pill">👨‍👩‍👧‍👦 ห้องครอบครัว Family</a>
+                        <a asp-controller="Home" asp-action="Promotions" class="sm-quick-pill">🌙 พักยาว 3+ คืน ลดพิเศษ</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         SECTION 4: FEATURED ROOMS (แสดงห้องพัก 4 ประเภท)
+         ========================================================= -->
+    <section class="sm-section" id="featuredRooms">
+        <div class="container">
+            <div class="sm-section-header" data-aos="fade-up">
+                <div>
+                    <span class="sm-eyebrow"><i class="fa-solid fa-layer-group me-1"></i> ACCOMMODATION COLLECTION</span>
+                    <h2 class="sm-section-title">Featured Rooms · ห้องพักดีไซน์อนาคต</h2>
+                    <p class="sm-section-subtitle">
+                        เลือกพื้นที่แห่งการพักผ่อนทั้ง 4 รูปแบบ ออกแบบด้วยนวัตกรรม Smart Room เพื่อความสบายสูงสุดของคุณ
+                    </p>
+                </div>
+                <a asp-controller="Home" asp-action="Rooms" class="sm-link-arrow">
+                    <span>ดูห้องพักทั้งหมด</span>
+                    <i class="fa-solid fa-arrow-right"></i>
                 </a>
             </div>
 
-            <div class="col-lg-5">
-                <div class="p-5 rounded-4 bg-light text-center">
-                    <div style="font-size: 100px;">🏨</div>
-                    <h3 class="fw-bold">StayMate Hotel</h3>
-                    <p class="text-secondary mb-0">
-                        Comfort, Convenience, and Care
-                    </p>
+            <div class="row g-4">
+                <!-- 1. Standard Room -->
+                <div class="col-12 col-md-6 col-xl-3" data-aos="fade-up" data-aos-delay="50">
+                    <article class="sm-room-card h-100">
+                        <div class="sm-room-img-box">
+                            <img src="https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=800&q=80"
+                                 alt="Standard Room" class="sm-room-img" loading="lazy" />
+                            <span class="sm-room-badge">Smart Value</span>
+                            <div class="sm-room-capacity">
+                                <i class="fa-solid fa-user-group"></i> 1–2 ท่าน
+                            </div>
+                        </div>
+                        <div class="sm-room-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h3 class="sm-room-title">Standard Room</h3>
+                                <span class="sm-room-size">28 ตร.ม.</span>
+                            </div>
+                            <p class="sm-room-desc">
+                                ห้องพักมาตรฐานดีไซน์โมเดิร์น มินิมอล ครบครันด้วยระบบควบคุมไฟอัจฉริยะและมุมทำงานส่วนตัว เหมาะสำหรับนักเดินทางและคู่รัก
+                            </p>
+                            <ul class="sm-room-highlights">
+                                <li><i class="fa-solid fa-check text-info"></i> เตียง Queen/Twin Comfort</li>
+                                <li><i class="fa-solid fa-check text-info"></i> Smart TV 55" &amp; Wi-Fi 6</li>
+                                <li><i class="fa-solid fa-check text-info"></i> ฝักบัว Rain Shower แรงดันสูง</li>
+                            </ul>
+                            <div class="sm-room-footer">
+                                <div class="sm-room-price">
+                                    <small>เริ่มต้น</small>
+                                    <strong>฿1,200</strong><span>/คืน</span>
+                                </div>
+                                <a asp-controller="Home" asp-action="RoomDetails" class="sm-btn-outline-card">
+                                    View Details <i class="fa-solid fa-angle-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+
+                <!-- 2. Deluxe Room -->
+                <div class="col-12 col-md-6 col-xl-3" data-aos="fade-up" data-aos-delay="120">
+                    <article class="sm-room-card h-100">
+                        <div class="sm-room-img-box">
+                            <img src="https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80"
+                                 alt="Deluxe Room" class="sm-room-img" loading="lazy" />
+                            <span class="sm-room-badge sm-badge-cyan">Popular · รองรับเตียงเสริม</span>
+                            <div class="sm-room-capacity">
+                                <i class="fa-solid fa-user-group"></i> 2–3 ท่าน
+                            </div>
+                        </div>
+                        <div class="sm-room-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h3 class="sm-room-title">Deluxe Room</h3>
+                                <span class="sm-room-size">36 ตร.ม.</span>
+                            </div>
+                            <p class="sm-room-desc">
+                                ห้องพักวิวเมืองมุมสูงผ่านกระจก Panoramic พื้นที่กว้างขวาง รองรับการเสริมเตียงและเข้าร่วมโปรโมชั่น "มา 3 จ่าย 2"
+                            </p>
+                            <ul class="sm-room-highlights">
+                                <li><i class="fa-solid fa-check text-info"></i> วิวเมืองมุมสูง (City Skyline)</li>
+                                <li><i class="fa-solid fa-check text-info"></i> รองรับ Extra Bed นุ่มพิเศษ</li>
+                                <li><i class="fa-solid fa-check text-info"></i> โซฟาเลานจ์ &amp; มินิบาร์พรีเมียม</li>
+                            </ul>
+                            <div class="sm-room-footer">
+                                <div class="sm-room-price">
+                                    <small>เริ่มต้น</small>
+                                    <strong>฿1,800</strong><span>/คืน</span>
+                                </div>
+                                <a asp-controller="Home" asp-action="RoomDetails" class="sm-btn-outline-card">
+                                    View Details <i class="fa-solid fa-angle-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+
+                <!-- 3. Family Room -->
+                <div class="col-12 col-md-6 col-xl-3" data-aos="fade-up" data-aos-delay="190">
+                    <article class="sm-room-card h-100">
+                        <div class="sm-room-img-box">
+                            <img src="https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=800&q=80"
+                                 alt="Family Room" class="sm-room-img" loading="lazy" />
+                            <span class="sm-room-badge sm-badge-violet">Family &amp; Gang</span>
+                            <div class="sm-room-capacity">
+                                <i class="fa-solid fa-people-roof"></i> 4 ท่าน
+                            </div>
+                        </div>
+                        <div class="sm-room-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h3 class="sm-room-title">Family Room</h3>
+                                <span class="sm-room-size">50 ตร.ม.</span>
+                            </div>
+                            <p class="sm-room-desc">
+                                พื้นที่ความสุขขนาดใหญ่สำหรับครอบครัวและกลุ่มเพื่อน แบ่งโซนนั่งเล่นและโซนพักผ่อนอย่างลงตัว สะดวกสบายไม่อึดอัด
+                            </p>
+                            <ul class="sm-room-highlights">
+                                <li><i class="fa-solid fa-check text-info"></i> เตียงใหญ่ 2 เตียง (2 King Beds)</li>
+                                <li><i class="fa-solid fa-check text-info"></i> โต๊ะทานอาหารและมุมบอร์ดเกม</li>
+                                <li><i class="fa-solid fa-check text-info"></i> ห้องน้ำแยกโซนเปียก-แห้ง 2 อ่างล้างหน้า</li>
+                            </ul>
+                            <div class="sm-room-footer">
+                                <div class="sm-room-price">
+                                    <small>เริ่มต้น</small>
+                                    <strong>฿2,600</strong><span>/คืน</span>
+                                </div>
+                                <a asp-controller="Home" asp-action="RoomDetails" class="sm-btn-outline-card">
+                                    View Details <i class="fa-solid fa-angle-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+
+                <!-- 4. Suite Room -->
+                <div class="col-12 col-md-6 col-xl-3" data-aos="fade-up" data-aos-delay="260">
+                    <article class="sm-room-card h-100">
+                        <div class="sm-room-img-box">
+                            <img src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80"
+                                 alt="Suite Room" class="sm-room-img" loading="lazy" />
+                            <span class="sm-room-badge sm-badge-gold">Futuristic Luxury</span>
+                            <div class="sm-room-capacity">
+                                <i class="fa-solid fa-crown"></i> 2–4 ท่าน
+                            </div>
+                        </div>
+                        <div class="sm-room-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h3 class="sm-room-title">Suite Room</h3>
+                                <span class="sm-room-size">68 ตร.ม.</span>
+                            </div>
+                            <p class="sm-room-desc">
+                                ที่สุดแห่งความหรูหราระดับ Flagship พร้อมห้องนั่งเล่นแยกสัดส่วน อ่างอาบน้ำระบบจากุซซี่ชมวิวเมือง และระบบสั่งงานด้วยเสียง
+                            </p>
+                            <ul class="sm-room-highlights">
+                                <li><i class="fa-solid fa-check text-info"></i> อ่างจากุซซี่ริมกระจกชมวิวพาโนรามา</li>
+                                <li><i class="fa-solid fa-check text-info"></i> ระบบเสียงลำโพง Hi-Res รอบทิศทาง</li>
+                                <li><i class="fa-solid fa-check text-info"></i> สิทธิ์เข้าใช้ Executive Sky Lounge</li>
+                            </ul>
+                            <div class="sm-room-footer">
+                                <div class="sm-room-price">
+                                    <small>เริ่มต้น</small>
+                                    <strong>฿3,900</strong><span>/คืน</span>
+                                </div>
+                                <a asp-controller="Home" asp-action="RoomDetails" class="sm-btn-outline-card">
+                                    View Details <i class="fa-solid fa-angle-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </article>
                 </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<section class="py-5 bg-light">
-    <div class="container">
-        <h2 class="fw-bold mb-2">Our Rooms</h2>
-        <p class="text-secondary mb-4">
-            เลือกห้องพักที่เหมาะกับการเดินทางของคุณ
-        </p>
+    <!-- =========================================================
+         SECTION 5: PROMOTIONS (Carousel สไลด์โชว์ครบทั้ง 5 โปรโมชั่น)
+         ========================================================= -->
+    <section class="sm-promo-section sm-full-bleed" id="specialPromotions">
+        <div class="container">
+            <div class="sm-section-header sm-header-dark" data-aos="fade-up">
+                <div>
+                    <span class="sm-eyebrow sm-eyebrow-cyan">
+                        <i class="fa-solid fa-fire-flame-curved me-1"></i> EXCLUSIVE CAMPAIGNS
+                    </span>
+                    <h2 class="sm-section-title text-white">Special Promotions · 5 โปรโมชั่นสุดคุ้ม</h2>
+                    <p class="sm-section-subtitle text-light opacity-75">
+                        คัดสรรดีลสุดพิเศษสำหรับทุกสไตล์การเข้าพัก ทั้งมาเป็นแก๊ง ครอบครัว หรือพักผ่อนระยะยาว
+                    </p>
+                </div>
 
-        <div class="row g-4">
-            <div class="col-md-6 col-lg-3">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="fs-1">🛏️</div>
-                        <h5 class="fw-bold mt-2">Standard Room</h5>
-                        <p class="text-secondary">
-                            ห้องพักมาตรฐาน สำหรับ 1–2 ท่าน
+                <!-- Swiper Navigation Buttons -->
+                <div class="sm-swiper-controls">
+                    <button type="button" class="sm-swiper-btn promo-prev" aria-label="โปรโมชั่นก่อนหน้า">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <button type="button" class="sm-swiper-btn promo-next" aria-label="โปรโมชั่นถัดไป">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Swiper Container -->
+            <div class="swiper sm-promo-swiper" data-aos="fade-up" data-aos-delay="100">
+                <div class="swiper-wrapper">
+
+                    <!-- Promo 1: มา 3 จ่าย 2 -->
+                    <div class="swiper-slide h-auto">
+                        <div class="sm-promo-card sm-grad-blue h-100">
+                            <div class="sm-promo-top">
+                                <span class="sm-promo-pill">PROMO 01 · HOT DEAL</span>
+                                <span class="sm-promo-icon"><i class="fa-solid fa-gift"></i></span>
+                            </div>
+                            <h3 class="sm-promo-title">มา 3 จ่าย 2</h3>
+                            <p class="sm-promo-subtitle">3 Guests, Pay for 2 Extra Value</p>
+                            <p class="sm-promo-desc">
+                                เข้าพัก 3 ท่านในห้องที่รองรับเตียงเสริม (Deluxe หรือ Suite) ฟรีทันทีค่าเตียงเสริมและสิทธิพิเศษสำหรับคนที่ 3 ตลอดการเข้าพัก
+                            </p>
+                            <div class="sm-promo-meta">
+                                <span><i class="fa-solid fa-bed"></i> ห้องที่รองรับเตียงเสริม</span>
+                                <span><i class="fa-solid fa-bolt"></i> ประหยัดสูงสุด 33%</span>
+                            </div>
+                            <a asp-controller="Home" asp-action="Promotions" class="sm-promo-btn">
+                                รับสิทธิ์โปรโมชั่น <i class="fa-solid fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Promo 2: Family & Gang Pack -->
+                    <div class="swiper-slide h-auto">
+                        <div class="sm-promo-card sm-grad-violet h-100">
+                            <div class="sm-promo-top">
+                                <span class="sm-promo-pill">PROMO 02 · GROUP PRIVILEGE</span>
+                                <span class="sm-promo-icon"><i class="fa-solid fa-people-group"></i></span>
+                            </div>
+                            <h3 class="sm-promo-title">Family &amp; Gang Pack</h3>
+                            <p class="sm-promo-subtitle">แพ็กเกจครอบครัวและกลุ่มเพื่อน</p>
+                            <p class="sm-promo-desc">
+                                จองห้อง Family Room หรือจองตั้งแต่ 2 ห้องขึ้นไป รับส่วนลดแพ็กเกจกลุ่ม พร้อมเซ็ตอาหารเช้าและ Welcome Mocktail ยกแก๊ง
+                            </p>
+                            <div class="sm-promo-meta">
+                                <span><i class="fa-solid fa-users"></i> เหมาะสำหรับ 4 ท่านขึ้นไป</span>
+                                <span><i class="fa-solid fa-mug-hot"></i> รวมอาหารเช้าพรีเมียม</span>
+                            </div>
+                            <a asp-controller="Home" asp-action="Promotions" class="sm-promo-btn">
+                                รับสิทธิ์โปรโมชั่น <i class="fa-solid fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Promo 3: Stay 3+ Nights Saver -->
+                    <div class="swiper-slide h-auto">
+                        <div class="sm-promo-card sm-grad-cyan h-100">
+                            <div class="sm-promo-top">
+                                <span class="sm-promo-pill">PROMO 03 · MULTI-NIGHT</span>
+                                <span class="sm-promo-icon"><i class="fa-solid fa-moon"></i></span>
+                            </div>
+                            <h3 class="sm-promo-title">Stay 3+ Nights Saver</h3>
+                            <p class="sm-promo-subtitle">ยิ่งพักต่อเนื่อง ยิ่งประหยัด</p>
+                            <p class="sm-promo-desc">
+                                เข้าพักต่อเนื่องตั้งแต่ 3 คืนขึ้นไป รับส่วนลดค่าห้องพักทันที 20% พร้อมสิทธิ์ Late Check-out ได้ถึง 14:00 น. (ขึ้นอยู่กับห้องว่าง)
+                            </p>
+                            <div class="sm-promo-meta">
+                                <span><i class="fa-regular fa-clock"></i> ขั้นต่ำ 3 คืนต่อเนื่อง</span>
+                                <span><i class="fa-solid fa-percent"></i> ลดเพิ่มสูงสุด 20%</span>
+                            </div>
+                            <a asp-controller="Home" asp-action="Promotions" class="sm-promo-btn">
+                                รับสิทธิ์โปรโมชั่น <i class="fa-solid fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Promo 4: Weekly Escape -->
+                    <div class="swiper-slide h-auto">
+                        <div class="sm-promo-card sm-grad-indigo h-100">
+                            <div class="sm-promo-top">
+                                <span class="sm-promo-pill">PROMO 04 · WORKATION</span>
+                                <span class="sm-promo-icon"><i class="fa-solid fa-laptop-code"></i></span>
+                            </div>
+                            <h3 class="sm-promo-title">Weekly Escape</h3>
+                            <p class="sm-promo-subtitle">ดีลพักผ่อนรายสัปดาห์ 7 วัน 6 คืน</p>
+                            <p class="sm-promo-desc">
+                                เปลี่ยนบรรยากาศทำงานและพักผ่อนยาวตลอดสัปดาห์ด้วยแพ็กเกจราคาเหมาสุดคุ้ม พร้อมบริการซักรีดฟรีและ Co-working Pod
+                            </p>
+                            <div class="sm-promo-meta">
+                                <span><i class="fa-solid fa-calendar-week"></i> เข้าพัก 6–7 คืน</span>
+                                <span><i class="fa-solid fa-wifi"></i> High-Speed Private VLAN</span>
+                            </div>
+                            <a asp-controller="Home" asp-action="Promotions" class="sm-promo-btn">
+                                รับสิทธิ์โปรโมชั่น <i class="fa-solid fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Promo 5: Festival & Long Weekend Pass -->
+                    <div class="swiper-slide h-auto">
+                        <div class="sm-promo-card sm-grad-gold h-100">
+                            <div class="sm-promo-top">
+                                <span class="sm-promo-pill">PROMO 05 · SEASONAL PASS</span>
+                                <span class="sm-promo-icon"><i class="fa-solid fa-champagne-glasses"></i></span>
+                            </div>
+                            <h3 class="sm-promo-title">Festival &amp; Long Weekend Pass</h3>
+                            <p class="sm-promo-subtitle">ดีลวันหยุดยาวและเทศกาลพิเศษ</p>
+                            <p class="sm-promo-desc">
+                                จองล่วงหน้าสำหรับช่วงเทศกาลหรือวันหยุดยาว ล็อกราคาพิเศษไม่ต้องจ่ายแพง พร้อมเครดิตห้องอาหารและสปาภายในโรงแรม
+                            </p>
+                            <div class="sm-promo-meta">
+                                <span><i class="fa-solid fa-ticket"></i> แถม Resort Credit ฿500</span>
+                                <span><i class="fa-solid fa-shield-heart"></i> ล็อกราคาช่วงวันหยุด</span>
+                            </div>
+                            <a asp-controller="Home" asp-action="Promotions" class="sm-promo-btn">
+                                รับสิทธิ์โปรโมชั่น <i class="fa-solid fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Swiper Pagination -->
+                <div class="swiper-pagination sm-swiper-pagination"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         SECTION 6: FACILITIES & SERVICES (สิ่งอำนวยความสะดวก 5 รายการ)
+         ========================================================= -->
+    <section class="sm-section" id="hotelFacilities">
+        <div class="container">
+            <div class="sm-section-header text-center flex-column align-items-center" data-aos="fade-up">
+                <span class="sm-eyebrow"><i class="fa-solid fa-sparkles me-1"></i> SMART URBAN FACILITIES</span>
+                <h2 class="sm-section-title">Facilities &amp; Services · สิ่งอำนวยความสะดวกครบวงจร</h2>
+                <p class="sm-section-subtitle mx-auto">
+                    เติมเต็มทุกช่วงเวลาของการเข้าพักด้วยพื้นที่ส่วนกลางระดับพรีเมียม ที่ออกแบบมาเพื่อความผ่อนคลายและไลฟ์สไตล์ยุคดิจิทัล
+                </p>
+            </div>
+
+            <div class="row g-4 justify-content-center">
+                <!-- 1. Swimming Pool -->
+                <div class="col-12 col-sm-6 col-lg-4" data-aos="zoom-in-up" data-aos-delay="50">
+                    <div class="sm-facility-card h-100">
+                        <div class="sm-facility-icon-wrap">
+                            <i class="fa-solid fa-person-swimming"></i>
+                        </div>
+                        <span class="sm-facility-tag">ROOFTOP SKY POOL</span>
+                        <h3 class="sm-facility-title">Swimming Pool</h3>
+                        <p class="sm-facility-desc">
+                            สระว่ายน้ำระบบเกลือแบบ Infinity Edge บนชั้นดาดฟ้า ชมวิวเส้นขอบฟ้าของเมืองพร้อมระบบควบคุมอุณหภูมิน้ำอัจฉริยะและไฟแอลอีดีเปลี่ยนสีระบบ Ambient
                         </p>
+                        <div class="sm-facility-hours">
+                            <i class="fa-regular fa-clock"></i> เปิดบริการ 06:00 – 22:00 น.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Restaurant -->
+                <div class="col-12 col-sm-6 col-lg-4" data-aos="zoom-in-up" data-aos-delay="110">
+                    <div class="sm-facility-card h-100">
+                        <div class="sm-facility-icon-wrap">
+                            <i class="fa-solid fa-utensils"></i>
+                        </div>
+                        <span class="sm-facility-tag">ALL-DAY FUTURISTIC DINING</span>
+                        <h3 class="sm-facility-title">Restaurant</h3>
+                        <p class="sm-facility-desc">
+                            ห้องอาหารนานาชาติและฟิวชั่น คัดสรรวัตถุดิบพรีเมียมสดใหม่ พร้อมบุฟเฟต์เช้าและบริการสั่งรูมเซอร์วิสผ่านจอสมาร์ททีวีในห้องพักของคุณ
+                        </p>
+                        <div class="sm-facility-hours">
+                            <i class="fa-regular fa-clock"></i> เปิดบริการ 06:00 – 23:00 น.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Fitness Center -->
+                <div class="col-12 col-sm-6 col-lg-4" data-aos="zoom-in-up" data-aos-delay="170">
+                    <div class="sm-facility-card h-100">
+                        <div class="sm-facility-icon-wrap">
+                            <i class="fa-solid fa-dumbbell"></i>
+                        </div>
+                        <span class="sm-facility-tag">24/7 BIOMETRIC GYM</span>
+                        <h3 class="sm-facility-title">Fitness Center</h3>
+                        <p class="sm-facility-desc">
+                            ศูนย์ฟิตเนสพร้อมอุปกรณ์ระดับคาร์ดิโอและเวทเทรนนิ่งครบครัน รองรับระบบล็อกอินส่วนบุคคลเพื่อซิงค์ข้อมูลการออกกำลังกายได้อย่างอัจฉริยะ
+                        </p>
+                        <div class="sm-facility-hours">
+                            <i class="fa-regular fa-clock"></i> เปิดบริการ 24 ชั่วโมง (Keycard Access)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Spa -->
+                <div class="col-12 col-md-6" data-aos="zoom-in-up" data-aos-delay="230">
+                    <div class="sm-facility-card sm-facility-horizontal h-100">
+                        <div class="sm-facility-icon-wrap">
+                            <i class="fa-solid fa-spa"></i>
+                        </div>
+                        <div>
+                            <span class="sm-facility-tag">HOLISTIC WELLNESS &amp; AROMA</span>
+                            <h3 class="sm-facility-title">Spa &amp; Wellness Sanctuary</h3>
+                            <p class="sm-facility-desc">
+                                ผ่อนคลายความเหนื่อยล้าด้วยทรีตเมนต์นวดอโรมาและสปาหินร้อน ผสานคลื่นเสียงบำบัด (Sound Therapy) และแสงไฟ Mood Lighting เพื่อการฟื้นฟูร่างกายอย่างล้ำลึก
+                            </p>
+                            <div class="sm-facility-hours">
+                                <i class="fa-regular fa-clock"></i> เปิดบริการ 10:00 – 21:00 น.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. Free Wi-Fi -->
+                <div class="col-12 col-md-6" data-aos="zoom-in-up" data-aos-delay="290">
+                    <div class="sm-facility-card sm-facility-horizontal h-100">
+                        <div class="sm-facility-icon-wrap">
+                            <i class="fa-solid fa-wifi"></i>
+                        </div>
+                        <div>
+                            <span class="sm-facility-tag">ULTRA-FAST CONNECTIVITY</span>
+                            <h3 class="sm-facility-title">Free Wi-Fi 6 (Gigabit Mesh)</h3>
+                            <p class="sm-facility-desc">
+                                อินเทอร์เน็ตไร้สายความเร็วสูงระดับ Gigabit ครอบคลุมทุกตารางเมตรของโรงแรม รองรับการทำงานในแบบ Workation และความบันเทิงอย่างราบรื่นไม่มีสะดุด
+                            </p>
+                            <div class="sm-facility-hours">
+                                <i class="fa-solid fa-shield-halved"></i> ความปลอดภัยสูงระดับ Enterprise 24 ชม.
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-6 col-lg-3">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="fs-1">🌇</div>
-                        <h5 class="fw-bold mt-2">Deluxe Room</h5>
-                        <p class="text-secondary">
-                            ห้องพักวิวพิเศษ รองรับเตียงเสริม
-                        </p>
+            <div class="text-center mt-5 pt-2" data-aos="fade-up">
+                <a asp-controller="Home" asp-action="Facilities" class="sm-btn-outline-dark">
+                    <span>สำรวจสิ่งอำนวยความสะดวกทั้งหมด</span>
+                    <i class="fa-solid fa-arrow-right ms-2"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         SECTION 7: ABOUT STAYMATE (เรื่องราวและเทคโนโลยีอันล้ำสมัย)
+         ========================================================= -->
+    <section class="sm-section sm-about-section" id="aboutStayMate">
+        <div class="container">
+            <div class="row g-5 align-items-center">
+                <!-- Visual Collage Column -->
+                <div class="col-lg-6" data-aos="fade-right">
+                    <div class="sm-about-gallery">
+                        <div class="sm-about-main-img">
+                            <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1000&q=80"
+                                 alt="StayMate Futuristic Hotel Exterior" class="img-fluid" loading="lazy" />
+                        </div>
+                        <div class="sm-about-sub-img">
+                            <img src="https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=600&q=80"
+                                 alt="StayMate Smart Lobby" class="img-fluid" loading="lazy" />
+                        </div>
+                        <div class="sm-about-float-badge">
+                            <div class="sm-float-icon"><i class="fa-solid fa-award"></i></div>
+                            <div>
+                                <strong>FUTURE URBAN HOTEL</strong>
+                                <span>Boutique Luxury &amp; Smart Tech</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="col-md-6 col-lg-3">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="fs-1">👨‍👩‍👧‍👦</div>
-                        <h5 class="fw-bold mt-2">Family Room</h5>
-                        <p class="text-secondary">
-                            พื้นที่สำหรับครอบครัวและกลุ่มเพื่อน
-                        </p>
+                <!-- Story & Value Proposition Column -->
+                <div class="col-lg-6" data-aos="fade-left">
+                    <span class="sm-eyebrow"><i class="fa-solid fa-compass-drafting me-1"></i> ABOUT STAYMATE</span>
+                    <h2 class="sm-section-title mt-1">
+                        นิยามใหม่ของโรงแรมยุคหน้า<br />
+                        <span class="sm-text-blue">ที่ผสานความล้ำสมัยเข้ากับความอบอุ่น</span>
+                    </h2>
+                    <p class="sm-about-lead">
+                        <strong>StayMate (Future Urban Hotel)</strong> ก่อตั้งขึ้นจากแนวคิดที่ว่า "เทคโนโลยีที่ดีที่สุด คือเทคโนโลยีที่ทำให้การพักผ่อนของคุณง่ายและสบายที่สุด" เราจึงผสานงานดีไซน์ระดับ Futuristic Boutique Luxury เข้ากับระบบบริการที่เข้าใจผู้ใช้ทุกวัย
+                    </p>
+
+                    <div class="sm-about-features">
+                        <div class="sm-about-feat-item">
+                            <div class="sm-about-feat-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                            <div>
+                                <h5>Seamless Smart Experience</h5>
+                                <p>ตั้งแต่การค้นหาห้องพัก เช็คอิน ไปจนถึงการปรับบรรยากาศภายในห้อง ทุกขั้นตอนถูกออกแบบให้ใช้งานง่าย ไม่ซับซ้อน</p>
+                            </div>
+                        </div>
+
+                        <div class="sm-about-feat-item">
+                            <div class="sm-about-feat-icon"><i class="fa-solid fa-gem"></i></div>
+                            <div>
+                                <h5>Futuristic Boutique Luxury</h5>
+                                <p>คัดสรรวัสดุเกรดพรีเมียม เตียงนอนคุณภาพสูง และแสงไฟ Ambient ที่ช่วยปรับอารมณ์ให้ผ่อนคลายเหมือนอยู่โอเอซิสส่วนตัว</p>
+                            </div>
+                        </div>
+
+                        <div class="sm-about-feat-item">
+                            <div class="sm-about-feat-icon"><i class="fa-solid fa-hand-holding-heart"></i></div>
+                            <div>
+                                <h5>Human-Centric Hospitality</h5>
+                                <p>แม้จะขับเคลื่อนด้วยเทคโนโลยีล้ำสมัย แต่ทีมงาน StayMate พร้อมดูแลคุณด้วยความใส่ใจและอบอุ่นในทุกวินาที</p>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
 
-            <div class="col-md-6 col-lg-3">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="fs-1">🛁</div>
-                        <h5 class="fw-bold mt-2">Suite Room</h5>
-                        <p class="text-secondary">
-                            ห้องสวีทพร้อมบรรยากาศสุดพิเศษ
-                        </p>
+                    <div class="d-flex flex-wrap gap-3 mt-4">
+                        <a asp-controller="Home" asp-action="About" class="sm-btn-primary">
+                            <span>อ่านเรื่องราวของเรา</span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                        <a asp-controller="Home" asp-action="Contact" class="sm-btn-outline-dark">
+                            <i class="fa-solid fa-location-dot me-1"></i> ดูแผนที่และการเดินทาง
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<section class="py-5">
-    <div class="container">
-        <h2 class="fw-bold mb-4">Special Promotions</h2>
+    <!-- =========================================================
+         SECTION 8: PRE-FOOTER DIRECTORY & SOCIALS
+         (รวมข้อมูลติดต่อ ที่อยู่ และนโยบายเพื่อเชื่อมต่อกับ Footer หลัก)
+         ========================================================= -->
+    <section class="sm-home-footer-ext sm-full-bleed" aria-label="ข้อมูลติดต่อและนโยบาย">
+        <div class="container">
+            <div class="sm-footer-ext-card" data-aos="fade-up">
+                <div class="row g-4 align-items-center">
+                    <!-- Brand & Address -->
+                    <div class="col-lg-5">
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            <div class="sm-footer-brand-mark">SM</div>
+                            <div>
+                                <h4 class="text-white fw-bold mb-0">StayMate · Future Urban Hotel</h4>
+                                <small class="text-info">Smart Hospitality &amp; Boutique Luxury</small>
+                            </div>
+                        </div>
+                        <p class="sm-footer-address mb-0">
+                            <i class="fa-solid fa-location-dot text-info me-2"></i>
+                            888 อาคารสเตย์เมท ทาวเวอร์ ถนนสุขุมวิท แขวงคลองเตยเหนือ เขตวัฒนา กรุงเทพมหานคร 10110 (ใกล้รถไฟฟ้า BTS อโศก)
+                        </p>
+                    </div>
 
-        <div class="row g-3">
-            <div class="col-md-4">
-                <div class="p-4 rounded-3 border h-100">
-                    <h5>🎁 มา 3 จ่าย 2</h5>
-                    <p class="text-secondary mb-0">
-                        โปรโมชั่นสำหรับห้องพักที่รองรับเตียงเสริม
-                    </p>
-                </div>
-            </div>
+                    <!-- Contact Channels & Socials -->
+                    <div class="col-lg-4">
+                        <div class="sm-footer-contact-pills">
+                            <span><i class="fa-solid fa-phone-volume text-info me-2"></i> 02-888-9999 (ดูแล 24 ชั่วโมง)</span>
+                            <span><i class="fa-solid fa-envelope-open-text text-info me-2"></i> booking@staymate-hotel.com</span>
+                        </div>
+                        <div class="sm-social-group mt-3">
+                            <a href="https://facebook.com" target="_blank" rel="noopener" class="sm-social-btn" aria-label="Facebook">
+                                <i class="fa-brands fa-facebook-f"></i>
+                            </a>
+                            <a href="https://instagram.com" target="_blank" rel="noopener" class="sm-social-btn" aria-label="Instagram">
+                                <i class="fa-brands fa-instagram"></i>
+                            </a>
+                            <a href="https://line.me" target="_blank" rel="noopener" class="sm-social-btn" aria-label="LINE">
+                                <i class="fa-brands fa-line"></i>
+                            </a>
+                            <a href="https://youtube.com" target="_blank" rel="noopener" class="sm-social-btn" aria-label="YouTube">
+                                <i class="fa-brands fa-youtube"></i>
+                            </a>
+                            <a href="https://x.com" target="_blank" rel="noopener" class="sm-social-btn" aria-label="X Twitter">
+                                <i class="fa-brands fa-x-twitter"></i>
+                            </a>
+                        </div>
+                    </div>
 
-            <div class="col-md-4">
-                <div class="p-4 rounded-3 border h-100">
-                    <h5>🌙 Stay 3+ Nights</h5>
-                    <p class="text-secondary mb-0">
-                        รับส่วนลดเมื่อเข้าพักต่อเนื่องตามเงื่อนไข
-                    </p>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="p-4 rounded-3 border h-100">
-                    <h5>👨‍👩‍👧‍👦 Family & Gang</h5>
-                    <p class="text-secondary mb-0">
-                        สิทธิพิเศษสำหรับการเข้าพักเป็นกลุ่ม
-                    </p>
+                    <!-- Quick Registration & Legal Policies -->
+                    <div class="col-lg-3 text-lg-end">
+                        <div class="d-flex flex-lg-column gap-2 align-items-lg-end">
+                            <a asp-controller="Account" asp-action="Register" class="sm-btn-cyan-sm">
+                                <i class="fa-solid fa-user-plus me-1"></i> สมัครสมาชิกรับส่วนลด
+                            </a>
+                            <div class="sm-legal-links mt-2">
+                                <a asp-controller="Home" asp-action="Privacy">Privacy Policy</a>
+                                <span class="text-secondary mx-1">·</span>
+                                <a asp-controller="Home" asp-action="FAQ">Terms &amp; Conditions</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+    </section>
 
-        <div class="text-center mt-4">
-            <a asp-controller="Customer"
-               asp-action="Index"
-               class="btn btn-primary">
-                ดูห้องพักและโปรโมชั่นทั้งหมด
-            </a>
-        </div>
-    </div>
-</section>
+</div>
+
+@section Scripts {
+    <!-- GSAP 3 Core Animation Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <!-- Swiper.js Bundle (Carousel Controller) -->
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <!-- AOS Scroll Reveal Engine -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // 1. กำหนดค่าเริ่มต้นของวันที่ในกล่องจองพัก (วันนี้ และ พรุ่งนี้)
+            const checkInInput = document.getElementById("checkInDate");
+            const checkOutInput = document.getElementById("checkOutDate");
+
+            if (checkInInput && checkOutInput) {
+                const today = new Date();
+                const tomorrow = new Date(today);
+                tomorrow.setDate(today.getDate() + 1);
+
+                const formatDate = (d) => d.toISOString().split("T")[0];
+                checkInInput.min = formatDate(today);
+                checkInInput.value = formatDate(today);
+
+                checkOutInput.min = formatDate(tomorrow);
+                checkOutInput.value = formatDate(tomorrow);
+
+                checkInInput.addEventListener("change", function () {
+                    const selected = new Date(this.value);
+                    const nextDay = new Date(selected);
+                    nextDay.setDate(selected.getDate() + 1);
+                    checkOutInput.min = formatDate(nextDay);
+                    if (new Date(checkOutInput.value) <= selected) {
+                        checkOutInput.value = formatDate(nextDay);
+                    }
+                });
+            }
+
+            // ตรวจหาค่า Reduce Motion บนอุปกรณ์ของผู้ใช้งานเพื่อลดภาระเครื่อง
+            const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+            // 2. GSAP: Zoom-out และ Fade-in ในส่วน Hero Section
+            if (typeof gsap !== "undefined" && !prefersReducedMotion) {
+                gsap.fromTo("#heroBgImage",
+                    { scale: 1.15 },
+                    { scale: 1, duration: 2.8, ease: "power2.out" }
+                );
+
+                gsap.fromTo(".gsap-hero-item",
+                    { opacity: 0, y: 30 },
+                    {
+                        opacity: 1,
+                        y: 0,
+                        duration: 0.9,
+                        stagger: 0.15,
+                        ease: "power3.out",
+                        delay: 0.1
+                    }
+                );
+
+                gsap.fromTo(".gsap-hero-card",
+                    { opacity: 0, x: 40 },
+                    {
+                        opacity: 1,
+                        x: 0,
+                        duration: 1.1,
+                        ease: "power3.out",
+                        delay: 0.5
+                    }
+                );
+            }
+
+            // 3. Swiper.js: ตั้งค่าระบบคาร์รูเซลโปรโมชั่น (5 สไลด์เดี่ยว/คู่/สามคอลัมน์ตามหน้าจอ)
+            if (typeof Swiper !== "undefined") {
+                new Swiper(".sm-promo-swiper", {
+                    slidesPerView: 1,
+                    spaceBetween: 24,
+                    loop: true,
+                    grabCursor: true,
+                    speed: prefersReducedMotion ? 0 : 700,
+                    autoplay: prefersReducedMotion ? false : {
+                        delay: 4000,
+                        disableOnInteraction: false,
+                        pauseOnMouseEnter: true
+                    },
+                    pagination: {
+                        el: ".sm-swiper-pagination",
+                        clickable: true
+                    },
+                    navigation: {
+                        nextEl: ".promo-next",
+                        prevEl: ".promo-prev"
+                    },
+                    breakpoints: {
+                        640: { slidesPerView: 1.3, spaceBetween: 20 },
+                        768: { slidesPerView: 2, spaceBetween: 24 },
+                        1200: { slidesPerView: 3, spaceBetween: 28 }
+                    }
+                });
+            }
+
+            // 4. AOS: เริ่มการประมวลผล Scroll Reveal
+            if (typeof AOS !== "undefined") {
+                AOS.init({
+                    duration: 800,
+                    easing: "ease-out-cubic",
+                    once: true,
+                    offset: 80,
+                    disable: prefersReducedMotion
+                });
+            }
+        });
+    </script>
+}
