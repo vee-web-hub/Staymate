@@ -1,4 +1,16 @@
 
+@{
+    // ตรวจสอบหน้าปัจจุบันเพื่อใส่ class active
+    var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+
+    bool Is(params string[] names) =>
+        names.Any(n => string.Equals(n, action, StringComparison.OrdinalIgnoreCase));
+
+    string Act(params string[] names) => Is(names) ? "active" : "";
+
+    // Customer Controller
+    const string C = "Customer";
+}
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -8,20 +20,33 @@
     <title>@ViewData["Title"] - StayMate Hotel</title>
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/staymate-layout.css" asp-append-version="true" />
+
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 
 <body class="customer-page">
 
     <!-- ================= HEADER ================= -->
-    <header class="customer-header">
+    <header class="customer-header" id="siteHeader">
 
         <!-- Brand -->
         <div class="brand-group">
-            <a asp-controller="Home"
+
+            <!-- Mobile Menu Button -->
+            <button class="btn-header-menu d-xl-none"
+                    type="button"
+                    data-bs-toggle="offcanvas"
+                    data-bs-target="#mobileMenu"
+                    aria-controls="mobileMenu"
+                    aria-label="เปิดเมนู">
+
+                <i class="fa-solid fa-bars"></i>
+            </button>
+
+            <a asp-controller="@C"
                asp-action="Index"
                class="brand-group text-decoration-none">
 
@@ -34,68 +59,93 @@
             </a>
         </div>
 
-        <!-- Main Navigation -->
-        <nav class="customer-navbar d-none d-lg-flex">
+
+        <!-- ================= DESKTOP NAVIGATION ================= -->
+        <nav class="customer-navbar d-none d-xl-flex" aria-label="เมนูหลัก">
 
             <!-- 1. Home -->
-            <a asp-controller="Home"
-               asp-action="Index">
+            <a asp-controller="@C"
+               asp-action="Index"
+               class="@Act("Index")">
+
                 <i class="fa-solid fa-house me-1"></i>
                 หน้าแรก
             </a>
 
+
             <!-- 2. Room Availability -->
-            <a asp-controller="Customer"
-               asp-action="RoomAvailability">
+            <a asp-controller="@C"
+               asp-action="RoomAvailability"
+               class="@Act("RoomAvailability")">
+
                 <i class="fa-solid fa-magnifying-glass me-1"></i>
                 ค้นหาห้องว่าง
             </a>
 
-            <!-- 3. Rooms / Room Details -->
-            <a asp-controller="Customer"
-               asp-action="Rooms">
+
+            <!-- 3. Rooms -->
+            <a asp-controller="@C"
+               asp-action="Rooms"
+               class="@Act("Rooms", "RoomDetails")">
+
                 <i class="fa-solid fa-bed me-1"></i>
                 ห้องพัก
             </a>
 
+
             <!-- 4. Promotions -->
-            <a asp-controller="Customer"
-               asp-action="Promotions">
+            <a asp-controller="@C"
+               asp-action="Promotions"
+               class="@Act("Promotions")">
+
                 <i class="fa-solid fa-tags me-1"></i>
                 โปรโมชั่น
             </a>
 
+
             <!-- 5. Checkout & Payment -->
-            <a asp-controller="Customer"
-               asp-action="Checkout">
+            <a asp-controller="@C"
+               asp-action="Checkout"
+               class="@Act("Checkout")">
+
                 <i class="fa-solid fa-credit-card me-1"></i>
                 ชำระเงิน
             </a>
 
-            <!-- 6. My Bookings / Booking Details -->
-            <a asp-controller="Customer"
-               asp-action="MyBookings">
+
+            <!-- 6. My Bookings -->
+            <a asp-controller="@C"
+               asp-action="MyBookings"
+               class="@Act("MyBookings", "BookingDetails")">
+
                 <i class="fa-solid fa-receipt me-1"></i>
                 การจองของฉัน
             </a>
 
+
             <!-- 7. Profile -->
-            <a asp-controller="Customer"
-               asp-action="Profile">
+            <a asp-controller="@C"
+               asp-action="Profile"
+               class="@Act("Profile")">
+
                 <i class="fa-solid fa-user me-1"></i>
                 โปรไฟล์
             </a>
 
-            <!-- 8. Review & Feedback -->
-            <a asp-controller="Customer"
-               asp-action="Reviews">
+
+            <!-- 8. Reviews -->
+            <a asp-controller="@C"
+               asp-action="Reviews"
+               class="@Act("Reviews")">
+
                 <i class="fa-solid fa-star me-1"></i>
                 รีวิว
             </a>
 
         </nav>
 
-        <!-- Header Actions -->
+
+        <!-- ================= HEADER ACTIONS ================= -->
         <div class="header-actions">
 
             <!-- Notification -->
@@ -110,10 +160,11 @@
                 </button>
             </div>
 
+
             @if (User.Identity != null && User.Identity.IsAuthenticated)
             {
                 <!-- User Profile -->
-                <a asp-controller="Customer"
+                <a asp-controller="@C"
                    asp-action="Profile"
                    class="user-badge-chip text-decoration-none"
                    title="ข้อมูลโปรไฟล์">
@@ -149,8 +200,122 @@
     </header>
 
 
+    <!-- ================= MOBILE MENU ================= -->
+    <div class="offcanvas offcanvas-start sm-offcanvas"
+         tabindex="-1"
+         id="mobileMenu"
+         aria-labelledby="mobileMenuLabel">
+
+        <div class="offcanvas-header">
+
+            <span class="brand-text" id="mobileMenuLabel">
+                StayMate
+            </span>
+
+            <button type="button"
+                    class="btn-close btn-close-white"
+                    data-bs-dismiss="offcanvas"
+                    aria-label="ปิด">
+            </button>
+
+        </div>
+
+        <div class="offcanvas-body">
+
+            <nav class="sm-mobile-nav">
+
+                <a asp-controller="@C" asp-action="Index"
+                   class="@Act("Index")">
+                    <i class="fa-solid fa-house"></i>
+                    หน้าแรก
+                </a>
+
+                <a asp-controller="@C" asp-action="RoomAvailability"
+                   class="@Act("RoomAvailability")">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    ค้นหาห้องว่าง
+                </a>
+
+                <a asp-controller="@C" asp-action="Rooms"
+                   class="@Act("Rooms", "RoomDetails")">
+                    <i class="fa-solid fa-bed"></i>
+                    ห้องพัก
+                </a>
+
+                <a asp-controller="@C" asp-action="Promotions"
+                   class="@Act("Promotions")">
+                    <i class="fa-solid fa-tags"></i>
+                    โปรโมชั่น
+                </a>
+
+                <a asp-controller="@C" asp-action="Checkout"
+                   class="@Act("Checkout")">
+                    <i class="fa-solid fa-credit-card"></i>
+                    ชำระเงิน
+                </a>
+
+                <a asp-controller="@C" asp-action="MyBookings"
+                   class="@Act("MyBookings", "BookingDetails")">
+                    <i class="fa-solid fa-receipt"></i>
+                    การจองของฉัน
+                </a>
+
+                <a asp-controller="@C" asp-action="Profile"
+                   class="@Act("Profile")">
+                    <i class="fa-solid fa-user"></i>
+                    โปรไฟล์
+                </a>
+
+                <a asp-controller="@C" asp-action="Reviews"
+                   class="@Act("Reviews")">
+                    <i class="fa-solid fa-star"></i>
+                    รีวิว
+                </a>
+
+            </nav>
+
+
+            <!-- Mobile User Actions -->
+            <div class="sm-mobile-auth">
+
+                @if (User.Identity != null && User.Identity.IsAuthenticated)
+                {
+                    <a asp-controller="@C"
+                       asp-action="Profile"
+                       class="btn btn-outline-light rounded-pill">
+
+                        <i class="fa-regular fa-user me-1"></i>
+                        ข้อมูลส่วนตัว
+                    </a>
+
+                    <form asp-controller="Account"
+                          asp-action="Logout"
+                          method="post">
+
+                        <button type="submit"
+                                class="btn-header-logout w-100 justify-content-center">
+                            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                            ออกจากระบบ
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <a asp-controller="Account"
+                       asp-action="Login"
+                       class="btn btn-outline-light rounded-pill">
+                        เข้าสู่ระบบ
+                    </a>
+                }
+
+            </div>
+
+        </div>
+    </div>
+
+
     <!-- ================= MAIN CONTENT ================= -->
-    <main class="customer-content">
+    <main class="customer-content page-enter">
         @RenderBody()
     </main>
 
@@ -162,6 +327,7 @@
 
             <!-- About -->
             <div class="footer-col">
+
                 <h5>
                     <i class="fa-solid fa-hotel me-2"></i>
                     StayMate Hotel
@@ -172,87 +338,85 @@
                     สัมผัสความสะดวกสบาย โปรโมชั่นสุดคุ้ม
                     และระบบจัดการห้องพักแบบครบวงจร
                 </p>
+
             </div>
 
 
-            <!-- Customer Services -->
+            <!-- Customer Menu -->
             <div class="footer-col">
+
                 <h5>เมนูสำหรับลูกค้า</h5>
 
                 <ul class="list-unstyled">
 
                     <li>
-                        <a asp-controller="Home" asp-action="Index">
-                            <i class="fa-solid fa-house me-2"></i>
+                        <a asp-controller="@C" asp-action="Index">
                             หน้าแรก
                         </a>
                     </li>
 
                     <li>
-                        <a asp-controller="Customer" asp-action="RoomAvailability">
-                            <i class="fa-solid fa-magnifying-glass me-2"></i>
+                        <a asp-controller="@C" asp-action="RoomAvailability">
                             ค้นหาห้องว่าง
                         </a>
                     </li>
 
                     <li>
-                        <a asp-controller="Customer" asp-action="Rooms">
-                            <i class="fa-solid fa-bed me-2"></i>
+                        <a asp-controller="@C" asp-action="Rooms">
                             ประเภทห้องพัก
                         </a>
                     </li>
 
                     <li>
-                        <a asp-controller="Customer" asp-action="Promotions">
-                            <i class="fa-solid fa-tags me-2"></i>
-                            โปรโมชั่น
+                        <a asp-controller="@C" asp-action="Promotions">
+                            โปรโมชั่นพิเศษ
                         </a>
                     </li>
 
                 </ul>
+
             </div>
 
 
-            <!-- Booking Management -->
+            <!-- Booking & Account -->
             <div class="footer-col">
+
                 <h5>การจองและบัญชี</h5>
 
                 <ul class="list-unstyled">
 
                     <li>
-                        <a asp-controller="Customer" asp-action="Checkout">
-                            <i class="fa-solid fa-credit-card me-2"></i>
+                        <a asp-controller="@C" asp-action="Checkout">
                             จองและชำระเงิน
                         </a>
                     </li>
 
                     <li>
-                        <a asp-controller="Customer" asp-action="MyBookings">
-                            <i class="fa-solid fa-receipt me-2"></i>
+                        <a asp-controller="@C" asp-action="MyBookings">
                             การจองของฉัน
                         </a>
                     </li>
 
                     <li>
-                        <a asp-controller="Customer" asp-action="Profile">
-                            <i class="fa-solid fa-user me-2"></i>
+                        <a asp-controller="@C" asp-action="Profile">
                             โปรไฟล์ส่วนตัว
                         </a>
                     </li>
 
                     <li>
-                        <a asp-controller="Customer" asp-action="Reviews">
-                            <i class="fa-solid fa-star me-2"></i>
+                        <a asp-controller="@C" asp-action="Reviews">
                             รีวิวและความคิดเห็น
                         </a>
                     </li>
 
                 </ul>
+
             </div>
 
 
             <!-- Contact -->
             <div class="footer-col">
+
                 <h5>ฝ่ายบริการลูกค้า</h5>
 
                 <p>
@@ -269,6 +433,7 @@
                     <i class="fa-solid fa-clock me-2 text-warning"></i>
                     Customer Support
                 </p>
+
             </div>
 
         </div>
@@ -293,6 +458,22 @@
 
     <!-- ================= SCRIPTS ================= -->
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Header shadow when scrolling
+        (function () {
+            const h = document.getElementById('siteHeader');
+
+            if (!h) return;
+
+            const on = () =>
+                h.classList.toggle('is-scrolled', window.scrollY > 8);
+
+            on();
+
+            window.addEventListener('scroll', on, { passive: true });
+        })();
+    </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 

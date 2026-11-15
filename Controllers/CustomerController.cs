@@ -71,21 +71,31 @@ namespace StayMate_Kavinvee_0576.Controllers
         // ==========================================
         // 3. ROOMS / ROOM DETAILS
         // ==========================================
-        public async Task<IActionResult> Rooms()
-        {
-            if (await GetCurrentUserId() == null)
-                return RedirectToAction("Login", "Account");
+       // ==========================================
+// 3. ROOMS / ROOM DETAILS (ปรับแต่งเพื่อตัด Rooms.cshtml ออก)
+// ==========================================
+// ==========================================
+// 3. ROOMS / ROOM DETAILS (ปรับเปลี่ยนเป็น All-In-One RoomDetails)
+// ==========================================
+public async Task<IActionResult> Rooms()
+{
+    if (await GetCurrentUserId() == null)
+        return RedirectToAction("Login", "Account");
 
-            return View();
-        }
+    // เมื่อลูกค้ากดปุ่มเมนู "ห้องพัก" บน Layout ให้เด้งมาแสดงผลที่หน้า RoomDetails (ห้องที่ 1) ทันที
+    return RedirectToAction("RoomDetails", new { id = 1 });
+}
 
-        public async Task<IActionResult> RoomDetails(uint id)
-        {
-            if (await GetCurrentUserId() == null)
-                return RedirectToAction("Login", "Account");
+public async Task<IActionResult> RoomDetails(uint id)
+{
+    if (await GetCurrentUserId() == null)
+        return RedirectToAction("Login", "Account");
 
-            return View();
-        }
+    // เปิดหน้า RoomDetails.cshtml ซึ่งจะใช้ระบบ Pure Mock ในการจัดเก็บข้อมูลทั้ง 4 ห้องในที่เดียว
+    return View();
+}
+
+
 
         // ==========================================
         // 4. PROMOTIONS

@@ -1,0 +1,481 @@
+@{
+    Layout = "~/Views/Shared/_CustomerLayout.cshtml";
+    ViewData["Title"] = "รายละเอียดประเภทห้องพักอัจฉริยะ";
+
+    // ดึงค่า id จาก Route เพื่อทราบว่าต้องการเริ่มโฟกัสที่ห้องไหน (1=Standard, 2=Deluxe, 3=Family, 4=Suite)
+    var routeIdStr = ViewContext.RouteData.Values["id"]?.ToString()
+                     ?? Context.Request.Query["id"].ToString();
+    uint focusRoomId = 1;
+    if (!string.IsNullOrWhiteSpace(routeIdStr) && uint.TryParse(routeIdStr, out var tempId) && tempId >= 1 && tempId <= 4)
+    {
+        focusRoomId = tempId;
+    }
+
+    // รับค่า Query String วันที่และผู้เข้าพักที่ส่งต่อมาจากหน้าค้นหาห้องว่างเพื่อนำไปใช้ในการจองต่อ
+    var qCheckIn = Context.Request.Query["checkIn"].ToString();
+    var qCheckOut = Context.Request.Query["checkOut"].ToString();
+    var qGuests = Context.Request.Query["guests"].ToString();
+    var qRooms = Context.Request.Query["rooms"].ToString();
+}
+
+@section Styles {
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" />
+    <link rel="stylesheet" href="~/css/Customer.css" asp-append-version="true" />
+}
+
+<div class="room-details-wrapper" id="roomDetailsPageRoot" data-focus-id="@focusRoomId">
+
+    <!-- =========================================================
+         PAGE HEADER & BREADCRUMB
+         ========================================================= -->
+    <section class="customer-ra-header mb-5">
+        <div class="customer-ra-header-bg"
+             style="background-image: url('https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=2000&q=80');">
+        </div>
+        <div class="customer-ra-header-overlay"></div>
+        <div class="container position-relative z-2">
+            <nav aria-label="breadcrumb" class="customer-ra-breadcrumb mb-3">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item">
+                        <a asp-controller="Customer" asp-action="Index"><i class="fa-solid fa-house me-1"></i> หน้าแรก</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a asp-controller="Customer" asp-action="RoomAvailability"><i class="fa-solid fa-magnifying-glass me-1"></i> ค้นหาห้องว่าง</a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">รายละเอียดประเภทห้องพัก</li>
+                </ol>
+            </nav>
+            <span class="customer-ra-eyebrow"><span class="customer-ra-live-dot"></span> LUXURY ROOM SHOWCASE</span>
+            <h1 class="customer-ra-title">ประเภทห้องพักอัจฉริยะ · StayMate Room Showcase</h1>
+            <p class="customer-ra-subtitle mb-0">
+                สัมผัสความหรูหราทันสมัยผ่านห้องพักทั้ง 4 รูปแบบ ออกแบบด้วยแนวคิด Futuristic Boutique Luxury พร้อมสิ่งอำนวยความสะดวกและระบบควบคุมห้องพักล้ำอนาคต
+            </p>
+        </div>
+    </section>
+
+    <!-- Quick Room Jumper Swapper (ตัวกระโดดไปยังประเภทห้องต่างๆ ในหน้าจอเดียวกัน) -->
+    <div class="container mb-5">
+        <div class="room-details-topbar justify-content-center">
+            <div class="room-details-switcher">
+                <span class="room-details-switcher-label"><i class="fa-solid fa-repeat me-1"></i> สลับเลื่อนดูห้อง:</span>
+                <button type="button" class="room-details-switch-pill" onclick="scrollToRoomSection('room-block-1')">Standard Room</button>
+                <button type="button" class="room-details-switch-pill" onclick="scrollToRoomSection('room-block-2')">Deluxe Room</button>
+                <button type="button" class="room-details-switch-pill" onclick="scrollToRoomSection('room-block-3')">Family Room</button>
+                <button type="button" class="room-details-switch-pill" onclick="scrollToRoomSection('room-block-4')">Suite Room</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         ROOM SHOWCASE CONTENT (PURE MOCK - 4 ROOM TYPES)
+         ========================================================= -->
+    <div class="container">
+
+        @* ---------------------------------------------------------
+           ROOM 1: STANDARD ROOM
+           --------------------------------------------------------- *@
+        <section id="room-block-1" class="room-details-block p-4 mb-5" data-aos="fade-up">
+            <div class="row g-4">
+                <div class="col-lg-7">
+                    <div class="room-details-gallery-main mb-3" style="height: 380px;">
+                        <img id="img-main-1" src="https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=1400&q=85" alt="Standard Room" />
+                        <span class="room-details-caption-pill"><i class="fa-solid fa-camera me-1"></i> มุมห้องนอนหลัก (Main Bedroom)</span>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-4">
+                            <div class="room-details-gallery-thumb" onclick="swapMainImage(1, 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=1200&q=80', 'มุมห้องนอนหลัก')">
+                                <img src="https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=400&q=80" alt="Standard 1" />
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="room-details-gallery-thumb" onclick="swapMainImage(1, 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=900&q=80', 'มุมโต๊ะทำงานอัจฉริยะ')">
+                                <img src="https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=400&q=80" alt="Standard 2" />
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="room-details-gallery-thumb" onclick="swapMainImage(1, 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=900&q=80', 'ห้องน้ำระบบ Rain Shower')">
+                                <img src="https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=400&q=80" alt="Standard 3" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-5 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="room-details-series-badge">RM-STD-01 · URBAN SMART</span>
+                                <h2 class="fw-bold text-dark mt-1">Standard Room</h2>
+                            </div>
+                            <div class="text-end">
+                                <span class="fs-3 fw-bold text-primary">฿1,800</span><small class="text-muted">/คืน</small>
+                            </div>
+                        </div>
+                        <p class="text-secondary small mb-3">ห้องพักแนวคิด Minimal Futuristic กะทัดรัด ตกแต่งทันสมัย ลงตัวทั้งการพักผ่อนและทำงานใจกลางเมือง</p>
+
+                        <!-- Specifications -->
+                        <div class="row g-2 mb-3">
+                            <div class="col-6"><div class="room-details-overview-card p-2"><i class="fa-solid fa-user-group text-primary me-2"></i><small>พักสูงสุด 2 ท่าน</small></div></div>
+                            <div class="col-6"><div class="room-details-overview-card p-2"><i class="fa-solid fa-maximize text-primary me-2"></i><small>ขนาด 28 ตร.ม.</small></div></div>
+                            <div class="col-12"><div class="room-details-overview-card p-2"><i class="fa-solid fa-bed text-primary me-2"></i><small>1 Queen Bed (หรือ 2 Twin Beds)</small></div></div>
+                        </div>
+
+                        <!-- Amenities -->
+                        <h6 class="fw-bold text-dark mb-2"><i class="fa-solid fa-list-check text-primary me-2"></i>สิ่งอำนวยความสะดวกและจุดเด่น</h6>
+                        <ul class="sm-amenity-list mb-4" style="font-size:0.85rem;">
+                            <li><i class="fa-solid fa-check text-success"></i> Free Wi-Fi 6 Mesh &amp; Smart TV 55"</li>
+                            <li><i class="fa-solid fa-check text-success"></i> ควบคุมบรรยากาศและไฟ Mood Lighting 4 โหมด</li>
+                            <li><i class="fa-solid fa-check text-success"></i> หน้าต่าง Acoustic Double Glazing ป้องกันเสียงรบกวน</li>
+                        </ul>
+                    </div>
+
+                    <div class="pt-3 border-top d-flex justify-content-between align-items-center">
+                        <span class="text-success small fw-semibold"><i class="fa-solid fa-circle-check"></i> รวมสิทธิ์อาหารเช้าสำหรับ 2 ท่าน</span>
+                        <a asp-controller="Customer" asp-action="Checkout" asp-route-roomTypeId="1" asp-route-checkIn="@qCheckIn" asp-route-checkOut="@qCheckOut" asp-route-guests="@qGuests" class="customer-ra-btn-book">
+                            <i class="fa-solid fa-calendar-check me-1"></i> จองห้องพักนี้
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        @* ---------------------------------------------------------
+           ROOM 2: DELUXE ROOM
+           --------------------------------------------------------- *@
+        <section id="room-block-2" class="room-details-block p-4 mb-5" data-aos="fade-up">
+            <div class="row g-4">
+                <!-- แกลเลอรีภาพ (ซ้าย) -->
+                <div class="col-lg-7">
+                    <div class="room-details-gallery-main mb-3" style="height: 380px;">
+                        <img id="img-main-2" src="https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1400&q=85" alt="Deluxe Room" />
+                        <span class="room-details-caption-pill"><i class="fa-solid fa-camera me-1"></i> ห้องนอนดีไซน์หรูพรีเมียม (Main Area)</span>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-4">
+                            <div class="room-details-gallery-thumb" onclick="swapMainImage(2, 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1200&q=80', 'ห้องนอนดีไซน์หรูพรีเมียม')">
+                                <img src="https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=400&q=80" alt="Deluxe 1" />
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="room-details-gallery-thumb" onclick="swapMainImage(2, 'https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=900&q=80', 'โซฟานั่งเล่นริมกระจกวิวเมือง')">
+                                <img src="https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=400&q=80" alt="Deluxe 2" />
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="room-details-gallery-thumb" onclick="swapMainImage(2, 'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?auto=format&fit=crop&w=900&q=80', 'อ่างอาบน้ำพรีเมียมส่วนตัว')">
+                                <img src="https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?auto=format&fit=crop&w=400&q=80" alt="Deluxe 3" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-5 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="room-details-series-badge">RM-DLX-02 · SKYLINE PREMIUM</span>
+                                <h2 class="fw-bold text-dark mt-1">Deluxe Room</h2>
+                            </div>
+                            <div class="text-end">
+                                <span class="fs-3 fw-bold text-primary">฿2,600</span><small class="text-muted">/คืน</small>
+                            </div>
+                        </div>
+                        <p class="text-secondary small mb-3">ยกระดับความสบายด้วยขนาดห้องที่ใหญ่ขึ้น อ่างอาบน้ำแยกสัดส่วน และบานกระจกบานใหญ่ชมทัศนียภาพเมืองยามค่ำคืน</p>
+
+                        <!-- Specs -->
+                        <div class="row g-2 mb-3">
+                            <div class="col-6"><div class="room-details-overview-card p-2"><i class="fa-solid fa-user-group text-primary me-2"></i><small>รองรับ 2–3 ท่าน</small></div></div>
+                            <div class="col-6"><div class="room-details-overview-card p-2"><i class="fa-solid fa-maximize text-primary me-2"></i><small>ขนาด 36 ตร.ม.</small></div></div>
+                            <div class="col-12"><div class="room-details-overview-card p-2"><i class="fa-solid fa-bath text-primary me-2"></i><small>อ่างอาบน้ำ (Bathtub) + Rain Shower</small></div></div>
+                        </div>
+
+                        <!-- Amenities -->
+                        <h6 class="fw-bold text-dark mb-2"><i class="fa-solid fa-list-check text-primary me-2"></i>สิ่งอำนวยความสะดวกและจุดเด่น</h6>
+                        <ul class="sm-amenity-list mb-4" style="font-size:0.85rem;">
+                            <li><i class="fa-solid fa-check text-success"></i> วิวเมืองมุมสูง Panoramic View กระจกบานใหญ่</li>
+                            <li><i class="fa-solid fa-check text-success"></i> อ่างอาบน้ำในห้องน้ำและลำโพงเชื่อมต่อ Bluetooth</li>
+                            <li><i class="fa-solid fa-check text-success"></i> รองรับการเสริมเตียง (ฟรีสิทธิ์เตียงเสริมเมื่อใช้โปรฯ 3 Pay 2)</li>
+                        </ul>
+                    </div>
+
+                    <div class="pt-3 border-top d-flex justify-content-between align-items-center">
+                        <span class="text-success small fw-semibold"><i class="fa-solid fa-tag"></i> เข้าร่วมโปรโมชั่น มา 3 จ่าย 2</span>
+                        <a asp-controller="Customer" asp-action="Checkout" asp-route-roomTypeId="2" asp-route-checkIn="@qCheckIn" asp-route-checkOut="@qCheckOut" asp-route-guests="@qGuests" class="customer-ra-btn-book">
+                            <i class="fa-solid fa-calendar-check me-1"></i> จองห้องพักนี้
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        @* ---------------------------------------------------------
+           ROOM 3: FAMILY ROOM
+           --------------------------------------------------------- *@
+        <section id="room-block-3" class="room-details-block p-4 mb-5" data-aos="fade-up">
+            <div class="row g-4">
+                <!-- แกลเลอรีภาพ (ซ้าย) -->
+                <div class="col-lg-7">
+                    <div class="room-details-gallery-main mb-3" style="height: 380px;">
+                        <img id="img-main-3" src="https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=1400&q=85" alt="Family Room" />
+                        <span class="room-details-caption-pill"><i class="fa-solid fa-camera me-1"></i> เตียง King Size 2 เตียงสำหรับครอบครัว</span>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-4">
+                            <div class="room-details-gallery-thumb" onclick="swapMainImage(3, 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=1200&q=80', 'เตียงคู่ King Size สำหรับครอบครัว')">
+                                <img src="https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=400&q=80" alt="Family 1" />
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="room-details-gallery-thumb" onclick="swapMainImage(3, 'https://images.unsplash.com/photo-1591088398332-8a7791972843?auto=format&fit=crop&w=900&q=80', 'พื้นที่พักผ่อนและสังสรรค์ส่วนกลาง')">
+                                <img src="https://images.unsplash.com/photo-1591088398332-8a7791972843?auto=format&fit=crop&w=400&q=80" alt="Family 2" />
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="room-details-gallery-thumb" onclick="swapMainImage(3, 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=900&q=80', 'ห้องน้ำขนาดใหญ่พร้อมอ่างอาบน้ำ')">
+                                <img src="https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=400&q=80" alt="Family 3" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-5 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="room-details-series-badge">RM-FAM-03 · FAMILY SANCTUARY</span>
+                                <h2 class="fw-bold text-dark mt-1">Family Room</h2>
+                            </div>
+                            <div class="text-end">
+                                <span class="fs-3 fw-bold text-primary">฿3,900</span><small class="text-muted">/คืน</small>
+                            </div>
+                        </div>
+                        <p class="text-secondary small mb-3">ตอบโจทย์การเดินทางเป็นแก๊งเพื่อนหรือครอบครัว นอนพักได้สบาย ๆ ครบ 4 ท่าน ด้วยเตียงคู่ขนาดใหญ่และโซฟาเลานจ์</p>
+
+                        <!-- Specs -->
+                        <div class="row g-2 mb-3">
+                            <div class="col-6"><div class="room-details-overview-card p-2"><i class="fa-solid fa-user-group text-primary me-2"></i><small>สูงสุด 4 ท่าน</small></div></div>
+                            <div class="col-6"><div class="room-details-overview-card p-2"><i class="fa-solid fa-maximize text-primary me-2"></i><small>ขนาด 48 ตร.ม.</small></div></div>
+                            <div class="col-12"><div class="room-details-overview-card p-2"><i class="fa-solid fa-bed text-primary me-2"></i><small>2 King Size Beds</small></div></div>
+                        </div>
+
+                        <!-- Amenities -->
+                        <h6 class="fw-bold text-dark mb-2"><i class="fa-solid fa-list-check text-primary me-2"></i>สิ่งอำนวยความสะดวกและจุดเด่น</h6>
+                        <ul class="sm-amenity-list mb-4" style="font-size:0.85rem;">
+                            <li><i class="fa-solid fa-check text-success"></i> นอนพัก 4 ท่านได้อย่างสบายใจแบบไม่ต้องเสริมเตียง</li>
+                            <li><i class="fa-solid fa-check text-success"></i> สมาร์ททีวีจอยักษ์ 65" พร้อมชุดตู้เย็นมินิบาร์แบบครอบครัว</li>
+                            <li><i class="fa-solid fa-check text-success"></i> สิทธิ์ร่วมแคมเปญโปรโมชั่น Family &amp; Gang Pack ลดค่าห้อง 20%</li>
+                        </ul>
+                    </div>
+
+                    <div class="pt-3 border-top d-flex justify-content-between align-items-center">
+                        <span class="text-success small fw-semibold"><i class="fa-solid fa-people-group"></i> รองรับโปรฯ Family &amp; Gang Pack</span>
+                        <a asp-controller="Customer" asp-action="Checkout" asp-route-roomTypeId="3" asp-route-checkIn="@qCheckIn" asp-route-checkOut="@qCheckOut" asp-route-guests="@qGuests" class="customer-ra-btn-book">
+                            <i class="fa-solid fa-calendar-check me-1"></i> จองห้องพักนี้
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        @* ---------------------------------------------------------
+           ROOM 4: SUITE ROOM
+           --------------------------------------------------------- *@
+        <section id="room-block-4" class="room-details-block p-4 mb-5" data-aos="fade-up">
+            <div class="row g-4">
+                <!-- แกลเลอรีภาพ (ซ้าย) -->
+                <div class="col-lg-7">
+                    <div class="room-details-gallery-main mb-3" style="height: 380px;">
+                        <img id="img-main-4" src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1400&q=85" alt="Suite Room" />
+                        <span class="room-details-caption-pill"><i class="fa-solid fa-camera me-1"></i> Horizon Suite สุดหรูหรา (Main Area)</span>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-4">
+                            <div class="room-details-gallery-thumb" onclick="swapMainImage(4, 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1200&q=80', 'Horizon Suite สุดหรูหรา')">
+                                <img src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=400&q=80" alt="Suite 1" />
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="room-details-gallery-thumb" onclick="swapMainImage(4, 'https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=900&q=80', 'โซนรับแขกห้องนั่งเล่นแยกส่วน')">
+                                <img src="https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=400&q=80" alt="Suite 2" />
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="room-details-gallery-thumb" onclick="swapMainImage(4, 'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?auto=format&fit=crop&w=900&q=80', 'ห้องน้ำหินอ่อนพร้อมอ่างจากุซซี่')">
+                                <img src="https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?auto=format&fit=crop&w=400&q=80" alt="Suite 3" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-5 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="room-details-series-badge">RM-SUI-04 · EXECUTIVE PENTHOUSE</span>
+                                <h2 class="fw-bold text-dark mt-1">Suite Room</h2>
+                            </div>
+                            <div class="text-end">
+                                <span class="fs-3 fw-bold text-primary">฿5,800</span><small class="text-muted">/คืน</small>
+                            </div>
+                        </div>
+                        <p class="text-secondary small mb-3">ที่สุดแห่งประสบการณ์ Boutique Luxury แยกสัดส่วนห้องนอน ห้องรับแขก และอ่างจากุซซี่ชมวิวพาโนรามา</p>
+
+                        <!-- Specs -->
+                        <div class="row g-2 mb-3">
+                            <div class="col-6"><div class="room-details-overview-card p-2"><i class="fa-solid fa-user-group text-primary me-2"></i><small>รองรับ 2–6 ท่าน</small></div></div>
+                            <div class="col-6"><div class="room-details-overview-card p-2"><i class="fa-solid fa-maximize text-primary me-2"></i><small>ขนาด 68 ตร.ม.</small></div></div>
+                            <div class="col-12"><div class="room-details-overview-card p-2"><i class="fa-solid fa-crown text-warning me-2"></i><small>รวมสิทธิ์เข้าใช้ Executive Sky Lounge ฟรี</small></div></div>
+                        </div>
+
+                        <!-- Amenities -->
+                        <h6 class="fw-bold text-dark mb-2"><i class="fa-solid fa-list-check text-primary me-2"></i>สิ่งอำนวยความสะดวกและจุดเด่น</h6>
+                        <ul class="sm-amenity-list mb-4" style="font-size:0.85rem;">
+                            <li><i class="fa-solid fa-check text-success"></i> อ่างจากุซซี่น้ำวน (Panoramic Jacuzzi) ริมหน้าต่างชมวิวเมือง</li>
+                            <li><i class="fa-solid fa-check text-success"></i> เครื่องชงกาแฟพรีเมียม สิทธิ์ VIP Check-in และ VIP Lounge</li>
+                            <li><i class="fa-solid fa-check text-success"></i> ระบบความปลอดภัยอัจฉริยะ Smart Automation ครบวงจร</li>
+                        </ul>
+                    </div>
+
+                    <div class="pt-3 border-top d-flex justify-content-between align-items-center">
+                        <span class="text-warning small fw-semibold"><i class="fa-solid fa-star"></i> บริการระดับพรีเมียม VIP Suite 5 ดาว</span>
+                        <a asp-controller="Customer" asp-action="Checkout" asp-route-roomTypeId="4" asp-route-checkIn="@qCheckIn" asp-route-checkOut="@qCheckOut" asp-route-guests="@qGuests" class="customer-ra-btn-book">
+                            <i class="fa-solid fa-calendar-check me-1"></i> จองห้องพักนี้
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    @* =========================================================
+       DYNAMIC REVIEW SYSTEM PREVIEW (รีวิวผู้เข้าพัก)
+       ========================================================= *@
+    <section class="customer-home-section customer-home-bg-alt" id="roomReviewsSection" data-aos="fade-up">
+        <div class="container">
+            <div class="customer-home-section-header">
+                <div>
+                    <span class="customer-home-eyebrow"><i class="fa-solid fa-comments me-1"></i> VERIFIED GUEST FEEDBACK</span>
+                    <h2 class="customer-home-section-title">Reviews &amp; Ratings · รีวิวจากผู้เข้าพักจริง</h2>
+                    <p class="customer-home-section-subtitle">ความเห็นบางส่วนจากลูกค้าผู้เข้าพักจริงในแต่ละประเภทห้องพักอัจฉริยะของโรงแรม</p>
+                </div>
+                <a asp-controller="Customer" asp-action="Reviews" class="customer-home-link-arrow">
+                    <span>ดูรีวิวและคอมเมนต์ทั้งหมด</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-12 col-lg-4">
+                    <div class="customer-home-review-card h-100">
+                        <div class="customer-home-review-top">
+                            <div class="customer-home-reviewer">
+                                <div class="customer-home-avatar">ก</div>
+                                <div>
+                                    <h5 class="customer-home-reviewer-name">คุณกวินท์</h5>
+                                    <span class="customer-home-review-room"><i class="fa-solid fa-bed text-primary me-1"></i> Standard Room</span>
+                                </div>
+                            </div>
+                            <div class="customer-home-stars"><i class="fa-solid fa-star text-warning"></i> 5.0</div>
+                        </div>
+                        <p class="customer-home-review-comment">
+                            "ห้อง Standard สวยตรงปกและสะอาดมากครับ ระบบปรับไฟ Mood Lighting ข้างเตียงและในห้องน้ำใช้งานง่าย เตียงนุ่มหลับสบาย และอินเทอร์เน็ต Gigabit เร็วมากครับ"
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-4">
+                    <div class="customer-home-review-card h-100">
+                        <div class="customer-home-review-top">
+                            <div class="customer-home-reviewer">
+                                <div class="customer-home-avatar customer-home-avatar-violet">พ</div>
+                                <div>
+                                    <h5 class="customer-home-reviewer-name">คุณพิมพ์ชนก</h5>
+                                    <span class="customer-home-review-room"><i class="fa-solid fa-bed text-primary me-1"></i> Deluxe Room</span>
+                                </div>
+                            </div>
+                            <div class="customer-home-stars"><i class="fa-solid fa-star text-warning"></i> 5.0</div>
+                        </div>
+                        <p class="customer-home-review-comment">
+                            "ประทับใจอ่างอาบน้ำริมกระจกมาก ๆ ค่ะ นอนแช่น้ำอุ่นพร้อมชมวิวกรุงเทพฯ ชั้นสูงยามค่ำคืนคืองานศิลปะสุด ๆ บริการรวดเร็วทันใจมากค่ะ"
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-4">
+                    <div class="customer-home-review-card h-100">
+                        <div class="customer-home-review-top">
+                            <div class="customer-home-reviewer">
+                                <div class="customer-home-avatar customer-home-avatar-navy">ธ</div>
+                                <div>
+                                    <h5 class="customer-home-reviewer-name">คุณธนภัทร</h5>
+                                    <span class="customer-home-review-room"><i class="fa-solid fa-bed text-primary me-1"></i> Suite Room</span>
+                                </div>
+                            </div>
+                            <div class="customer-home-stars"><i class="fa-solid fa-star text-warning"></i> 4.9</div>
+                        </div>
+                        <p class="customer-home-review-comment">
+                            "ห้องสวีท Penthouse กว้างขวางและอัจฉริยะมากครับ แยกโซนห้องนั่งเล่นและเตียงได้ลงตัว มีสิทธิ์เครื่องดื่ม Sky Pool และ Executive Lounge คุ้มค่าที่สุด"
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <script>
+        // ฟังก์ชันในการสลับเปลี่ยนภาพหลักแกลเลอรีของแต่ละห้อง
+        function swapMainImage(roomNum, src, caption) {
+            const mainImg = document.getElementById(`img-main-${roomNum}`);
+            const captionPill = mainImg.nextElementSibling;
+            if (mainImg) {
+                mainImg.style.opacity = "0.35";
+                setTimeout(() => {
+                    mainImg.src = src;
+                    mainImg.style.opacity = "1";
+                    if (captionPill) {
+                        captionPill.innerHTML = `<i class="fa-solid fa-camera me-1"></i> ${caption}`;
+                    }
+                }, 130);
+            }
+        }
+
+        // ฟังก์ชันเลื่อนหน้าจอไปยังตำแหน่งของห้องเป้าหมาย
+        function scrollToRoomSection(sectionId) {
+            const target = document.getElementById(sectionId);
+            if (target) {
+                const headerOffset = 90; // ป้องกันไม่ให้โดน Navbar ด้านบนบัง
+                const elementPosition = target.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: "smooth"
+                });
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            if (typeof AOS !== "undefined") {
+                AOS.init({ duration: 650, once: true, offset: 50 });
+            }
+
+            // ตรวจสอบพารามิเตอร์ Focus ID หรือ Hash เพื่อกระโดดเลื่อนหน้าจอไปยังห้องที่ลูกค้าต้องการอัตโนมัติ
+            const rootEl = document.getElementById("roomDetailsPageRoot");
+            const focusId = rootEl.dataset.focusId;
+
+            if (focusId && focusId !== "1") {
+                setTimeout(() => {
+                    scrollToRoomSection(`room-block-${focusId}`);
+                }, 400);
+            }
+        });
+    </script>
+}
