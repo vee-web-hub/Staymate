@@ -1,4 +1,4 @@
-
+//Program.cs
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using StayMate_Kavinvee_0576.Models;

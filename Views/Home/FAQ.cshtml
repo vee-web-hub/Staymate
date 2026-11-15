@@ -1,0 +1,308 @@
+@{
+    Layout = "~/Views/Shared/_HomeLayout.cshtml";
+    ViewData["Title"] = "คำถามที่พบบ่อย (FAQ)";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" />
+    <link rel="stylesheet" href="~/css/Home.css" asp-append-version="true" />
+}
+
+<div class="sm-home-wrapper">
+
+    <!-- =========================================================
+         1. PAGE HERO BANNER (FAQ & Knowledge Center)
+         ========================================================= -->
+    <section class="sm-subpage-hero sm-full-bleed">
+        <div class="sm-subpage-hero-bg"
+             style="background-image: url('https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=2000&q=85');">
+        </div>
+        <div class="sm-hero-overlay"></div>
+        <div class="sm-hero-glow-orb sm-orb-violet"></div>
+
+        <div class="container position-relative z-2 py-4">
+            <nav aria-label="breadcrumb" class="mb-3" data-aos="fade-down">
+                <ol class="breadcrumb sm-breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index"><i class="fa-solid fa-house me-1"></i>หน้าแรก</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">คำถามที่พบบ่อย (FAQ)</li>
+                </ol>
+            </nav>
+
+            <div class="row align-items-end g-4">
+                <div class="col-lg-8" data-aos="fade-up">
+                    <div class="sm-hero-badge mb-2">
+                        <span class="sm-badge-pulse"></span>
+                        <span>SMART HELP CENTER &amp; FAQ</span>
+                    </div>
+                    <h1 class="sm-subpage-title text-white">
+                        Frequently Asked Questions<br />
+                        <span class="sm-text-gradient">ศูนย์รวมคำถามและข้อมูลการเข้าพัก</span>
+                    </h1>
+                    <p class="text-light opacity-75 mb-0">
+                        ค้นหาคำตอบเกี่ยวกับการจองห้องพัก เงื่อนไขเตียงเสริม โปรโมชั่นทั้ง 5 รายการ และการใช้บริการภายในโรงแรม StayMate ได้อย่างรวดเร็ว
+                    </p>
+                </div>
+
+                <!-- Live Search Input inside Hero -->
+                <div class="col-lg-4" data-aos="fade-up" data-aos-delay="100">
+                    <div class="sm-faq-search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="faqSearchInput" class="form-control" placeholder="พิมพ์ค้นหา เช่น เตียงเสริม, เช็คอิน, มา 3 จ่าย 2..." />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         2. FAQ CATEGORY TABS
+         ========================================================= -->
+    <section class="sm-rooms-filter-wrap" data-aos="fade-up">
+        <div class="container">
+            <div class="sm-filter-bar">
+                <div class="d-flex align-items-center flex-wrap gap-2">
+                    <span class="sm-filter-label"><i class="fa-solid fa-circle-question text-primary me-1"></i> หมวดหมู่คำถาม:</span>
+                    <button type="button" class="sm-filter-btn active" data-faq-cat="all">ทั้งหมด (8)</button>
+                    <button type="button" class="sm-filter-btn" data-faq-cat="booking">การจองและชำระเงิน</button>
+                    <button type="button" class="sm-filter-btn" data-faq-cat="promo">โปรโมชั่นและเตียงเสริม</button>
+                    <button type="button" class="sm-filter-btn" data-faq-cat="checkin">เช็คอิน &amp; Smart Key</button>
+                    <button type="button" class="sm-filter-btn" data-faq-cat="facility">สิ่งอำนวยความสะดวก</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         3. ACCORDION FAQ LIST
+         ========================================================= -->
+    <section class="sm-section pt-3">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="accordion sm-faq-accordion" id="staymateFaqAccordion">
+
+                        <!-- FAQ 1 -->
+                        <div class="accordion-item sm-faq-item" data-faq-cat="checkin" data-aos="fade-up">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" aria-expanded="true">
+                                    <span class="sm-faq-num">01</span> เวลาเช็คอิน (Check-in) และเช็คเอาท์ (Check-out) ของโรงแรมคือกี่โมง?
+                                </button>
+                            </h2>
+                            <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#staymateFaqAccordion">
+                                <div class="accordion-body">
+                                    เวลาเช็คอินมาตรฐานของ StayMate คือตั้งแต่ <strong>14:00 น.</strong> เป็นต้นไป และเวลาเช็คเอาท์คือไม่เกิน <strong>12:00 น. (เที่ยงวัน)</strong> หากคุณใช้สิทธิ์โปรโมชั่น <em>Stay 3+ Nights Saver</em> หรือเข้าพักห้อง <em>Suite Room</em> จะได้รับสิทธิ์ Late Check-out พิเศษถึง 14:00–15:00 น. (ขึ้นอยู่กับสถานะห้องว่างในวันนั้น)
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- FAQ 2 -->
+                        <div class="accordion-item sm-faq-item" data-faq-cat="promo" data-aos="fade-up">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                    <span class="sm-faq-num">02</span> โปรโมชั่น "มา 3 จ่าย 2" ใช้กับห้องพักประเภทใดได้บ้าง?
+                                </button>
+                            </h2>
+                            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#staymateFaqAccordion">
+                                <div class="accordion-body">
+                                    โปรโมชั่น <strong>"มา 3 จ่าย 2"</strong> สามารถใช้ได้กับห้องพักที่รองรับการเสริมเตียง ได้แก่ <strong>Deluxe Room</strong> และ <strong>Suite Room</strong> เมื่อเข้าพักผู้ใหญ่ 3 ท่าน ระบบจะยกเว้นค่าเตียงเสริมและมอบสิทธิพิเศษให้คนที่ 3 ฟรีทันที ส่วนห้อง Standard Room จะไม่รองรับการเสริมเตียงเพื่อรักษาความสบายของพื้นที่ครับ
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- FAQ 3 -->
+                        <div class="accordion-item sm-faq-item" data-faq-cat="promo" data-aos="fade-up">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                    <span class="sm-faq-num">03</span> หากเดินทางมาเป็นกลุ่ม 4 คน ควรเลือกจองห้องแบบไหนคุ้มค่าที่สุด?
+                                </button>
+                            </h2>
+                            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#staymateFaqAccordion">
+                                <div class="accordion-body">
+                                    แนะนำให้เลือกจอง <strong>Family Room (ขนาด 50 ตร.ม.)</strong> ซึ่งมีเตียง King Size 2 เตียงใหญ่และห้องน้ำอ่างล้างหน้าคู่สำหรับ 4 ท่านโดยเฉพาะ และอย่าลืมใช้คู่กับโปรโมชั่น <strong>Family &amp; Gang Pack</strong> เพื่อรับส่วนลดแพ็กเกจกลุ่มพร้อมเซ็ตอาหารเช้าครับ
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- FAQ 4 -->
+                        <div class="accordion-item sm-faq-item" data-faq-cat="checkin" data-aos="fade-up">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                                    <span class="sm-faq-num">04</span> ระบบ Digital Keyless เข้าห้องพักผ่านสมาร์ตโฟนใช้งานอย่างไร?
+                                </button>
+                            </h2>
+                            <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#staymateFaqAccordion">
+                                <div class="accordion-body">
+                                    เมื่อคุณทำการจองและยืนยันตัวตนที่ล็อบบี้เรียบร้อยแล้ว คุณจะได้รับ Digital Key ผ่านบัญชีสมาชิก StayMate ของคุณ สามารถนำสมาร์ตโฟนแตะที่หน้าประตูห้องพักและลิฟต์ได้ทันที หรือหากท่านใดสะดวกใช้คีย์การ์ดแบบปกติ ทางแผนกต้อนรับก็มีเตรียมไว้ให้เช่นกันครับ
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- FAQ 5 -->
+                        <div class="accordion-item sm-faq-item" data-faq-cat="booking" data-aos="fade-up">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                                    <span class="sm-faq-num">05</span> จำเป็นต้องสมัครสมาชิกก่อนทำการจองห้องพักหรือไม่?
+                                </button>
+                            </h2>
+                            <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#staymateFaqAccordion">
+                                <div class="accordion-body">
+                                    การเข้าสู่ระบบด้วยบัญชีสมาชิก StayMate จะช่วยให้คุณสามารถรับสิทธิ์โปรโมชั่นทั้ง 5 รายการ ตรวจสอบประวัติการจอง สถานะห้องพัก และจัดการบุ๊กกิ้งได้อย่างปลอดภัยและรวดเร็ว คุณสามารถกดปุ่ม <strong>"สมัครสมาชิก"</strong> ที่มุมขวาบนได้ฟรีโดยไม่มีค่าใช้จ่ายครับ
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- FAQ 6 -->
+                        <div class="accordion-item sm-faq-item" data-faq-cat="booking" data-aos="fade-up">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq6">
+                                    <span class="sm-faq-num">06</span> นโยบายการยกเลิกหรือเลื่อนวันเข้าพักเป็นอย่างไร?
+                                </button>
+                            </h2>
+                            <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#staymateFaqAccordion">
+                                <div class="accordion-body">
+                                    สำหรับการจองปกติและโปรโมชั่นส่วนใหญ่ ลูกค้าสามารถแจ้งยกเลิกหรือเปลี่ยนแปลงวันเข้าพักล่วงหน้าได้ไม่น้อยกว่า <strong>3–7 วันก่อนวันเช็คอิน</strong> โดยไม่มีค่าธรรมเนียม ทั้งนี้สามารถตรวจสอบเงื่อนไขเฉพาะของแต่ละโปรโมชั่นได้ในหน้าโปรโมชั่นครับ
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- FAQ 7 -->
+                        <div class="accordion-item sm-faq-item" data-faq-cat="facility" data-aos="fade-up">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq7">
+                                    <span class="sm-faq-num">07</span> โรงแรมมีที่จอดรถและจุดชาร์จรถยนต์ไฟฟ้า (EV Charger) หรือไม่?
+                                </button>
+                            </h2>
+                            <div id="faq7" class="accordion-collapse collapse" data-bs-parent="#staymateFaqAccordion">
+                                <div class="accordion-body">
+                                    มีบริการครบครันครับ อาคารจอดรถในร่มของ StayMate มีระบบรักษาความปลอดภัย 24 ชั่วโมง จอดฟรีสำหรับแขกผู้เข้าพักทุกท่าน พร้อมสถานีชาร์จรถยนต์ไฟฟ้าแบบ <strong>DC Fast Charge</strong> และ AC Type 2 บริเวณชั้น G
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- FAQ 8 -->
+                        <div class="accordion-item sm-faq-item" data-faq-cat="facility" data-aos="fade-up">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq8">
+                                    <span class="sm-faq-num">08</span> สระว่ายน้ำ ฟิตเนส และ Wi-Fi มีค่าใช้จ่ายเพิ่มเติมหรือไม่?
+                                </button>
+                            </h2>
+                            <div id="faq8" class="accordion-collapse collapse" data-bs-parent="#staymateFaqAccordion">
+                                <div class="accordion-body">
+                                    ผู้เข้าพักทุกห้องสามารถใช้บริการ <strong>สระว่ายน้ำ Rooftop Sky Pool</strong>, <strong>Fitness Center 24 ชั่วโมง</strong> และ <strong>Free Gigabit Wi-Fi 6</strong> ได้ฟรีตลอดการเข้าพักโดยไม่มีค่าใช้จ่ายเพิ่มเติมครับ
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Empty State เมื่อค้นหาไม่เจอ -->
+                    <div id="faqEmptyState" class="text-center p-5 rounded-4 bg-white border d-none">
+                        <i class="fa-solid fa-magnifying-glass-minus fs-1 text-secondary mb-3"></i>
+                        <h5 class="fw-bold">ไม่พบคำถามที่ตรงกับคำค้นหาของคุณ</h5>
+                        <p class="text-secondary small mb-3">ลองเปลี่ยนคำค้นหา หรือกดปุ่ม "ทั้งหมด" เพื่อดูรายการคำถามทั้งหมด</p>
+                        <button type="button" id="btnResetFaq" class="btn btn-sm btn-outline-primary rounded-pill px-4">แสดงคำถามทั้งหมด</button>
+                    </div>
+                </div>
+
+                <!-- Right Sidebar: Direct Support Card -->
+                <div class="col-lg-4" data-aos="fade-left">
+                    <div class="sm-sticky-booking-panel">
+                        <div class="sm-booking-panel-header">
+                            <div>
+                                <span class="sm-panel-tag">NEED MORE HELP?</span>
+                                <h4 class="text-white fw-bold mb-0 mt-1">ยังไม่พบคำตอบที่ต้องการ?</h4>
+                            </div>
+                            <i class="fa-solid fa-headset fs-2 text-info"></i>
+                        </div>
+                        <div class="sm-booking-panel-body">
+                            <p class="text-secondary small lh-lg mb-3">
+                                หากคุณมีคำถามเฉพาะเจาะจงเกี่ยวกับการเข้าพัก การจัดกรุ๊ปทัวร์ หรือต้องการความช่วยเหลือเร่งด่วน ทีมงาน Digital Concierge ของเราพร้อมดูแลคุณทันที
+                            </p>
+                            <div class="p-3 rounded-3 bg-light border mb-3 small">
+                                <div class="mb-2"><i class="fa-solid fa-phone text-primary me-2"></i><strong>โทร:</strong> 02-888-9999</div>
+                                <div class="mb-2"><i class="fa-brands fa-line text-success me-2"></i><strong>LINE:</strong> &#64;StayMateHotel</div>
+                                <div><i class="fa-solid fa-envelope text-primary me-2"></i><strong>อีเมล:</strong> booking@staymate-hotel.com</div>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <a asp-controller="Home" asp-action="Contact" class="sm-btn-search justify-content-center">
+                                    <i class="fa-regular fa-paper-plane"></i>
+                                    <span>ไปที่หน้าติดต่อเรา</span>
+                                </a>
+                                <a asp-controller="Home" asp-action="Rooms" class="btn btn-outline-secondary rounded-3 py-2 small">
+                                    สำรวจห้องพักทั้งหมด
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            if (typeof AOS !== "undefined") {
+                AOS.init({ duration: 700, once: true });
+            }
+
+            const searchInput = document.getElementById("faqSearchInput");
+            const catBtns = document.querySelectorAll("[data-faq-cat]");
+            const faqItems = document.querySelectorAll(".sm-faq-item");
+            const emptyState = document.getElementById("faqEmptyState");
+            const resetBtn = document.getElementById("btnResetFaq");
+
+            let activeCat = "all";
+
+            function filterFaqs() {
+                const keyword = (searchInput.value || "").trim().toLowerCase();
+                let visibleCount = 0;
+
+                faqItems.forEach(item => {
+                    const itemCat = item.getAttribute("data-faq-cat") || "";
+                    const text = item.textContent.toLowerCase();
+
+                    const matchCat = (activeCat === "all" || itemCat === activeCat);
+                    const matchKeyword = (!keyword || text.includes(keyword));
+
+                    if (matchCat && matchKeyword) {
+                        item.classList.remove("d-none");
+                        visibleCount++;
+                    } else {
+                        item.classList.add("d-none");
+                    }
+                });
+
+                emptyState.classList.toggle("d-none", visibleCount > 0);
+            }
+
+            catBtns.forEach(btn => {
+                if (btn.tagName === "BUTTON") {
+                    btn.addEventListener("click", function () {
+                        document.querySelectorAll(".sm-filter-btn").forEach(b => b.classList.remove("active"));
+                        this.classList.add("active");
+                        activeCat = this.getAttribute("data-faq-cat");
+                        filterFaqs();
+                    });
+                }
+            });
+
+            if (searchInput) {
+                searchInput.addEventListener("input", filterFaqs);
+            }
+
+            if (resetBtn) {
+                resetBtn.addEventListener("click", function () {
+                    searchInput.value = "";
+                    activeCat = "all";
+                    document.querySelectorAll(".sm-filter-btn").forEach((b, i) => b.classList.toggle("active", i === 0));
+                    filterFaqs();
+                });
+            }
+        });
+    </script>
+}

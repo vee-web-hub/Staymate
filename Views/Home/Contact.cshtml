@@ -1,0 +1,230 @@
+@{
+    Layout = "~/Views/Shared/_HomeLayout.cshtml";
+    ViewData["Title"] = "ติดต่อเรา";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" />
+    <link rel="stylesheet" href="~/css/Home.css" asp-append-version="true" />
+}
+
+<div class="sm-home-wrapper">
+
+    <!-- =========================================================
+         1. PAGE HERO BANNER (Contact Us)
+         ========================================================= -->
+    <section class="sm-subpage-hero sm-full-bleed">
+        <div class="sm-subpage-hero-bg"
+             style="background-image: url('https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=2000&q=85');">
+        </div>
+        <div class="sm-hero-overlay"></div>
+        <div class="sm-hero-glow-orb sm-orb-cyan"></div>
+
+        <div class="container position-relative z-2 py-4">
+            <nav aria-label="breadcrumb" class="mb-3" data-aos="fade-down">
+                <ol class="breadcrumb sm-breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index"><i class="fa-solid fa-house me-1"></i>หน้าแรก</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">ติดต่อเรา</li>
+                </ol>
+            </nav>
+
+            <div class="row align-items-end g-4">
+                <div class="col-lg-12" data-aos="fade-up">
+                    <div class="sm-hero-badge mb-2">
+                        <span class="sm-badge-pulse"></span>
+                        <span>24/7 DIGITAL CONCIERGE &amp; SUPPORT</span>
+                    </div>
+                    <h1 class="sm-subpage-title text-white">
+                        Contact StayMate<br />
+                        <span class="sm-text-gradient">เราพร้อมดูแลและให้คำปรึกษาตลอด 24 ชั่วโมง</span>
+                    </h1>
+                    <p class="text-light opacity-75 mb-0" style="max-width: 620px;">
+                        สอบถามข้อมูลห้องพัก เงื่อนไขโปรโมชั่น การจัดเลี้ยง หรือการเดินทาง ทีมงานฝ่ายบริการลูกค้าของ StayMate พร้อมตอบกลับอย่างรวดเร็วในทุกช่องทาง
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         2. QUICK CONTACT INFO CARDS (4 ช่องทางติดต่อหลัก)
+         ========================================================= -->
+    <section class="sm-section pb-3">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-sm-6 col-lg-3" data-aos="fade-up" data-aos-delay="50">
+                    <div class="sm-contact-info-card h-100">
+                        <div class="sm-contact-icon"><i class="fa-solid fa-phone-volume"></i></div>
+                        <h5>โทรศัพท์สายตรง</h5>
+                        <p class="text-secondary small mb-2">แผนกสำรองห้องพักและต้อนรับ (24 ชม.)</p>
+                        <strong class="text-primary fs-5">02-888-9999</strong>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-lg-3" data-aos="fade-up" data-aos-delay="110">
+                    <div class="sm-contact-info-card h-100">
+                        <div class="sm-contact-icon"><i class="fa-solid fa-envelope-open-text"></i></div>
+                        <h5>อีเมลติดต่อ</h5>
+                        <p class="text-secondary small mb-2">ตอบกลับภายใน 1–2 ชั่วโมงทำการ</p>
+                        <strong class="text-primary">booking@staymate-hotel.com</strong>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-lg-3" data-aos="fade-up" data-aos-delay="170">
+                    <div class="sm-contact-info-card h-100">
+                        <div class="sm-contact-icon"><i class="fa-brands fa-line"></i></div>
+                        <h5>LINE Official Chat</h5>
+                        <p class="text-secondary small mb-2">แชทสอบถามด่วนและรับคูปองพิเศษ</p>
+                        <strong class="text-success">&#64;StayMateHotel</strong>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-lg-3" data-aos="fade-up" data-aos-delay="230">
+                    <div class="sm-contact-info-card h-100">
+                        <div class="sm-contact-icon"><i class="fa-solid fa-location-dot"></i></div>
+                        <h5>ที่ตั้งโรงแรม</h5>
+                        <p class="text-secondary small mb-2">888 ถ.สุขุมวิท คลองเตยเหนือ วัฒนา</p>
+                        <strong class="text-dark">ติด BTS อโศก (ทางออก 3)</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         3. CONTACT FORM & INTERACTIVE MAP / TRANSIT GUIDE
+         ========================================================= -->
+    <section class="sm-section pt-4">
+        <div class="container">
+            <div class="row g-4">
+
+                <!-- Left: Send Message Form -->
+                <div class="col-lg-7" data-aos="fade-right">
+                    <div class="sm-detail-card h-100">
+                        <span class="sm-eyebrow"><i class="fa-regular fa-paper-plane me-1"></i> SEND US A MESSAGE</span>
+                        <h3 class="sm-section-title mt-1 mb-2">ส่งข้อความถึงทีมงาน StayMate</h3>
+                        <p class="text-secondary small mb-4">
+                            กรอกข้อมูลด้านล่างเพื่อสอบถามรายละเอียดห้องพัก การขอใบเสนอราคาแบบกลุ่ม หรือแจ้งความต้องการพิเศษล่วงหน้า
+                        </p>
+
+                        <!-- Alert Box เมื่อส่งข้อความสำเร็จ (ซ่อนไว้เริ่มต้น) -->
+                        <div id="contactSuccessAlert" class="alert alert-success rounded-4 border-0 shadow-sm d-none mb-4" role="alert">
+                            <div class="d-flex align-items-center gap-3">
+                                <i class="fa-solid fa-circle-check fs-3 text-success"></i>
+                                <div>
+                                    <h6 class="fw-bold mb-1">ส่งข้อความเรียบร้อยแล้ว!</h6>
+                                    <p class="small mb-0">ขอบคุณที่ติดต่อ StayMate Hotel ทีมงานได้รับข้อความของคุณแล้วและจะติดต่อกลับโดยเร็วที่สุด</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <form id="demoContactForm">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="sm-form-label">ชื่อ - นามสกุล <span class="text-danger">*</span></label>
+                                    <input type="text" id="contactName" class="form-control sm-input" placeholder="ระบุชื่อของคุณ" required />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="sm-form-label">เบอร์โทรศัพท์ <span class="text-danger">*</span></label>
+                                    <input type="tel" id="contactPhone" class="form-control sm-input" placeholder="เช่น 08x-xxx-xxxx" required />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="sm-form-label">อีเมล <span class="text-danger">*</span></label>
+                                    <input type="email" id="contactEmail" class="form-control sm-input" placeholder="name@example.com" required />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="sm-form-label">หัวข้อที่ต้องการติดต่อ</label>
+                                    <select id="contactTopic" class="form-select sm-input">
+                                        <option value="booking" selected>สอบถามห้องว่างและการจอง</option>
+                                        <option value="promo">เงื่อนไขโปรโมชั่น (มา 3 จ่าย 2 / พักยาว)</option>
+                                        <option value="group">จองแบบกลุ่ม / ครอบครัว (Family &amp; Gang)</option>
+                                        <option value="other">อื่น ๆ / ข้อเสนอแนะ</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="sm-form-label">ข้อความหรือรายละเอียดเพิ่มเติม <span class="text-danger">*</span></label>
+                                    <textarea id="contactMessage" rows="4" class="form-control sm-textarea" placeholder="ระบุวันที่คาดว่าจะเข้าพัก จำนวนผู้เข้าพัก หรือคำถามที่ต้องการทราบ..." required></textarea>
+                                </div>
+                                <div class="col-12 mt-3">
+                                    <button type="submit" class="sm-btn-primary border-0 py-3 px-4">
+                                        <i class="fa-solid fa-paper-plane"></i>
+                                        <span>ส่งข้อความติดต่อเรา</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Right: Location Map & Smart Transit Guide -->
+                <div class="col-lg-5" data-aos="fade-left">
+                    <div class="sm-detail-card h-100 d-flex flex-column">
+                        <span class="sm-eyebrow"><i class="fa-solid fa-map-location-dot me-1"></i> LOCATION &amp; TRANSIT</span>
+                        <h3 class="sm-detail-card-title mt-1 mb-3">แผนที่และการเดินทาง</h3>
+
+                        <!-- Embedded Google Map (Sukhumvit / Asok Area) -->
+                        <div class="sm-map-frame mb-4">
+                            <iframe title="แผนที่โรงแรม StayMate"
+                                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3875.640998170251!2d100.5580045!3d13.7371511!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30e29ee109dab6e1%3A0xfd15aa1c632d9677!2sAsok%20BTS%20Station!5e0!3m2!1sen!2sth!4v1700000000000!5m2!1sen!2sth"
+                                    width="100%" height="230" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+                            </iframe>
+                        </div>
+
+                        <h6 class="fw-bold text-dark mb-3">การเดินทางมายังโรงแรม StayMate</h6>
+                        <div class="d-grid gap-3 mt-auto">
+                            <div class="sm-transit-item">
+                                <div class="sm-transit-badge bg-success-subtle text-success"><i class="fa-solid fa-train-subway"></i></div>
+                                <div>
+                                    <strong class="d-block text-dark small">รถไฟฟ้า BTS และ MRT</strong>
+                                    <span class="text-secondary small">สถานี BTS อโศก (ทางออก 3) หรือ MRT สุขุมวิท เดินเชื่อม Skywalk เพียง 3 นาทีถึงตัวอาคาร</span>
+                                </div>
+                            </div>
+
+                            <div class="sm-transit-item">
+                                <div class="sm-transit-badge bg-primary-subtle text-primary"><i class="fa-solid fa-charging-station"></i></div>
+                                <div>
+                                    <strong class="d-block text-dark small">รถยนต์ส่วนตัว &amp; EV Supercharger</strong>
+                                    <span class="text-secondary small">ที่จอดรถในร่มรองรับ 100 คัน ฟรีสำหรับผู้เข้าพัก พร้อมหัวชาร์จรถยนต์ไฟฟ้า DC Fast Charge</span>
+                                </div>
+                            </div>
+
+                            <div class="sm-transit-item">
+                                <div class="sm-transit-badge bg-info-subtle text-info"><i class="fa-solid fa-plane-arrival"></i></div>
+                                <div>
+                                    <strong class="d-block text-dark small">จากสนามบินสุวรรณภูมิ (BKK)</strong>
+                                    <span class="text-secondary small">เดินทางด้วย Airport Rail Link ลงสถานีมักกะสัน ต่อ MRT เพชรบุรี มาลงสถานีสุขุมวิทเพียง 30 นาที</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            if (typeof AOS !== "undefined") {
+                AOS.init({ duration: 700, once: true });
+            }
+
+            // จำลองการส่งฟอร์มติดต่อเราแบบ Frontend
+            const form = document.getElementById("demoContactForm");
+            const alertBox = document.getElementById("contactSuccessAlert");
+
+            if (form && alertBox) {
+                form.addEventListener("submit", function (e) {
+                    e.preventDefault();
+                    alertBox.classList.remove("d-none");
+                    form.reset();
+                    alertBox.scrollIntoView({ behavior: "smooth", block: "center" });
+                });
+            }
+        });
+    </script>
+}

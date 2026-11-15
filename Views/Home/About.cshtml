@@ -1,0 +1,202 @@
+@{
+    Layout = "~/Views/Shared/_HomeLayout.cshtml";
+    ViewData["Title"] = "เกี่ยวกับเรา";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" />
+    <link rel="stylesheet" href="~/css/Home.css" asp-append-version="true" />
+}
+
+<div class="sm-home-wrapper">
+
+    <!-- =========================================================
+         1. PAGE HERO BANNER (About StayMate)
+         ========================================================= -->
+    <section class="sm-subpage-hero sm-full-bleed">
+        <div class="sm-subpage-hero-bg"
+             style="background-image: url('https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=2000&q=85');">
+        </div>
+        <div class="sm-hero-overlay"></div>
+        <div class="sm-hero-glow-orb sm-orb-cyan"></div>
+
+        <div class="container position-relative z-2 py-4">
+            <nav aria-label="breadcrumb" class="mb-3" data-aos="fade-down">
+                <ol class="breadcrumb sm-breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index"><i class="fa-solid fa-house me-1"></i>หน้าแรก</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">เกี่ยวกับเรา</li>
+                </ol>
+            </nav>
+
+            <div class="row align-items-end g-4">
+                <div class="col-lg-12" data-aos="fade-up">
+                    <div class="sm-hero-badge mb-2">
+                        <span class="sm-badge-pulse"></span>
+                        <span>THE STORY OF STAYMATE · FUTURE URBAN HOTEL</span>
+                    </div>
+                    <h1 class="sm-subpage-title text-white">
+                        About StayMate<br />
+                        <span class="sm-text-gradient">นิยามใหม่แห่งการพักผ่อนยุคดิจิทัล</span>
+                    </h1>
+                    <p class="text-light opacity-75 mb-0" style="max-width: 650px;">
+                        เราเชื่อว่าโรงแรมแห่งอนาคตไม่ใช่เพียงแค่ความล้ำสมัยของเทคโนโลยี แต่คือการนำนวัตกรรมมาสร้างความผ่อนคลาย ความคุ้มค่า และความอบอุ่นที่เข้าถึงผู้ใช้ทุกเจเนอเรชัน
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         2. BRAND STORY & PHILOSOPHY
+         ========================================================= -->
+    <section class="sm-section">
+        <div class="container">
+            <div class="row g-5 align-items-center">
+                <div class="col-lg-6" data-aos="fade-right">
+                    <div class="sm-about-gallery">
+                        <div class="sm-about-main-img">
+                            <img src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=85"
+                                 alt="StayMate Exterior Architecture" class="img-fluid" />
+                        </div>
+                        <div class="sm-about-sub-img">
+                            <img src="https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=700&q=80"
+                                 alt="StayMate Smart Interior" class="img-fluid" />
+                        </div>
+                        <div class="sm-about-float-badge">
+                            <div class="sm-float-icon"><i class="fa-solid fa-microchip"></i></div>
+                            <div>
+                                <strong>EST. 2026 BANGKOK</strong>
+                                <span>100% Smart Hospitality</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6" data-aos="fade-left">
+                    <span class="sm-eyebrow"><i class="fa-solid fa-sparkles me-1"></i> OUR VISION &amp; CONCEPT</span>
+                    <h2 class="sm-section-title mt-1">
+                        เมื่อความหรูหราระดับ Boutique<br />
+                        <span class="sm-text-blue">หลอมรวมเข้ากับเทคโนโลยีอัจฉริยะ</span>
+                    </h2>
+                    <p class="text-secondary lh-lg mb-3">
+                        <strong>StayMate Hotel</strong> ถือกำเนิดขึ้นใจกลางย่านสุขุมวิท กรุงเทพฯ ด้วยแนวคิด <em>"Future Urban Hotel"</em> ที่ต้องการทลายข้อจำกัดของโรงแรมแบบเดิม ๆ เราตัดขั้นตอนที่ยุ่งยากออกด้วยระบบจัดการห้องพักและบริการอัจฉริยะ เพื่อให้ทุกวินาทีของคุณคือการพักผ่อนอย่างแท้จริง
+                    </p>
+                    <p class="text-secondary lh-lg mb-4">
+                        ไม่ว่าคุณจะเดินทางมาทำงานแบบ Workation พักผ่อนสุดสัปดาห์กับคนพิเศษ หรือยกแก๊งมาสังสรรค์กับครอบครัว ห้องพักทั้ง 4 รูปแบบและโปรโมชั่นสุดคุ้มของเราถูกออกแบบมาให้ยืดหยุ่นและตอบโจทย์ทุกความต้องการอย่างตรงจุด
+                    </p>
+
+                    <!-- Key Statistics Row -->
+                    <div class="row g-3">
+                        <div class="col-4">
+                            <div class="sm-stat-box">
+                                <span class="sm-stat-number">120+</span>
+                                <span class="sm-stat-label">Smart Rooms &amp; Suites</span>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="sm-stat-box">
+                                <span class="sm-stat-number">4.9/5</span>
+                                <span class="sm-stat-label">Guest Satisfaction</span>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="sm-stat-box">
+                                <span class="sm-stat-number">24/7</span>
+                                <span class="sm-stat-label">Digital &amp; Human Care</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         3. THREE CORE PILLARS (จุดเด่น 3 แกนหลักของโรงแรม)
+         ========================================================= -->
+    <section class="sm-promo-section sm-full-bleed">
+        <div class="container">
+            <div class="text-center mb-5" data-aos="fade-up">
+                <span class="sm-eyebrow sm-eyebrow-cyan"><i class="fa-solid fa-layer-group me-1"></i> CORE VALUES</span>
+                <h2 class="sm-section-title text-white">3 เสาหลักที่ทำให้ StayMate แตกต่าง</h2>
+                <p class="text-light opacity-75 mx-auto mb-0" style="max-width: 620px;">
+                    ยกระดับมาตรฐานโรงแรมยุคใหม่ด้วยการออกแบบที่ใส่ใจทั้งนวัตกรรม ความคุ้มค่า และสิ่งแวดล้อม
+                </p>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="50">
+                    <div class="sm-pillar-card h-100">
+                        <div class="sm-pillar-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                        <h4>1. Smart &amp; Frictionless</h4>
+                        <p>
+                            ตั้งแต่การค้นหาห้องพัก การเช็คอินแบบไร้สัมผัส ไปจนถึงการควบคุมไฟ Ambient Light และอุณหภูมิในห้องพัก ทุกอย่างถูกออกแบบให้ใช้งานง่ายสำหรับทุกวัย
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="120">
+                    <div class="sm-pillar-card h-100">
+                        <div class="sm-pillar-icon"><i class="fa-solid fa-gem"></i></div>
+                        <h4>2. Boutique Luxury Comfort</h4>
+                        <p>
+                            คัดสรรเครื่องนอน Pocket Spring เกรดโรงแรม 5 ดาว กระจกเก็บเสียงสองชั้นชมวิวเส้นขอบฟ้า และห้องน้ำเรนชาวเวอร์หรืออ่างจากุซซี่เพื่อความสบายสูงสุด
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="190">
+                    <div class="sm-pillar-card h-100">
+                        <div class="sm-pillar-icon"><i class="fa-solid fa-leaf"></i></div>
+                        <h4>3. Sustainable Urban Living</h4>
+                        <p>
+                            ใช้ระบบเซนเซอร์ประหยัดพลังงานอัจฉริยะ ลดการใช้พลาสติกแบบครั้งเดียวทิ้ง และมีสถานีชาร์จรถยนต์ไฟฟ้า (EV Supercharger) รองรับการเดินทางยุคอนาคต
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         4. STANDARDS & CTA
+         ========================================================= -->
+    <section class="sm-section">
+        <div class="container">
+            <div class="sm-comparison-box" data-aos="fade-up">
+                <div class="row align-items-center g-4">
+                    <div class="col-lg-8">
+                        <span class="sm-eyebrow"><i class="fa-solid fa-shield-heart me-1"></i> STAYMATE PROMISE</span>
+                        <h3 class="sm-section-title mt-1">พร้อมสัมผัสประสบการณ์การพักผ่อนแห่งอนาคตหรือยัง?</h3>
+                        <p class="text-secondary mb-0">
+                            สำรวจห้องพักทั้ง 4 ประเภทของเรา หรือเลือกรับสิทธิ์โปรโมชั่นสุดคุ้มสำหรับการเดินทางครั้งถัดไปของคุณได้ทันที
+                        </p>
+                    </div>
+                    <div class="col-lg-4 text-lg-end">
+                        <div class="d-flex flex-wrap justify-content-lg-end gap-2">
+                            <a asp-controller="Home" asp-action="Rooms" class="sm-btn-primary">
+                                <span>ดูห้องพักทั้งหมด</span>
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </a>
+                            <a asp-controller="Home" asp-action="Contact" class="sm-btn-outline-dark">
+                                ติดต่อสอบถาม
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            if (typeof AOS !== "undefined") {
+                AOS.init({ duration: 700, once: true });
+            }
+        });
+    </script>
+}

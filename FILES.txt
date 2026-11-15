@@ -1,453 +1,461 @@
 Folder PATH listing for volume Windows
 Volume serial number is 64EB-A5A8
 C:.
-³   .gitignore
-³   appsettings.Development.json
-³   appsettings.json
-³   FILES.txt
-³   Program.cs
-³   StayMate_Kavinvee_0576.csproj
-³   
-?ÄÄÄbin
-³   ÀÄÄÄDebug
-³       ÀÄÄÄnet10.0
-³           ³   appsettings.Development.json
-³           ³   appsettings.json
-³           ³   Humanizer.dll
-³           ³   Microsoft.Bcl.AsyncInterfaces.dll
-³           ³   Microsoft.Build.Locator.dll
-³           ³   Microsoft.CodeAnalysis.CSharp.dll
-³           ³   Microsoft.CodeAnalysis.CSharp.Workspaces.dll
-³           ³   Microsoft.CodeAnalysis.dll
-³           ³   Microsoft.CodeAnalysis.Workspaces.dll
-³           ³   Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.dll
-³           ³   Microsoft.CodeAnalysis.Workspaces.MSBuild.dll
-³           ³   Microsoft.EntityFrameworkCore.Abstractions.dll
-³           ³   Microsoft.EntityFrameworkCore.Design.dll
-³           ³   Microsoft.EntityFrameworkCore.dll
-³           ³   Microsoft.EntityFrameworkCore.Relational.dll
-³           ³   Microsoft.Extensions.DependencyModel.dll
-³           ³   Mono.TextTemplating.dll
-³           ³   MySqlConnector.dll
-³           ³   Pomelo.EntityFrameworkCore.MySql.dll
-³           ³   StayMate_Kavinvee_0576.deps.json
-³           ³   StayMate_Kavinvee_0576.dll
-³           ³   StayMate_Kavinvee_0576.exe
-³           ³   StayMate_Kavinvee_0576.pdb
-³           ³   StayMate_Kavinvee_0576.runtimeconfig.json
-³           ³   StayMate_Kavinvee_0576.staticwebassets.endpoints.json
-³           ³   StayMate_Kavinvee_0576.staticwebassets.runtime.json
-³           ³   System.CodeDom.dll
-³           ³   System.Composition.AttributedModel.dll
-³           ³   System.Composition.Convention.dll
-³           ³   System.Composition.Hosting.dll
-³           ³   System.Composition.Runtime.dll
-³           ³   System.Composition.TypedParts.dll
-³           ³   
-³           ?ÄÄÄcs
-³           ³       Microsoft.CodeAnalysis.CSharp.resources.dll
-³           ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-³           ³       Microsoft.CodeAnalysis.resources.dll
-³           ³       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
-³           ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
-³           ³       
-³           ?ÄÄÄde
-³           ³       Microsoft.CodeAnalysis.CSharp.resources.dll
-³           ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-³           ³       Microsoft.CodeAnalysis.resources.dll
-³           ³       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
-³           ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
-³           ³       
-³           ?ÄÄÄes
-³           ³       Microsoft.CodeAnalysis.CSharp.resources.dll
-³           ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-³           ³       Microsoft.CodeAnalysis.resources.dll
-³           ³       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
-³           ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
-³           ³       
-³           ?ÄÄÄfr
-³           ³       Microsoft.CodeAnalysis.CSharp.resources.dll
-³           ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-³           ³       Microsoft.CodeAnalysis.resources.dll
-³           ³       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
-³           ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
-³           ³       
-³           ?ÄÄÄit
-³           ³       Microsoft.CodeAnalysis.CSharp.resources.dll
-³           ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-³           ³       Microsoft.CodeAnalysis.resources.dll
-³           ³       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
-³           ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
-³           ³       
-³           ?ÄÄÄja
-³           ³       Microsoft.CodeAnalysis.CSharp.resources.dll
-³           ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-³           ³       Microsoft.CodeAnalysis.resources.dll
-³           ³       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
-³           ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
-³           ³       
-³           ?ÄÄÄko
-³           ³       Microsoft.CodeAnalysis.CSharp.resources.dll
-³           ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-³           ³       Microsoft.CodeAnalysis.resources.dll
-³           ³       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
-³           ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
-³           ³       
-³           ?ÄÄÄpl
-³           ³       Microsoft.CodeAnalysis.CSharp.resources.dll
-³           ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-³           ³       Microsoft.CodeAnalysis.resources.dll
-³           ³       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
-³           ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
-³           ³       
-³           ?ÄÄÄpt-BR
-³           ³       Microsoft.CodeAnalysis.CSharp.resources.dll
-³           ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-³           ³       Microsoft.CodeAnalysis.resources.dll
-³           ³       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
-³           ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
-³           ³       
-³           ?ÄÄÄru
-³           ³       Microsoft.CodeAnalysis.CSharp.resources.dll
-³           ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-³           ³       Microsoft.CodeAnalysis.resources.dll
-³           ³       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
-³           ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
-³           ³       
-³           ?ÄÄÄtr
-³           ³       Microsoft.CodeAnalysis.CSharp.resources.dll
-³           ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-³           ³       Microsoft.CodeAnalysis.resources.dll
-³           ³       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
-³           ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
-³           ³       
-³           ?ÄÄÄzh-Hans
-³           ³       Microsoft.CodeAnalysis.CSharp.resources.dll
-³           ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-³           ³       Microsoft.CodeAnalysis.resources.dll
-³           ³       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
-³           ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
-³           ³       
-³           ÀÄÄÄzh-Hant
-³                   Microsoft.CodeAnalysis.CSharp.resources.dll
-³                   Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-³                   Microsoft.CodeAnalysis.resources.dll
-³                   Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
-³                   Microsoft.CodeAnalysis.Workspaces.resources.dll
-³                   
-?ÄÄÄControllers
-³       AccountController.cs
-³       CustomerController.cs
-³       DatabaseTestController.cs
-³       FinanceController.cs
-³       HomeController.cs
-³       HousekeepingController.cs
-³       ManagerController.cs
-³       OwnerController.cs
-³       ReceptionController.cs
-³       
-?ÄÄÄModels
-³   ³   AuditLog.cs
-³   ³   Booking.cs
-³   ³   BookingGuest.cs
-³   ³   BookingPromotion.cs
-³   ³   BookingRoom.cs
-³   ³   ErrorViewModel.cs
-³   ³   FinancialTransaction.cs
-³   ³   Holiday.cs
-³   ³   HousekeepingTask.cs
-³   ³   Payment.cs
-³   ³   Promotion.cs
-³   ³   Receipt.cs
-³   ³   Review.cs
-³   ³   Role.cs
-³   ³   Room.cs
-³   ³   RoomRatePeriod.cs
-³   ³   RoomStatusHistory.cs
-³   ³   RoomType.cs
-³   ³   StayMateDbContext.cs
-³   ³   StayRecord.cs
-³   ³   User.cs
-³   ³   UserRole.cs
-³   ³   Voucher.cs
-³   ³   
-³   ÀÄÄÄViewModels
-³           LoginViewModel.cs
-³           RegisterViewModel.cs
-³           UserCreateViewModel.cs
-³           UserEditViewModel.cs
-³           UserListItem.cs
-³           
-?ÄÄÄobj
-³   ³   project.assets.json
-³   ³   project.nuget.cache
-³   ³   StayMate_Kavinvee_0576.csproj.EntityFrameworkCore.targets
-³   ³   StayMate_Kavinvee_0576.csproj.nuget.dgspec.json
-³   ³   StayMate_Kavinvee_0576.csproj.nuget.g.props
-³   ³   StayMate_Kavinvee_0576.csproj.nuget.g.targets
-³   ³   
-³   ÀÄÄÄDebug
-³       ÀÄÄÄnet10.0
-³           ³   .NETCoreApp,Version=v10.0.AssemblyAttributes.cs
-³           ³   apphost.exe
-³           ³   rbcswa.dswa.cache.json
-³           ³   rjimswa.dswa.cache.json
-³           ³   rjsmcshtml.dswa.cache.json
-³           ³   rjsmrazor.dswa.cache.json
-³           ³   rpswa.dswa.cache.json
-³           ³   staticwebassets.build.endpoints.json
-³           ³   staticwebassets.build.json
-³           ³   staticwebassets.build.json.cache
-³           ³   staticwebassets.development.json
-³           ³   StayMate.B973F3A9.Up2Date
-³           ³   StayMate_Kavinvee_0576.AssemblyInfo.cs
-³           ³   StayMate_Kavinvee_0576.AssemblyInfoInputs.cache
-³           ³   StayMate_Kavinvee_0576.assets.cache
-³           ³   StayMate_Kavinvee_0576.csproj.AssemblyReference.cache
-³           ³   StayMate_Kavinvee_0576.csproj.CoreCompileInputs.cache
-³           ³   StayMate_Kavinvee_0576.csproj.FileListAbsolute.txt
-³           ³   StayMate_Kavinvee_0576.dll
-³           ³   StayMate_Kavinvee_0576.GeneratedMSBuildEditorConfig.editorconfig
-³           ³   StayMate_Kavinvee_0576.genruntimeconfig.cache
-³           ³   StayMate_Kavinvee_0576.GlobalUsings.g.cs
-³           ³   StayMate_Kavinvee_0576.MvcApplicationPartsAssemblyInfo.cache
-³           ³   StayMate_Kavinvee_0576.pdb
-³           ³   StayMate_Kavinvee_0576.RazorAssemblyInfo.cache
-³           ³   StayMate_Kavinvee_0576.RazorAssemblyInfo.cs
-³           ³   StayMate_Kavinvee_0576.sourcelink.json
-³           ³   swae.build.ex.cache
-³           ³   
-³           ?ÄÄÄcompressed
-³           ³       0ficvtfgdc-{0}-47otxtyo56-47otxtyo56.gz
-³           ³       10wo29qovj-{0}-ft3s53vfgj-ft3s53vfgj.gz
-³           ³       2tlghukceq-{0}-83jwlth58m-83jwlth58m.gz
-³           ³       2ual7gkoo7-{0}-ub07r2b239-ub07r2b239.gz
-³           ³       3ga03bymqb-{0}-khv3u5hwcm-khv3u5hwcm.gz
-³           ³       40ue91ahp2-{0}-61n19gt1b8-61n19gt1b8.gz
-³           ³       43jx188oel-{0}-iovd86k7lj-iovd86k7lj.gz
-³           ³       4ly27mpcpd-{0}-6pdc2jztkx-6pdc2jztkx.gz
-³           ³       4vr19yay4y-{0}-v8cbagddvq-v8cbagddvq.gz
-³           ³       51av17qs08-{0}-493y06b0oq-493y06b0oq.gz
-³           ³       66wet7egkx-{0}-2z0ns9nrw6-2z0ns9nrw6.gz
-³           ³       6oi3yrxg6t-{0}-xtxxf3hu2r-xtxxf3hu2r.gz
-³           ³       71ueavpycn-{0}-o1o13a6vjx-o1o13a6vjx.gz
-³           ³       87dci6w7b5-{0}-b9sayid5wm-b9sayid5wm.gz
-³           ³       887pd8j304-{0}-aexeepp0ev-aexeepp0ev.gz
-³           ³       8ejbko8rar-{0}-notf2xhcfb-notf2xhcfb.gz
-³           ³       8rswtylhb9-{0}-dxx9fxp4il-dxx9fxp4il.gz
-³           ³       8x10uodgim-{0}-06098lyss8-06098lyss8.gz
-³           ³       bareymlnuk-{0}-d7shbmvgxk-d7shbmvgxk.gz
-³           ³       brr242e1i9-{0}-v8cbagddvq-v8cbagddvq.gz
-³           ³       d195qumnqc-{0}-rzd6atqjts-rzd6atqjts.gz
-³           ³       dbdeqgs9f1-{0}-x0q3zqp4vz-x0q3zqp4vz.gz
-³           ³       dlf8ms1lp3-{0}-87fc7y1x7t-87fc7y1x7t.gz
-³           ³       e2okrv3qcw-{0}-v0zj4ognzu-v0zj4ognzu.gz
-³           ³       e4oyv4lbxd-{0}-nvvlpmu67g-nvvlpmu67g.gz
-³           ³       eay04i0z2d-{0}-kbrnm935zg-kbrnm935zg.gz
-³           ³       exr35g1m01-{0}-mrlpezrjn3-mrlpezrjn3.gz
-³           ³       f44ihm0v0j-{0}-pk9g2wxc8p-pk9g2wxc8p.gz
-³           ³       fb9wif4nsc-{0}-356vix0kms-356vix0kms.gz
-³           ³       fho7g43ely-{0}-2tz4jy55bf-2tz4jy55bf.gz
-³           ³       h1lyw2vlih-{0}-tdbxkamptv-tdbxkamptv.gz
-³           ³       i23z9ljo7z-{0}-4v8eqarkd7-4v8eqarkd7.gz
-³           ³       ib2j1mn2cb-{0}-wxgo9wxi7w-wxgo9wxi7w.gz
-³           ³       iplg6kj7pp-{0}-k8d9w2qqmf-k8d9w2qqmf.gz
-³           ³       iwxz5ht8fm-{0}-s35ty4nyc5-s35ty4nyc5.gz
-³           ³       j6kvfp56yr-{0}-hrwsygsryq-hrwsygsryq.gz
-³           ³       j79ipxec3l-{0}-y7v9cxd14o-y7v9cxd14o.gz
-³           ³       j9kcd6sadz-{0}-6cfz1n2cew-6cfz1n2cew.gz
-³           ³       jq2wbzmnds-{0}-lcd1t2u6c8-lcd1t2u6c8.gz
-³           ³       lcr4s48kkr-{0}-bqjiyaj88i-bqjiyaj88i.gz
-³           ³       lrfjpwhhj1-{0}-jd9uben2k1-jd9uben2k1.gz
-³           ³       n0qrfy8wbi-{0}-erw9l3u2r3-erw9l3u2r3.gz
-³           ³       n8yzhachsr-{0}-mlv21k5csn-mlv21k5csn.gz
-³           ³       ny9jgfolha-{0}-46ein0sx1k-46ein0sx1k.gz
-³           ³       o8nkortlbl-{0}-37tfw0ft22-37tfw0ft22.gz
-³           ³       p4ugsuiwru-{0}-muycvpuwrr-muycvpuwrr.gz
-³           ³       pezw8s05uq-{0}-c2jlpeoesf-c2jlpeoesf.gz
-³           ³       q1qwgno2ax-{0}-0i3buxo5is-0i3buxo5is.gz
-³           ³       rv0i07z09r-{0}-pj5nd1wqec-pj5nd1wqec.gz
-³           ³       rxnzu9022f-{0}-fsbi9cje9m-fsbi9cje9m.gz
-³           ³       sfkqcq42t8-{0}-jj8uyg4cgr-jj8uyg4cgr.gz
-³           ³       soqpwhc87p-{0}-vr1egmr9el-vr1egmr9el.gz
-³           ³       t43wuiuchk-{0}-h1s4sie4z3-h1s4sie4z3.gz
-³           ³       tbennsm6aw-{0}-ee0r1s7dh0-ee0r1s7dh0.gz
-³           ³       tbzqt5g0a8-{0}-ttgo8qnofa-ttgo8qnofa.gz
-³           ³       uf54sxlupq-{0}-fvhpjtyr6v-fvhpjtyr6v.gz
-³           ³       unns15k1gp-{0}-cosvhxvwiu-cosvhxvwiu.gz
-³           ³       wbvn6nmods-{0}-c2oey78nd0-c2oey78nd0.gz
-³           ³       wemnvbuv1y-{0}-63fj8s7r0e-63fj8s7r0e.gz
-³           ³       wsxj2pm3ah-{0}-lzl9nlhx6b-lzl9nlhx6b.gz
-³           ³       wvlu4r5puf-{0}-r4e9w2rdcm-r4e9w2rdcm.gz
-³           ³       x9bs77h1p2-{0}-0j3bgjxly4-0j3bgjxly4.gz
-³           ³       y8w1pxqsxp-{0}-b7pk76d08c-b7pk76d08c.gz
-³           ³       ymyw0eocuu-{0}-j5mq2jizvt-j5mq2jizvt.gz
-³           ³       ywnitiicxu-{0}-ag7o75518u-ag7o75518u.gz
-³           ³       zunjg9i1hq-{0}-ausgxo2sd3-ausgxo2sd3.gz
-³           ³       
-³           ?ÄÄÄref
-³           ³       StayMate_Kavinvee_0576.dll
-³           ³       
-³           ?ÄÄÄrefint
-³           ³       StayMate_Kavinvee_0576.dll
-³           ³       
-³           ?ÄÄÄscopedcss
-³           ³   ?ÄÄÄbundle
-³           ³   ³       StayMate_Kavinvee_0576.styles.css
-³           ³   ³       
-³           ³   ?ÄÄÄprojectbundle
-³           ³   ³       StayMate_Kavinvee_0576.bundle.scp.css
-³           ³   ³       
-³           ³   ÀÄÄÄViews
-³           ³       ÀÄÄÄShared
-³           ³               _Layout.cshtml.rz.scp.css
-³           ³               
-³           ÀÄÄÄstaticwebassets
-?ÄÄÄProperties
-³       launchSettings.json
-³       
-?ÄÄÄViews
-³   ³   _ViewImports.cshtml
-³   ³   _ViewStart.cshtml
-³   ³   
-³   ?ÄÄÄAccount
-³   ³       AccessDenied.cshtml
-³   ³       Create.cshtml
-³   ³       Edit.cshtml
-³   ³       Login.cshtml
-³   ³       LoginResult.cshtml
-³   ³       Register.cshtml
-³   ³       RegisterResult.cshtml
-³   ³       UserList.cshtml
-³   ³       
-³   ?ÄÄÄCustomer
-³   ³       Index.cshtml
-³   ³       
-³   ?ÄÄÄFinance
-³   ³       Index.cshtml
-³   ³       
-³   ?ÄÄÄHome
-³   ³       Index.cshtml
-³   ³       Privacy.cshtml
-³   ³       
-³   ?ÄÄÄHousekeeping
-³   ³       Index.cshtml
-³   ³       
-³   ?ÄÄÄManager
-³   ³       Index.cshtml
-³   ³       
-³   ?ÄÄÄOwner
-³   ³       Index.cshtml
-³   ³       
-³   ?ÄÄÄReception
-³   ³       Index.cshtml
-³   ³       
-³   ÀÄÄÄShared
-³           Error.cshtml
-³           _CustomerLayout.cshtml
-³           _FinanceLayout.cshtml
-³           _HomeLayout.cshtml
-³           _HousekeepingLayout.cshtml
-³           _Layout.cshtml
-³           _Layout.cshtml.css
-³           _ManagerLayout.cshtml
-³           _OwnerLayout.cshtml
-³           _ReceptionLayout.cshtml
-³           _ValidationScriptsPartial.cshtml
-³           
-ÀÄÄÄwwwroot
-    ³   favicon.ico
-    ³   
-    ?ÄÄÄcss
-    ³       Home.css
-    ³       site.css
-    ³       staymate-layout.css
-    ³       staymate_login_Register.css
-    ³       
-    ?ÄÄÄimages
-    ³   ÀÄÄÄLogo
-    ³           LogoStayMate.jpg
-    ³           
-    ?ÄÄÄjs
-    ³       site.js
-    ³       
-    ÀÄÄÄlib
-        ?ÄÄÄbootstrap
-        ³   ³   LICENSE
-        ³   ³   
-        ³   ÀÄÄÄdist
-        ³       ?ÄÄÄcss
-        ³       ³       bootstrap-grid.css
-        ³       ³       bootstrap-grid.css.map
-        ³       ³       bootstrap-grid.min.css
-        ³       ³       bootstrap-grid.min.css.map
-        ³       ³       bootstrap-grid.rtl.css
-        ³       ³       bootstrap-grid.rtl.css.map
-        ³       ³       bootstrap-grid.rtl.min.css
-        ³       ³       bootstrap-grid.rtl.min.css.map
-        ³       ³       bootstrap-reboot.css
-        ³       ³       bootstrap-reboot.css.map
-        ³       ³       bootstrap-reboot.min.css
-        ³       ³       bootstrap-reboot.min.css.map
-        ³       ³       bootstrap-reboot.rtl.css
-        ³       ³       bootstrap-reboot.rtl.css.map
-        ³       ³       bootstrap-reboot.rtl.min.css
-        ³       ³       bootstrap-reboot.rtl.min.css.map
-        ³       ³       bootstrap-utilities.css
-        ³       ³       bootstrap-utilities.css.map
-        ³       ³       bootstrap-utilities.min.css
-        ³       ³       bootstrap-utilities.min.css.map
-        ³       ³       bootstrap-utilities.rtl.css
-        ³       ³       bootstrap-utilities.rtl.css.map
-        ³       ³       bootstrap-utilities.rtl.min.css
-        ³       ³       bootstrap-utilities.rtl.min.css.map
-        ³       ³       bootstrap.css
-        ³       ³       bootstrap.css.map
-        ³       ³       bootstrap.min.css
-        ³       ³       bootstrap.min.css.map
-        ³       ³       bootstrap.rtl.css
-        ³       ³       bootstrap.rtl.css.map
-        ³       ³       bootstrap.rtl.min.css
-        ³       ³       bootstrap.rtl.min.css.map
-        ³       ³       
-        ³       ÀÄÄÄjs
-        ³               bootstrap.bundle.js
-        ³               bootstrap.bundle.js.map
-        ³               bootstrap.bundle.min.js
-        ³               bootstrap.bundle.min.js.map
-        ³               bootstrap.esm.js
-        ³               bootstrap.esm.js.map
-        ³               bootstrap.esm.min.js
-        ³               bootstrap.esm.min.js.map
-        ³               bootstrap.js
-        ³               bootstrap.js.map
-        ³               bootstrap.min.js
-        ³               bootstrap.min.js.map
-        ³               
-        ?ÄÄÄjquery
-        ³   ³   LICENSE.txt
-        ³   ³   
-        ³   ÀÄÄÄdist
-        ³           jquery.js
-        ³           jquery.min.js
-        ³           jquery.min.map
-        ³           jquery.slim.js
-        ³           jquery.slim.min.js
-        ³           jquery.slim.min.map
-        ³           
-        ?ÄÄÄjquery-validation
-        ³   ³   LICENSE.md
-        ³   ³   
-        ³   ÀÄÄÄdist
-        ³           additional-methods.js
-        ³           additional-methods.min.js
-        ³           jquery.validate.js
-        ³           jquery.validate.min.js
-        ³           
-        ÀÄÄÄjquery-validation-unobtrusive
-            ³   LICENSE.txt
-            ³   
-            ÀÄÄÄdist
+|   .gitignore
+|   appsettings.Development.json
+|   appsettings.json
+|   FILES.txt
+|   Program.cs
+|   StayMate_Kavinvee_0576.csproj
+|   
++---bin
+|   \---Debug
+|       \---net10.0
+|           |   appsettings.Development.json
+|           |   appsettings.json
+|           |   Humanizer.dll
+|           |   Microsoft.Bcl.AsyncInterfaces.dll
+|           |   Microsoft.Build.Locator.dll
+|           |   Microsoft.CodeAnalysis.CSharp.dll
+|           |   Microsoft.CodeAnalysis.CSharp.Workspaces.dll
+|           |   Microsoft.CodeAnalysis.dll
+|           |   Microsoft.CodeAnalysis.Workspaces.dll
+|           |   Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.dll
+|           |   Microsoft.CodeAnalysis.Workspaces.MSBuild.dll
+|           |   Microsoft.EntityFrameworkCore.Abstractions.dll
+|           |   Microsoft.EntityFrameworkCore.Design.dll
+|           |   Microsoft.EntityFrameworkCore.dll
+|           |   Microsoft.EntityFrameworkCore.Relational.dll
+|           |   Microsoft.Extensions.DependencyModel.dll
+|           |   Mono.TextTemplating.dll
+|           |   MySqlConnector.dll
+|           |   Pomelo.EntityFrameworkCore.MySql.dll
+|           |   StayMate_Kavinvee_0576.deps.json
+|           |   StayMate_Kavinvee_0576.dll
+|           |   StayMate_Kavinvee_0576.exe
+|           |   StayMate_Kavinvee_0576.pdb
+|           |   StayMate_Kavinvee_0576.runtimeconfig.json
+|           |   StayMate_Kavinvee_0576.staticwebassets.endpoints.json
+|           |   StayMate_Kavinvee_0576.staticwebassets.runtime.json
+|           |   System.CodeDom.dll
+|           |   System.Composition.AttributedModel.dll
+|           |   System.Composition.Convention.dll
+|           |   System.Composition.Hosting.dll
+|           |   System.Composition.Runtime.dll
+|           |   System.Composition.TypedParts.dll
+|           |   
+|           +---cs
+|           |       Microsoft.CodeAnalysis.CSharp.resources.dll
+|           |       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+|           |       Microsoft.CodeAnalysis.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.resources.dll
+|           |       
+|           +---de
+|           |       Microsoft.CodeAnalysis.CSharp.resources.dll
+|           |       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+|           |       Microsoft.CodeAnalysis.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.resources.dll
+|           |       
+|           +---es
+|           |       Microsoft.CodeAnalysis.CSharp.resources.dll
+|           |       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+|           |       Microsoft.CodeAnalysis.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.resources.dll
+|           |       
+|           +---fr
+|           |       Microsoft.CodeAnalysis.CSharp.resources.dll
+|           |       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+|           |       Microsoft.CodeAnalysis.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.resources.dll
+|           |       
+|           +---it
+|           |       Microsoft.CodeAnalysis.CSharp.resources.dll
+|           |       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+|           |       Microsoft.CodeAnalysis.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.resources.dll
+|           |       
+|           +---ja
+|           |       Microsoft.CodeAnalysis.CSharp.resources.dll
+|           |       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+|           |       Microsoft.CodeAnalysis.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.resources.dll
+|           |       
+|           +---ko
+|           |       Microsoft.CodeAnalysis.CSharp.resources.dll
+|           |       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+|           |       Microsoft.CodeAnalysis.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.resources.dll
+|           |       
+|           +---pl
+|           |       Microsoft.CodeAnalysis.CSharp.resources.dll
+|           |       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+|           |       Microsoft.CodeAnalysis.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.resources.dll
+|           |       
+|           +---pt-BR
+|           |       Microsoft.CodeAnalysis.CSharp.resources.dll
+|           |       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+|           |       Microsoft.CodeAnalysis.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.resources.dll
+|           |       
+|           +---ru
+|           |       Microsoft.CodeAnalysis.CSharp.resources.dll
+|           |       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+|           |       Microsoft.CodeAnalysis.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.resources.dll
+|           |       
+|           +---tr
+|           |       Microsoft.CodeAnalysis.CSharp.resources.dll
+|           |       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+|           |       Microsoft.CodeAnalysis.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.resources.dll
+|           |       
+|           +---zh-Hans
+|           |       Microsoft.CodeAnalysis.CSharp.resources.dll
+|           |       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+|           |       Microsoft.CodeAnalysis.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
+|           |       Microsoft.CodeAnalysis.Workspaces.resources.dll
+|           |       
+|           \---zh-Hant
+|                   Microsoft.CodeAnalysis.CSharp.resources.dll
+|                   Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+|                   Microsoft.CodeAnalysis.resources.dll
+|                   Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
+|                   Microsoft.CodeAnalysis.Workspaces.resources.dll
+|                   
++---Controllers
+|       AccountController.cs
+|       CustomerController.cs
+|       DatabaseTestController.cs
+|       FinanceController.cs
+|       HomeController.cs
+|       HousekeepingController.cs
+|       ManagerController.cs
+|       OwnerController.cs
+|       ReceptionController.cs
+|       
++---Models
+|   |   AuditLog.cs
+|   |   Booking.cs
+|   |   BookingGuest.cs
+|   |   BookingPromotion.cs
+|   |   BookingRoom.cs
+|   |   ErrorViewModel.cs
+|   |   FinancialTransaction.cs
+|   |   Holiday.cs
+|   |   HousekeepingTask.cs
+|   |   Payment.cs
+|   |   Promotion.cs
+|   |   Receipt.cs
+|   |   Review.cs
+|   |   Role.cs
+|   |   Room.cs
+|   |   RoomRatePeriod.cs
+|   |   RoomStatusHistory.cs
+|   |   RoomType.cs
+|   |   StayMateDbContext.cs
+|   |   StayRecord.cs
+|   |   User.cs
+|   |   UserRole.cs
+|   |   Voucher.cs
+|   |   
+|   \---ViewModels
+|           LoginViewModel.cs
+|           RegisterViewModel.cs
+|           UserCreateViewModel.cs
+|           UserEditViewModel.cs
+|           UserListItem.cs
+|           
++---obj
+|   |   project.assets.json
+|   |   project.nuget.cache
+|   |   StayMate_Kavinvee_0576.csproj.EntityFrameworkCore.targets
+|   |   StayMate_Kavinvee_0576.csproj.nuget.dgspec.json
+|   |   StayMate_Kavinvee_0576.csproj.nuget.g.props
+|   |   StayMate_Kavinvee_0576.csproj.nuget.g.targets
+|   |   
+|   \---Debug
+|       \---net10.0
+|           |   .NETCoreApp,Version=v10.0.AssemblyAttributes.cs
+|           |   apphost.exe
+|           |   rbcswa.dswa.cache.json
+|           |   rjimswa.dswa.cache.json
+|           |   rjsmcshtml.dswa.cache.json
+|           |   rjsmrazor.dswa.cache.json
+|           |   rpswa.dswa.cache.json
+|           |   staticwebassets.build.endpoints.json
+|           |   staticwebassets.build.json
+|           |   staticwebassets.build.json.cache
+|           |   staticwebassets.development.json
+|           |   StayMate.B973F3A9.Up2Date
+|           |   StayMate_Kavinvee_0576.AssemblyInfo.cs
+|           |   StayMate_Kavinvee_0576.AssemblyInfoInputs.cache
+|           |   StayMate_Kavinvee_0576.assets.cache
+|           |   StayMate_Kavinvee_0576.csproj.AssemblyReference.cache
+|           |   StayMate_Kavinvee_0576.csproj.CoreCompileInputs.cache
+|           |   StayMate_Kavinvee_0576.csproj.FileListAbsolute.txt
+|           |   StayMate_Kavinvee_0576.dll
+|           |   StayMate_Kavinvee_0576.GeneratedMSBuildEditorConfig.editorconfig
+|           |   StayMate_Kavinvee_0576.genruntimeconfig.cache
+|           |   StayMate_Kavinvee_0576.GlobalUsings.g.cs
+|           |   StayMate_Kavinvee_0576.MvcApplicationPartsAssemblyInfo.cache
+|           |   StayMate_Kavinvee_0576.pdb
+|           |   StayMate_Kavinvee_0576.RazorAssemblyInfo.cache
+|           |   StayMate_Kavinvee_0576.RazorAssemblyInfo.cs
+|           |   StayMate_Kavinvee_0576.sourcelink.json
+|           |   swae.build.ex.cache
+|           |   
+|           +---compressed
+|           |       0ficvtfgdc-{0}-47otxtyo56-47otxtyo56.gz
+|           |       10wo29qovj-{0}-ft3s53vfgj-ft3s53vfgj.gz
+|           |       2q8nczj1zj-{0}-b5jijheh38-b5jijheh38.gz
+|           |       2tlghukceq-{0}-83jwlth58m-83jwlth58m.gz
+|           |       2ual7gkoo7-{0}-ub07r2b239-ub07r2b239.gz
+|           |       3ga03bymqb-{0}-khv3u5hwcm-khv3u5hwcm.gz
+|           |       40ue91ahp2-{0}-61n19gt1b8-61n19gt1b8.gz
+|           |       43jx188oel-{0}-iovd86k7lj-iovd86k7lj.gz
+|           |       4ly27mpcpd-{0}-6pdc2jztkx-6pdc2jztkx.gz
+|           |       4vr19yay4y-{0}-v8cbagddvq-v8cbagddvq.gz
+|           |       51av17qs08-{0}-493y06b0oq-493y06b0oq.gz
+|           |       66wet7egkx-{0}-2z0ns9nrw6-2z0ns9nrw6.gz
+|           |       6oi3yrxg6t-{0}-xtxxf3hu2r-xtxxf3hu2r.gz
+|           |       71ueavpycn-{0}-o1o13a6vjx-o1o13a6vjx.gz
+|           |       87dci6w7b5-{0}-b9sayid5wm-b9sayid5wm.gz
+|           |       887pd8j304-{0}-aexeepp0ev-aexeepp0ev.gz
+|           |       8ejbko8rar-{0}-notf2xhcfb-notf2xhcfb.gz
+|           |       8rswtylhb9-{0}-dxx9fxp4il-dxx9fxp4il.gz
+|           |       8x10uodgim-{0}-06098lyss8-06098lyss8.gz
+|           |       bareymlnuk-{0}-d7shbmvgxk-d7shbmvgxk.gz
+|           |       brr242e1i9-{0}-v8cbagddvq-v8cbagddvq.gz
+|           |       d195qumnqc-{0}-rzd6atqjts-rzd6atqjts.gz
+|           |       dbdeqgs9f1-{0}-x0q3zqp4vz-x0q3zqp4vz.gz
+|           |       dlf8ms1lp3-{0}-87fc7y1x7t-87fc7y1x7t.gz
+|           |       e2okrv3qcw-{0}-v0zj4ognzu-v0zj4ognzu.gz
+|           |       e4oyv4lbxd-{0}-nvvlpmu67g-nvvlpmu67g.gz
+|           |       eay04i0z2d-{0}-kbrnm935zg-kbrnm935zg.gz
+|           |       exr35g1m01-{0}-mrlpezrjn3-mrlpezrjn3.gz
+|           |       f44ihm0v0j-{0}-pk9g2wxc8p-pk9g2wxc8p.gz
+|           |       fb9wif4nsc-{0}-356vix0kms-356vix0kms.gz
+|           |       fho7g43ely-{0}-2tz4jy55bf-2tz4jy55bf.gz
+|           |       h1lyw2vlih-{0}-tdbxkamptv-tdbxkamptv.gz
+|           |       i23z9ljo7z-{0}-4v8eqarkd7-4v8eqarkd7.gz
+|           |       ib2j1mn2cb-{0}-wxgo9wxi7w-wxgo9wxi7w.gz
+|           |       iplg6kj7pp-{0}-k8d9w2qqmf-k8d9w2qqmf.gz
+|           |       iwxz5ht8fm-{0}-s35ty4nyc5-s35ty4nyc5.gz
+|           |       j6kvfp56yr-{0}-hrwsygsryq-hrwsygsryq.gz
+|           |       j79ipxec3l-{0}-y7v9cxd14o-y7v9cxd14o.gz
+|           |       j9kcd6sadz-{0}-6cfz1n2cew-6cfz1n2cew.gz
+|           |       jq2wbzmnds-{0}-lcd1t2u6c8-lcd1t2u6c8.gz
+|           |       lcr4s48kkr-{0}-bqjiyaj88i-bqjiyaj88i.gz
+|           |       lrfjpwhhj1-{0}-jd9uben2k1-jd9uben2k1.gz
+|           |       n0qrfy8wbi-{0}-erw9l3u2r3-erw9l3u2r3.gz
+|           |       n8yzhachsr-{0}-mlv21k5csn-mlv21k5csn.gz
+|           |       ny9jgfolha-{0}-46ein0sx1k-46ein0sx1k.gz
+|           |       o8nkortlbl-{0}-37tfw0ft22-37tfw0ft22.gz
+|           |       p4ugsuiwru-{0}-muycvpuwrr-muycvpuwrr.gz
+|           |       pezw8s05uq-{0}-c2jlpeoesf-c2jlpeoesf.gz
+|           |       q1qwgno2ax-{0}-0i3buxo5is-0i3buxo5is.gz
+|           |       rv0i07z09r-{0}-pj5nd1wqec-pj5nd1wqec.gz
+|           |       rxnzu9022f-{0}-fsbi9cje9m-fsbi9cje9m.gz
+|           |       sfkqcq42t8-{0}-jj8uyg4cgr-jj8uyg4cgr.gz
+|           |       soqpwhc87p-{0}-vr1egmr9el-vr1egmr9el.gz
+|           |       t43wuiuchk-{0}-h1s4sie4z3-h1s4sie4z3.gz
+|           |       tbennsm6aw-{0}-ee0r1s7dh0-ee0r1s7dh0.gz
+|           |       tbzqt5g0a8-{0}-ttgo8qnofa-ttgo8qnofa.gz
+|           |       uf54sxlupq-{0}-fvhpjtyr6v-fvhpjtyr6v.gz
+|           |       unns15k1gp-{0}-cosvhxvwiu-cosvhxvwiu.gz
+|           |       wbvn6nmods-{0}-c2oey78nd0-c2oey78nd0.gz
+|           |       wemnvbuv1y-{0}-63fj8s7r0e-63fj8s7r0e.gz
+|           |       wsxj2pm3ah-{0}-lzl9nlhx6b-lzl9nlhx6b.gz
+|           |       wvlu4r5puf-{0}-r4e9w2rdcm-r4e9w2rdcm.gz
+|           |       x9bs77h1p2-{0}-0j3bgjxly4-0j3bgjxly4.gz
+|           |       y8w1pxqsxp-{0}-b7pk76d08c-b7pk76d08c.gz
+|           |       ymyw0eocuu-{0}-j5mq2jizvt-j5mq2jizvt.gz
+|           |       ywnitiicxu-{0}-ag7o75518u-ag7o75518u.gz
+|           |       zunjg9i1hq-{0}-ausgxo2sd3-ausgxo2sd3.gz
+|           |       
+|           +---ref
+|           |       StayMate_Kavinvee_0576.dll
+|           |       
+|           +---refint
+|           |       StayMate_Kavinvee_0576.dll
+|           |       
+|           +---scopedcss
+|           |   +---bundle
+|           |   |       StayMate_Kavinvee_0576.styles.css
+|           |   |       
+|           |   +---projectbundle
+|           |   |       StayMate_Kavinvee_0576.bundle.scp.css
+|           |   |       
+|           |   \---Views
+|           |       \---Shared
+|           |               _Layout.cshtml.rz.scp.css
+|           |               
+|           \---staticwebassets
++---Properties
+|       launchSettings.json
+|       
++---Views
+|   |   _ViewImports.cshtml
+|   |   _ViewStart.cshtml
+|   |   
+|   +---Account
+|   |       AccessDenied.cshtml
+|   |       Create.cshtml
+|   |       Edit.cshtml
+|   |       Login.cshtml
+|   |       LoginResult.cshtml
+|   |       Register.cshtml
+|   |       RegisterResult.cshtml
+|   |       UserList.cshtml
+|   |       
+|   +---Customer
+|   |       Index.cshtml
+|   |       
+|   +---Finance
+|   |       Index.cshtml
+|   |       
+|   +---Home
+|   |       About.cshtml
+|   |       Contact.cshtml
+|   |       Facilities.cshtml
+|   |       FAQ.cshtml
+|   |       Index.cshtml
+|   |       Privacy.cshtml
+|   |       Promotions.cshtml
+|   |       RoomDetails.cshtml
+|   |       Rooms.cshtml
+|   |       
+|   +---Housekeeping
+|   |       Index.cshtml
+|   |       
+|   +---Manager
+|   |       Index.cshtml
+|   |       
+|   +---Owner
+|   |       Index.cshtml
+|   |       
+|   +---Reception
+|   |       Index.cshtml
+|   |       
+|   \---Shared
+|           Error.cshtml
+|           _CustomerLayout.cshtml
+|           _FinanceLayout.cshtml
+|           _HomeLayout.cshtml
+|           _HousekeepingLayout.cshtml
+|           _Layout.cshtml
+|           _Layout.cshtml.css
+|           _ManagerLayout.cshtml
+|           _OwnerLayout.cshtml
+|           _ReceptionLayout.cshtml
+|           _ValidationScriptsPartial.cshtml
+|           
+\---wwwroot
+    |   favicon.ico
+    |   
+    +---css
+    |       Home.css
+    |       site.css
+    |       staymate-layout.css
+    |       staymate_login_Register.css
+    |       
+    +---images
+    |   \---Logo
+    |           LogoStayMate.jpg
+    |           
+    +---js
+    |       site.js
+    |       
+    \---lib
+        +---bootstrap
+        |   |   LICENSE
+        |   |   
+        |   \---dist
+        |       +---css
+        |       |       bootstrap-grid.css
+        |       |       bootstrap-grid.css.map
+        |       |       bootstrap-grid.min.css
+        |       |       bootstrap-grid.min.css.map
+        |       |       bootstrap-grid.rtl.css
+        |       |       bootstrap-grid.rtl.css.map
+        |       |       bootstrap-grid.rtl.min.css
+        |       |       bootstrap-grid.rtl.min.css.map
+        |       |       bootstrap-reboot.css
+        |       |       bootstrap-reboot.css.map
+        |       |       bootstrap-reboot.min.css
+        |       |       bootstrap-reboot.min.css.map
+        |       |       bootstrap-reboot.rtl.css
+        |       |       bootstrap-reboot.rtl.css.map
+        |       |       bootstrap-reboot.rtl.min.css
+        |       |       bootstrap-reboot.rtl.min.css.map
+        |       |       bootstrap-utilities.css
+        |       |       bootstrap-utilities.css.map
+        |       |       bootstrap-utilities.min.css
+        |       |       bootstrap-utilities.min.css.map
+        |       |       bootstrap-utilities.rtl.css
+        |       |       bootstrap-utilities.rtl.css.map
+        |       |       bootstrap-utilities.rtl.min.css
+        |       |       bootstrap-utilities.rtl.min.css.map
+        |       |       bootstrap.css
+        |       |       bootstrap.css.map
+        |       |       bootstrap.min.css
+        |       |       bootstrap.min.css.map
+        |       |       bootstrap.rtl.css
+        |       |       bootstrap.rtl.css.map
+        |       |       bootstrap.rtl.min.css
+        |       |       bootstrap.rtl.min.css.map
+        |       |       
+        |       \---js
+        |               bootstrap.bundle.js
+        |               bootstrap.bundle.js.map
+        |               bootstrap.bundle.min.js
+        |               bootstrap.bundle.min.js.map
+        |               bootstrap.esm.js
+        |               bootstrap.esm.js.map
+        |               bootstrap.esm.min.js
+        |               bootstrap.esm.min.js.map
+        |               bootstrap.js
+        |               bootstrap.js.map
+        |               bootstrap.min.js
+        |               bootstrap.min.js.map
+        |               
+        +---jquery
+        |   |   LICENSE.txt
+        |   |   
+        |   \---dist
+        |           jquery.js
+        |           jquery.min.js
+        |           jquery.min.map
+        |           jquery.slim.js
+        |           jquery.slim.min.js
+        |           jquery.slim.min.map
+        |           
+        +---jquery-validation
+        |   |   LICENSE.md
+        |   |   
+        |   \---dist
+        |           additional-methods.js
+        |           additional-methods.min.js
+        |           jquery.validate.js
+        |           jquery.validate.min.js
+        |           
+        \---jquery-validation-unobtrusive
+            |   LICENSE.txt
+            |   
+            \---dist
                     jquery.validate.unobtrusive.js
                     jquery.validate.unobtrusive.min.js
                     
