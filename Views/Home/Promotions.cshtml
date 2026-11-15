@@ -1,6 +1,12 @@
+@model List<StayMate_Kavinvee_0576.Models.ViewModels.PromoCardItem>
 @{
     Layout = "~/Views/Shared/_HomeLayout.cshtml";
     ViewData["Title"] = "โปรโมชั่นพิเศษ";
+
+    int total = Model.Count;
+    int cPopular = Model.Count(p => p.Category.Contains("popular"));
+    int cLong = Model.Count(p => p.Category.Contains("stay-long"));
+    int cGroup = Model.Count(p => p.Category.Contains("group-pack"));
 }
 
 @section Styles {
@@ -10,9 +16,7 @@
 
 <div class="sm-home-wrapper">
 
-    <!-- =========================================================
-         1. PAGE HERO BANNER
-         ========================================================= -->
+    <!-- 1. HERO -->
     <section class="sm-subpage-hero sm-full-bleed">
         <div class="sm-subpage-hero-bg"
              style="background-image: url('https://images.unsplash.com/photo-1540518614846-7ede433c4576?auto=format&fit=crop&w=2000&q=85');">
@@ -32,283 +36,206 @@
                 <div class="col-lg-12" data-aos="fade-up">
                     <div class="sm-hero-badge mb-2 sm-badge-pulse-violet">
                         <span class="sm-badge-pulse bg-warning" style="box-shadow: 0 0 10px #FFB547;"></span>
-                        <span>EXCLUSIVE LIMITED TIME OFFERS</span>
+                        <span>SPECIAL PROMOTIONS</span>
                     </div>
                     <h1 class="sm-subpage-title text-white">
                         Special Promotions<br />
                         <span class="sm-text-gradient">โปรโมชั่นและสิทธิพิเศษสำหรับคุณ</span>
                     </h1>
                     <p class="text-light opacity-75 mb-0" style="max-width: 620px;">
-                        จองห้องพักตรงผ่านสมาร์ตจองของ StayMate วันนี้ รับข้อเสนอที่ดีที่สุด พร้อมสิทธิ์เข้าใช้ระบบ Smart Room Automation และสิทธิพิเศษในการยกเลิกหรือเลื่อนวันเข้าพักฟรี
+                        ดูโปรโมชั่นที่เปิดให้บริการอยู่ในขณะนี้ เมื่อพร้อมเข้าพัก เข้าสู่ระบบเพื่อจองห้องพักและรับสิทธิ์ตามเงื่อนไขของแต่ละโปรโมชั่น
                     </p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- =========================================================
-         2. PROMOTIONS CATEGORY SELECTOR
-         ========================================================= -->
+    <!-- 2. FILTER -->
     <section class="sm-rooms-filter-wrap" data-aos="fade-up">
         <div class="container">
             <div class="sm-filter-bar">
                 <div class="d-flex align-items-center flex-wrap gap-2">
                     <span class="sm-filter-label"><i class="fa-solid fa-tags text-primary me-1"></i> เลือกประเภทโปรโมชั่น:</span>
-                    <button type="button" class="sm-filter-btn active" data-filter="all">ทั้งหมด (5)</button>
-                    <button type="button" class="sm-filter-btn" data-filter="popular">ดีลยอดนิยม</button>
-                    <button type="button" class="sm-filter-btn" data-filter="stay-long">พักระยะยาว</button>
-                    <button type="button" class="sm-filter-btn" data-filter="group-pack">กลุ่มและครอบครัว</button>
+                    <button type="button" class="sm-filter-btn active" data-filter="all">ทั้งหมด (@total)</button>
+                    <button type="button" class="sm-filter-btn" data-filter="popular">ดีลยอดนิยม (@cPopular)</button>
+                    <button type="button" class="sm-filter-btn" data-filter="stay-long">พักระยะยาว (@cLong)</button>
+                    <button type="button" class="sm-filter-btn" data-filter="group-pack">กลุ่มและครอบครัว (@cGroup)</button>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- =========================================================
-         3. PROMOTION CARDS SECTION (ครบทั้ง 5 โปรโมชั่น)
-         ========================================================= -->
+    <!-- 3. PROMOTION CARDS -->
     <section class="sm-section pt-3">
         <div class="container">
-            <div class="row g-4" id="promotionsContainer">
 
-                <!-- PROMO 1: มา 3 จ่าย 2 -->
-                <div class="col-lg-6 sm-promo-item-card" data-category="popular" data-aos="fade-up">
-                    <div class="sm-promo-showcase-box sm-grad-blue">
-                        <div class="sm-promo-header-row">
-                            <span class="sm-promo-badge-tag">HOT DEAL</span>
-                            <div class="sm-countdown-wrap" data-hours="14">
-                                <i class="fa-regular fa-clock me-1"></i>เหลือเวลา <span class="countdown-timer">00:00:00</span>
-                            </div>
-                        </div>
-                        <h2 class="sm-promo-showcase-title">มา 3 จ่าย 2</h2>
-                        <span class="sm-promo-showcase-sub">3 Guests, Pay for 2 Extra Value</span>
-                        <p class="sm-promo-showcase-desc">
-                            สิทธิพิเศษเมื่อจองห้องพักประเภท Deluxe Room หรือ Suite Room ที่รองรับการเสริมเตียง พักผ่อนแบบกลุ่มหรือแก๊ง 3 ท่าน จ่ายจริงเพียง 2 ท่าน ฟรีค่าเตียงเสริมและสิทธิ์รับเซ็ตชาอุ่นรับอรุณตลอดการเข้าพัก
-                        </p>
-                        <div class="sm-promo-perks">
-                            <span><i class="fa-solid fa-bed"></i> เตียงเสริมฟรี 1 ชุด</span>
-                            <span><i class="fa-solid fa-mug-hot"></i> อาหารเช้าฟรี 3 ท่าน</span>
-                        </div>
-                        <div class="sm-promo-showcase-footer">
-                            <div class="sm-coupon-box">
-                                <small>โค้ดจองตรง:</small>
-                                <div class="sm-coupon-code">
-                                    <span class="code-text">STAYMATE3PAY2</span>
-                                    <button class="sm-copy-btn" onclick="copyCouponCode('STAYMATE3PAY2', this)" aria-label="คัดลอกโค้ด"><i class="fa-regular fa-copy"></i></button>
-                                </div>
-                            </div>
-                            <a asp-controller="Home" asp-action="RoomDetails" asp-route-type="deluxe" class="sm-promo-action-btn">จองห้องพักเลย <i class="fa-solid fa-angle-right"></i></a>
-                        </div>
-                    </div>
+            @if (total == 0)
+            {
+                <div class="text-center py-5">
+                    <i class="fa-regular fa-face-smile fa-2x mb-3 text-muted"></i>
+                    <h5 class="mb-1">ขณะนี้ยังไม่มีโปรโมชั่นที่เปิดใช้งาน</h5>
+                    <p class="text-muted mb-3">โปรดกลับมาตรวจสอบใหม่เร็ว ๆ นี้</p>
+                    <a asp-controller="Home" asp-action="Rooms" class="sm-promo-action-btn d-inline-flex">ดูห้องพักทั้งหมด <i class="fa-solid fa-angle-right"></i></a>
                 </div>
+            }
+            else
+            {
+                <div class="row g-4" id="promotionsContainer">
+                    @{ var delay = 0; }
+                    @foreach (var p in Model)
+                    {
+                        <div class="col-lg-6 sm-promo-item-card" data-category="@p.Category" data-aos="fade-up" data-aos-delay="@delay">
+                            <div class="sm-promo-showcase-box @p.GradClass">
+                                <div class="sm-promo-header-row">
+                                    <span class="sm-promo-badge-tag">@p.BadgeText</span>
 
-                <!-- PROMO 2: Family & Gang Pack -->
-                <div class="col-lg-6 sm-promo-item-card" data-category="group-pack" data-aos="fade-up" data-aos-delay="100">
-                    <div class="sm-promo-showcase-box sm-grad-violet">
-                        <div class="sm-promo-header-row">
-                            <span class="sm-promo-badge-tag">GROUP VALUE</span>
-                            <div class="sm-countdown-wrap" data-hours="36">
-                                <i class="fa-regular fa-clock me-1"></i>เหลือเวลา <span class="countdown-timer">00:00:00</span>
-                            </div>
-                        </div>
-                        <h2 class="sm-promo-showcase-title">Family &amp; Gang Pack</h2>
-                        <span class="sm-promo-showcase-sub">แพ็กเกจเติมเต็มความสุขสำหรับครอบครัวและกลุ่มเพื่อน</span>
-                        <p class="sm-promo-showcase-desc">
-                            เมื่อจองห้องพัก Family Room หรือเลือกห้องพักประเภทใดก็ได้ตั้งแต่ 2 ห้องขึ้นไป รับส่วนลดค่าที่พักรวม 15% พร้อมเซ็ตอาหารเช้าลอยน้ำ (Floating Breakfast) สุดชิค และสิทธิ์ Welcome Mocktail ยกแก๊งที่บาร์ดาดฟ้า
-                        </p>
-                        <div class="sm-promo-perks">
-                            <span><i class="fa-solid fa-utensils"></i> ฟรี Floating Breakfast 1 เซ็ต</span>
-                            <span><i class="fa-solid fa-percent"></i> ส่วนลดค่าห้องพัก 15%</span>
-                        </div>
-                        <div class="sm-promo-showcase-footer">
-                            <div class="sm-coupon-box">
-                                <small>โค้ดจองตรง:</small>
-                                <div class="sm-coupon-code">
-                                    <span class="code-text">FAMILYGANG15</span>
-                                    <button class="sm-copy-btn" onclick="copyCouponCode('FAMILYGANG15', this)" aria-label="คัดลอกโค้ด"><i class="fa-regular fa-copy"></i></button>
+                                    @if (p.ValidTo.HasValue)
+                                    {
+                                        <div class="sm-countdown-wrap" data-end="@p.ValidTo.Value.ToString("yyyy-MM-dd")T23:59:59">
+                                            <i class="fa-regular fa-clock me-1"></i>เหลือเวลา <span class="countdown-timer">--:--:--</span>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="sm-countdown-wrap">
+                                            <i class="fa-regular fa-clock me-1"></i>ไม่มีวันสิ้นสุด
+                                        </div>
+                                    }
                                 </div>
-                            </div>
-                            <a asp-controller="Home" asp-action="RoomDetails" asp-route-type="family" class="sm-promo-action-btn">จองห้องพักเลย <i class="fa-solid fa-angle-right"></i></a>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- PROMO 3: Stay 3+ Nights Saver -->
-                <div class="col-lg-6 sm-promo-item-card" data-category="popular stay-long" data-aos="fade-up" data-aos-delay="50">
-                    <div class="sm-promo-showcase-box sm-grad-cyan">
-                        <div class="sm-promo-header-row">
-                            <span class="sm-promo-badge-tag">SAVER DEALS</span>
-                            <div class="sm-countdown-wrap" data-hours="48">
-                                <i class="fa-regular fa-clock me-1"></i>เหลือเวลา <span class="countdown-timer">00:00:00</span>
-                            </div>
-                        </div>
-                        <h2 class="sm-promo-showcase-title">Stay 3+ Nights Saver</h2>
-                        <span class="sm-promo-showcase-sub">พักต่อเนื่องยาวขึ้น รับส่วนลดเพิ่มขึ้น 20%</span>
-                        <p class="sm-promo-showcase-desc">
-                            พักผ่อนเต็มอิ่มไร้กังวลเมื่อเข้าพักต่อเนื่องตั้งแต่ 3 คืนขึ้นไปในห้องพักทุกประเภท รับสิทธิ์หักส่วนลดราคาห้องพักทันที 20% ทุกคืน พร้อมบริการเช็คเอาท์ล่าช้า (Late Check-out) ได้จนถึงเวลา 14:00 น.
-                        </p>
-                        <div class="sm-promo-perks">
-                            <span><i class="fa-solid fa-moon"></i> เข้าพัก 3 คืนขึ้นไป</span>
-                            <span><i class="fa-solid fa-clock"></i> Late Check-out 14:00 น.</span>
-                        </div>
-                        <div class="sm-promo-showcase-footer">
-                            <div class="sm-coupon-box">
-                                <small>โค้ดจองตรง:</small>
-                                <div class="sm-coupon-code">
-                                    <span class="code-text">STAY3NSAVER</span>
-                                    <button class="sm-copy-btn" onclick="copyCouponCode('STAY3NSAVER', this)" aria-label="คัดลอกโค้ด"><i class="fa-regular fa-copy"></i></button>
-                                </div>
-                            </div>
-                            <a asp-controller="Home" asp-action="Rooms" class="sm-promo-action-btn">เลือกดูห้องพัก <i class="fa-solid fa-angle-right"></i></a>
-                        </div>
-                    </div>
-                </div>
+                                <h2 class="sm-promo-showcase-title">@p.PromoName</h2>
+                                <span class="sm-promo-showcase-sub">
+                                    @p.Meta1@(string.IsNullOrEmpty(p.Meta2) ? "" : " • " + p.Meta2)
+                                </span>
 
-                <!-- PROMO 4: Weekly Escape -->
-                <div class="col-lg-6 sm-promo-item-card" data-category="stay-long" data-aos="fade-up" data-aos-delay="150">
-                    <div class="sm-promo-showcase-box sm-grad-indigo">
-                        <div class="sm-promo-header-row">
-                            <span class="sm-promo-badge-tag">WORKATION EXCLUSIVE</span>
-                            <div class="sm-countdown-wrap" data-hours="72">
-                                <i class="fa-regular fa-clock me-1"></i>เหลือเวลา <span class="countdown-timer">00:00:00</span>
-                            </div>
-                        </div>
-                        <h2 class="sm-promo-showcase-title">Weekly Escape</h2>
-                        <span class="sm-promo-showcase-sub">พักผ่อนแบบทำงานสบาย ๆ 7 วัน 6 คืน</span>
-                        <p class="sm-promo-showcase-desc">
-                            เปลี่ยนบรรยากาศมา Work from Hotel ท่ามกลางความหรูหราที่ StayMate ด้วยดีลราคาเหมาจ่ายพิเศษรายสัปดาห์ ลดกระหน่ำถึง 25% ตลอดช่วงเวลาพักผ่อน พร้อมบริการส่งซักรีดเสื้อผ้าฟรีวันละ 2 ชิ้น
-                        </p>
-                        <div class="sm-promo-perks">
-                            <span><i class="fa-solid fa-shirt"></i> บริการซักรีดฟรีวันละ 2 ชิ้น</span>
-                            <span><i class="fa-solid fa-laptop-code"></i> ฟรี Co-working Access</span>
-                        </div>
-                        <div class="sm-promo-showcase-footer">
-                            <div class="sm-coupon-box">
-                                <small>โค้ดจองตรง:</small>
-                                <div class="sm-coupon-code">
-                                    <span class="code-text">WEEKLYESCAPE25</span>
-                                    <button class="sm-copy-btn" onclick="copyCouponCode('WEEKLYESCAPE25', this)" aria-label="คัดลอกโค้ด"><i class="fa-regular fa-copy"></i></button>
-                                </div>
-                            </div>
-                            <a asp-controller="Home" asp-action="Rooms" class="sm-promo-action-btn">เลือกดูห้องพัก <i class="fa-solid fa-angle-right"></i></a>
-                        </div>
-                    </div>
-                </div>
+                                @if (!string.IsNullOrWhiteSpace(p.Description))
+                                {
+                                    <p class="sm-promo-showcase-desc">@p.Description</p>
+                                }
 
-                <!-- PROMO 5: Festival & Long Weekend Pass -->
-                <div class="col-12 sm-promo-item-card" data-category="popular group-pack" data-aos="fade-up" data-aos-delay="200">
-                    <div class="sm-promo-showcase-box sm-grad-gold" style="min-height: auto;">
-                        <div class="row align-items-center g-4">
-                            <div class="col-lg-8">
-                                <div class="sm-promo-header-row mb-3">
-                                    <span class="sm-promo-badge-tag" style="background: rgba(180, 83, 9, 0.5); border-color: #F59E0B;">SEASONAL CAMPAIGN</span>
-                                    <span class="text-white small opacity-75"><i class="fa-solid fa-ticket-simple text-warning me-1"></i>จองก่อนล่วงหน้า ล็อกราคาช่วงวันหยุดยาว</span>
+                                @if (p.Perks.Count > 0)
+                                {
+                                    <div class="sm-promo-perks">
+                                        @foreach (var perk in p.Perks)
+                                        {
+                                            <span><i class="fa-solid @perk.Icon"></i> @perk.Text</span>
+                                        }
+                                    </div>
+                                }
+
+                                <div class="small text-white opacity-75 mt-2">
+                                    @if (!string.IsNullOrEmpty(p.ApplicableRoomTypeName))
+                                    {
+                                        <div><i class="fa-solid fa-door-open me-1"></i>ใช้ได้กับห้อง: @p.ApplicableRoomTypeName</div>
+                                    }
+                                    else
+                                    {
+                                        <div><i class="fa-solid fa-door-open me-1"></i>ใช้ได้กับห้องพักทุกประเภท</div>
+                                    }
+                                    @if (p.ValidFrom.HasValue || p.ValidTo.HasValue)
+                                    {
+                                        <div>
+                                            <i class="fa-regular fa-calendar me-1"></i>ระยะเวลา:
+                                            @(p.ValidFrom?.ToString("d MMM yyyy") ?? "-") – @(p.ValidTo?.ToString("d MMM yyyy") ?? "-")
+                                        </div>
+                                    }
                                 </div>
-                                <h2 class="sm-promo-showcase-title">Festival &amp; Long Weekend Pass</h2>
-                                <span class="sm-promo-showcase-sub d-block mb-3">แพ็กเกจราคาพิเศษล็อกคุ้มสำหรับวันหยุดเทศกาล</span>
-                                <p class="sm-promo-showcase-desc mb-4">
-                                    ไม่หวั่นกับราคาห้องช่วงเทศกาล จองห้องพักล่วงหน้าสำหรับช่วงวันหยุดยาวหรือปีใหม่ ล็อกราคาพิเศษสุดคุ้ม พร้อมแถมบัตรสปาเครดิต (Resort Credit) มูลค่า ฿500 สำหรับนำไปแลกซื้อทรีตเมนต์ผ่อนคลายร่างกายที่ Spa Sanctuary
-                                </p>
-                                <div class="sm-promo-perks">
-                                    <span><i class="fa-solid fa-ticket text-warning"></i> ฟรี Resort Credit ฿500</span>
-                                    <span><i class="fa-solid fa-circle-check text-warning"></i> ยกเลิกฟรีก่อนเข้าพัก 7 วัน</span>
-                                </div>
-                            </div>
-                            <div class="col-lg-4">
-                                <div class="p-4 rounded-4 bg-dark bg-opacity-25 border border-white border-opacity-10 text-center">
-                                    <div class="sm-coupon-box justify-content-center mb-3">
-                                        <small class="text-white-50">โค้ดจองตรง:</small>
-                                        <div class="sm-coupon-code justify-content-center mt-1">
-                                            <span class="code-text text-warning">FESTIVALPASS500</span>
-                                            <button class="sm-copy-btn" onclick="copyCouponCode('FESTIVALPASS500', this)" aria-label="คัดลอกโค้ด"><i class="fa-regular fa-copy"></i></button>
+
+                                <div class="sm-promo-showcase-footer">
+                                    <div class="sm-coupon-box">
+                                        <small>รหัสโปรโมชั่น:</small>
+                                        <div class="sm-coupon-code">
+                                            <span class="code-text">@p.PromoCode</span>
+                                            <button type="button" class="sm-copy-btn" data-code="@p.PromoCode" aria-label="คัดลอกโค้ด"><i class="fa-regular fa-copy"></i></button>
                                         </div>
                                     </div>
-                                    <a asp-controller="Home" asp-action="Rooms" class="sm-btn-primary w-100 py-3">จองห้องพักล่วงหน้าเลย</a>
+
+                                    @if (p.ApplicableRoomTypeId.HasValue)
+                                    {
+                                        <a asp-controller="Home" asp-action="RoomDetails" asp-route-id="@p.ApplicableRoomTypeId" class="sm-promo-action-btn">ดูห้องพักที่ร่วมรายการ <i class="fa-solid fa-angle-right"></i></a>
+                                    }
+                                    else
+                                    {
+                                        <a asp-controller="Home" asp-action="Rooms" class="sm-promo-action-btn">ดูห้องพักที่ร่วมรายการ <i class="fa-solid fa-angle-right"></i></a>
+                                    }
                                 </div>
                             </div>
                         </div>
-                    </div>
+                        delay = Math.Min(delay + 50, 200);
+                    }
                 </div>
+            }
 
+            <!-- 4. แจ้งให้ล็อกอินก่อนจอง -->
+            <div class="mt-5 p-4 rounded-4 border text-center" data-aos="fade-up">
+                <h5 class="mb-1"><i class="fa-solid fa-circle-info text-primary me-2"></i>สนใจโปรโมชั่นไหน?</h5>
+                <p class="text-muted mb-3">การจองห้องพักและการใช้สิทธิ์โปรโมชั่นต้องเข้าสู่ระบบก่อน</p>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <a asp-controller="Customer" asp-action="Index" class="sm-btn-primary px-4 py-2">ไปที่หน้าของฉัน</a>
+                }
+                else
+                {
+                    <a asp-controller="Account" asp-action="Login" class="sm-btn-primary px-4 py-2 me-2">เข้าสู่ระบบ</a>
+                    <a asp-controller="Account" asp-action="Register" class="btn btn-outline-secondary px-4 py-2">สมัครสมาชิก</a>
+                }
             </div>
         </div>
     </section>
-
 </div>
 
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            if (typeof AOS !== "undefined") {
-                AOS.init({ duration: 700, once: true });
-            }
+            if (typeof AOS !== "undefined") AOS.init({ duration: 700, once: true });
 
-            // 1. ฟังก์ชันกรองการ์ดโปรโมชั่นด้วย JavaScript
+            // 1. กรองการ์ด (ใช้ split เพื่อไม่ให้ "popular" ไปชนกับชื่ออื่น)
             const filterBtns = document.querySelectorAll(".sm-filter-btn");
             const promoCards = document.querySelectorAll(".sm-promo-item-card");
-
             filterBtns.forEach(btn => {
                 btn.addEventListener("click", function () {
                     filterBtns.forEach(b => b.classList.remove("active"));
                     this.classList.add("active");
-
-                    const filterVal = this.getAttribute("data-filter");
+                    const f = this.dataset.filter;
                     promoCards.forEach(card => {
-                        const cats = card.getAttribute("data-category") || "";
-                        if (filterVal === "all" || cats.includes(filterVal)) {
-                            card.classList.remove("d-none");
-                        } else {
-                            card.classList.add("d-none");
-                        }
+                        const cats = (card.dataset.category || "").split(" ");
+                        card.classList.toggle("d-none", !(f === "all" || cats.includes(f)));
                     });
                 });
             });
 
-            // 2. ระบบจับเวลา Countdown Timer นับถอยหลังจำลองดีลพิเศษ
-            const timers = document.querySelectorAll(".sm-countdown-wrap");
-            timers.forEach(timer => {
-                const hoursLimit = parseInt(timer.getAttribute("data-hours") || "24", 10);
-                const display = timer.querySelector(".countdown-timer");
+            // 2. Countdown จากวันสิ้นสุดจริง (data-end)
+            document.querySelectorAll(".sm-countdown-wrap[data-end]").forEach(wrap => {
+                const target = new Date(wrap.dataset.end).getTime();
+                const display = wrap.querySelector(".countdown-timer");
+                const fmt = n => String(n).padStart(2, "0");
 
-                // กำหนดเวลาสิ้นสุดจำลองให้คงที่ (เช่น สิ้นสุดอีกในอีก 14 หรือ 36 ชั่วโมงนับจากปัจจุบัน)
-                const targetTime = new Date().getTime() + (hoursLimit * 60 * 60 * 1000);
-
-                function updateCountdown() {
-                    const now = new Date().getTime();
-                    const diff = targetTime - now;
-
-                    if (diff <= 0) {
-                        display.textContent = "00:00:00";
-                        return;
-                    }
-
-                    const h = Math.floor(diff / (1000 * 60 * 60));
-                    const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                    const s = Math.floor((diff % (1000 * 60)) / 1000);
-
-                    const fmt = n => n < 10 ? "0" + n : n;
-                    display.textContent = `${fmt(h)}:${fmt(m)}:${fmt(s)}`;
+                function tick() {
+                    const diff = target - Date.now();
+                    if (diff <= 0) { display.textContent = "สิ้นสุดแล้ว"; return false; }
+                    const d = Math.floor(diff / 86400000);
+                    const h = Math.floor((diff % 86400000) / 3600000);
+                    const m = Math.floor((diff % 3600000) / 60000);
+                    const s = Math.floor((diff % 60000) / 1000);
+                    display.textContent = (d > 0 ? d + " วัน " : "") + `${fmt(h)}:${fmt(m)}:${fmt(s)}`;
+                    return true;
                 }
+                if (tick()) {
+                    const id = setInterval(() => { if (!tick()) clearInterval(id); }, 1000);
+                }
+            });
 
-                updateCountdown();
-                setInterval(updateCountdown, 1000);
+            // 3. คัดลอกโค้ด
+            document.querySelectorAll(".sm-copy-btn").forEach(btn => {
+                btn.addEventListener("click", function () {
+                    navigator.clipboard.writeText(this.dataset.code).then(() => {
+                        const icon = this.querySelector("i");
+                        icon.className = "fa-solid fa-check text-success";
+                        setTimeout(() => icon.className = "fa-regular fa-copy", 2000);
+                    }).catch(err => console.error("คัดลอกโค้ดไม่สำเร็จ:", err));
+                });
             });
         });
-
-        // 3. ฟังก์ชันคลิกคัดลอกรหัสโปรโมชั่นด่วน
-        function copyCouponCode(text, button) {
-            navigator.clipboard.writeText(text).then(() => {
-                const icon = button.querySelector("i");
-                icon.className = "fa-solid fa-check text-success";
-                button.classList.add("copied");
-
-                setTimeout(() => {
-                    icon.className = "fa-regular fa-copy";
-                    button.classList.remove("copied");
-                }, 2000);
-            }).catch(err => {
-                console.error("ไม่สามารถคัดลอกโค้ดได้: ", err);
-            });
-        }
     </script>
 }

@@ -1,6 +1,14 @@
+@model StayMate_Kavinvee_0576.Models.ViewModels.RoomDetailsViewModel
 @{
     Layout = "~/Views/Shared/_HomeLayout.cshtml";
-    ViewData["Title"] = "รายละเอียดห้องพัก";
+    var room = Model.Room;
+    ViewData["Title"] = room.TypeName;
+
+    var guestsText = room.MinGuests == room.MaxGuests
+        ? $"{room.MaxGuests} ท่าน"
+        : $"{room.MinGuests}–{room.MaxGuests} ท่าน" + (room.AllowExtraBed ? " (เสริมเตียงได้)" : "");
+
+    var thumbLabels = new[] { "มุมพักผ่อนหลัก", "Ambient & View", "Smart Room" };
 }
 
 @section Styles {
@@ -10,9 +18,7 @@
 
 <div class="sm-home-wrapper">
 
-    <!-- =========================================================
-         1. TOP ROOM TYPE SWITCHER BAR (สลับดูรายละเอียดทั้ง 4 ห้องได้ทันที)
-         ========================================================= -->
+    <!-- 1. TOP BAR: breadcrumb + ตัวสลับประเภทห้อง (ลิงก์ไปหน้าห้องอื่นตาม id ใน DB) -->
     <section class="sm-detail-header-bar sm-full-bleed">
         <div class="container">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
@@ -20,47 +26,46 @@
                     <ol class="breadcrumb sm-breadcrumb mb-0">
                         <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">หน้าแรก</a></li>
                         <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Rooms">ประเภทห้องพัก</a></li>
-                        <li class="breadcrumb-item active" id="breadcrumbRoomName" aria-current="page">Deluxe Room</li>
+                        <li class="breadcrumb-item active" aria-current="page">@room.TypeName</li>
                     </ol>
                 </nav>
 
-                <!-- ปุ่มสลับประเภทห้องพัก (Interactive Switcher) -->
                 <div class="sm-room-switcher" role="tablist" aria-label="เลือกดูประเภทห้องพัก">
                     <span class="sm-switcher-label d-none d-md-inline"><i class="fa-solid fa-repeat me-1"></i> เลือกดูห้อง:</span>
-                    <button type="button" class="sm-switch-pill" data-room="standard">Standard</button>
-                    <button type="button" class="sm-switch-pill active" data-room="deluxe">Deluxe</button>
-                    <button type="button" class="sm-switch-pill" data-room="family">Family</button>
-                    <button type="button" class="sm-switch-pill" data-room="suite">Suite</button>
+                    @foreach (var r in Model.AllRooms)
+                    {
+                        <a asp-controller="Home" asp-action="RoomDetails" asp-route-id="@r.RoomTypeId"
+                           class="sm-switch-pill text-decoration-none @(r.RoomTypeId == room.RoomTypeId ? "active" : "")">@r.TypeName.Replace(" Room", "")</a>
+                    }
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- =========================================================
-         2. MAIN ROOM DETAILS & INTERACTIVE GALLERY
-         ========================================================= -->
+    <!-- 2. MAIN DETAILS -->
     <section class="sm-section pt-4">
         <div class="container">
 
-            <!-- Title & Quick Rating Row -->
             <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4" data-aos="fade-up">
                 <div>
                     <div class="d-flex align-items-center gap-2 mb-2">
-                        <span class="sm-eyebrow mb-0" id="detailRoomCode">TYPE B · SKYLINE PANORAMA</span>
+                        <span class="sm-eyebrow mb-0">@room.Code</span>
                         <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle">
                             <i class="fa-solid fa-bolt me-1"></i>Smart Room 100%
                         </span>
                     </div>
-                    <h1 class="sm-section-title mb-1" id="detailRoomTitle">Deluxe Room</h1>
-                    <p class="text-secondary mb-0" id="detailRoomTagline">
-                        ห้องพักวิวเมืองมุมสูง รองรับเตียงเสริมและโปรโมชั่น "มา 3 จ่าย 2"
-                    </p>
+                    <h1 class="sm-section-title mb-1">@room.TypeName</h1>
+                    <p class="text-secondary mb-0">@room.Tagline</p>
                 </div>
 
                 <div class="d-flex align-items-center gap-3">
                     <div class="sm-rating-chip">
-                        <span class="sm-rating-score"><i class="fa-solid fa-star text-warning me-1"></i>4.9</span>
-                        <span class="sm-rating-text">ดีเยี่ยม (รีวิวผู้เข้าพักจริง)</span>
+                        <span class="sm-rating-score">
+                            <i class="fa-solid fa-star text-warning me-1"></i>@(Model.AverageRating.HasValue ? Model.AverageRating.Value.ToString("0.0") : "–")
+                        </span>
+                        <span class="sm-rating-text">
+                            @(Model.ReviewCount > 0 ? $"จาก {Model.ReviewCount} รีวิวผู้เข้าพักจริง" : "ยังไม่มีรีวิว")
+                        </span>
                     </div>
                     <a asp-controller="Home" asp-action="Rooms" class="btn btn-outline-secondary rounded-pill btn-sm px-3">
                         <i class="fa-solid fa-arrow-left me-1"></i> ดูห้องทั้งหมด
@@ -68,88 +73,72 @@
                 </div>
             </div>
 
-            <!-- Interactive Photo Gallery (อัปเกรดรูปภาพให้ตรงกับหัวข้อจริง 100%) -->
+            <!-- Gallery -->
             <div class="row g-3 mb-5" data-aos="fade-up" data-aos-delay="50">
                 <div class="col-lg-8">
                     <div class="sm-gallery-main-wrap">
-                        <img id="mainGalleryImg"
-                             src="https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1400&q=85"
-                             alt="Room Main View" class="sm-gallery-main-img" />
-                        <span class="sm-gallery-badge" id="detailGalleryBadge">
+                        <img id="mainGalleryImg" src="@room.Gallery[0]" alt="@room.TypeName" class="sm-gallery-main-img" />
+                        <span class="sm-gallery-badge">
                             <i class="fa-solid fa-camera me-1"></i> StayMate Official Room Preview
                         </span>
                     </div>
                 </div>
                 <div class="col-lg-4">
-                    <div class="row g-3 h-100" id="galleryThumbsContainer">
-                        <!-- Thumbs populated/updated by JS -->
-                        <div class="col-4 col-lg-12">
-                            <div class="sm-gallery-thumb active" id="thumb0" data-src="">
-                                <img src="" alt="มุมเตียงนอน" id="thumbImg0" />
-                                <span id="thumbLabel0">มุมพักผ่อนหลัก</span>
+                    <div class="row g-3 h-100">
+                        @for (var i = 0; i < 3; i++)
+                        {
+                            var img = room.Gallery.Length > i ? room.Gallery[i] : room.Gallery[0];
+                            <div class="@(i == 0 ? "col-4 col-lg-12" : "col-4 col-lg-6")">
+                                <div class="sm-gallery-thumb @(i == 0 ? "active" : "")" data-src="@img">
+                                    <img src="@img" alt="@thumbLabels[i]" loading="lazy" />
+                                    <span>@thumbLabels[i]</span>
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-4 col-lg-6">
-                            <div class="sm-gallery-thumb" id="thumb1" data-src="">
-                                <img src="" alt="ห้องน้ำ" id="thumbImg1" />
-                                <span id="thumbLabel1">Smart Bathroom</span>
-                            </div>
-                        </div>
-                        <div class="col-4 col-lg-6">
-                            <div class="sm-gallery-thumb" id="thumb2" data-src="">
-                                <img src="" alt="วิวและมุมตกแต่ง" id="thumbImg2" />
-                                <span id="thumbLabel2">Ambient &amp; View</span>
-                            </div>
-                        </div>
+                        }
                     </div>
                 </div>
             </div>
 
-            <!-- Content Columns: Left Specs + Right Booking Simulator -->
             <div class="row g-4">
-                <!-- Left Column: Room Details, Amenities, Reviews -->
+                <!-- Left -->
                 <div class="col-lg-8">
 
-                    <!-- Key Highlights Bar -->
                     <div class="sm-detail-specs-bar mb-4" data-aos="fade-up">
-                        <div class="sm-detail-spec-item">
-                            <i class="fa-solid fa-maximize"></i>
-                            <div>
-                                <small>ขนาดห้องพัก</small>
-                                <strong id="specSize">36 ตร.ม.</strong>
+                        @if (room.SizeSqm > 0)
+                        {
+                            <div class="sm-detail-spec-item">
+                                <i class="fa-solid fa-maximize"></i>
+                                <div><small>ขนาดห้องพัก</small><strong>@room.SizeText</strong></div>
                             </div>
-                        </div>
+                        }
                         <div class="sm-detail-spec-item">
                             <i class="fa-solid fa-user-group"></i>
-                            <div>
-                                <small>จำนวนผู้เข้าพัก</small>
-                                <strong id="specGuests">2–3 ท่าน (เสริมเตียงได้)</strong>
-                            </div>
+                            <div><small>จำนวนผู้เข้าพัก</small><strong>@guestsText</strong></div>
                         </div>
                         <div class="sm-detail-spec-item">
                             <i class="fa-solid fa-bed"></i>
-                            <div>
-                                <small>ประเภทเตียง</small>
-                                <strong id="specBed">1 King Bed + Sofa Bed</strong>
-                            </div>
+                            <div><small>ประเภทเตียง</small><strong>@(room.BedType ?? "-")</strong></div>
                         </div>
                         <div class="sm-detail-spec-item">
                             <i class="fa-solid fa-city"></i>
-                            <div>
-                                <small>ทิวทัศน์</small>
-                                <strong id="specView">City Skyline View</strong>
-                            </div>
+                            <div><small>ทิวทัศน์</small><strong>@room.ViewText</strong></div>
                         </div>
                     </div>
 
-                    <!-- Room Description -->
                     <div class="sm-detail-card mb-4" data-aos="fade-up">
                         <h3 class="sm-detail-card-title">
                             <i class="fa-solid fa-wand-magic-sparkles text-primary me-2"></i>รายละเอียดและแนวคิดการออกแบบ
                         </h3>
-                        <p class="text-secondary lh-lg mb-3" id="detailFullDesc">
-                            Deluxe Room ของ StayMate ออกแบบภายใต้แนวคิด Futuristic Boutique Luxury ที่มอบพื้นที่กว้างถึง 36 ตารางเมตร โดดเด่นด้วยหน้าต่างกระจกบานใหญ่จากพื้นจรดเพดาน เปิดรับวิวเส้นขอบฟ้าของเมืองยามค่ำคืน มาพร้อมโซฟาพักผ่อนริมหน้าต่าง และรองรับการเสริมเตียงมาตรฐานโรงแรมโดยไม่ทำให้ห้องอึดอัด
-                        </p>
+                        <p class="text-secondary lh-lg mb-3">@room.Description</p>
+
+                        @if (room.AllowExtraBed)
+                        {
+                            <p class="text-secondary mb-3">
+                                <i class="fa-solid fa-bed text-info me-1"></i>
+                                รองรับเตียงเสริม ค่าบริการ <strong>฿@room.ExtraBedPrice.ToString("N0")</strong> / คืน
+                            </p>
+                        }
+
                         <div class="sm-smart-tech-banner">
                             <div class="sm-tech-icon"><i class="fa-solid fa-microchip"></i></div>
                             <div>
@@ -161,119 +150,157 @@
                         </div>
                     </div>
 
-                    <!-- Room Amenities Grid -->
                     <div class="sm-detail-card mb-4" data-aos="fade-up">
                         <h3 class="sm-detail-card-title">
                             <i class="fa-solid fa-list-check text-primary me-2"></i>สิ่งอำนวยความสะดวกภายในห้องพัก
                         </h3>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <h6 class="fw-bold text-dark mb-2"><i class="fa-solid fa-bolt text-info me-2"></i>Smart Tech &amp; Entertainment</h6>
+                                <h6 class="fw-bold text-dark mb-2"><i class="fa-solid fa-bolt text-info me-2"></i>จุดเด่นของห้องนี้</h6>
                                 <ul class="sm-amenity-list">
-                                    <li><i class="fa-solid fa-check text-success"></i> Free Wi-Fi 6 ความเร็วระดับ Gigabit</li>
-                                    <li><i class="fa-solid fa-check text-success"></i> Smart TV 4K รองรับ Netflix / YouTube / AirPlay</li>
-                                    <li><i class="fa-solid fa-check text-success"></i> แผงควบคุมไฟ Mood Lighting อัจฉริยะ</li>
-                                    <li><i class="fa-solid fa-check text-success"></i> ช่องชาร์จ Universal USB-C Fast Charge ข้างเตียง</li>
+                                    @foreach (var h in room.Highlights.Where(x => !string.IsNullOrWhiteSpace(x)))
+                                    {
+                                        <li><i class="fa-solid fa-check text-success"></i> @h</li>
+                                    }
                                 </ul>
                             </div>
                             <div class="col-md-6">
-                                <h6 class="fw-bold text-dark mb-2"><i class="fa-solid fa-spa text-info me-2"></i>Comfort &amp; Bathroom</h6>
+                                <h6 class="fw-bold text-dark mb-2"><i class="fa-solid fa-spa text-info me-2"></i>มาตรฐานทุกห้อง</h6>
                                 <ul class="sm-amenity-list">
-                                    <li><i class="fa-solid fa-check text-success"></i> ที่นอน Pocket Spring ระดับพรีเมียมพร้อมท็อปเปอร์</li>
-                                    <li><i class="fa-solid fa-check text-success"></i> เครื่องชงกาแฟแคปซูล มินิบาร์ และกาน้ำร้อน</li>
-                                    <li><i class="fa-solid fa-check text-success"></i> ห้องน้ำแยกเปียก-แห้ง พร้อมไดร์เป่าผมแรงลมสูง</li>
-                                    <li><i class="fa-solid fa-check text-success"></i> ตู้นิรภัยดิจิทัลขนาดใส่ Laptop 16" ได้</li>
+                                    <li><i class="fa-solid fa-check text-success"></i> Free Wi-Fi 6 ความเร็วระดับ Gigabit</li>
+                                    <li><i class="fa-solid fa-check text-success"></i> แผงควบคุมไฟ Mood Lighting อัจฉริยะ</li>
+                                    <li><i class="fa-solid fa-check text-success"></i> ช่องชาร์จ USB-C Fast Charge ข้างเตียง</li>
+                                    <li><i class="fa-solid fa-check text-success"></i> ตู้นิรภัยดิจิทัลและมินิบาร์</li>
                                 </ul>
                             </div>
                         </div>
                     </div>
 
-                    <!-- =========================================================
-                         ★ NEW: INTERACTIVE GUEST REVIEWS SECTION ★
-                         (แสดงรีวิวเจาะลึกแบบ Dynamic ปรับเปลี่ยนข้อความตามห้องที่เลือก)
-                         ========================================================= -->
+                    <!-- รีวิวจริงจากตาราง reviews (เฉพาะการจองที่มีห้องประเภทนี้) -->
                     <div class="sm-detail-card mb-4" data-aos="fade-up">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h3 class="sm-detail-card-title mb-0">
                                 <i class="fa-solid fa-comments text-primary me-2"></i>รีวิวจากผู้เข้าพักจริง (Guest Reviews)
                             </h3>
-                            <div class="sm-review-summary-badge">
-                                <span class="text-warning"><i class="fa-solid fa-star"></i> <span id="reviewScoreBadge">4.9</span>/5.0</span>
-                            </div>
+                            @if (Model.AverageRating.HasValue)
+                            {
+                                <div class="sm-review-summary-badge">
+                                    <span class="text-warning"><i class="fa-solid fa-star"></i> @Model.AverageRating.Value.ToString("0.0")/5.0</span>
+                                </div>
+                            }
                         </div>
 
-                        <!-- Review Stream Container -->
-                        <div class="sm-reviews-container d-grid gap-3" id="dynamicReviewsList">
-                            <!-- Populated Dynamically via JS -->
+                        <div class="sm-reviews-container d-grid gap-3">
+                            @if (!Model.Reviews.Any())
+                            {
+                                <div class="text-muted text-center py-3">ยังไม่มีรีวิวสำหรับห้องประเภทนี้</div>
+                            }
+                            @foreach (var rev in Model.Reviews)
+                            {
+                                var name = string.IsNullOrWhiteSpace(rev.UserName) ? "ผู้เข้าพัก" : rev.UserName;
+                                <div class="p-3 rounded-4 bg-light border border-light-subtle d-flex flex-column gap-2">
+                                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="sm-avatar-placeholder">@name.Substring(0, 1)</div>
+                                            <div>
+                                                <strong class="text-dark d-block">@name</strong>
+                                                <span class="text-muted" style="font-size: 0.76rem;">
+                                                    <i class="fa-regular fa-calendar-check me-1"></i>รีวิวเมื่อ: @rev.CreatedAt.ToString("dd/MM/yyyy")
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="sm-rating-stars-wrap">
+                                            @for (var s = 1; s <= 5; s++)
+                                            {
+                                                if (s <= rev.Rating)
+                                                {
+                                                    <i class="fa-solid fa-star text-warning me-1"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="fa-regular fa-star text-muted me-1"></i>
+                                                }
+                                            }
+                                            <span class="fw-bold text-dark ms-1" style="font-size: 0.88rem;">(@rev.Rating)</span>
+                                        </div>
+                                    </div>
+                                    @if (!string.IsNullOrWhiteSpace(rev.Comment))
+                                    {
+                                        <p class="text-secondary mb-0 small lh-lg" style="font-style: italic;">“@rev.Comment”</p>
+                                    }
+                                </div>
+                            }
                         </div>
                     </div>
-
                 </div>
 
-                <!-- Right Column: Sticky Smart Booking & Price Simulator -->
+                <!-- Right: Price simulator -->
                 <div class="col-lg-4">
                     <aside class="sm-sticky-booking-panel" data-aos="fade-left">
                         <div class="sm-booking-panel-header">
                             <div>
                                 <span class="sm-panel-tag">INSTANT RATE SIMULATOR</span>
-                                <h4 class="text-white fw-bold mb-0 mt-1" id="panelRoomName">Deluxe Room</h4>
+                                <h4 class="text-white fw-bold mb-0 mt-1">@room.TypeName</h4>
                             </div>
                             <div class="text-end">
-                                <span class="sm-panel-price" id="panelBasePrice">฿1,800</span>
+                                <span class="sm-panel-price">฿@room.Price.ToString("N0")</span>
                                 <small class="d-block text-light opacity-75">/ คืน</small>
                             </div>
                         </div>
 
                         <div class="sm-booking-panel-body">
                             <div class="mb-3">
-                                <label class="sm-form-label">วันเช็คอิน (Check-in)</label>
+                                <label class="sm-form-label" for="simCheckIn">วันเช็คอิน (Check-in)</label>
                                 <input type="date" id="simCheckIn" class="form-control sm-input" />
                             </div>
                             <div class="mb-3">
-                                <label class="sm-form-label">วันเช็คเอาท์ (Check-out)</label>
+                                <label class="sm-form-label" for="simCheckOut">วันเช็คเอาท์ (Check-out)</label>
                                 <input type="date" id="simCheckOut" class="form-control sm-input" />
                             </div>
 
                             <div class="row g-2 mb-3">
                                 <div class="col-6">
-                                    <label class="sm-form-label">จำนวนผู้เข้าพัก</label>
+                                    <label class="sm-form-label" for="simGuests">จำนวนผู้เข้าพัก</label>
                                     <select id="simGuests" class="form-select sm-input">
-                                        <option value="1">1 ท่าน</option>
-                                        <option value="2" selected>2 ท่าน</option>
-                                        <option value="3">3 ท่าน (+เตียงเสริม)</option>
-                                        <option value="4">4 ท่าน</option>
+                                        @for (var g = 1; g <= room.MaxGuests; g++)
+                                        {
+                                            <option value="@g" selected="@(g == Math.Max((int)room.MinGuests, 2) || (room.MaxGuests < 2 && g == 1))">@g ท่าน</option>
+                                        }
                                     </select>
                                 </div>
                                 <div class="col-6">
-                                    <label class="sm-form-label">โปรโมชั่นจำลอง</label>
+                                    <label class="sm-form-label" for="simPromo">โปรโมชั่นจำลอง</label>
                                     <select id="simPromo" class="form-select sm-input">
-                                        <option value="none">ราคาปกติ</option>
-                                        <option value="pay2" selected>มา 3 จ่าย 2</option>
-                                        <option value="stay3">Stay 3+ Nights (-20%)</option>
-                                        <option value="weekly">Weekly Escape (-25%)</option>
+                                        <option value="-1">ราคาปกติ</option>
+                                        @for (var i = 0; i < Model.Promos.Count; i++)
+                                        {
+                                            <option value="@i">@Model.Promos[i].Name</option>
+                                        }
                                     </select>
                                 </div>
                             </div>
 
-                            <!-- Live Price Breakdown -->
                             <div class="sm-price-breakdown">
                                 <div class="d-flex justify-content-between mb-1">
                                     <span id="calcNightText">ราคาห้องพัก (1 คืน)</span>
-                                    <strong id="calcSubTotal">฿1,800</strong>
+                                    <strong id="calcSubTotal">฿@room.Price.ToString("N0")</strong>
                                 </div>
-                                <div class="d-flex justify-content-between mb-1 text-success" id="calcPromoRow">
-                                    <span id="calcPromoLabel"><i class="fa-solid fa-tag me-1"></i>สิทธิพิเศษโปรโมชั่น</span>
-                                    <strong id="calcDiscount">-฿0</strong>
+                                <div class="d-flex justify-content-between mb-1" id="calcExtraRow">
+                                    <span><i class="fa-solid fa-bed me-1"></i>ค่าเตียงเสริม</span>
+                                    <strong id="calcExtra">฿0</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-1 text-success">
+                                    <span id="calcPromoLabel"><i class="fa-solid fa-tag me-1"></i>ไม่มีส่วนลด</span>
+                                    <strong id="calcDiscount">฿0</strong>
                                 </div>
                                 <hr class="my-2" />
                                 <div class="d-flex justify-content-between align-items-baseline">
                                     <span class="fw-bold text-dark">ยอดประมาณการสุทธิ</span>
-                                    <span class="sm-total-highlight" id="calcGrandTotal">฿1,800</span>
+                                    <span class="sm-total-highlight" id="calcGrandTotal">฿@room.Price.ToString("N0")</span>
                                 </div>
-                                <small class="text-muted d-block mt-1">* ตัวเลขจำลองเบื้องต้นสำหรับการออกแบบ UI เท่านั้น</small>
+                                <small class="text-muted d-block mt-1">* ตัวเลขประมาณการเบื้องต้น ราคาจริงคำนวณตอนยืนยันการจอง</small>
                             </div>
 
-                            <!-- CTA Buttons -->
                             <div class="d-grid gap-2 mt-3">
                                 <a asp-controller="Account" asp-action="Login" class="sm-btn-search justify-content-center py-3">
                                     <i class="fa-solid fa-calendar-check"></i>
@@ -287,10 +314,8 @@
                     </aside>
                 </div>
             </div>
-
         </div>
     </section>
-
 </div>
 
 @section Scripts {
@@ -301,325 +326,120 @@
                 AOS.init({ duration: 700, once: true, offset: 50 });
             }
 
-            // ข้อมูลห้องพัก พร้อมลิงก์รูปภาพภายนอก แยกตามประเภทภาพ
-            const roomCatalog = {
-                standard: {
-                    code: "TYPE A · URBAN MINIMAL",
-                    title: "Standard Room",
-                    tagline: "ห้องพักมาตรฐานดีไซน์โมเดิร์น มินิมอล สำหรับ 1–2 ท่าน พร้อมระบบไฟอัจฉริยะ",
-                    size: "28 ตร.ม.",
-                    guests: "ผู้ใหญ่ 1–2 ท่าน",
-                    bed: "1 Queen หรือ 2 Twin Beds",
-                    view: "Urban Street View",
-                    price: 1200,
-                    desc: "Standard Room ออกแบบอย่างพิถีพิถันเพื่อความคล่องตัวของนักเดินทางยุคใหม่ จัดสรรพื้นที่ 28 ตร.ม. ให้โปร่งสบาย พร้อมโต๊ะทำงาน Ergonomic สมาร์ททีวี 55 นิ้ว และระบบควบคุมแสงไฟ Ambient ข้างเตียง",
-                    images: {
-                        bed: "https://www.daysinnvancouver.com/Content/images/DeluxeQueenHotelRoom.jpg", // โทนสแตนดาร์ดเรียบหรู
-                        bathroom: "https://www.rebstock.com/images/portal_95023/2011/2011003_w1500.jpg", // ห้องอาบน้ำเรนชาวเวอร์โมเดิร์น
-                        ambient: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=85"  // มุมโต๊ะทำงานควบคุมไฟอัจฉริยะ
-                    },
-                    score: "4.8",
-                    reviews: [
-                        {
-                            user: "คุณ นนทพัทธ์ บี.",
-                            score: 5,
-                            date: "12 ต.ค. 2026",
-                            comment: "ห้องสะอาดมาก ขนาดกะทัดรัดแต่จัดระเบียบดีมาก ระบบสัมผัสข้างเตียงควบคุมไฟได้สะดวกสุด ๆ คุ้มราคาสุดในย่านนี้แล้วครับ"
-                        },
-                        {
-                            user: "คุณ กัญญาณัฐ พี.",
-                            score: 4.6,
-                            date: "28 ก.ย. 2026",
-                            comment: "ชอบความมินิมอล มี USB-C ชาร์จแบตเตอรี่ข้างเตียงเยอะดี อินเทอร์เน็ต Wi-Fi เร็วมาก เหมาะกับคนที่ต้องแบกงานมาทำด้วย"
-                        }
-                    ]
-                },
-                deluxe: {
-                    code: "TYPE B · SKYLINE PANORAMA",
-                    title: "Deluxe Room",
-                    tagline: "ห้องพักวิวเมืองมุมสูง รองรับเตียงเสริมและโปรโมชั่น 'มา 3 จ่าย 2'",
-                    size: "36 ตร.ม.",
-                    guests: "2–3 ท่าน (เสริมเตียงได้)",
-                    bed: "1 King Bed + Sofa Bed",
-                    view: "City Skyline View",
-                    price: 1800,
-                    desc: "Deluxe Room ของ StayMate ออกแบบภายใต้แนวคิด Futuristic Boutique Luxury ที่มอบพื้นที่กว้างถึง 36 ตารางเมตร โดดเด่นด้วยหน้าต่างกระจกบานใหญ่จากพื้นจรดเพดาน เปิดรับวิวเส้นขอบฟ้าของเมืองยามค่ำคืน มาพร้อมโซฟาพักผ่อนริมหน้าต่าง และรองรับการเสริมเตียงมาตรฐานโรงแรมโดยไม่ทำให้ห้องอึดอัด",
-                    images: {
-                        bed: "https://www.hotelscombined.com/rimg/himg/14/44/0e/leonardo-19066-741285-684003.jpg?crop=true&height=607&width=968", // เตียงดีลักซ์วิวสวย
-                        bathroom: "https://cdn.kiwicollection.com/media/room_images/PR000394/xl/000394-chiph-p0847-gold-coast-and-wellbeing-suite-bathroom.jpg", // ห้องน้ำดีลักซ์โมเดิร์น
-                        ambient: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=85"  // โซฟาริมกระจกวิวเมืองใหญ่
-                    },
-                    score: "4.9",
-                    reviews: [
-                        {
-                            user: "คุณ ฐิติพันธ์ เอส.",
-                            score: 5,
-                            date: "04 พ.ย. 2026",
-                            comment: "จองโปรมา 3 จ่าย 2 ไปกับเพื่อน เสริมเตียงนอนสบายมาก ไม่อึดอัดเลย วิวเมืองจากห้องกระจกบานใหญ่คือสวยแบบสะกดตาจริง ๆ คุ้มค่ามาก!"
-                        },
-                        {
-                            user: "คุณ ปิยธิดา เจ.",
-                            score: 4.8,
-                            date: "19 ต.ค. 2026",
-                            comment: "ห้องสวยงามเหมือนในรูปเป๊ะ ๆ ระบบคำนวณแสงไฟอัจฉริยะล้ำสมัยมาก ห้องน้ำสะอาดสะอ้าน อุปกรณ์อำนวยความสะดวกครบถ้วน แนะนำเลยค่ะ"
-                        }
-                    ]
-                },
-                family: {
-                    code: "TYPE C · SHARED HAPPINESS SPACE",
-                    title: "Family Room",
-                    tagline: "พื้นที่ความสุขขนาดใหญ่ 50 ตร.ม. สำหรับครอบครัวและแก๊งเพื่อน 4 ท่าน",
-                    size: "50 ตร.ม.",
-                    guests: "4 ท่าน (ครอบครัว / กลุ่มเพื่อน)",
-                    bed: "2 King Size Beds",
-                    view: "Panoramic City & Pool View",
-                    price: 2600,
-                    desc: "Family Room มอบพื้นที่กว้างขวางถึง 50 ตร.ม. พร้อมเตียง King Size 2 เตียงใหญ่ โซนนั่งเล่นและโต๊ะรับประทานอาหารสำหรับสังสรรค์ ห้องน้ำขนาดใหญ่มาพร้อมอ่างอาบน้ำและอ่างล้างหน้าคู่ (Double Vanity) ตอบโจทย์การเข้าพักเป็นกลุ่มอย่างแท้จริง",
-                    images: {
-                        bed: "https://www.unionhouse.com.tw/f/enroom_1501480059.jpg", // สองเตียงใหญ่กว้างขวาง
-                        bathroom: "https://www.rebstock.com/images/portal_95023/2011/2011003_w1500.jpg", // อ่างอาบน้ำหรูและอ่างล้างหน้าคู่
-                        ambient: "https://jacosmohotelandspa.com/UploadFile/Gallery-2026/Rooms/FAMILY-WITH-CITY-VIEW/1.jpg"  // โซนนั่งเล่น โต๊ะทานข้าว บอร์ดเกม
-                    },
-                    score: "4.9",
-                    reviews: [
-                        {
-                            user: "คุณ อรวรรณ ดี.",
-                            score: 5,
-                            date: "08 พ.ย. 2026",
-                            comment: "พาครอบครัวและเด็ก ๆ มาพัก ทุกคนแฮปปี้มาก มีเตียง King size ถึงสองเตียงเต็ม ห้องน้ำมีอ่างอาบน้ำใหญ่ให้เด็ก ๆ แช่ สัญญาณเน็ตแรงทั่วทั้งห้องพึงพอใจค่ะ"
-                        },
-                        {
-                            user: "คุณ ณัฐวุฒิ โอ.",
-                            score: 4.8,
-                            date: "31 ต.ค. 2026",
-                            comment: "มากับแก๊งเพื่อน 4 คน พื้นที่กว้างมาก ไม่แออัด โต๊ะกลางบอร์ดเกมตอบโจทย์กิจกรรมตอนกลางคืน แถมระบบแอนิเมชันทีวีแชร์จอไอโฟนได้สะดวกรวดเร็ว"
-                        }
-                    ]
-                },
-                suite: {
-                    code: "TYPE D · EXECUTIVE HORIZON SUITE",
-                    title: "Suite Room",
-                    tagline: "ห้องสวีทระดับ Flagship พร้อมอ่างจากุซซี่ชมวิวเมืองและสิทธิ์เข้าใช้ Sky Lounge",
-                    size: "68 ตร.ม.",
-                    guests: "2–4 ท่าน (Executive Privilege)",
-                    bed: "1 Emperor King + Living Lounge",
-                    view: "180° Horizon Skyline",
-                    price: 3900,
-                    desc: "Suite Room คือที่สุดแห่งประสบการณ์พักผ่อนของ StayMate แบ่งโซนห้องนั่งเล่นและห้องนอนเป็นสัดส่วน ไฮไลท์คืออ่างอาบน้ำระบบจากุซซี่ริมกระจกชมวิวเมือง 180 องศา ระบบสั่งงานด้วยเสียงอัจฉริยะ และสิทธิ์เข้าใช้บริการ Executive Sky Lounge ฟรีตลอดการเข้าพัก",
-                    images: {
-                        bed: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1000&q=80", // ห้องสูทอลังการ
-                        bathroom: "https://r.profitroom.com/hotelnarvilconferencespa1/images/gallery/thumbs/1080x655/201806051034290.Hotel_Narvil_Apartament_VIP_jacuzzi_3.jpg", // อ่างจากุซซี่กระจกขอบเมือง
-                        ambient: "https://www.wellnesshotel.com/import/rooms/4848/image-thumb__4848__gallery/eadded6a-d089-4c19-b19f-b8ff3faf1056.7da959d7.jpg"  // ห้องนั่งเล่นแยกส่วนหรูหรา
-                    },
-                    score: "5.0",
-                    reviews: [
-                        {
-                            user: "คุณ แพรวพรรณ จี.",
-                            score: 5,
-                            date: "14 พ.ย. 2026",
-                            comment: "ที่สุดของความประทับใจค่ะ! อ่างจากุซซี่ริมกระจกมองเห็นวิวกรุงเทพฯ แบบ 180 องศา สวยงามหรูหราเกินบรรยาย สั่งการปิดม่านปรับแอร์ด้วยเสียงล้ำมาก สิทธิ์เลานจ์ก็คุ้มมากค่ะ"
-                        },
-                        {
-                            user: "คุณ ศรัณย์ ที.",
-                            score: 5,
-                            date: "02 พ.ย. 2026",
-                            comment: "มาฉลองวันครบรอบแต่งงานที่นี่ ทางโรงแรมจัดเตรียมห้องได้ประทับใจมาก ระบบความบันเทิงเสียงรอบทิศทางในห้องดูหนังฟินสุด ๆ จะกลับมาพักอีกแน่นอน"
-                        }
-                    ]
-                }
-            };
+            // ---------- ข้อมูลจาก DB ----------
+            const room = @Json.Serialize(new {
+                price = room.Price,
+                allowExtraBed = room.AllowExtraBed,
+                extraBedPrice = room.ExtraBedPrice,
+                baseGuests = Math.Max((int)room.MinGuests, 2)
+            });
+            const promos = @Json.Serialize(Model.Promos);
 
-            let currentRoomKey = "deluxe";
-
-            // ตรวจสอบ Query String ?type=... จาก URL
-            const params = new URLSearchParams(window.location.search);
-            const typeParam = (params.get("type") || "").toLowerCase();
-            if (roomCatalog[typeParam]) {
-                currentRoomKey = typeParam;
-            }
-
-            const switchButtons = document.querySelectorAll(".sm-switch-pill");
-            const mainImg = document.getElementById("mainGalleryImg");
-            const thumbs = document.querySelectorAll(".sm-gallery-thumb");
-
-            // หากเว็บต้นทางปิด hotlink หรือไฟล์ภาพหาย ให้แสดง placeholder แทน broken image icon
-            // รูปหลักยังโหลดจาก URL ภายนอกตามที่กำหนดไว้ใน roomCatalog
+            // ---------- Gallery ----------
             const imageFallback = "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(
-                '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">' +
-                '<rect width="1200" height="800" fill="#e9edf2"/>' +
-                '<g fill="none" stroke="#8995a3" stroke-width="18"><rect x="390" y="230" width="420" height="300" rx="24"/><path d="M390 430h420M500 230v-80h200v80"/></g>' +
-                '<text x="600" y="620" text-anchor="middle" font-family="Arial,sans-serif" font-size="34" fill="#526071">Image temporarily unavailable</text>' +
-                '</svg>'
+                '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800"><rect width="1200" height="800" fill="#e9edf2"/>' +
+                '<text x="600" y="410" text-anchor="middle" font-family="Arial,sans-serif" font-size="34" fill="#526071">Image temporarily unavailable</text></svg>'
             );
-
-            function setGalleryImage(img, url, altText) {
-                if (!img) return;
-                img.alt = altText;
-                img.onerror = function () {
-                    this.onerror = null; // ป้องกันการวนลูปเมื่อ fallback โหลดไม่ได้
-                    this.src = imageFallback;
-                };
-                img.src = url;
-            }
-
-            function renderRoom(key) {
-                const data = roomCatalog[key];
-                if (!data) return;
-                currentRoomKey = key;
-
-                document.getElementById("breadcrumbRoomName").textContent = data.title;
-                document.getElementById("detailRoomCode").textContent = data.code;
-                document.getElementById("detailRoomTitle").textContent = data.title;
-                document.getElementById("detailRoomTagline").textContent = data.tagline;
-                document.getElementById("specSize").textContent = data.size;
-                document.getElementById("specGuests").textContent = data.guests;
-                document.getElementById("specBed").textContent = data.bed;
-                document.getElementById("specView").textContent = data.view;
-                document.getElementById("detailFullDesc").textContent = data.desc;
-                document.getElementById("panelRoomName").textContent = data.title;
-                document.getElementById("panelBasePrice").textContent = "฿" + data.price.toLocaleString();
-                document.getElementById("reviewScoreBadge").textContent = data.score;
-
-                // อัปเดตแกลเลอรีด้วย URL แยกตามประเภทภาพ (เตียง / ห้องน้ำ / มุมห้อง)
-                setGalleryImage(mainImg, data.images.bed, "Room bedroom");
-
-                // ภาพที่ 1: มุมเตียงนอน
-                document.getElementById("thumb0").setAttribute("data-src", data.images.bed);
-                setGalleryImage(document.getElementById("thumbImg0"), data.images.bed, "Bedroom thumbnail");
-                document.getElementById("thumbLabel0").textContent = "มุมพักผ่อนหลัก";
-
-                // ภาพที่ 2: ห้องน้ำ (Bathroom) ตรงกับรูปห้องน้ำจริง
-                document.getElementById("thumb1").setAttribute("data-src", data.images.bathroom);
-                setGalleryImage(document.getElementById("thumbImg1"), data.images.bathroom, "Bathroom thumbnail");
-                document.getElementById("thumbLabel1").textContent = key === "suite" ? "Panorama Jacuzzi" : "Smart Bathroom";
-
-                // ภาพที่ 3: มุมตกแต่งวิว (Ambient & View) วิวมุมกระจกและสิ่งอำนวยความสะดวก
-                document.getElementById("thumb2").setAttribute("data-src", data.images.ambient);
-                setGalleryImage(document.getElementById("thumbImg2"), data.images.ambient, "Room ambience thumbnail");
-                document.getElementById("thumbLabel2").textContent = key === "family" ? "Lounge & Boardgame" : "Ambient & View";
-
-                // รีเซ็ตการไฮไลท์รูปแรก
-                thumbs.forEach((t, idx) => {
-                    t.classList.toggle("active", idx === 0);
-                });
-
-                switchButtons.forEach(btn => {
-                    btn.classList.toggle("active", btn.getAttribute("data-room") === key);
-                });
-
-                // เรนเดอร์ความคิดเห็นรีวิว (Dynamic Static Reviews) เจาะจงตามประเภทห้องพัก
-                renderReviewsList(data.reviews);
-
-                calculateSimulatedPrice();
-            }
-
-            // ฟังก์ชันสร้าง UI แสดงผลรีวิวแบบไดนามิก
-            function renderReviewsList(reviews) {
-                const container = document.getElementById("dynamicReviewsList");
-                container.innerHTML = ""; // ล้างข้อมูลเดิม
-
-                reviews.forEach(rev => {
-                    // สร้างดาวความเห็นตามคะแนนจริง
-                    let starsHtml = "";
-                    const fullStars = Math.floor(rev.score);
-                    for (let i = 0; i < 5; i++) {
-                        if (i < fullStars) {
-                            starsHtml += '<i class="fa-solid fa-star text-warning me-1"></i>';
-                        } else {
-                            starsHtml += '<i class="fa-regular fa-star text-muted me-1"></i>';
-                        }
-                    }
-
-                    const reviewHtml = `
-                        <div class="p-3 rounded-4 bg-light border border-light-subtle d-flex flex-column gap-2" data-aos="fade-up">
-                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="sm-avatar-placeholder">${rev.user.charAt(4)}</div>
-                                    <div>
-                                        <strong class="text-dark d-block">${rev.user}</strong>
-                                        <span class="text-muted" style="font-size: 0.76rem;"><i class="fa-regular fa-calendar-check me-1"></i>เข้าพักเมื่อ: ${rev.date}</span>
-                                    </div>
-                                </div>
-                                <div class="sm-rating-stars-wrap">
-                                    ${starsHtml} <span class="fw-bold text-dark ms-1" style="font-size: 0.88rem;">(${rev.score})</span>
-                                </div>
-                            </div>
-                            <p class="text-secondary mb-0 small lh-lg" style="font-style: italic;">
-                                "${rev.comment}"
-                            </p>
-                        </div>
-                    `;
-                    container.insertAdjacentHTML("beforeend", reviewHtml);
-                });
-            }
-
-            switchButtons.forEach(btn => {
-                btn.addEventListener("click", function () {
-                    renderRoom(this.getAttribute("data-room"));
+            document.querySelectorAll("#mainGalleryImg, .sm-gallery-thumb img").forEach(img => {
+                img.addEventListener("error", function () {
+                    if (this.src !== imageFallback) this.src = imageFallback;
                 });
             });
 
-            // Gallery Thumbnail Click
+            const mainImg = document.getElementById("mainGalleryImg");
+            const thumbs = document.querySelectorAll(".sm-gallery-thumb");
             thumbs.forEach(thumb => {
                 thumb.addEventListener("click", function () {
                     thumbs.forEach(t => t.classList.remove("active"));
                     this.classList.add("active");
-                    setGalleryImage(mainImg, this.getAttribute("data-src"), "Selected room gallery image");
+                    mainImg.src = this.getAttribute("data-src");
                 });
             });
 
-            // ตั้งค่าวันที่เริ่มต้นใน Simulator
+            // ---------- Simulator ----------
             const simIn = document.getElementById("simCheckIn");
             const simOut = document.getElementById("simCheckOut");
             const simGuests = document.getElementById("simGuests");
             const simPromo = document.getElementById("simPromo");
 
+            const pad = n => String(n).padStart(2, "0");
+            const fmt = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+            const baht = n => "฿" + Math.round(n).toLocaleString("en-US");
+
             const today = new Date();
             const tomorrow = new Date(today);
             tomorrow.setDate(today.getDate() + 1);
-            const fmt = d => d.toISOString().split("T")[0];
-
+            simIn.min = fmt(today);
             simIn.value = fmt(today);
+            simOut.min = fmt(tomorrow);
             simOut.value = fmt(tomorrow);
 
-            function calculateSimulatedPrice() {
-                const basePrice = roomCatalog[currentRoomKey].price;
-                const d1 = new Date(simIn.value);
-                const d2 = new Date(simOut.value);
-                let nights = Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
-                if (isNaN(nights) || nights < 1) nights = 1;
-
-                const subTotal = basePrice * nights;
-                const promo = simPromo.value;
-                let discount = 0;
-                let promoNote = "ไม่มีส่วนลดเพิ่มเติม";
-
-                if (promo === "pay2") {
-                    discount = 500 * nights; // จำลองฟรีค่าเตียงเสริม 500/คืน
-                    promoNote = "ฟรีค่าเตียงเสริมคนที่ 3 (มา 3 จ่าย 2)";
-                } else if (promo === "stay3") {
-                    discount = Math.round(subTotal * 0.20);
-                    promoNote = "ส่วนลด Stay 3+ Nights (20%)";
-                } else if (promo === "weekly") {
-                    discount = Math.round(subTotal * 0.25);
-                    promoNote = "ส่วนลด Weekly Escape (25%)";
+            simIn.addEventListener("change", function () {
+                if (!this.value) return;
+                const d = new Date(this.value + "T00:00:00");
+                d.setDate(d.getDate() + 1);
+                simOut.min = fmt(d);
+                if (!simOut.value || new Date(simOut.value + "T00:00:00") <= new Date(this.value + "T00:00:00")) {
+                    simOut.value = fmt(d);
                 }
-
-                const grandTotal = Math.max(basePrice, subTotal - discount);
-
-                document.getElementById("calcNightText").textContent = `ราคาห้องพัก (${nights} คืน)`;
-                document.getElementById("calcSubTotal").textContent = "฿" + subTotal.toLocaleString();
-                document.getElementById("calcPromoLabel").innerHTML = `<i class="fa-solid fa-tag me-1"></i>${promoNote}`;
-                document.getElementById("calcDiscount").textContent = discount > 0 ? `-฿${discount.toLocaleString()}` : "฿0";
-                document.getElementById("calcGrandTotal").textContent = "฿" + grandTotal.toLocaleString();
-            }
-
-            [simIn, simOut, simGuests, simPromo].forEach(el => {
-                el.addEventListener("change", calculateSimulatedPrice);
             });
 
-            // เริ่มแสดงผลห้องเริ่มต้น
-            renderRoom(currentRoomKey);
+            function calculate() {
+                const d1 = new Date(simIn.value + "T00:00:00");
+                const d2 = new Date(simOut.value + "T00:00:00");
+                let nights = Math.round((d2 - d1) / 86400000);
+                if (isNaN(nights) || nights < 1) nights = 1;
+
+                const guests = parseInt(simGuests.value, 10) || 1;
+                const subTotal = room.price * nights;
+
+                // ต้องเสริมเตียงเมื่อจำนวนคนเกินความจุมาตรฐาน (สมมติ = max(min_guests, 2))
+                const needExtra = room.allowExtraBed && guests > room.baseGuests;
+                const extra = needExtra ? room.extraBedPrice * nights : 0;
+
+                let discount = 0;
+                let label = "ไม่มีส่วนลด";
+                const idx = parseInt(simPromo.value, 10);
+                const p = idx >= 0 ? promos[idx] : null;
+
+                if (p) {
+                    if (p.minGuests && guests < p.minGuests) {
+                        label = `ยังไม่เข้าเงื่อนไข: ต้องมี ${p.minGuests} ท่านขึ้นไป`;
+                    } else if (p.type === "free_extra_bed") {
+                        if (needExtra) { discount = extra; label = p.name; }
+                        else { label = "ยังไม่เข้าเงื่อนไข: ต้องมีการใช้เตียงเสริม"; }
+                    } else if (p.type === "percent_room") {
+                        if (p.minNights && nights < p.minNights) {
+                            label = `ยังไม่เข้าเงื่อนไข: พักขั้นต่ำ ${p.minNights} คืน`;
+                        } else {
+                            discount = subTotal * p.percent / 100;
+                            label = `${p.name} (-${p.percent}%)`;
+                        }
+                    } else if (p.type === "percent_extra_nights") {
+                        let extraNights = Math.max(0, nights - (p.minNights || 0));
+                        if (p.maxDiscountNights) extraNights = Math.min(extraNights, p.maxDiscountNights);
+                        if (extraNights > 0) {
+                            discount = room.price * extraNights * p.percent / 100;
+                            label = `${p.name} (-${p.percent}% ${extraNights} คืน)`;
+                        } else {
+                            label = `ยังไม่เข้าเงื่อนไข: พักเกิน ${p.minNights || 0} คืน`;
+                        }
+                    }
+                }
+
+                const grand = Math.max(0, subTotal + extra - discount);
+
+                document.getElementById("calcNightText").textContent = `ราคาห้องพัก (${nights} คืน)`;
+                document.getElementById("calcSubTotal").textContent = baht(subTotal);
+                document.getElementById("calcExtraRow").style.display = extra > 0 ? "" : "none";
+                document.getElementById("calcExtra").textContent = baht(extra);
+                document.getElementById("calcPromoLabel").innerHTML = `<i class="fa-solid fa-tag me-1"></i>${label}`;
+                document.getElementById("calcDiscount").textContent = discount > 0 ? "-" + baht(discount) : "฿0";
+                document.getElementById("calcGrandTotal").textContent = baht(grand);
+            }
+
+            [simIn, simOut, simGuests, simPromo].forEach(el => el.addEventListener("change", calculate));
+            calculate();
         });
     </script>
 }

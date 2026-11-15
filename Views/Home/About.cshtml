@@ -82,33 +82,33 @@
                         <strong>StayMate Hotel</strong> ถือกำเนิดขึ้นใจกลางย่านสุขุมวิท กรุงเทพฯ ด้วยแนวคิด <em>"Future Urban Hotel"</em> ที่ต้องการทลายข้อจำกัดของโรงแรมแบบเดิม ๆ เราตัดขั้นตอนที่ยุ่งยากออกด้วยระบบจัดการห้องพักและบริการอัจฉริยะ เพื่อให้ทุกวินาทีของคุณคือการพักผ่อนอย่างแท้จริง
                     </p>
                     <p class="text-secondary lh-lg mb-4">
-                        ไม่ว่าคุณจะเดินทางมาทำงานแบบ Workation พักผ่อนสุดสัปดาห์กับคนพิเศษ หรือยกแก๊งมาสังสรรค์กับครอบครัว ห้องพักทั้ง 4 รูปแบบและโปรโมชั่นสุดคุ้มของเราถูกออกแบบมาให้ยืดหยุ่นและตอบโจทย์ทุกความต้องการอย่างตรงจุด
+                        ไม่ว่าคุณจะเดินทางมาทำงานแบบ Workation พักผ่อนสุดสัปดาห์กับคนพิเศษ หรือยกแก๊งมาสังสรรค์กับครอบครัว ห้องพักทั้ง @(ViewBag.RoomTypeCount ?? 0) รูปแบบและโปรโมชั่นสุดคุ้มของเราถูกออกแบบมาให้ยืดหยุ่นและตอบโจทย์ทุกความต้องการอย่างตรงจุด
                     </p>
 
                     <!-- Key Statistics Row -->
-                    <div class="row g-3">
-                        <div class="col-4">
-                            <div class="sm-stat-box">
-                                <span class="sm-stat-number">120+</span>
-                                <span class="sm-stat-label">Smart Rooms &amp; Suites</span>
-                            </div>
-                        </div>
-                        <div class="col-4">
-                            <div class="sm-stat-box">
-                                <span class="sm-stat-number">4.9/5</span>
-                                <span class="sm-stat-label">Guest Satisfaction</span>
-                            </div>
-                        </div>
-                        <div class="col-4">
-                            <div class="sm-stat-box">
-                                <span class="sm-stat-number">24/7</span>
-                                <span class="sm-stat-label">Digital &amp; Human Care</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<!-- Key Statistics Row -->
+<div class="row g-3">
+    <div class="col-4">
+        <div class="sm-stat-box">
+            <span class="sm-stat-number">@(ViewBag.RoomCount ?? 0)</span>
+            <span class="sm-stat-label">Smart Rooms &amp; Suites</span>
         </div>
+    </div>
+    <div class="col-4">
+        <div class="sm-stat-box">
+            <span class="sm-stat-number">@(ViewBag.AvgRating != null ? ((double)ViewBag.AvgRating).ToString("0.0") + "/5" : "-")</span>
+            <span class="sm-stat-label">
+                Guest Satisfaction@(ViewBag.ReviewCount > 0 ? $" ({ViewBag.ReviewCount} รีวิว)" : "")
+            </span>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="sm-stat-box">
+            <span class="sm-stat-number">24/7</span>
+            <span class="sm-stat-label">Digital &amp; Human Care</span>
+        </div>
+    </div>
+</div>
     </section>
 
     <!-- =========================================================
@@ -169,7 +169,7 @@
                         <span class="sm-eyebrow"><i class="fa-solid fa-shield-heart me-1"></i> STAYMATE PROMISE</span>
                         <h3 class="sm-section-title mt-1">พร้อมสัมผัสประสบการณ์การพักผ่อนแห่งอนาคตหรือยัง?</h3>
                         <p class="text-secondary mb-0">
-                            สำรวจห้องพักทั้ง 4 ประเภทของเรา หรือเลือกรับสิทธิ์โปรโมชั่นสุดคุ้มสำหรับการเดินทางครั้งถัดไปของคุณได้ทันที
+                            สำรวจห้องพักทั้ง @(ViewBag.RoomTypeCount ?? 0) ประเภทของเรา หรือเลือกรับสิทธิ์โปรโมชั่นสุดคุ้มสำหรับการเดินทางครั้งถัดไปของคุณได้ทันที
                         </p>
                     </div>
                     <div class="col-lg-4 text-lg-end">

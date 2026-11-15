@@ -1,6 +1,193 @@
 ﻿@{
-    ViewData["Title"] = "Privacy Policy";
+    Layout = "~/Views/Shared/_HomeLayout.cshtml";
+    ViewData["Title"] = "นโยบายความเป็นส่วนตัว";
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" />
+    <link rel="stylesheet" href="~/css/Home.css" asp-append-version="true" />
+}
+
+<div class="sm-home-wrapper">
+
+    <!-- HERO -->
+    <section class="sm-subpage-hero sm-full-bleed">
+        <div class="sm-subpage-hero-bg"
+             style="background-image: url('https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=2000&q=85');">
+        </div>
+        <div class="sm-hero-overlay"></div>
+        <div class="sm-hero-glow-orb sm-orb-violet"></div>
+
+        <div class="container position-relative z-2 py-4">
+            <nav aria-label="breadcrumb" class="mb-3" data-aos="fade-down">
+                <ol class="breadcrumb sm-breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index"><i class="fa-solid fa-house me-1"></i>หน้าแรก</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">นโยบายความเป็นส่วนตัว</li>
+                </ol>
+            </nav>
+
+            <div class="row align-items-end g-4">
+                <div class="col-lg-12" data-aos="fade-up">
+                    <div class="sm-hero-badge mb-2">
+                        <span class="sm-badge-pulse"></span>
+                        <span>PRIVACY &amp; DATA PROTECTION</span>
+                    </div>
+                    <h1 class="sm-subpage-title text-white">
+                        Privacy Policy<br />
+                        <span class="sm-text-gradient">นโยบายความเป็นส่วนตัวของ StayMate</span>
+                    </h1>
+                    <p class="text-light opacity-75 mb-0" style="max-width: 650px;">
+                        เราให้ความสำคัญกับข้อมูลส่วนบุคคลของคุณ หน้านี้อธิบายว่าเราเก็บข้อมูลอะไร นำไปใช้อย่างไร และคุณมีสิทธิ์อะไรบ้าง
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTENT -->
+    <section class="sm-section">
+        <div class="container">
+            <div class="row g-4">
+
+                <!-- สารบัญ -->
+                <div class="col-lg-3 d-none d-lg-block">
+                    <div class="sm-detail-card position-sticky" style="top: 100px;">
+                        <h6 class="fw-bold mb-3">สารบัญ</h6>
+                        <nav class="d-grid gap-2 small">
+                            <a href="#p1" class="text-decoration-none">1. ข้อมูลที่เราเก็บรวบรวม</a>
+                            <a href="#p2" class="text-decoration-none">2. วัตถุประสงค์การใช้ข้อมูล</a>
+                            <a href="#p3" class="text-decoration-none">3. การเปิดเผยข้อมูล</a>
+                            <a href="#p4" class="text-decoration-none">4. คุกกี้</a>
+                            <a href="#p5" class="text-decoration-none">5. ความปลอดภัยของข้อมูล</a>
+                            <a href="#p6" class="text-decoration-none">6. ระยะเวลาเก็บรักษา</a>
+                            <a href="#p7" class="text-decoration-none">7. สิทธิ์ของเจ้าของข้อมูล</a>
+                            <a href="#p8" class="text-decoration-none">8. ติดต่อเรา</a>
+                        </nav>
+                    </div>
+                </div>
+
+                <!-- เนื้อหา -->
+                <div class="col-lg-9">
+                    <div class="sm-detail-card" data-aos="fade-up">
+
+                        <p class="text-secondary small mb-4">
+                            <i class="fa-regular fa-calendar me-1"></i>
+                            ปรับปรุงล่าสุด: 16 พฤศจิกายน 2569
+                        </p>
+
+                        <p class="text-secondary lh-lg">
+                            โรงแรม StayMate (“เรา”) จัดทำนโยบายนี้เพื่อแจ้งให้ผู้ใช้งานเว็บไซต์และผู้เข้าพักทราบถึงการเก็บรวบรวม
+                            ใช้ และเปิดเผยข้อมูลส่วนบุคคล ตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 (PDPA)
+                        </p>
+
+                        <h4 id="p1" class="fw-bold mt-5 mb-3">1. ข้อมูลที่เราเก็บรวบรวม</h4>
+                        <p class="text-secondary lh-lg">เราอาจเก็บข้อมูลของคุณตามการใช้งานดังนี้</p>
+                        <ul class="text-secondary lh-lg">
+                            <li><strong>ข้อมูลบัญชีสมาชิก:</strong> ชื่อผู้ใช้ ชื่อ-นามสกุล อีเมล เบอร์โทรศัพท์ และรหัสผ่าน (เก็บในรูปแบบที่เข้ารหัสแบบแฮช เราไม่สามารถอ่านรหัสผ่านจริงของคุณได้)</li>
+                            <li><strong>ข้อมูลการจอง:</strong> วันที่เข้าพัก-ออก จำนวนผู้เข้าพัก ประเภทห้อง ชื่อและข้อมูลติดต่อของผู้จอง คำขอพิเศษ และโปรโมชั่นที่ใช้สิทธิ์</li>
+                            <li><strong>ข้อมูลผู้เข้าพัก:</strong> ชื่อ-นามสกุล เบอร์โทรศัพท์ และเลขบัตรประชาชน/หนังสือเดินทาง (ในกรณีที่โรงแรมต้องใช้ตามกฎหมายเพื่อแจ้งที่พักอาศัย)</li>
+                            <li><strong>ข้อมูลการชำระเงิน:</strong> วิธีชำระเงิน จำนวนเงิน สถานะ และรูปสลิปการโอนเงินที่คุณอัปโหลด</li>
+                            <li><strong>ข้อมูลการเข้าพัก:</strong> เวลาเช็คอิน-เช็คเอาท์ และห้องที่เข้าพักจริง</li>
+                            <li><strong>รีวิว:</strong> คะแนนและความคิดเห็นที่คุณเขียนหลังเข้าพัก</li>
+                            <li><strong>ข้อมูลทางเทคนิค:</strong> ที่อยู่ IP และบันทึกการทำรายการสำคัญในระบบ (Audit Log) เพื่อความปลอดภัย</li>
+                        </ul>
+
+                        <h4 id="p2" class="fw-bold mt-5 mb-3">2. วัตถุประสงค์การใช้ข้อมูล</h4>
+                        <ul class="text-secondary lh-lg">
+                            <li>สร้างและจัดการบัญชีสมาชิก รวมถึงยืนยันตัวตนเมื่อเข้าสู่ระบบ</li>
+                            <li>ดำเนินการจอง ตรวจสอบการชำระเงิน และออกใบเสร็จ</li>
+                            <li>จัดเตรียมห้องพัก เช็คอิน เช็คเอาท์ และให้บริการระหว่างเข้าพัก</li>
+                            <li>ตรวจสอบและคำนวณสิทธิ์โปรโมชั่นหรือส่วนลดที่คุณใช้</li>
+                            <li>ปฏิบัติตามกฎหมาย เช่น การแจ้งข้อมูลผู้เข้าพักและการจัดทำบัญชีทางการเงิน</li>
+                            <li>ป้องกันการทุจริต รักษาความปลอดภัยของระบบ และตรวจสอบย้อนหลังเมื่อเกิดเหตุผิดปกติ</li>
+                            <li>ปรับปรุงคุณภาพบริการจากรีวิวและข้อเสนอแนะของผู้เข้าพัก</li>
+                        </ul>
+
+                        <h4 id="p3" class="fw-bold mt-5 mb-3">3. การเปิดเผยข้อมูล</h4>
+                        <p class="text-secondary lh-lg">
+                            เราไม่ขายข้อมูลส่วนบุคคลของคุณให้บุคคลภายนอก ข้อมูลอาจถูกเข้าถึงได้เฉพาะ
+                        </p>
+                        <ul class="text-secondary lh-lg">
+                            <li><strong>เจ้าหน้าที่ของโรงแรม</strong> ตามหน้าที่ที่ได้รับมอบหมาย เช่น แผนกต้อนรับ แม่บ้าน การเงิน และผู้บริหาร โดยแต่ละบทบาทเห็นข้อมูลเท่าที่จำเป็น</li>
+                            <li><strong>หน่วยงานราชการ</strong> เมื่อมีกฎหมายกำหนดหรือมีคำสั่งตามกระบวนการที่ชอบด้วยกฎหมาย</li>
+                            <li><strong>ผู้ให้บริการระบบ</strong> เช่น ผู้ให้บริการโฮสติ้งและฐานข้อมูล ภายใต้ข้อตกลงรักษาความลับ</li>
+                        </ul>
+
+                        <h4 id="p4" class="fw-bold mt-5 mb-3">4. คุกกี้ (Cookies)</h4>
+                        <p class="text-secondary lh-lg">
+                            เว็บไซต์ใช้คุกกี้เพื่อจดจำสถานะการเข้าสู่ระบบเท่านั้น เป็นคุกกี้ที่จำเป็นต่อการทำงานของระบบ
+                            ตั้งค่าให้เข้าถึงผ่าน HTTPS เท่านั้นและไม่สามารถอ่านได้ด้วย JavaScript
+                            จะหมดอายุอัตโนมัติหลังไม่มีการใช้งานประมาณ 2 ชั่วโมง และถูกลบเมื่อคุณออกจากระบบ
+                            เราไม่ใช้คุกกี้เพื่อการโฆษณาหรือติดตามพฤติกรรมของคุณ
+                        </p>
+                        <p class="text-secondary lh-lg">
+                            หมายเหตุ: บางหน้าของเว็บไซต์โหลดเนื้อหาจากผู้ให้บริการภายนอก (เช่น รูปภาพ แผนที่ ฟอนต์ และไลบรารีหน้าเว็บ)
+                            ผู้ให้บริการเหล่านั้นอาจได้รับที่อยู่ IP ของคุณตามปกติของการเปิดเว็บ ซึ่งอยู่ภายใต้นโยบายของแต่ละผู้ให้บริการ
+                        </p>
+
+                        <h4 id="p5" class="fw-bold mt-5 mb-3">5. ความปลอดภัยของข้อมูล</h4>
+                        <ul class="text-secondary lh-lg">
+                            <li>รหัสผ่านถูกเก็บในรูปแบบแฮช ไม่เก็บเป็นข้อความธรรมดา</li>
+                            <li>จำกัดสิทธิ์การเข้าถึงข้อมูลตามบทบาทของเจ้าหน้าที่</li>
+                            <li>บันทึกการทำรายการสำคัญเพื่อตรวจสอบย้อนหลังได้</li>
+                            <li>ใช้การเชื่อมต่อแบบเข้ารหัส (HTTPS) ในการรับส่งข้อมูล</li>
+                        </ul>
+                        <p class="text-secondary lh-lg">
+                            แม้เราจะใช้มาตรการดังกล่าว แต่ไม่มีระบบใดปลอดภัยได้ 100% โปรดรักษารหัสผ่านของคุณเป็นความลับและออกจากระบบทุกครั้งเมื่อใช้เครื่องสาธารณะ
+                        </p>
+
+                        <h4 id="p6" class="fw-bold mt-5 mb-3">6. ระยะเวลาเก็บรักษา</h4>
+                        <p class="text-secondary lh-lg">
+                            เราเก็บข้อมูลเท่าที่จำเป็นต่อวัตถุประสงค์ข้างต้น และตามระยะเวลาที่กฎหมายกำหนด
+                            เช่น เอกสารทางบัญชีและการเงิน เมื่อพ้นระยะเวลาดังกล่าว เราจะลบหรือทำให้ข้อมูลไม่สามารถระบุตัวตนได้
+                        </p>
+
+                        <h4 id="p7" class="fw-bold mt-5 mb-3">7. สิทธิ์ของเจ้าของข้อมูล</h4>
+                        <p class="text-secondary lh-lg">ตาม PDPA คุณมีสิทธิ์ดังนี้</p>
+                        <ul class="text-secondary lh-lg">
+                            <li>ขอเข้าถึงและขอรับสำเนาข้อมูลส่วนบุคคลของคุณ</li>
+                            <li>ขอแก้ไขข้อมูลให้ถูกต้องและเป็นปัจจุบัน</li>
+                            <li>ขอลบหรือระงับการใช้ข้อมูล (ในกรณีที่ไม่ขัดต่อข้อกำหนดทางกฎหมายที่เราต้องปฏิบัติ)</li>
+                            <li>คัดค้านหรือถอนความยินยอมในการใช้ข้อมูลบางประเภท</li>
+                            <li>ร้องเรียนต่อสำนักงานคณะกรรมการคุ้มครองข้อมูลส่วนบุคคล หากเห็นว่าเราไม่ปฏิบัติตามกฎหมาย</li>
+                        </ul>
+                        <p class="text-secondary lh-lg">
+                            การถอนความยินยอมหรือขอลบข้อมูลบางส่วนอาจทำให้เราไม่สามารถให้บริการจองหรือเข้าพักแก่คุณได้
+                        </p>
+
+                        <h4 id="p8" class="fw-bold mt-5 mb-3">8. ติดต่อเรา</h4>
+                        <p class="text-secondary lh-lg">
+                            หากต้องการใช้สิทธิ์หรือมีข้อสงสัยเกี่ยวกับนโยบายนี้ ติดต่อได้ที่
+                        </p>
+                        <div class="p-3 rounded-3 bg-light border small">
+                            <div class="mb-2"><i class="fa-solid fa-envelope text-primary me-2"></i>booking@staymate-hotel.com</div>
+                            <div class="mb-2"><i class="fa-solid fa-phone text-primary me-2"></i>02-888-9999 (24 ชั่วโมง)</div>
+                            <div><i class="fa-solid fa-location-dot text-primary me-2"></i>888 ถ.สุขุมวิท คลองเตยเหนือ วัฒนา กรุงเทพฯ</div>
+                        </div>
+
+                        <p class="text-secondary small mt-4 mb-0">
+                            เราอาจปรับปรุงนโยบายนี้เป็นครั้งคราว โดยจะแสดงวันที่ปรับปรุงล่าสุดไว้ที่ด้านบนของหน้านี้
+                        </p>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <a asp-controller="Home" asp-action="Index" class="sm-btn-outline-dark">
+                            <i class="fa-solid fa-arrow-left me-1"></i> กลับหน้าแรก
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            if (typeof AOS !== "undefined") AOS.init({ duration: 700, once: true });
+        });
+    </script>
+}

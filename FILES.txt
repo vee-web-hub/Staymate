@@ -172,8 +172,10 @@ C:.
 |   |   Voucher.cs
 |   |   
 |   \---ViewModels
+|           HomeIndexViewModel.cs
 |           LoginViewModel.cs
 |           RegisterViewModel.cs
+|           RoomExtrasCatalog.cs
 |           UserCreateViewModel.cs
 |           UserEditViewModel.cs
 |           UserListItem.cs
@@ -220,7 +222,7 @@ C:.
 |           +---compressed
 |           |       0ficvtfgdc-{0}-47otxtyo56-47otxtyo56.gz
 |           |       10wo29qovj-{0}-ft3s53vfgj-ft3s53vfgj.gz
-|           |       2q8nczj1zj-{0}-b5jijheh38-b5jijheh38.gz
+|           |       2q8nczj1zj-{0}-7wyt2gtnln-7wyt2gtnln.gz
 |           |       2tlghukceq-{0}-83jwlth58m-83jwlth58m.gz
 |           |       2ual7gkoo7-{0}-ub07r2b239-ub07r2b239.gz
 |           |       3ga03bymqb-{0}-khv3u5hwcm-khv3u5hwcm.gz
