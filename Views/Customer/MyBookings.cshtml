@@ -1,0 +1,721 @@
+@{
+    Layout = "~/Views/Shared/_CustomerLayout.cshtml";
+    ViewData["Title"] = "การจองของฉัน (My Bookings)";
+
+    // =========================================================
+    // PURE MOCK DATA: รายการจองจำลอง 4 รายการ (ครบทุกสถานะตาม Flow)
+    // =========================================================
+    var mockBookings = new[]
+    {
+        new
+        {
+            BookingId = 1,
+            BookingCode = "BK-2026101",
+            RoomName = "StayMate Skyline Deluxe #402",
+            RoomType = "Deluxe Room",
+            RoomImage = "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=900&q=80",
+            CheckIn = new DateTime(2026, 11, 20),
+            CheckOut = new DateTime(2026, 11, 23),
+            CreatedAt = new DateTime(2026, 11, 10),
+            Nights = 3,
+            Guests = 3,
+            RoomsCount = 1,
+            RoomPrice = 7800m,
+            PromoDiscount = 2600m, // มา 3 จ่าย 2
+            AdditionalDiscount = 0m,
+            TotalAmount = 5200m,
+            BookingStatus = "Approved",
+            PaymentStatus = "Paid",
+            PromoName = "มา 3 จ่าย 2 (Stay 3 Pay 2)",
+            HasQrCode = true,
+            QrCodeUrl = "https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=STAYMATE-BK-2026101-APPROVED"
+        },
+        new
+        {
+            BookingId = 2,
+            BookingCode = "BK-2026102",
+            RoomName = "StayMate Horizon Executive Suite #801",
+            RoomType = "Suite Room",
+            RoomImage = "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=900&q=80",
+            CheckIn = new DateTime(2026, 12, 5),
+            CheckOut = new DateTime(2026, 12, 7),
+            CreatedAt = new DateTime(2026, 11, 15),
+            Nights = 2,
+            Guests = 4,
+            RoomsCount = 1,
+            RoomPrice = 11600m,
+            PromoDiscount = 1160m, // Festival 10%
+            AdditionalDiscount = 500m, // E-Voucher
+            TotalAmount = 9940m,
+            BookingStatus = "Pending",
+            PaymentStatus = "Pending Verification",
+            PromoName = "Festival & Long Weekend (-10%)",
+            HasQrCode = false,
+            QrCodeUrl = ""
+        },
+        new
+        {
+            BookingId = 3,
+            BookingCode = "BK-2026089",
+            RoomName = "StayMate Family Sanctuary #505",
+            RoomType = "Family Room",
+            RoomImage = "https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=900&q=80",
+            CheckIn = new DateTime(2026, 10, 12),
+            CheckOut = new DateTime(2026, 10, 15),
+            CreatedAt = new DateTime(2026, 10, 1),
+            Nights = 3,
+            Guests = 4,
+            RoomsCount = 1,
+            RoomPrice = 11700m,
+            PromoDiscount = 2340m,
+            AdditionalDiscount = 0m,
+            TotalAmount = 9360m,
+            BookingStatus = "Completed",
+            PaymentStatus = "Paid",
+            PromoName = "Family & Gang Pack",
+            HasQrCode = true,
+            QrCodeUrl = "https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=STAYMATE-BK-2026089-COMPLETED"
+        },
+        new
+        {
+            BookingId = 4,
+            BookingCode = "BK-2026074",
+            RoomName = "StayMate Urban Smart #204",
+            RoomType = "Standard Room",
+            RoomImage = "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=900&q=80",
+            CheckIn = new DateTime(2026, 9, 18),
+            CheckOut = new DateTime(2026, 9, 19),
+            CreatedAt = new DateTime(2026, 9, 15),
+            Nights = 1,
+            Guests = 2,
+            RoomsCount = 1,
+            RoomPrice = 1800m,
+            PromoDiscount = 0m,
+            AdditionalDiscount = 0m,
+            TotalAmount = 1800m,
+            BookingStatus = "Rejected",
+            PaymentStatus = "Rejected",
+            PromoName = "ราคาปกติสำหรับสมาชิก",
+            HasQrCode = false,
+            QrCodeUrl = ""
+        }
+    };
+
+    int totalBookingsCount = mockBookings.Length;
+    int upcomingStaysCount = mockBookings.Count(x => x.BookingStatus == "Approved");
+    int pendingBookingsCount = mockBookings.Count(x => x.BookingStatus == "Pending");
+    int completedStaysCount = mockBookings.Count(x => x.BookingStatus == "Completed");
+}
+
+@section Styles {
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" />
+    <link rel="stylesheet" href="~/css/Customer.css" asp-append-version="true" />
+}
+
+<div class="customer-mb-wrapper">
+
+    <!-- =========================================================
+         3. PAGE HEADER
+         ========================================================= -->
+    <section class="customer-mb-header">
+        <div class="container">
+            <nav aria-label="breadcrumb" class="customer-mb-breadcrumb mb-2" data-aos="fade-down">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item">
+                        <a asp-controller="Customer" asp-action="Index">
+                            <i class="fa-solid fa-house me-1"></i> หน้าแรก
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">การจองของฉัน (My Bookings)</li>
+                </ol>
+            </nav>
+
+            <div class="d-flex justify-content-between align-items-end flex-wrap gap-3" data-aos="fade-up">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="customer-mb-eyebrow mb-0">
+                            <i class="fa-solid fa-shield-halved me-1"></i> DIGITAL BOOKING MANAGEMENT
+                        </span>
+                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill">
+                            <i class="fa-solid fa-flask me-1"></i> Mock UI Preview
+                        </span>
+                    </div>
+                    <h1 class="customer-mb-title">My Bookings · การจองของฉัน</h1>
+                    <p class="customer-mb-subtitle mb-0">
+                        Manage your reservations and keep track of your stays. ตรวจสอบสถานะการจอง การชำระเงิน ดูรายละเอียดใบจอง และเปิด Digital Travel Pass (QR Code)
+                    </p>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2">
+                    <a asp-controller="Customer" asp-action="RoomAvailability" class="customer-mb-btn-primary">
+                        <i class="fa-solid fa-calendar-plus"></i>
+                        <span>จองห้องพักเพิ่ม</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         4. BOOKING OVERVIEW DASHBOARD (4 CARDS)
+         ========================================================= -->
+    <section class="customer-mb-dashboard-section" aria-label="สรุปภาพรวมการจอง">
+        <div class="container">
+            <div class="row g-3 g-md-4">
+                <!-- Card 1: Total Bookings -->
+                <div class="col-12 col-sm-6 col-xl-3" data-aos="fade-up" data-aos-delay="0">
+                    <div class="customer-mb-stat-card customer-mb-stat-navy">
+                        <div class="customer-mb-stat-icon">
+                            <i class="fa-solid fa-layer-group"></i>
+                        </div>
+                        <div class="customer-mb-stat-content">
+                            <span class="customer-mb-stat-label">Total Bookings</span>
+                            <h2 class="customer-mb-stat-value">@totalBookingsCount</h2>
+                            <small class="customer-mb-stat-desc">รายการจองห้องพักทั้งหมด</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Upcoming Stays -->
+                <div class="col-12 col-sm-6 col-xl-3" data-aos="fade-up" data-aos-delay="60">
+                    <div class="customer-mb-stat-card customer-mb-stat-emerald">
+                        <div class="customer-mb-stat-icon">
+                            <i class="fa-solid fa-calendar-check"></i>
+                        </div>
+                        <div class="customer-mb-stat-content">
+                            <span class="customer-mb-stat-label">Upcoming Stays</span>
+                            <h2 class="customer-mb-stat-value">@upcomingStaysCount</h2>
+                            <small class="customer-mb-stat-desc">อนุมัติแล้วและกำลังจะเข้าพัก</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3: Pending Bookings -->
+                <div class="col-12 col-sm-6 col-xl-3" data-aos="fade-up" data-aos-delay="120">
+                    <div class="customer-mb-stat-card customer-mb-stat-amber">
+                        <div class="customer-mb-stat-icon">
+                            <i class="fa-solid fa-hourglass-half"></i>
+                        </div>
+                        <div class="customer-mb-stat-content">
+                            <span class="customer-mb-stat-label">Pending Bookings</span>
+                            <h2 class="customer-mb-stat-value">@pendingBookingsCount</h2>
+                            <small class="customer-mb-stat-desc">รอตรวจสอบการชำระเงิน/อนุมัติ</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 4: Completed Stays -->
+                <div class="col-12 col-sm-6 col-xl-3" data-aos="fade-up" data-aos-delay="180">
+                    <div class="customer-mb-stat-card customer-mb-stat-blue">
+                        <div class="customer-mb-stat-icon">
+                            <i class="fa-solid fa-award"></i>
+                        </div>
+                        <div class="customer-mb-stat-content">
+                            <span class="customer-mb-stat-label">Completed Stays</span>
+                            <h2 class="customer-mb-stat-value">@completedStaysCount</h2>
+                            <small class="customer-mb-stat-desc">เข้าพักเสร็จสิ้นเรียบร้อยแล้ว</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         5. BOOKING FILTER & SEARCH
+         ========================================================= -->
+    <section class="customer-mb-filter-section" aria-label="ค้นหาและกรองรายการจอง">
+        <div class="container">
+            <div class="customer-mb-filter-panel" data-aos="fade-up">
+                <div class="customer-mb-filter-top">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="customer-mb-filter-icon"><i class="fa-solid fa-sliders"></i></span>
+                        <h3 class="customer-mb-filter-heading mb-0">Search &amp; Filter Reservations</h3>
+                    </div>
+                    <button type="button" id="btnResetBookingFilters" class="customer-mb-btn-reset">
+                        <i class="fa-solid fa-rotate-left me-1"></i> Reset Filter
+                    </button>
+                </div>
+
+                <form id="mbFilterForm" onsubmit="return false;">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-12 col-sm-6 col-lg-2">
+                            <label for="mbSearchBookingId" class="customer-mb-label">
+                                <i class="fa-solid fa-hashtag text-primary me-1"></i> Booking ID
+                            </label>
+                            <input type="text" id="mbSearchBookingId" class="form-control customer-mb-input" placeholder="เช่น BK-2026101" />
+                        </div>
+
+                        <div class="col-12 col-sm-6 col-lg-2">
+                            <label for="mbSearchRoomName" class="customer-mb-label">
+                                <i class="fa-solid fa-bed text-primary me-1"></i> Room Name
+                            </label>
+                            <input type="text" id="mbSearchRoomName" class="form-control customer-mb-input" placeholder="เช่น Deluxe, Suite" />
+                        </div>
+
+                        <div class="col-12 col-sm-6 col-lg-2">
+                            <label for="mbFilterBookingStatus" class="customer-mb-label">
+                                <i class="fa-solid fa-clipboard-check text-primary me-1"></i> Booking Status
+                            </label>
+                            <select id="mbFilterBookingStatus" class="form-select customer-mb-input">
+                                <option value="ALL" selected>All Statuses</option>
+                                <option value="Pending">Pending (รออนุมัติ)</option>
+                                <option value="Approved">Approved (อนุมัติแล้ว)</option>
+                                <option value="Rejected">Rejected (ไม่อนุมัติ)</option>
+                                <option value="Completed">Completed (เสร็จสิ้น)</option>
+                                <option value="Cancelled">Cancelled (ยกเลิก)</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12 col-sm-6 col-lg-2">
+                            <label for="mbFilterPaymentStatus" class="customer-mb-label">
+                                <i class="fa-solid fa-credit-card text-primary me-1"></i> Payment Status
+                            </label>
+                            <select id="mbFilterPaymentStatus" class="form-select customer-mb-input">
+                                <option value="ALL" selected>All Payments</option>
+                                <option value="Unpaid">Unpaid (ยังไม่ชำระ)</option>
+                                <option value="Pending Verification">Pending Verification</option>
+                                <option value="Paid">Paid (ชำระแล้ว)</option>
+                                <option value="Rejected">Rejected (สลิปไม่ผ่าน)</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12 col-sm-6 col-lg-2">
+                            <label for="mbFilterCheckInDate" class="customer-mb-label">
+                                <i class="fa-regular fa-calendar text-primary me-1"></i> Check-in Date
+                            </label>
+                            <input type="date" id="mbFilterCheckInDate" class="form-control customer-mb-input" />
+                        </div>
+
+                        <div class="col-12 col-sm-6 col-lg-2">
+                            <label for="mbSortOrder" class="customer-mb-label">
+                                <i class="fa-solid fa-arrow-down-wide-short text-primary me-1"></i> Sorting
+                            </label>
+                            <select id="mbSortOrder" class="form-select customer-mb-input">
+                                <option value="newest" selected>Newest First (ใหม่สุด)</option>
+                                <option value="oldest">Oldest First (เก่าสุด)</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         6, 7 & 8. BOOKING LIST (MODERN BOOKING CARDS)
+         ========================================================= -->
+    <section class="customer-mb-list-section" aria-label="รายการจองห้องพัก">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                <span class="customer-mb-result-counter">
+                    แสดง <strong id="mbVisibleCount">@totalBookingsCount</strong> จากทั้งหมด <strong>@totalBookingsCount</strong> รายการจอง (Mock Data)
+                </span>
+                <span class="small text-muted">
+                    คลิก <strong>View Details</strong> เพื่อเปิดหน้า <code>BookingDetails.cshtml</code> ของแต่ละรายการ
+                </span>
+            </div>
+
+            <div id="mbBookingCardsContainer" class="customer-mb-cards-stack">
+                @foreach (var item in mockBookings)
+                {
+                    string bStatus = item.BookingStatus;
+                    string pStatus = item.PaymentStatus;
+
+                    string bStatusClass = bStatus switch
+                    {
+                        "Approved" => "customer-mb-badge-approved",
+                        "Rejected" => "customer-mb-badge-rejected",
+                        "Completed" => "customer-mb-badge-completed",
+                        "Cancelled" => "customer-mb-badge-cancelled",
+                        _ => "customer-mb-badge-pending"
+                    };
+
+                    string bStatusIcon = bStatus switch
+                    {
+                        "Approved" => "fa-circle-check",
+                        "Rejected" => "fa-circle-xmark",
+                        "Completed" => "fa-flag-checkered",
+                        "Cancelled" => "fa-ban",
+                        _ => "fa-clock"
+                    };
+
+                    string pStatusClass = pStatus switch
+                    {
+                        "Paid" => "customer-mb-pay-paid",
+                        "Pending Verification" => "customer-mb-pay-verifying",
+                        "Rejected" => "customer-mb-pay-rejected",
+                        _ => "customer-mb-pay-unpaid"
+                    };
+
+                    <article class="customer-mb-booking-card js-booking-card"
+                             data-booking-id="@item.BookingCode.ToLowerInvariant()"
+                             data-room-name="@item.RoomName.ToLowerInvariant() @item.RoomType.ToLowerInvariant()"
+                             data-booking-status="@bStatus"
+                             data-payment-status="@pStatus"
+                             data-checkin="@item.CheckIn.ToString("yyyy-MM-dd")"
+                             data-timestamp="@item.CreatedAt.Ticks">
+
+                        <div class="row g-0 align-items-stretch">
+                            <!-- ซ้าย: รูปห้องพัก -->
+                            <div class="col-12 col-lg-3">
+                                <div class="customer-mb-card-img-wrap">
+                                    <img src="@item.RoomImage" alt="@item.RoomName" class="customer-mb-card-img" loading="lazy" />
+                                    <span class="customer-mb-roomtype-pill">@item.RoomType</span>
+                                    <span class="customer-mb-id-overlay">#@item.BookingCode</span>
+                                </div>
+                            </div>
+
+                            <!-- กลาง: รายละเอียดการจอง -->
+                            <div class="col-12 col-lg-5">
+                                <div class="customer-mb-card-center">
+                                    <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
+                                        <span class="customer-mb-code-tag">
+                                            <i class="fa-solid fa-receipt text-primary me-1"></i> Booking ID: <strong>@item.BookingCode</strong>
+                                        </span>
+                                        <span class="text-muted small">· จองเมื่อ @item.CreatedAt.ToString("dd MMM yyyy")</span>
+                                    </div>
+
+                                    <h3 class="customer-mb-room-title">@item.RoomName</h3>
+                                    <p class="customer-mb-room-sub mb-3">
+                                        ประเภทห้อง: <strong>@item.RoomType</strong> · แคมเปญ: <span class="text-primary fw-semibold">@item.PromoName</span>
+                                    </p>
+
+                                    <div class="customer-mb-meta-grid">
+                                        <div class="customer-mb-meta-item">
+                                            <small><i class="fa-regular fa-calendar-plus text-primary me-1"></i> Check-in Date</small>
+                                            <strong>@item.CheckIn.ToString("dd MMM yyyy")</strong>
+                                        </div>
+                                        <div class="customer-mb-meta-item">
+                                            <small><i class="fa-regular fa-calendar-minus text-primary me-1"></i> Check-out Date</small>
+                                            <strong>@item.CheckOut.ToString("dd MMM yyyy")</strong>
+                                        </div>
+                                        <div class="customer-mb-meta-item">
+                                            <small><i class="fa-solid fa-moon text-primary me-1"></i> จำนวนคืนเข้าพัก</small>
+                                            <strong>@item.Nights คืน</strong>
+                                        </div>
+                                        <div class="customer-mb-meta-item">
+                                            <small><i class="fa-solid fa-user-group text-primary me-1"></i> ผู้เข้าพัก &amp; จำนวนห้อง</small>
+                                            <strong>@item.Guests ท่าน · @item.RoomsCount ห้อง</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ขวา: สถานะ ราคา และปุ่มจัดการ -->
+                            <div class="col-12 col-lg-4">
+                                <div class="customer-mb-card-right">
+                                    <div class="customer-mb-status-row">
+                                        <div class="customer-mb-status-group">
+                                            <small>Booking Status</small>
+                                            <span class="customer-mb-status-badge @bStatusClass">
+                                                <i class="fa-solid @bStatusIcon me-1"></i> @bStatus
+                                            </span>
+                                        </div>
+                                        <div class="customer-mb-status-group text-lg-end">
+                                            <small>Payment Status</small>
+                                            <span class="customer-mb-pay-badge @pStatusClass">
+                                                @pStatus
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="customer-mb-price-box">
+                                        <div class="customer-mb-price-line">
+                                            <span>ค่าห้องพัก (@item.Nights คืน)</span>
+                                            <span>฿@item.RoomPrice.ToString("N0")</span>
+                                        </div>
+                                        @if (item.PromoDiscount > 0)
+                                        {
+                                            <div class="customer-mb-price-line text-success">
+                                                <span>ส่วนลดโปรโมชั่น</span>
+                                                <span>-฿@item.PromoDiscount.ToString("N0")</span>
+                                            </div>
+                                        }
+                                        @if (item.AdditionalDiscount > 0)
+                                        {
+                                            <div class="customer-mb-price-line text-success">
+                                                <span>ส่วนลด E-Voucher</span>
+                                                <span>-฿@item.AdditionalDiscount.ToString("N0")</span>
+                                            </div>
+                                        }
+                                        <div class="customer-mb-price-total">
+                                            <span>ยอดชำระสุทธิ</span>
+                                            <strong>฿@item.TotalAmount.ToString("N0")</strong>
+                                        </div>
+                                    </div>
+
+                                    <div class="customer-mb-actions">
+                                        <!-- ปุ่ม View Details ส่งไปหน้า BookingDetails.cshtml ตาม Flow ข้อ 7 -->
+                                        <a asp-controller="Customer"
+                                           asp-action="BookingDetails"
+                                           asp-route-id="@item.BookingId"
+                                           class="customer-mb-btn-detail">
+                                            <i class="fa-regular fa-file-lines"></i>
+                                            <span>View Details</span>
+                                        </a>
+
+                                        <button type="button"
+                                                class="customer-mb-btn-qr js-open-qr-modal"
+                                                data-booking-code="@item.BookingCode"
+                                                data-room-name="@item.RoomName"
+                                                data-checkin="@item.CheckIn.ToString("dd MMM yyyy")"
+                                                data-qr-url="@item.QrCodeUrl">
+                                            <i class="fa-solid fa-qrcode"></i>
+                                            <span>View QR Code</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                }
+            </div>
+
+            <!-- Empty State เมื่อกรองแล้วไม่เจอ -->
+            <div id="mbFilterEmptyState" class="customer-mb-empty-card d-none mt-3">
+                <div class="customer-mb-empty-icon-wrap">
+                    <i class="fa-solid fa-suitcase-rolling"></i>
+                </div>
+                <h3 class="customer-mb-empty-title">No Bookings Found</h3>
+                <p class="customer-mb-empty-desc">
+                    ไม่พบรายการจองที่ตรงกับเงื่อนไขการค้นหา ลองกด Reset Filter เพื่อแสดงรายการจองทั้งหมด
+                </p>
+                <button type="button" id="btnEmptyFilterReset" class="customer-mb-btn-primary mt-3">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    <span>Reset Filter</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         11. BOOKING STATUS INFORMATION
+         ========================================================= -->
+    <section class="customer-mb-legend-section">
+        <div class="container">
+            <div class="customer-mb-legend-card" data-aos="fade-up">
+                <div class="row g-4">
+                    <div class="col-12 col-lg-7">
+                        <h4 class="customer-mb-legend-title">
+                            <i class="fa-solid fa-circle-info text-primary me-2"></i>คำอธิบายสถานะการจอง (Booking Status)
+                        </h4>
+                        <div class="customer-mb-legend-grid">
+                            <div class="customer-mb-legend-item">
+                                <span class="customer-mb-status-badge customer-mb-badge-pending">Pending</span>
+                                <p class="mb-0">การจองกำลังรอการตรวจสอบและอนุมัติจากโรงแรม</p>
+                            </div>
+                            <div class="customer-mb-legend-item">
+                                <span class="customer-mb-status-badge customer-mb-badge-approved">Approved</span>
+                                <p class="mb-0">การจองได้รับการยืนยันแล้ว พร้อมรับ QR Code สำหรับเช็คอิน</p>
+                            </div>
+                            <div class="customer-mb-legend-item">
+                                <span class="customer-mb-status-badge customer-mb-badge-rejected">Rejected</span>
+                                <p class="mb-0">การจองไม่ผ่านการอนุมัติ (ตรวจสอบสาเหตุในหน้า Booking Details)</p>
+                            </div>
+                            <div class="customer-mb-legend-item">
+                                <span class="customer-mb-status-badge customer-mb-badge-completed">Completed</span>
+                                <p class="mb-0">ลูกค้าเข้าพักและเช็คเอาท์เสร็จสิ้นแล้ว (สามารถเขียนรีวิวได้)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-5 border-lg-start ps-lg-4">
+                        <h4 class="customer-mb-legend-title">
+                            <i class="fa-solid fa-wallet text-info me-2"></i>สถานะการชำระเงิน (Payment Status)
+                        </h4>
+                        <div class="customer-mb-legend-grid">
+                            <div class="customer-mb-legend-item">
+                                <span class="customer-mb-pay-badge customer-mb-pay-unpaid">Unpaid</span>
+                                <p class="mb-0">ยังไม่ได้ชำระเงิน หรือรอการแนบสลิปโอนเงิน</p>
+                            </div>
+                            <div class="customer-mb-legend-item">
+                                <span class="customer-mb-pay-badge customer-mb-pay-verifying">Pending Verification</span>
+                                <p class="mb-0">แนบสลิปแล้ว อยู่ระหว่างเจ้าหน้าที่ตรวจสอบยอดเงิน</p>
+                            </div>
+                            <div class="customer-mb-legend-item">
+                                <span class="customer-mb-pay-badge customer-mb-pay-paid">Paid</span>
+                                <p class="mb-0">ชำระเงินครบถ้วนและได้รับการยืนยันเรียบร้อยแล้ว</p>
+                            </div>
+                            <div class="customer-mb-legend-item">
+                                <span class="customer-mb-pay-badge customer-mb-pay-rejected">Rejected</span>
+                                <p class="mb-0">หลักฐานการโอนเงินไม่ถูกต้อง กรุณาติดต่อฝ่ายบริการลูกค้า</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         9. QR CODE PREVIEW MODAL
+         ========================================================= -->
+    <div class="modal fade customer-mb-qr-modal" id="mbQrCodeModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content customer-mb-qr-modal-content">
+                <div class="modal-header customer-mb-qr-modal-header">
+                    <div>
+                        <span class="customer-mb-qr-tag">DIGITAL TRAVEL PASS</span>
+                        <h5 class="modal-title fw-bold text-white mb-0">StayMate Booking QR Code</h5>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body p-4 text-center">
+                    <div class="customer-mb-qr-info-strip mb-3">
+                        <div>
+                            <small>Booking ID</small>
+                            <strong id="qrModalBookingCode">-</strong>
+                        </div>
+                        <div>
+                            <small>Room</small>
+                            <strong id="qrModalRoomName">-</strong>
+                        </div>
+                        <div>
+                            <small>Check-in Date</small>
+                            <strong id="qrModalCheckIn">-</strong>
+                        </div>
+                    </div>
+
+                    <div id="qrAvailableBox" class="customer-mb-qr-frame d-none">
+                        <img id="qrModalImage" src="" alt="Booking QR Code" class="img-fluid rounded-3 border p-2 bg-white" />
+                        <small class="d-block text-muted mt-2">
+                            <i class="fa-solid fa-shield-check text-success me-1"></i> แสดง QR Code นี้ต่อเจ้าหน้าที่หรือตู้ Smart Kiosk เพื่อเช็คอิน
+                        </small>
+                    </div>
+
+                    <div id="qrUnavailableBox" class="customer-mb-qr-unavailable py-4">
+                        <div class="customer-mb-qr-unavail-icon">
+                            <i class="fa-solid fa-qrcode"></i>
+                        </div>
+                        <h6 class="fw-bold text-dark mb-1">QR Code is not available yet.</h6>
+                        <p class="text-muted small mb-0">
+                            รายการจองนี้ยังอยู่ระหว่างรอการอนุมัติ ระบบจะออก QR Code ให้ทันทีเมื่อสถานะเป็น Approved
+                        </p>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light border-top justify-content-between">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">ปิดหน้าต่าง</button>
+                    <a href="#" id="qrModalDownloadBtn" target="_blank" rel="noopener" class="customer-mb-btn-primary d-none">
+                        <i class="fa-solid fa-download"></i>
+                        <span>เปิด/ดาวน์โหลด QR Code</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            if (typeof AOS !== "undefined") {
+                AOS.init({ duration: 650, once: true, offset: 50 });
+            }
+
+            const searchIdEl = document.getElementById("mbSearchBookingId");
+            const searchRoomEl = document.getElementById("mbSearchRoomName");
+            const filterBookStatusEl = document.getElementById("mbFilterBookingStatus");
+            const filterPayStatusEl = document.getElementById("mbFilterPaymentStatus");
+            const filterCheckInEl = document.getElementById("mbFilterCheckInDate");
+            const sortOrderEl = document.getElementById("mbSortOrder");
+            const resetBtn = document.getElementById("btnResetBookingFilters");
+            const emptyResetBtn = document.getElementById("btnEmptyFilterReset");
+
+            const cardsContainer = document.getElementById("mbBookingCardsContainer");
+            const filterEmptyState = document.getElementById("mbFilterEmptyState");
+            const visibleCountEl = document.getElementById("mbVisibleCount");
+            const allCards = Array.from(document.querySelectorAll(".js-booking-card"));
+
+            function applyFilters() {
+                const qId = (searchIdEl.value || "").trim().toLowerCase();
+                const qRoom = (searchRoomEl.value || "").trim().toLowerCase();
+                const bStat = filterBookStatusEl.value;
+                const pStat = filterPayStatusEl.value;
+                const cDate = filterCheckInEl.value;
+                const sortVal = sortOrderEl.value;
+
+                let visible = 0;
+
+                const sorted = [...allCards].sort((a, b) => {
+                    const tA = Number(a.dataset.timestamp || 0);
+                    const tB = Number(b.dataset.timestamp || 0);
+                    return sortVal === "oldest" ? (tA - tB) : (tB - tA);
+                });
+
+                sorted.forEach(card => {
+                    cardsContainer.appendChild(card);
+
+                    const passId = !qId || card.dataset.bookingId.includes(qId);
+                    const passRoom = !qRoom || card.dataset.roomName.includes(qRoom);
+                    const passBs = (bStat === "ALL" || card.dataset.bookingStatus === bStat);
+                    const passPs = (pStat === "ALL" || card.dataset.paymentStatus === pStat);
+                    const passDate = (!cDate || card.dataset.checkin === cDate);
+
+                    if (passId && passRoom && passBs && passPs && passDate) {
+                        card.classList.remove("d-none");
+                        visible++;
+                    } else {
+                        card.classList.add("d-none");
+                    }
+                });
+
+                visibleCountEl.textContent = visible;
+                filterEmptyState.classList.toggle("d-none", visible > 0);
+            }
+
+            [searchIdEl, searchRoomEl].forEach(el => el.addEventListener("input", applyFilters));
+            [filterBookStatusEl, filterPayStatusEl, filterCheckInEl, sortOrderEl].forEach(el => el.addEventListener("change", applyFilters));
+
+            function resetFilters() {
+                searchIdEl.value = "";
+                searchRoomEl.value = "";
+                filterBookStatusEl.value = "ALL";
+                filterPayStatusEl.value = "ALL";
+                filterCheckInEl.value = "";
+                sortOrderEl.value = "newest";
+                applyFilters();
+            }
+
+            resetBtn.addEventListener("click", resetFilters);
+            emptyResetBtn.addEventListener("click", resetFilters);
+
+            // QR Modal
+            const qrModalEl = document.getElementById("mbQrCodeModal");
+            document.querySelectorAll(".js-open-qr-modal").forEach(btn => {
+                btn.addEventListener("click", function () {
+                    document.getElementById("qrModalBookingCode").textContent = this.dataset.bookingCode;
+                    document.getElementById("qrModalRoomName").textContent = this.dataset.roomName;
+                    document.getElementById("qrModalCheckIn").textContent = this.dataset.checkin;
+
+                    const qrUrl = (this.dataset.qrUrl || "").trim();
+                    const availBox = document.getElementById("qrAvailableBox");
+                    const unavailBox = document.getElementById("qrUnavailableBox");
+                    const qrImg = document.getElementById("qrModalImage");
+                    const dlBtn = document.getElementById("qrModalDownloadBtn");
+
+                    if (qrUrl) {
+                        qrImg.src = qrUrl;
+                        availBox.classList.remove("d-none");
+                        unavailBox.classList.add("d-none");
+                        dlBtn.href = qrUrl;
+                        dlBtn.classList.remove("d-none");
+                    } else {
+                        availBox.classList.add("d-none");
+                        unavailBox.classList.remove("d-none");
+                        dlBtn.classList.add("d-none");
+                    }
+
+                    bootstrap.Modal.getOrCreateInstance(qrModalEl).show();
+                });
+            });
+        });
+    </script>
+}

@@ -269,6 +269,7 @@ C:.
 |           |       p4ugsuiwru-{0}-muycvpuwrr-muycvpuwrr.gz
 |           |       pezw8s05uq-{0}-c2jlpeoesf-c2jlpeoesf.gz
 |           |       q1qwgno2ax-{0}-0i3buxo5is-0i3buxo5is.gz
+|           |       ru5wq50895-{0}-zpyssu5fe8-zpyssu5fe8.gz
 |           |       rv0i07z09r-{0}-pj5nd1wqec-pj5nd1wqec.gz
 |           |       rxnzu9022f-{0}-fsbi9cje9m-fsbi9cje9m.gz
 |           |       sfkqcq42t8-{0}-jj8uyg4cgr-jj8uyg4cgr.gz
@@ -324,7 +325,16 @@ C:.
 |   |       UserList.cshtml
 |   |       
 |   +---Customer
+|   |       BookingDetails.cshtml
+|   |       Checkout.cshtml
 |   |       Index.cshtml
+|   |       MyBookings.cshtml
+|   |       Profile.cshtml
+|   |       Promotions.cshtml
+|   |       Reviews.cshtml
+|   |       RoomAvailability.cshtml
+|   |       RoomDetails.cshtml
+|   |       Rooms.cshtml
 |   |       
 |   +---Finance
 |   |       Index.cshtml
@@ -369,6 +379,7 @@ C:.
     |   favicon.ico
     |   
     +---css
+    |       Customer.css
     |       Home.css
     |       site.css
     |       staymate-layout.css

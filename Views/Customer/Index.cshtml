@@ -1,19 +1,30 @@
-@model StayMate_Kavinvee_0576.Models.User
+@model StayMate_Kavinvee_0576.Models.ViewModels.CustomerViewModel
 @{
     Layout = "~/Views/Shared/_CustomerLayout.cshtml";
     ViewData["Title"] = "Customer Home";
 
-    // ดึงชื่อผู้ใช้งานจาก Claims (ยืนยันแล้วจาก _CustomerLayout.cshtml)
     var displayUserName = (User.Identity != null && User.Identity.IsAuthenticated && !string.IsNullOrWhiteSpace(User.Identity.Name))
         ? User.Identity.Name
         : "คุณลูกค้าคนสำคัญ";
 
-    // ดึงจำนวนการจองทั้งหมดจาก Navigation Property ที่ยืนยันแล้วใน CustomerController (Include(u => u.Bookings))
-    var hasRealBookings = Model?.Bookings != null;
-    var realTotalBookings = Model?.Bookings?.Count ?? 0;
-}
+    var promoCount = Model.Promotions.Count;
+    var roomCount = Model.Rooms.Count;
 
-@* โหลด Google Font (Prompt), AOS, Swiper และ Customer.css โดยไม่ใช้ section Styles เพื่อป้องกัน Error จาก _CustomerLayout.cshtml *@
+    var thMonths = new[] { "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค." };
+    string ThDate(DateOnly d) => $"{d.Day:00} {thMonths[d.Month - 1]} {d.Year}";
+
+    (string Label, string Css, string Icon) StatusInfo(string s) => s switch
+    {
+        "pending_payment"  => ("รอชำระเงิน", "customer-home-status-pending", "fa-clock"),
+        "pending_approval" => ("รอตรวจสอบการชำระเงิน", "customer-home-status-pending", "fa-hourglass-half"),
+        "confirmed"        => ("ยืนยันการจองแล้ว (Upcoming)", "customer-home-status-confirmed", "fa-circle-check"),
+        "checked_in"       => ("กำลังเข้าพัก", "customer-home-status-confirmed", "fa-key"),
+        "checked_out"      => ("เข้าพักเสร็จสิ้น", "customer-home-status-confirmed", "fa-circle-check"),
+        "cancelled"        => ("ยกเลิกแล้ว", "customer-home-status-cancelled", "fa-ban"),
+        "rejected"         => ("ถูกปฏิเสธ", "customer-home-status-cancelled", "fa-circle-xmark"),
+        _                  => (s, "customer-home-status-pending", "fa-circle-info")
+    };
+}
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -35,8 +46,8 @@
             <div class="customer-home-subnav-links">
                 <a href="#quickBookingSearch"><i class="fa-solid fa-magnifying-glass"></i> ค้นหาห้องด่วน</a>
                 <a href="#myBookingOverview"><i class="fa-solid fa-receipt"></i> สรุปการจองของฉัน</a>
-                <a href="#featuredRooms"><i class="fa-solid fa-bed"></i> ห้องพัก 4 ประเภท</a>
-                <a href="#specialPromotions"><i class="fa-solid fa-bolt"></i> โปรโมชั่นสมาชิก (5)</a>
+                <a href="#featuredRooms"><i class="fa-solid fa-bed"></i> ห้องพัก @roomCount ประเภท</a>
+                <a href="#specialPromotions"><i class="fa-solid fa-bolt"></i> โปรโมชั่นสมาชิก (@promoCount)</a>
                 <a href="#hotelFacilities"><i class="fa-solid fa-microchip"></i> สิ่งอำนวยความสะดวก</a>
             </div>
         </div>
@@ -88,7 +99,7 @@
                             <i class="fa-solid fa-shield-check text-info"></i>
                             <div>
                                 <strong>Member Privilege</strong>
-                                <span>รับสิทธิ์ใช้โปรโมชั่นครบทั้ง 5 แคมเปญ</span>
+                                <span>รับสิทธิ์ใช้โปรโมชั่นครบทั้ง @promoCount แคมเปญ</span>
                             </div>
                         </div>
                         <div class="customer-home-highlight-divider"></div>
@@ -262,229 +273,146 @@
                         ติดตามสถานะการจองห้องพัก กำหนดการเช็คอิน และรายการรอตรวจสอบการชำระเงินได้ในที่เดียว
                     </p>
                 </div>
-                <div class="d-flex align-items-center flex-wrap gap-2">
-                    <span class="customer-home-mock-notice-badge" title="ข้อมูลตัวอย่างสำหรับการออกแบบ UI รอการผูก Property จาก Backend">
-                        <i class="fa-solid fa-flask me-1"></i> UI Preview (Mock Data)
-                    </span>
-                    <a asp-controller="Customer" asp-action="MyBookings" class="customer-home-link-arrow">
-                        <span>ดูการจองทั้งหมด</span>
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </a>
-                </div>
-            </div>
-
-            @* 
-                [BACKEND INTEGRATION NOTE - BOOKING SUMMARY COUNTERS]:
-                ปัจจุบันดึงจำนวนการจองทั้งหมดจาก Model.Bookings.Count ได้แล้วหากมีข้อมูลใน DB
-                เมื่อยืนยันชื่อ Property สถานะในคลาส Booking (เช่น BookingStatus / PaymentStatus) แล้ว
-                สามารถแทนค่าตัวเลขด้านล่างด้วย LINQ เช่น:
-                - กำลังจะเข้าพัก: Model.Bookings.Count(b => b.Status == "CONFIRMED")
-                - รอตรวจสอบการชำระเงิน: Model.Bookings.Count(b => b.Status == "PENDING_PAYMENT")
-                - เข้าพักเสร็จสิ้น: Model.Bookings.Count(b => b.Status == "COMPLETED")
-            *@
-            <div class="row g-3 g-md-4 mb-4" data-aos="fade-up" data-aos-delay="50">
-                <!-- Stat 1: จำนวนการจองทั้งหมด -->
-                <div class="col-12 col-sm-6 col-xl-3">
-                    <div class="customer-home-stat-card customer-home-stat-total">
-                        <div class="customer-home-stat-icon">
-                            <i class="fa-solid fa-layer-group"></i>
-                        </div>
-                        <div class="customer-home-stat-info">
-                            <span class="customer-home-stat-label">จำนวนการจองทั้งหมด</span>
-                            <div class="d-flex align-items-baseline gap-2">
-                                <h3 class="customer-home-stat-value">@(hasRealBookings && realTotalBookings > 0 ? realTotalBookings.ToString() : "3")</h3>
-                                <span class="customer-home-stat-unit">รายการ</span>
-                            </div>
-                            <small class="customer-home-stat-note">
-                                @(hasRealBookings && realTotalBookings > 0 ? "ข้อมูลจากบัญชีของคุณ" : "ข้อมูลตัวอย่าง (Mock UI)")
-                            </small>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Stat 2: การจองที่กำลังจะเข้าพัก -->
-                <div class="col-12 col-sm-6 col-xl-3">
-                    <div class="customer-home-stat-card customer-home-stat-upcoming">
-                        <div class="customer-home-stat-icon">
-                            <i class="fa-solid fa-calendar-day"></i>
-                        </div>
-                        <div class="customer-home-stat-info">
-                            <span class="customer-home-stat-label">กำลังจะเข้าพัก (Upcoming)</span>
-                            <div class="d-flex align-items-baseline gap-2">
-                                <h3 class="customer-home-stat-value">1</h3>
-                                <span class="customer-home-stat-unit">รายการ</span>
-                            </div>
-                            <small class="customer-home-stat-note">ข้อมูลตัวอย่าง (Mock UI)</small>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Stat 3: รายการรอตรวจสอบการชำระเงิน -->
-                <div class="col-12 col-sm-6 col-xl-3">
-                    <div class="customer-home-stat-card customer-home-stat-pending">
-                        <div class="customer-home-stat-icon">
-                            <i class="fa-solid fa-hourglass-half"></i>
-                        </div>
-                        <div class="customer-home-stat-info">
-                            <span class="customer-home-stat-label">รอตรวจสอบการชำระเงิน</span>
-                            <div class="d-flex align-items-baseline gap-2">
-                                <h3 class="customer-home-stat-value">1</h3>
-                                <span class="customer-home-stat-unit">รายการ</span>
-                            </div>
-                            <small class="customer-home-stat-note">ข้อมูลตัวอย่าง (Mock UI)</small>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Stat 4: รายการที่เข้าพักเสร็จสิ้น -->
-                <div class="col-12 col-sm-6 col-xl-3">
-                    <div class="customer-home-stat-card customer-home-stat-completed">
-                        <div class="customer-home-stat-icon">
-                            <i class="fa-solid fa-circle-check"></i>
-                        </div>
-                        <div class="customer-home-stat-info">
-                            <span class="customer-home-stat-label">เข้าพักเสร็จสิ้นแล้ว</span>
-                            <div class="d-flex align-items-baseline gap-2">
-                                <h3 class="customer-home-stat-value">1</h3>
-                                <span class="customer-home-stat-unit">รายการ</span>
-                            </div>
-                            <small class="customer-home-stat-note">ข้อมูลตัวอย่าง (Mock UI)</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Alert แจ้งเตือนชัดเจนว่าเป็น Mock Data สำหรับโครงสร้าง UI -->
-            <div class="customer-home-mock-banner mb-4" data-aos="fade-up" data-aos-delay="80">
-                <div class="d-flex align-items-center gap-3">
-                    <span class="customer-home-mock-banner-icon"><i class="fa-solid fa-circle-info"></i></span>
-                    <div>
-                        <strong>หมายเหตุระบบ (UI Mockup Preview):</strong>
-                        การ์ดรายการจองด้านล่างแสดงด้วย <strong>ข้อมูลจำลอง (Mock Data)</strong> เพื่อจัดวางโครงสร้าง UI รอการเชื่อมโยงข้อมูลจริงในตารางการจองของระบบ Backend
-                    </div>
-                </div>
-                <a asp-controller="Customer" asp-action="MyBookings" class="customer-home-btn-MockLink">
-                    ไปยังหน้าการจองของฉัน <i class="fa-solid fa-angle-right ms-1"></i>
+                <a asp-controller="Customer" asp-action="MyBookings" class="customer-home-link-arrow">
+                    <span>ดูการจองทั้งหมด</span>
+                    <i class="fa-solid fa-arrow-right"></i>
                 </a>
             </div>
 
-            @* 
-                [BACKEND INTEGRATION NOTE - LATEST BOOKING CARDS]:
-                เมื่อ Backend ยืนยันโครงสร้างฐานข้อมูลการจองห้องพักเสร็จสิ้นแล้ว
-                สามารถเปิดการใช้งานโดยเปลี่ยนเป็นคำสั่ง C# foreach ดึงประวัติการจอง 2 รายการล่าสุดมาแสดงได้ทันที:
-                
-                foreach (var b in Model.Bookings.OrderByDescending(x => x.BookingId).Take(2)) { ... }
-            *@
-            <div class="row g-4" data-aos="fade-up" data-aos-delay="120">
-                <!-- Mock Booking Card 1: Upcoming / Confirmed -->
-                <div class="col-12 col-lg-6">
-                    <div class="customer-home-booking-card">
-                        <div class="customer-home-booking-top">
-                            <div class="d-flex align-items-center flex-wrap gap-2">
-                                <span class="customer-home-booking-id">BOOKING ID: #SM-MOCK-202601</span>
-                                <span class="customer-home-mock-pill">MOCK DATA</span>
+            <div class="row g-3 g-md-4 mb-4" data-aos="fade-up" data-aos-delay="50">
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="customer-home-stat-card customer-home-stat-total">
+                        <div class="customer-home-stat-icon"><i class="fa-solid fa-layer-group"></i></div>
+                        <div class="customer-home-stat-info">
+                            <span class="customer-home-stat-label">จำนวนการจองทั้งหมด</span>
+                            <div class="d-flex align-items-baseline gap-2">
+                                <h3 class="customer-home-stat-value">@Model.TotalBookings</h3>
+                                <span class="customer-home-stat-unit">รายการ</span>
                             </div>
-                            <span class="customer-home-status-badge customer-home-status-confirmed">
-                                <i class="fa-solid fa-circle-check me-1"></i> ยืนยันการจองแล้ว (Upcoming)
-                            </span>
-                        </div>
-
-                        <div class="customer-home-booking-body">
-                            <div class="customer-home-booking-room-info">
-                                <img src="https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=600&q=80"
-                                     alt="Deluxe Room" class="customer-home-booking-thumb" />
-                                <div>
-                                    <span class="customer-home-booking-cat">ROOM TYPE (ตัวอย่างข้อมูล)</span>
-                                    <h4 class="customer-home-booking-title">Deluxe Urban Room</h4>
-                                    <p class="customer-home-booking-sub mb-0">
-                                        <i class="fa-solid fa-tag text-info me-1"></i> โปรโมชั่นที่ใช้: Stay 3+ Nights Saver
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div class="customer-home-booking-grid">
-                                <div class="customer-home-booking-meta-box">
-                                    <small><i class="fa-regular fa-calendar-check text-primary me-1"></i> Check-in / Check-out</small>
-                                    <strong>20 พ.ย. 2026 – 23 พ.ย. 2026 (3 คืน)</strong>
-                                </div>
-                                <div class="customer-home-booking-meta-box">
-                                    <small><i class="fa-solid fa-user-group text-primary me-1"></i> จำนวนผู้เข้าพัก</small>
-                                    <strong>ผู้ใหญ่ 2 ท่าน · 1 ห้อง</strong>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="customer-home-booking-footer">
-                            <div class="customer-home-booking-price">
-                                <small>ยอดชำระเงินสุทธิ (ตัวอย่าง)</small>
-                                <strong>฿6,800</strong>
-                            </div>
-                            <div class="d-flex flex-wrap gap-2">
-                                <a asp-controller="Customer" asp-action="BookingDetails" asp-route-id="1" class="customer-home-btn-detail">
-                                    <span>View Booking Details</span>
-                                    <i class="fa-solid fa-arrow-right"></i>
-                                </a>
-                            </div>
+                            <small class="customer-home-stat-note">ข้อมูลจากบัญชีของคุณ</small>
                         </div>
                     </div>
                 </div>
 
-                <!-- Mock Booking Card 2: Pending Payment Verification -->
-                <div class="col-12 col-lg-6">
-                    <div class="customer-home-booking-card">
-                        <div class="customer-home-booking-top">
-                            <div class="d-flex align-items-center flex-wrap gap-2">
-                                <span class="customer-home-booking-id">BOOKING ID: #SM-MOCK-202602</span>
-                                <span class="customer-home-mock-pill">MOCK DATA</span>
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="customer-home-stat-card customer-home-stat-upcoming">
+                        <div class="customer-home-stat-icon"><i class="fa-solid fa-calendar-day"></i></div>
+                        <div class="customer-home-stat-info">
+                            <span class="customer-home-stat-label">กำลังจะเข้าพัก (Upcoming)</span>
+                            <div class="d-flex align-items-baseline gap-2">
+                                <h3 class="customer-home-stat-value">@Model.UpcomingBookings</h3>
+                                <span class="customer-home-stat-unit">รายการ</span>
                             </div>
-                            <span class="customer-home-status-badge customer-home-status-pending">
-                                <i class="fa-solid fa-clock me-1"></i> รอตรวจสอบการชำระเงิน
-                            </span>
+                            <small class="customer-home-stat-note">ยืนยันการจองแล้ว</small>
                         </div>
+                    </div>
+                </div>
 
-                        <div class="customer-home-booking-body">
-                            <div class="customer-home-booking-room-info">
-                                <img src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=600&q=80"
-                                     alt="Suite Room" class="customer-home-booking-thumb" />
-                                <div>
-                                    <span class="customer-home-booking-cat">ROOM TYPE (ตัวอย่างข้อมูล)</span>
-                                    <h4 class="customer-home-booking-title">Horizon Executive Suite</h4>
-                                    <p class="customer-home-booking-sub mb-0">
-                                        <i class="fa-solid fa-tag text-info me-1"></i> โปรโมชั่นที่ใช้: Festival &amp; Long Weekend Pass
-                                    </p>
-                                </div>
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="customer-home-stat-card customer-home-stat-pending">
+                        <div class="customer-home-stat-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+                        <div class="customer-home-stat-info">
+                            <span class="customer-home-stat-label">รอชำระ / รอตรวจสอบ</span>
+                            <div class="d-flex align-items-baseline gap-2">
+                                <h3 class="customer-home-stat-value">@Model.PendingBookings</h3>
+                                <span class="customer-home-stat-unit">รายการ</span>
                             </div>
-
-                            <div class="customer-home-booking-grid">
-                                <div class="customer-home-booking-meta-box">
-                                    <small><i class="fa-regular fa-calendar-check text-primary me-1"></i> Check-in / Check-out</small>
-                                    <strong>05 ธ.ค. 2026 – 07 ธ.ค. 2026 (2 คืน)</strong>
-                                </div>
-                                <div class="customer-home-booking-meta-box">
-                                    <small><i class="fa-solid fa-user-group text-primary me-1"></i> จำนวนผู้เข้าพัก</small>
-                                    <strong>ผู้ใหญ่ 4 ท่าน · 1 ห้อง Suite</strong>
-                                </div>
-                            </div>
+                            <small class="customer-home-stat-note">รอชำระเงินหรือรอฝ่ายการเงินอนุมัติ</small>
                         </div>
+                    </div>
+                </div>
 
-                        <div class="customer-home-booking-footer">
-                            <div class="customer-home-booking-price">
-                                <small>ยอดชำระเงินสุทธิ (ตัวอย่าง)</small>
-                                <strong>฿11,500</strong>
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="customer-home-stat-card customer-home-stat-completed">
+                        <div class="customer-home-stat-icon"><i class="fa-solid fa-circle-check"></i></div>
+                        <div class="customer-home-stat-info">
+                            <span class="customer-home-stat-label">เข้าพักเสร็จสิ้นแล้ว</span>
+                            <div class="d-flex align-items-baseline gap-2">
+                                <h3 class="customer-home-stat-value">@Model.CompletedBookings</h3>
+                                <span class="customer-home-stat-unit">รายการ</span>
                             </div>
-                            <div class="d-flex flex-wrap gap-2">
-                                <a asp-controller="Customer" asp-action="Checkout" class="customer-home-btn-pay">
-                                    <i class="fa-solid fa-credit-card"></i> ชำระเงิน
-                                </a>
-                                <a asp-controller="Customer" asp-action="BookingDetails" asp-route-id="2" class="customer-home-btn-detail">
-                                    <span>View Booking Details</span>
-                                    <i class="fa-solid fa-arrow-right"></i>
-                                </a>
-                            </div>
+                            <small class="customer-home-stat-note">Check-out แล้ว</small>
                         </div>
                     </div>
                 </div>
             </div>
+
+            @if (!Model.LatestBookings.Any())
+            {
+                <div class="customer-home-booking-card text-center py-5" data-aos="fade-up">
+                    <i class="fa-solid fa-suitcase-rolling fa-2x text-info mb-3"></i>
+                    <h4 class="customer-home-booking-title">ยังไม่มีรายการจอง</h4>
+                    <p class="customer-home-booking-sub">เริ่มค้นหาห้องว่างแล้วจองการเข้าพักครั้งแรกของคุณได้เลย</p>
+                    <div>
+                        <a asp-controller="Customer" asp-action="RoomAvailability" class="customer-home-btn-primary">
+                            <span>ค้นหาห้องว่าง</span> <i class="fa-solid fa-arrow-right-long"></i>
+                        </a>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="row g-4" data-aos="fade-up" data-aos-delay="120">
+                    @foreach (var b in Model.LatestBookings)
+                    {
+                        var st = StatusInfo(b.Status);
+                        <div class="col-12 col-lg-6">
+                            <div class="customer-home-booking-card">
+                                <div class="customer-home-booking-top">
+                                    <span class="customer-home-booking-id">BOOKING ID: #@b.BookingCode</span>
+                                    <span class="customer-home-status-badge @st.Css">
+                                        <i class="fa-solid @st.Icon me-1"></i> @st.Label
+                                    </span>
+                                </div>
+
+                                <div class="customer-home-booking-body">
+                                    <div class="customer-home-booking-room-info">
+                                        <img src="@b.ImageUrl" alt="@b.RoomTypeName" class="customer-home-booking-thumb" />
+                                        <div>
+                                            <span class="customer-home-booking-cat">ROOM TYPE</span>
+                                            <h4 class="customer-home-booking-title">@b.RoomTypeName</h4>
+                                            <p class="customer-home-booking-sub mb-0">
+                                                <i class="fa-solid fa-tag text-info me-1"></i>
+                                                โปรโมชั่นที่ใช้: @(string.IsNullOrEmpty(b.PromoName) ? "ไม่ได้ใช้โปรโมชั่น" : b.PromoName)
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div class="customer-home-booking-grid">
+                                        <div class="customer-home-booking-meta-box">
+                                            <small><i class="fa-regular fa-calendar-check text-primary me-1"></i> Check-in / Check-out</small>
+                                            <strong>@ThDate(b.CheckIn) – @ThDate(b.CheckOut) (@b.Nights คืน)</strong>
+                                        </div>
+                                        <div class="customer-home-booking-meta-box">
+                                            <small><i class="fa-solid fa-user-group text-primary me-1"></i> จำนวนผู้เข้าพัก</small>
+                                            <strong>@b.Guests ท่าน · @b.RoomCount ห้อง</strong>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="customer-home-booking-footer">
+                                    <div class="customer-home-booking-price">
+                                        <small>ยอดชำระเงินสุทธิ</small>
+                                        <strong>฿@b.TotalAmount.ToString("N0")</strong>
+                                    </div>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        @if (b.Status == "pending_payment")
+                                        {
+                                            <a asp-controller="Customer" asp-action="Checkout" class="customer-home-btn-pay">
+                                                <i class="fa-solid fa-credit-card"></i> ชำระเงิน
+                                            </a>
+                                        }
+                                        <a asp-controller="Customer" asp-action="BookingDetails" asp-route-id="@b.BookingId" class="customer-home-btn-detail">
+                                            <span>View Booking Details</span>
+                                            <i class="fa-solid fa-arrow-right"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
         </div>
     </section>
 
@@ -498,7 +426,7 @@
                     <span class="customer-home-eyebrow">
                         <i class="fa-solid fa-bed me-1"></i> SMART ACCOMMODATION COLLECTION
                     </span>
-                    <h2 class="customer-home-section-title">Featured Rooms · แนะนำห้องพักทั้ง 4 ประเภท</h2>
+                    <h2 class="customer-home-section-title">Featured Rooms · แนะนำห้องพักทั้ง @roomCount ประเภท</h2>
                     <p class="customer-home-section-subtitle">
                         เลือกห้องพักดีไซน์ล้ำสมัยที่ออกแบบมาเพื่อรองรับทุกไลฟ์สไตล์ ตั้งแต่นักเดินทางคนเดียว คู่รัก ครอบครัว ไปจนถึงระดับ Executive Suite
                     </p>
@@ -517,153 +445,59 @@
                 foreach (var r in Model.RoomTypes) { ... }
             *@
             <div class="row g-4">
-                <!-- 1. Standard Room -->
-                <div class="col-12 col-md-6 col-xl-3" data-aos="fade-up" data-aos-delay="50">
-                    <article class="customer-home-room-card h-100">
-                        <div class="customer-home-room-img-wrap">
-                            <img src="https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=800&q=80"
-                                 alt="Standard Room" class="customer-home-room-img" loading="lazy" />
-                            <span class="customer-home-room-badge customer-home-badge-cyan">SMART VALUE</span>
-                            <div class="customer-home-room-capacity">
-                                <i class="fa-solid fa-user-group"></i> 1–2 ท่าน
-                            </div>
-                        </div>
-                        <div class="customer-home-room-body">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <h3 class="customer-home-room-title">Standard Room</h3>
-                                <span class="customer-home-room-size">28 ตร.ม.</span>
-                            </div>
-                            <p class="customer-home-room-desc">
-                                ห้องพักสไตล์ Minimal Futuristic กะทัดรัดแต่ครบครัน เหมาะสำหรับนักเดินทางยุคใหม่และ Workation ใจกลางเมือง
-                            </p>
-                            <ul class="customer-home-room-highlights">
-                                <li><i class="fa-solid fa-check text-info"></i> Smart TV 55" &amp; High-Speed Wi-Fi 6</li>
-                                <li><i class="fa-solid fa-check text-info"></i> ระบบไฟ Ambient Light ปรับตามอารมณ์</li>
-                                <li><i class="fa-solid fa-check text-info"></i> โต๊ะทำงาน Ergonomic พร้อมปลั๊ก Universal</li>
-                            </ul>
-                            <div class="customer-home-room-footer">
-                                <div class="customer-home-room-price">
-                                    <small>ราคาเริ่มต้น (Placeholder)</small>
-                                    <strong>฿1,800</strong><span>/คืน</span>
-                                </div>
-                                <a asp-controller="Customer" asp-action="RoomDetails" asp-route-id="1" class="customer-home-btn-room">
-                                    View Details <i class="fa-solid fa-angle-right"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </article>
-                </div>
+                @if (!Model.Rooms.Any())
+                {
+                    <div class="col-12 text-center text-muted py-5">ยังไม่มีข้อมูลห้องพักในระบบ</div>
+                }
 
-                <!-- 2. Deluxe Room -->
-                <div class="col-12 col-md-6 col-xl-3" data-aos="fade-up" data-aos-delay="120">
-                    <article class="customer-home-room-card h-100">
-                        <div class="customer-home-room-img-wrap">
-                            <img src="https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80"
-                                 alt="Deluxe Room" class="customer-home-room-img" loading="lazy" />
-                            <span class="customer-home-room-badge customer-home-badge-blue">POPULAR CHOICE</span>
-                            <div class="customer-home-room-capacity">
-                                <i class="fa-solid fa-user-group"></i> 2–3 ท่าน
-                            </div>
-                        </div>
-                        <div class="customer-home-room-body">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <h3 class="customer-home-room-title">Deluxe Room</h3>
-                                <span class="customer-home-room-size">36 ตร.ม.</span>
-                            </div>
-                            <p class="customer-home-room-desc">
-                                ยกระดับความหรูหราด้วยพื้นที่กว้างขวาง กระจกบานใหญ่ชมวิวเมืองยามค่ำคืน พร้อมมุมโซฟาพักผ่อนและรองรับเตียงเสริม
-                            </p>
-                            <ul class="customer-home-room-highlights">
-                                <li><i class="fa-solid fa-check text-info"></i> วิวเมืองมุมสูง (Panoramic City View)</li>
-                                <li><i class="fa-solid fa-check text-info"></i> อ่างอาบน้ำพร้อม Rain Shower แยกสัดส่วน</li>
-                                <li><i class="fa-solid fa-check text-info"></i> รองรับโปรโมชั่น มา 3 จ่าย 2 (เตียงเสริม)</li>
-                            </ul>
-                            <div class="customer-home-room-footer">
-                                <div class="customer-home-room-price">
-                                    <small>ราคาเริ่มต้น (Placeholder)</small>
-                                    <strong>฿2,600</strong><span>/คืน</span>
+                @{ var roomDelay = 50; }
+                @foreach (var r in Model.Rooms)
+                {
+                    <div class="col-12 col-md-6 col-xl-3" data-aos="fade-up" data-aos-delay="@roomDelay">
+                        <article class="customer-home-room-card h-100">
+                            <div class="customer-home-room-img-wrap">
+                                <img src="@r.ImageUrl" alt="@r.TypeName" class="customer-home-room-img" loading="lazy" />
+                                @if (!string.IsNullOrEmpty(r.BadgeText))
+                                {
+                                    <span class="customer-home-room-badge @r.BadgeClass">@r.BadgeText</span>
+                                }
+                                <div class="customer-home-room-capacity">
+                                    <i class="fa-solid fa-user-group"></i>
+                                    @(r.MinGuests == r.MaxGuests ? $"{r.MaxGuests} ท่าน" : $"{r.MinGuests}–{r.MaxGuests} ท่าน")
                                 </div>
-                                <a asp-controller="Customer" asp-action="RoomDetails" asp-route-id="2" class="customer-home-btn-room">
-                                    View Details <i class="fa-solid fa-angle-right"></i>
-                                </a>
                             </div>
-                        </div>
-                    </article>
-                </div>
-
-                <!-- 3. Family Room -->
-                <div class="col-12 col-md-6 col-xl-3" data-aos="fade-up" data-aos-delay="190">
-                    <article class="customer-home-room-card h-100">
-                        <div class="customer-home-room-img-wrap">
-                            <img src="https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=800&q=80"
-                                 alt="Family Room" class="customer-home-room-img" loading="lazy" />
-                            <span class="customer-home-room-badge customer-home-badge-violet">FAMILY &amp; GANG</span>
-                            <div class="customer-home-room-capacity">
-                                <i class="fa-solid fa-user-group"></i> 4 ท่าน
-                            </div>
-                        </div>
-                        <div class="customer-home-room-body">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <h3 class="customer-home-room-title">Family Room</h3>
-                                <span class="customer-home-room-size">48 ตร.ม.</span>
-                            </div>
-                            <p class="customer-home-room-desc">
-                                ออกแบบพิเศษสำหรับครอบครัวและกลุ่มเพื่อน พื้นที่สังสรรค์กว้างขวาง เตียงคู่ขนาดใหญ่พิเศษ พร้อมระบบบันเทิงครบชุด
-                            </p>
-                            <ul class="customer-home-room-highlights">
-                                <li><i class="fa-solid fa-check text-info"></i> เตียง King Size 2 เตียง นอนสบาย 4 ท่าน</li>
-                                <li><i class="fa-solid fa-check text-info"></i> โซนนั่งเล่นส่วนกลางพร้อมมินิบาร์ครอบครัว</li>
-                                <li><i class="fa-solid fa-check text-info"></i> เข้าคู่กับโปรฯ Family &amp; Gang Pack สุดคุ้ม</li>
-                            </ul>
-                            <div class="customer-home-room-footer">
-                                <div class="customer-home-room-price">
-                                    <small>ราคาเริ่มต้น (Placeholder)</small>
-                                    <strong>฿3,900</strong><span>/คืน</span>
+                            <div class="customer-home-room-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h3 class="customer-home-room-title">@r.TypeName</h3>
+                                    @if (!string.IsNullOrEmpty(r.SizeText))
+                                    {
+                                        <span class="customer-home-room-size">@r.SizeText</span>
+                                    }
                                 </div>
-                                <a asp-controller="Customer" asp-action="RoomDetails" asp-route-id="3" class="customer-home-btn-room">
-                                    View Details <i class="fa-solid fa-angle-right"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </article>
-                </div>
-
-                <!-- 4. Suite Room -->
-                <div class="col-12 col-md-6 col-xl-3" data-aos="fade-up" data-aos-delay="260">
-                    <article class="customer-home-room-card h-100">
-                        <div class="customer-home-room-img-wrap">
-                            <img src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80"
-                                 alt="Suite Room" class="customer-home-room-img" loading="lazy" />
-                            <span class="customer-home-room-badge customer-home-badge-gold">ULTIMATE LUXURY</span>
-                            <div class="customer-home-room-capacity">
-                                <i class="fa-solid fa-user-group"></i> 4–6 ท่าน
-                            </div>
-                        </div>
-                        <div class="customer-home-room-body">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <h3 class="customer-home-room-title">Suite Room</h3>
-                                <span class="customer-home-room-size">68 ตร.ม.</span>
-                            </div>
-                            <p class="customer-home-room-desc">
-                                ที่สุดแห่งความพรีเมียม แยกห้องนอนและห้องนั่งเล่นชัดเจน พร้อมแผงควบคุม Smart Room Automation เต็มรูปแบบและวิวเส้นขอบฟ้า
-                            </p>
-                            <ul class="customer-home-room-highlights">
-                                <li><i class="fa-solid fa-check text-info"></i> ห้องนั่งเล่นแยกสัดส่วน + อ่างจากุซซี่ชมวิว</li>
-                                <li><i class="fa-solid fa-check text-info"></i> ระบบสั่งการห้องพักอัจฉริยะเต็มรูปแบบ</li>
-                                <li><i class="fa-solid fa-check text-info"></i> สิทธิ์เช็คอินด่วน &amp; Executive Lounge</li>
-                            </ul>
-                            <div class="customer-home-room-footer">
-                                <div class="customer-home-room-price">
-                                    <small>ราคาเริ่มต้น (Placeholder)</small>
-                                    <strong>฿5,800</strong><span>/คืน</span>
+                                <p class="customer-home-room-desc">@r.Description</p>
+                                <ul class="customer-home-room-highlights">
+                                    @foreach (var h in r.Highlights)
+                                    {
+                                        <li><i class="fa-solid fa-check text-info"></i> @h</li>
+                                    }
+                                </ul>
+                                <div class="customer-home-room-footer">
+                                    <div class="customer-home-room-price">
+                                        <small>ราคาเริ่มต้น</small>
+                                        <strong>฿@r.Price.ToString("N0")</strong><span>/คืน</span>
+                                        <small class="d-block @(r.AvailableRooms > 0 ? "text-success" : "text-danger")">
+                                            @(r.AvailableRooms > 0 ? $"ว่าง {r.AvailableRooms} ห้อง" : "เต็มชั่วคราว")
+                                        </small>
+                                    </div>
+                                    <a asp-controller="Customer" asp-action="RoomDetails" asp-route-id="@r.RoomTypeId" class="customer-home-btn-room">
+                                        View Details <i class="fa-solid fa-angle-right"></i>
+                                    </a>
                                 </div>
-                                <a asp-controller="Customer" asp-action="RoomDetails" asp-route-id="4" class="customer-home-btn-room">
-                                    View Details <i class="fa-solid fa-angle-right"></i>
-                                </a>
                             </div>
-                        </div>
-                    </article>
-                </div>
+                        </article>
+                    </div>
+                    roomDelay += 70;
+                }
             </div>
         </div>
     </section>
@@ -678,7 +512,7 @@
                     <span class="customer-home-eyebrow customer-home-eyebrow-cyan">
                         <i class="fa-solid fa-fire-flame-curved me-1"></i> MEMBER EXCLUSIVE CAMPAIGNS
                     </span>
-                    <h2 class="customer-home-section-title text-white">Special Promotions · 5 โปรโมชั่นพิเศษสำหรับสมาชิก</h2>
+                    <h2 class="customer-home-section-title text-white">Special Promotions · @promoCount โปรโมชั่นพิเศษสำหรับสมาชิก</h2>
                     <p class="customer-home-section-subtitle text-light opacity-75">
                         คัดสรรดีลสุดคุ้มครบทั้ง 5 รูปแบบ เลือกใช้สิทธิ์ในการจองครั้งถัดไปของคุณได้ทันที
                     </p>
@@ -694,154 +528,51 @@
                 </div>
             </div>
 
-            <!-- Swiper Carousel สำหรับ 5 โปรโมชั่น -->
-            <div class="swiper customer-home-promo-swiper" data-aos="fade-up" data-aos-delay="100">
-                <div class="swiper-wrapper">
-
-                    <!-- Promotion 1: มา 3 จ่าย 2 -->
-                    <div class="swiper-slide h-auto">
-                        <div class="customer-home-promo-card customer-home-grad-blue h-100">
-                            <div class="customer-home-promo-top">
-                                <span class="customer-home-promo-pill">PROMO 01 · STAY3PAY2</span>
-                                <span class="customer-home-promo-icon"><i class="fa-solid fa-user-plus"></i></span>
-                            </div>
-                            <h3 class="customer-home-promo-title">มา 3 จ่าย 2</h3>
-                            <p class="customer-home-promo-desc">
-                                เข้าพัก 3 ท่าน หรือจองต่อเนื่อง 3 คืน จ่ายเพียงราคา 2! คุ้มค่าสุดสำหรับกลุ่มเพื่อนหรือการเพิ่มเตียงเสริมในห้องพักขนาดใหญ่
-                            </p>
-                            <div class="customer-home-promo-details">
-                                <div class="customer-home-promo-detail-item">
-                                    <strong><i class="fa-solid fa-gift text-info me-1"></i> สิทธิประโยชน์:</strong>
-                                    <span>ฟรีค่าเตียงเสริมคนที่ 3 หรือส่วนลดเทียบเท่า 1 คืนเมื่อพักครบ 3 คืน</span>
+            @if (!Model.Promotions.Any())
+            {
+                <div class="text-center text-light opacity-75 py-5">ขณะนี้ยังไม่มีโปรโมชั่นที่เปิดให้ใช้งาน</div>
+            }
+            else
+            {
+                <div class="swiper customer-home-promo-swiper" data-aos="fade-up" data-aos-delay="100">
+                    <div class="swiper-wrapper">
+                        @{ var pn = 0; }
+                        @foreach (var p in Model.Promotions)
+                        {
+                            pn++;
+                            <div class="swiper-slide h-auto">
+                                <div class="customer-home-promo-card @p.GradClass h-100">
+                                    <div class="customer-home-promo-top">
+                                        <span class="customer-home-promo-pill">PROMO @pn.ToString("00") · @p.PromoCode</span>
+                                        <span class="customer-home-promo-icon"><i class="fa-solid @p.IconClass"></i></span>
+                                    </div>
+                                    <h3 class="customer-home-promo-title">@p.PromoName</h3>
+                                    <p class="customer-home-promo-desc">@p.Description</p>
+                                    <div class="customer-home-promo-details">
+                                        <div class="customer-home-promo-detail-item">
+                                            <strong><i class="fa-solid fa-gift text-info me-1"></i> สิทธิประโยชน์:</strong>
+                                            <span>@p.BenefitText</span>
+                                        </div>
+                                        <div class="customer-home-promo-detail-item">
+                                            <strong><i class="fa-solid fa-circle-exclamation text-warning me-1"></i> เงื่อนไขเบื้องต้น:</strong>
+                                            <span>@p.ConditionText</span>
+                                        </div>
+                                        @if (p.ValidTo.HasValue)
+                                        {
+                                            <small class="d-block opacity-75">ถึงวันที่ @ThDate(p.ValidTo.Value)</small>
+                                        }
+                                    </div>
+                                    <a asp-controller="Customer" asp-action="Promotions" class="customer-home-promo-btn">
+                                        <span>View Promotion</span>
+                                        <i class="fa-solid fa-arrow-right"></i>
+                                    </a>
                                 </div>
-                                <div class="customer-home-promo-detail-item">
-                                    <strong><i class="fa-solid fa-circle-exclamation text-warning me-1"></i> เงื่อนไขเบื้องต้น:</strong>
-                                    <span>เฉพาะห้อง Deluxe, Family และ Suite ที่ร่วมรายการ</span>
-                                </div>
                             </div>
-                            <a asp-controller="Customer" asp-action="Promotions" class="customer-home-promo-btn">
-                                <span>View Promotion</span>
-                                <i class="fa-solid fa-arrow-right"></i>
-                            </a>
-                        </div>
+                        }
                     </div>
-
-                    <!-- Promotion 2: Family & Gang Pack -->
-                    <div class="swiper-slide h-auto">
-                        <div class="customer-home-promo-card customer-home-grad-violet h-100">
-                            <div class="customer-home-promo-top">
-                                <span class="customer-home-promo-pill">PROMO 02 · FAMGANG4</span>
-                                <span class="customer-home-promo-icon"><i class="fa-solid fa-people-group"></i></span>
-                            </div>
-                            <h3 class="customer-home-promo-title">Family &amp; Gang Pack</h3>
-                            <p class="customer-home-promo-desc">
-                                แพ็กเกจสุดพิเศษสำหรับครอบครัวและแก๊งเพื่อน (4 ท่านขึ้นไป) ยิ่งมาเยอะยิ่งคุ้ม พร้อมเซ็ตอาหารเช้าและมินิบาร์ต้อนรับ
-                            </p>
-                            <div class="customer-home-promo-details">
-                                <div class="customer-home-promo-detail-item">
-                                    <strong><i class="fa-solid fa-gift text-info me-1"></i> สิทธิประโยชน์:</strong>
-                                    <span>ส่วนลดค่าห้องพัก 20% + ฟรี Welcome Snack &amp; เครื่องดื่มสำหรับ 4 ท่าน</span>
-                                </div>
-                                <div class="customer-home-promo-detail-item">
-                                    <strong><i class="fa-solid fa-circle-exclamation text-warning me-1"></i> เงื่อนไขเบื้องต้น:</strong>
-                                    <span>สำหรับการจองห้อง Family Room หรือ Suite Room (ผู้เข้าพัก 4 ท่านขึ้นไป)</span>
-                                </div>
-                            </div>
-                            <a asp-controller="Customer" asp-action="Promotions" class="customer-home-promo-btn">
-                                <span>View Promotion</span>
-                                <i class="fa-solid fa-arrow-right"></i>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Promotion 3: Stay 3+ Nights Saver -->
-                    <div class="swiper-slide h-auto">
-                        <div class="customer-home-promo-card customer-home-grad-cyan h-100">
-                            <div class="customer-home-promo-top">
-                                <span class="customer-home-promo-pill">PROMO 03 · SAVER3PLUS</span>
-                                <span class="customer-home-promo-icon"><i class="fa-solid fa-moon"></i></span>
-                            </div>
-                            <h3 class="customer-home-promo-title">Stay 3+ Nights Saver</h3>
-                            <p class="customer-home-promo-desc">
-                                พักผ่อนต่อเนื่องอย่างเต็มอิ่มตั้งแต่ 3 คืนขึ้นไป รับส่วนลดออนท็อปทันที เหมาะสำหรับทริปพักผ่อนในเมืองแบบไม่ต้องเร่งรีบ
-                            </p>
-                            <div class="customer-home-promo-details">
-                                <div class="customer-home-promo-detail-item">
-                                    <strong><i class="fa-solid fa-gift text-info me-1"></i> สิทธิประโยชน์:</strong>
-                                    <span>ลดทันที 18% ทุกคืน + สิทธิ์ Late Check-out ได้ถึง 14:00 น.</span>
-                                </div>
-                                <div class="customer-home-promo-detail-item">
-                                    <strong><i class="fa-solid fa-circle-exclamation text-warning me-1"></i> เงื่อนไขเบื้องต้น:</strong>
-                                    <span>เมื่อจองห้องพักประเภทใดก็ได้ต่อเนื่องตั้งแต่ 3 คืนขึ้นไปในรหัสการจองเดียว</span>
-                                </div>
-                            </div>
-                            <a asp-controller="Customer" asp-action="Promotions" class="customer-home-promo-btn">
-                                <span>View Promotion</span>
-                                <i class="fa-solid fa-arrow-right"></i>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Promotion 4: Weekly Escape -->
-                    <div class="swiper-slide h-auto">
-                        <div class="customer-home-promo-card customer-home-grad-indigo h-100">
-                            <div class="customer-home-promo-top">
-                                <span class="customer-home-promo-pill">PROMO 04 · WEEKLY7</span>
-                                <span class="customer-home-promo-icon"><i class="fa-solid fa-laptop-code"></i></span>
-                            </div>
-                            <h3 class="customer-home-promo-title">Weekly Escape</h3>
-                            <p class="customer-home-promo-desc">
-                                ดีลพิเศษสำหรับสาย Workation และการพักผ่อนรายสัปดาห์ เปลี่ยนบรรยากาศการทำงานด้วยห้องพักอัจฉริยะและอินเทอร์เน็ตความเร็วสูง
-                            </p>
-                            <div class="customer-home-promo-details">
-                                <div class="customer-home-promo-detail-item">
-                                    <strong><i class="fa-solid fa-gift text-info me-1"></i> สิทธิประโยชน์:</strong>
-                                    <span>ส่วนลดสูงสุด 30% + บริการทำความสะอาดและเครดิตห้องอาหารมูลค่า ฿500</span>
-                                </div>
-                                <div class="customer-home-promo-detail-item">
-                                    <strong><i class="fa-solid fa-circle-exclamation text-warning me-1"></i> เงื่อนไขเบื้องต้น:</strong>
-                                    <span>สำหรับการเข้าพักต่อเนื่องตั้งแต่ 7 คืนขึ้นไป (ทุกประเภทห้องพัก)</span>
-                                </div>
-                            </div>
-                            <a asp-controller="Customer" asp-action="Promotions" class="customer-home-promo-btn">
-                                <span>View Promotion</span>
-                                <i class="fa-solid fa-arrow-right"></i>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Promotion 5: Festival & Long Weekend Pass -->
-                    <div class="swiper-slide h-auto">
-                        <div class="customer-home-promo-card customer-home-grad-gold h-100">
-                            <div class="customer-home-promo-top">
-                                <span class="customer-home-promo-pill">PROMO 05 · FESTPASS</span>
-                                <span class="customer-home-promo-icon"><i class="fa-solid fa-champagne-glasses"></i></span>
-                            </div>
-                            <h3 class="customer-home-promo-title">Festival &amp; Long Weekend Pass</h3>
-                            <p class="customer-home-promo-desc">
-                                ฉลองช่วงเทศกาลและวันหยุดยาวแบบไม่ต้องกลัวราคาพุ่ง ล็อกราคาพิเศษสำหรับสมาชิก StayMate พร้อมสิทธิพิเศษเหนือระดับ
-                            </p>
-                            <div class="customer-home-promo-details">
-                                <div class="customer-home-promo-detail-item">
-                                    <strong><i class="fa-solid fa-gift text-info me-1"></i> สิทธิประโยชน์:</strong>
-                                    <span>ลด 15% ช่วงวันหยุดยาว + ฟรีเครื่องดื่มสุดพิเศษที่ Rooftop Sky Pool</span>
-                                </div>
-                                <div class="customer-home-promo-detail-item">
-                                    <strong><i class="fa-solid fa-circle-exclamation text-warning me-1"></i> เงื่อนไขเบื้องต้น:</strong>
-                                    <span>จองล่วงหน้าอย่างน้อย 7 วันก่อนเข้าพักในช่วงเทศกาลหรือวันหยุดนักขัตฤกษ์</span>
-                                </div>
-                            </div>
-                            <a asp-controller="Customer" asp-action="Promotions" class="customer-home-promo-btn">
-                                <span>View Promotion</span>
-                                <i class="fa-solid fa-arrow-right"></i>
-                            </a>
-                        </div>
-                    </div>
-
+                    <div class="swiper-pagination customer-home-swiper-pagination"></div>
                 </div>
-
-                <div class="swiper-pagination customer-home-swiper-pagination"></div>
-            </div>
+            }
         </div>
     </section>
 
@@ -1042,9 +773,6 @@
                     </p>
                 </div>
                 <div class="d-flex align-items-center flex-wrap gap-2">
-                    <span class="customer-home-mock-notice-badge">
-                        <i class="fa-solid fa-flask me-1"></i> Sample Reviews (Mock Data)
-                    </span>
                     <a asp-controller="Customer" asp-action="Reviews" class="customer-home-link-arrow">
                         <span>เขียนรีวิว / ดูรีวิวทั้งหมด</span>
                         <i class="fa-solid fa-arrow-right"></i>
@@ -1052,107 +780,46 @@
                 </div>
             </div>
 
-            @* 
-                [BACKEND INTEGRATION NOTE - CUSTOMER REVIEWS]:
-                เมื่อระบบจัดเตรียม API หรือ Model ดึงข้อมูลรีวิวเสร็จสิ้นแล้ว
-                สามารถเปลี่ยนมาใช้ C# foreach ดึงคอมเมนต์จริงจากระบบมาแสดงได้ทันที:
-                
-                foreach (var review in Model.Reviews.Take(3)) { ... }
-            *@
-            <div class="row g-4">
-                <!-- Review 1 -->
-                <div class="col-12 col-lg-4" data-aos="fade-up" data-aos-delay="50">
-                    <div class="customer-home-review-card h-100">
-                        <div class="customer-home-review-top">
-                            <div class="customer-home-reviewer">
-                                <div class="customer-home-avatar">ก</div>
-                                <div>
-                                    <h5 class="customer-home-reviewer-name">คุณกวินท์ (ข้อมูลตัวอย่าง)</h5>
-                                    <span class="customer-home-review-room">
-                                        <i class="fa-solid fa-bed text-primary me-1"></i> Deluxe Room
-                                    </span>
+            @if (!Model.Reviews.Any())
+            {
+                <div class="text-center text-muted py-5">ยังไม่มีรีวิวจากผู้เข้าพัก</div>
+            }
+            else
+            {
+                <div class="row g-4">
+                    @{ var rvDelay = 50; }
+                    @foreach (var rv in Model.Reviews)
+                    {
+                        <div class="col-12 col-lg-4" data-aos="fade-up" data-aos-delay="@rvDelay">
+                            <div class="customer-home-review-card h-100">
+                                <div class="customer-home-review-top">
+                                    <div class="customer-home-reviewer">
+                                        <div class="customer-home-avatar">@(string.IsNullOrWhiteSpace(rv.UserName) ? "?" : rv.UserName.Trim()[0].ToString())</div>
+                                        <div>
+                                            <h5 class="customer-home-reviewer-name">@rv.UserName</h5>
+                                            <span class="customer-home-review-room">
+                                                <i class="fa-solid fa-bed text-primary me-1"></i> @rv.RoomTypeName
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="customer-home-stars" aria-label="คะแนน @rv.Rating ดาว">
+                                        @for (var s = 1; s <= 5; s++)
+                                        {
+                                            <i class="@(s <= rv.Rating ? "fa-solid" : "fa-regular") fa-star"></i>
+                                        }
+                                    </div>
+                                </div>
+                                <p class="customer-home-review-comment">"@rv.Comment"</p>
+                                <div class="customer-home-review-footer">
+                                    <span><i class="fa-solid fa-circle-check text-success me-1"></i> รีวิวจากผู้เข้าพักจริง</span>
+                                    <small class="text-muted">คะแนน @rv.Rating.ToString("0.0") / 5</small>
                                 </div>
                             </div>
-                            <div class="customer-home-stars" aria-label="คะแนน 5 ดาว">
-                                <i class="fa-solid fa-star"></i>
-                                <i class="fa-solid fa-star"></i>
-                                <i class="fa-solid fa-star"></i>
-                                <i class="fa-solid fa-star"></i>
-                                <i class="fa-solid fa-star"></i>
-                            </div>
                         </div>
-                        <p class="customer-home-review-comment">
-                            "ประทับใจดีไซน์ห้องพักแนว Futuristic มากครับ แสงไฟ Ambient ปรับบรรยากาศได้ดีมาก อินเทอร์เน็ตเร็วแรงทำงานไม่สะดุด ระบบจองและเช็คสถานะในเว็บก็ใช้งานง่ายสุด ๆ ครับ"
-                        </p>
-                        <div class="customer-home-review-footer">
-                            <span><i class="fa-solid fa-circle-check text-success me-1"></i> ตัวอย่างรีวิวผู้เข้าพัก</span>
-                            <small class="text-muted">คะแนน 5.0 / 5</small>
-                        </div>
-                    </div>
+                        rvDelay += 70;
+                    }
                 </div>
-
-                <!-- Review 2 -->
-                <div class="col-12 col-lg-4" data-aos="fade-up" data-aos-delay="120">
-                    <div class="customer-home-review-card h-100">
-                        <div class="customer-home-review-top">
-                            <div class="customer-home-reviewer">
-                                <div class="customer-home-avatar customer-home-avatar-violet">พ</div>
-                                <div>
-                                    <h5 class="customer-home-reviewer-name">คุณพิมพ์ชนก (ข้อมูลตัวอย่าง)</h5>
-                                    <span class="customer-home-review-room">
-                                        <i class="fa-solid fa-bed text-primary me-1"></i> Family Room
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="customer-home-stars" aria-label="คะแนน 5 ดาว">
-                                <i class="fa-solid fa-star"></i>
-                                <i class="fa-solid fa-star"></i>
-                                <i class="fa-solid fa-star"></i>
-                                <i class="fa-solid fa-star"></i>
-                                <i class="fa-solid fa-star"></i>
-                            </div>
-                        </div>
-                        <p class="customer-home-review-comment">
-                            "พาครอบครัวมาพัก 4 คน ใช้โปรโมชั่น Family &amp; Gang Pack คุ้มมากค่ะ ห้องกว้าง สะอาด เตียงนุ่มนอนสบาย สระว่ายน้ำชั้นดาดฟ้าวิวสวยมาก เด็ก ๆ ชอบมากค่ะ"
-                        </p>
-                        <div class="customer-home-review-footer">
-                            <span><i class="fa-solid fa-circle-check text-success me-1"></i> ตัวอย่างรีวิวผู้เข้าพัก</span>
-                            <small class="text-muted">คะแนน 5.0 / 5</small>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Review 3 -->
-                <div class="col-12 col-lg-4" data-aos="fade-up" data-aos-delay="190">
-                    <div class="customer-home-review-card h-100">
-                        <div class="customer-home-review-top">
-                            <div class="customer-home-reviewer">
-                                <div class="customer-home-avatar customer-home-avatar-navy">ธ</div>
-                                <div>
-                                    <h5 class="customer-home-reviewer-name">คุณธนภัทร (ข้อมูลตัวอย่าง)</h5>
-                                    <span class="customer-home-review-room">
-                                        <i class="fa-solid fa-bed text-primary me-1"></i> Suite Room
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="customer-home-stars" aria-label="คะแนน 5 ดาว">
-                                <i class="fa-solid fa-star"></i>
-                                <i class="fa-solid fa-star"></i>
-                                <i class="fa-solid fa-star"></i>
-                                <i class="fa-solid fa-star"></i>
-                                <i class="fa-solid fa-star-half-stroke"></i>
-                            </div>
-                        </div>
-                        <p class="customer-home-review-comment">
-                            "ห้อง Suite แยกโซนห้องนั่งเล่นและห้องนอนได้ลงตัวมาก อ่างจากุซซี่ชมวิวเมืองตอนกลางคืนคือที่สุด พนักงานบริการดีและระบบสมาชิกช่วยให้จัดการการจองสะดวกมากครับ"
-                        </p>
-                        <div class="customer-home-review-footer">
-                            <span><i class="fa-solid fa-circle-check text-success me-1"></i> ตัวอย่างรีวิวผู้เข้าพัก</span>
-                            <small class="text-muted">คะแนน 4.8 / 5</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            }
         </div>
     </section>
 
@@ -1255,7 +922,7 @@
                 new Swiper(".customer-home-promo-swiper", {
                     slidesPerView: 1,
                     spaceBetween: 24,
-                    loop: true,
+                    loop: @(Model.Promotions.Count > 3 ? "true" : "false"),
                     grabCursor: true,
                     speed: prefersReducedMotion ? 0 : 700,
                     autoplay: prefersReducedMotion ? false : {
