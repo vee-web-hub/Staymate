@@ -1,110 +1,112 @@
+@model StayMate_Kavinvee_0576.Models.User
 @{
     Layout = "~/Views/Shared/_CustomerLayout.cshtml";
     ViewData["Title"] = "การจองของฉัน (My Bookings)";
 
-    // =========================================================
-    // PURE MOCK DATA: รายการจองจำลอง 4 รายการ (ครบทุกสถานะตาม Flow)
-    // =========================================================
-    var mockBookings = new[]
+    // ฟังก์ชันแปลงสถานะการจองจาก Database ให้ตรงกับระบบ UI
+    string MapBookingStatus(string? dbStatus)
     {
-        new
+        return (dbStatus ?? "").ToLowerInvariant() switch
         {
-            BookingId = 1,
-            BookingCode = "BK-2026101",
-            RoomName = "StayMate Skyline Deluxe #402",
-            RoomType = "Deluxe Room",
-            RoomImage = "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=900&q=80",
-            CheckIn = new DateTime(2026, 11, 20),
-            CheckOut = new DateTime(2026, 11, 23),
-            CreatedAt = new DateTime(2026, 11, 10),
-            Nights = 3,
-            Guests = 3,
-            RoomsCount = 1,
-            RoomPrice = 7800m,
-            PromoDiscount = 2600m, // มา 3 จ่าย 2
-            AdditionalDiscount = 0m,
-            TotalAmount = 5200m,
-            BookingStatus = "Approved",
-            PaymentStatus = "Paid",
-            PromoName = "มา 3 จ่าย 2 (Stay 3 Pay 2)",
-            HasQrCode = true,
-            QrCodeUrl = "https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=STAYMATE-BK-2026101-APPROVED"
-        },
-        new
-        {
-            BookingId = 2,
-            BookingCode = "BK-2026102",
-            RoomName = "StayMate Horizon Executive Suite #801",
-            RoomType = "Suite Room",
-            RoomImage = "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=900&q=80",
-            CheckIn = new DateTime(2026, 12, 5),
-            CheckOut = new DateTime(2026, 12, 7),
-            CreatedAt = new DateTime(2026, 11, 15),
-            Nights = 2,
-            Guests = 4,
-            RoomsCount = 1,
-            RoomPrice = 11600m,
-            PromoDiscount = 1160m, // Festival 10%
-            AdditionalDiscount = 500m, // E-Voucher
-            TotalAmount = 9940m,
-            BookingStatus = "Pending",
-            PaymentStatus = "Pending Verification",
-            PromoName = "Festival & Long Weekend (-10%)",
-            HasQrCode = false,
-            QrCodeUrl = ""
-        },
-        new
-        {
-            BookingId = 3,
-            BookingCode = "BK-2026089",
-            RoomName = "StayMate Family Sanctuary #505",
-            RoomType = "Family Room",
-            RoomImage = "https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=900&q=80",
-            CheckIn = new DateTime(2026, 10, 12),
-            CheckOut = new DateTime(2026, 10, 15),
-            CreatedAt = new DateTime(2026, 10, 1),
-            Nights = 3,
-            Guests = 4,
-            RoomsCount = 1,
-            RoomPrice = 11700m,
-            PromoDiscount = 2340m,
-            AdditionalDiscount = 0m,
-            TotalAmount = 9360m,
-            BookingStatus = "Completed",
-            PaymentStatus = "Paid",
-            PromoName = "Family & Gang Pack",
-            HasQrCode = true,
-            QrCodeUrl = "https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=STAYMATE-BK-2026089-COMPLETED"
-        },
-        new
-        {
-            BookingId = 4,
-            BookingCode = "BK-2026074",
-            RoomName = "StayMate Urban Smart #204",
-            RoomType = "Standard Room",
-            RoomImage = "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=900&q=80",
-            CheckIn = new DateTime(2026, 9, 18),
-            CheckOut = new DateTime(2026, 9, 19),
-            CreatedAt = new DateTime(2026, 9, 15),
-            Nights = 1,
-            Guests = 2,
-            RoomsCount = 1,
-            RoomPrice = 1800m,
-            PromoDiscount = 0m,
-            AdditionalDiscount = 0m,
-            TotalAmount = 1800m,
-            BookingStatus = "Rejected",
-            PaymentStatus = "Rejected",
-            PromoName = "ราคาปกติสำหรับสมาชิก",
-            HasQrCode = false,
-            QrCodeUrl = ""
-        }
-    };
+            "confirmed" or "approved" or "checked_in" => "Approved",
+            "rejected" => "Rejected",
+            "checked_out" or "completed" => "Completed",
+            "cancelled" or "canceled" => "Cancelled",
+            _ => "Pending"
+        };
+    }
 
-    int totalBookingsCount = mockBookings.Length;
-    int upcomingStaysCount = mockBookings.Count(x => x.BookingStatus == "Approved");
-    int pendingBookingsCount = mockBookings.Count(x => x.BookingStatus == "Pending");
-    int completedStaysCount = mockBookings.Count(x => x.BookingStatus == "Completed");
+    // ฟังก์ชันแปลงสถานะการชำระเงินจาก Database
+    string MapPaymentStatus(StayMate_Kavinvee_0576.Models.Booking b)
+    {
+        var latestPay = b.Payments?.OrderByDescending(p => p.CreatedAt).FirstOrDefault();
+        if (latestPay == null)
+        {
+            var bStat = (b.Status ?? "").ToLowerInvariant();
+            if (bStat == "confirmed" || bStat == "checked_out" || bStat == "approved") return "Paid";
+            if (bStat == "pending_approval") return "Pending Verification";
+            if (bStat == "rejected") return "Rejected";
+            return "Unpaid";
+        }
+
+        return (latestPay.Status ?? "").ToLowerInvariant() switch
+        {
+            "approved" or "paid" or "completed" or "verified" => "Paid",
+            "pending" or "pending_verification" or "verifying" => "Pending Verification",
+            "rejected" or "failed" => "Rejected",
+            _ => "Unpaid"
+        };
+    }
+
+    // ฟังก์ชันเลือกรูปภาพห้องพักตามประเภทห้อง
+    string GetRoomImage(string? code, string? name)
+    {
+        var key = ((code ?? "") + " " + (name ?? "")).ToLowerInvariant();
+        if (key.Contains("std") || key.Contains("standard"))
+            return "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=900&q=80";
+        if (key.Contains("dlx") || key.Contains("deluxe"))
+            return "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=900&q=80";
+        if (key.Contains("fam") || key.Contains("family"))
+            return "https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=900&q=80";
+        if (key.Contains("sui") || key.Contains("suite"))
+            return "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=900&q=80";
+        return "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=900&q=80";
+    }
+
+    var rawBookings = Model?.Bookings?.OrderByDescending(b => b.CreatedAt).ToList()
+                      ?? new List<StayMate_Kavinvee_0576.Models.Booking>();
+
+    var bookingsList = rawBookings.Select(b =>
+    {
+        var firstRoom = b.BookingRooms?.FirstOrDefault();
+        var rt = firstRoom?.RoomType;
+        var roomEntity = firstRoom?.Room;
+
+        var typeName = rt?.TypeName ?? "Standard Room";
+        var typeCode = rt?.TypeCode ?? "";
+        var roomTitle = roomEntity != null
+            ? $"{typeName} · ห้อง #{roomEntity.RoomNumber}"
+            : typeName;
+
+        var promoName = b.BookingPromotions?.Select(bp => bp.Promotion?.PromoName).FirstOrDefault(n => !string.IsNullOrWhiteSpace(n))
+                        ?? "ราคาสมาชิกมาตรฐาน";
+
+        var mappedBStatus = MapBookingStatus(b.Status);
+        var mappedPStatus = MapPaymentStatus(b);
+
+        var hasQr = mappedBStatus == "Approved" || mappedBStatus == "Completed" || !string.IsNullOrWhiteSpace(b.QrCode);
+        var qrUrl = hasQr
+            ? $"https://api.qrserver.com/v1/create-qr-code/?size=260x260&data={Uri.EscapeDataString(!string.IsNullOrWhiteSpace(b.QrCode) ? b.QrCode : $"STAYMATE-{b.BookingCode}-{mappedBStatus.ToUpperInvariant()}")}"
+            : "";
+
+        return new
+        {
+            BookingId = b.BookingId,
+            BookingCode = b.BookingCode,
+            RoomName = roomTitle,
+            RoomType = typeName,
+            RoomImage = GetRoomImage(typeCode, typeName),
+            CheckIn = b.CheckInDate,
+            CheckOut = b.CheckOutDate,
+            CreatedAt = b.CreatedAt,
+            Nights = (int)b.Nights,
+            Guests = (int)b.NumGuests,
+            RoomsCount = b.BookingRooms != null && b.BookingRooms.Any() ? b.BookingRooms.Count : 1,
+            RoomPrice = b.RoomAmount,
+            PromoDiscount = b.DiscountAmount,
+            TotalAmount = b.TotalAmount,
+            BookingStatus = mappedBStatus,
+            PaymentStatus = mappedPStatus,
+            PromoName = promoName,
+            HasQrCode = hasQr,
+            QrCodeUrl = qrUrl
+        };
+    }).ToList();
+
+    int totalBookingsCount = bookingsList.Count;
+    int upcomingStaysCount = bookingsList.Count(x => x.BookingStatus == "Approved");
+    int pendingBookingsCount = bookingsList.Count(x => x.BookingStatus == "Pending");
+    int completedStaysCount = bookingsList.Count(x => x.BookingStatus == "Completed");
 }
 
 @section Styles {
@@ -118,7 +120,7 @@
 <div class="customer-mb-wrapper">
 
     <!-- =========================================================
-         3. PAGE HEADER
+         1. PAGE HEADER
          ========================================================= -->
     <section class="customer-mb-header">
         <div class="container">
@@ -139,13 +141,10 @@
                         <span class="customer-mb-eyebrow mb-0">
                             <i class="fa-solid fa-shield-halved me-1"></i> DIGITAL BOOKING MANAGEMENT
                         </span>
-                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill">
-                            <i class="fa-solid fa-flask me-1"></i> Mock UI Preview
-                        </span>
                     </div>
                     <h1 class="customer-mb-title">My Bookings · การจองของฉัน</h1>
                     <p class="customer-mb-subtitle mb-0">
-                        Manage your reservations and keep track of your stays. ตรวจสอบสถานะการจอง การชำระเงิน ดูรายละเอียดใบจอง และเปิด Digital Travel Pass (QR Code)
+                        ตรวจสอบสถานะการจอง การชำระเงิน ดูรายละเอียดใบจอง และเปิด Digital Travel Pass (QR Code) สำหรับเช็คอินเข้าพัก
                     </p>
                 </div>
 
@@ -160,7 +159,7 @@
     </section>
 
     <!-- =========================================================
-         4. BOOKING OVERVIEW DASHBOARD (4 CARDS)
+         2. BOOKING OVERVIEW DASHBOARD (4 CARDS)
          ========================================================= -->
     <section class="customer-mb-dashboard-section" aria-label="สรุปภาพรวมการจอง">
         <div class="container">
@@ -225,7 +224,7 @@
     </section>
 
     <!-- =========================================================
-         5. BOOKING FILTER & SEARCH
+         3. BOOKING FILTER & SEARCH
          ========================================================= -->
     <section class="customer-mb-filter-section" aria-label="ค้นหาและกรองรายการจอง">
         <div class="container">
@@ -246,7 +245,7 @@
                             <label for="mbSearchBookingId" class="customer-mb-label">
                                 <i class="fa-solid fa-hashtag text-primary me-1"></i> Booking ID
                             </label>
-                            <input type="text" id="mbSearchBookingId" class="form-control customer-mb-input" placeholder="เช่น BK-2026101" />
+                            <input type="text" id="mbSearchBookingId" class="form-control customer-mb-input" placeholder="ระบุรหัสการจอง..." />
                         </div>
 
                         <div class="col-12 col-sm-6 col-lg-2">
@@ -306,21 +305,21 @@
     </section>
 
     <!-- =========================================================
-         6, 7 & 8. BOOKING LIST (MODERN BOOKING CARDS)
+         4. BOOKING LIST (MODERN BOOKING CARDS)
          ========================================================= -->
     <section class="customer-mb-list-section" aria-label="รายการจองห้องพัก">
         <div class="container">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                 <span class="customer-mb-result-counter">
-                    แสดง <strong id="mbVisibleCount">@totalBookingsCount</strong> จากทั้งหมด <strong>@totalBookingsCount</strong> รายการจอง (Mock Data)
+                    แสดง <strong id="mbVisibleCount">@totalBookingsCount</strong> จากทั้งหมด <strong>@totalBookingsCount</strong> รายการจอง
                 </span>
                 <span class="small text-muted">
-                    คลิก <strong>View Details</strong> เพื่อเปิดหน้า <code>BookingDetails.cshtml</code> ของแต่ละรายการ
+                    คลิก <strong>View Details</strong> เพื่อดูรายละเอียดใบยืนยันการจองและสถานะการชำระเงิน
                 </span>
             </div>
 
             <div id="mbBookingCardsContainer" class="customer-mb-cards-stack">
-                @foreach (var item in mockBookings)
+                @foreach (var item in bookingsList)
                 {
                     string bStatus = item.BookingStatus;
                     string pStatus = item.PaymentStatus;
@@ -431,15 +430,8 @@
                                         @if (item.PromoDiscount > 0)
                                         {
                                             <div class="customer-mb-price-line text-success">
-                                                <span>ส่วนลดโปรโมชั่น</span>
+                                                <span>ส่วนลดที่ได้รับ</span>
                                                 <span>-฿@item.PromoDiscount.ToString("N0")</span>
-                                            </div>
-                                        }
-                                        @if (item.AdditionalDiscount > 0)
-                                        {
-                                            <div class="customer-mb-price-line text-success">
-                                                <span>ส่วนลด E-Voucher</span>
-                                                <span>-฿@item.AdditionalDiscount.ToString("N0")</span>
                                             </div>
                                         }
                                         <div class="customer-mb-price-total">
@@ -449,7 +441,6 @@
                                     </div>
 
                                     <div class="customer-mb-actions">
-                                        <!-- ปุ่ม View Details ส่งไปหน้า BookingDetails.cshtml ตาม Flow ข้อ 7 -->
                                         <a asp-controller="Customer"
                                            asp-action="BookingDetails"
                                            asp-route-id="@item.BookingId"
@@ -475,25 +466,37 @@
                 }
             </div>
 
-            <!-- Empty State เมื่อกรองแล้วไม่เจอ -->
-            <div id="mbFilterEmptyState" class="customer-mb-empty-card d-none mt-3">
+            <!-- Empty State เมื่อยังไม่มีการจอง หรือกรองแล้วไม่เจอ -->
+            <div id="mbFilterEmptyState" class="customer-mb-empty-card @(totalBookingsCount == 0 ? "" : "d-none") mt-3">
                 <div class="customer-mb-empty-icon-wrap">
                     <i class="fa-solid fa-suitcase-rolling"></i>
                 </div>
                 <h3 class="customer-mb-empty-title">No Bookings Found</h3>
                 <p class="customer-mb-empty-desc">
-                    ไม่พบรายการจองที่ตรงกับเงื่อนไขการค้นหา ลองกด Reset Filter เพื่อแสดงรายการจองทั้งหมด
+                    @(totalBookingsCount == 0
+                        ? "คุณยังไม่มีรายการจองห้องพักในระบบ สามารถกดค้นหาห้องว่างและสำรองห้องพักได้ทันที"
+                        : "ไม่พบรายการจองที่ตรงกับเงื่อนไขการค้นหา ลองกด Reset Filter เพื่อแสดงรายการจองทั้งหมด")
                 </p>
-                <button type="button" id="btnEmptyFilterReset" class="customer-mb-btn-primary mt-3">
-                    <i class="fa-solid fa-rotate-left"></i>
-                    <span>Reset Filter</span>
-                </button>
+                @if (totalBookingsCount == 0)
+                {
+                    <a asp-controller="Customer" asp-action="RoomAvailability" class="customer-mb-btn-primary mt-3">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <span>ค้นหาห้องพักและจองตอนนี้</span>
+                    </a>
+                }
+                else
+                {
+                    <button type="button" id="btnEmptyFilterReset" class="customer-mb-btn-primary mt-3">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span>Reset Filter</span>
+                    </button>
+                }
             </div>
         </div>
     </section>
 
     <!-- =========================================================
-         11. BOOKING STATUS INFORMATION
+         5. BOOKING STATUS INFORMATION
          ========================================================= -->
     <section class="customer-mb-legend-section">
         <div class="container">
@@ -552,7 +555,7 @@
     </section>
 
     <!-- =========================================================
-         9. QR CODE PREVIEW MODAL
+         6. QR CODE PREVIEW MODAL
          ========================================================= -->
     <div class="modal fade customer-mb-qr-modal" id="mbQrCodeModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -635,6 +638,8 @@
             const allCards = Array.from(document.querySelectorAll(".js-booking-card"));
 
             function applyFilters() {
+                if (allCards.length === 0) return;
+
                 const qId = (searchIdEl.value || "").trim().toLowerCase();
                 const qRoom = (searchRoomEl.value || "").trim().toLowerCase();
                 const bStat = filterBookStatusEl.value;
@@ -684,8 +689,8 @@
                 applyFilters();
             }
 
-            resetBtn.addEventListener("click", resetFilters);
-            emptyResetBtn.addEventListener("click", resetFilters);
+            if (resetBtn) resetBtn.addEventListener("click", resetFilters);
+            if (emptyResetBtn) emptyResetBtn.addEventListener("click", resetFilters);
 
             // QR Modal
             const qrModalEl = document.getElementById("mbQrCodeModal");

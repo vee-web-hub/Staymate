@@ -1,15 +1,57 @@
+@using System.Text.Json
 @{
     Layout = "~/Views/Shared/_CustomerLayout.cshtml";
     ViewData["Title"] = "สำรองห้องพักและชำระเงิน";
 
-    // รับค่าพารามิเตอร์ส่งต่อมาจากปุ่มจองห้องพักในหน้า RoomAvailability และ RoomDetails เพื่อรักษาความต่อเนื่องของ Flow
+    // รับค่าพารามิเตอร์ส่งต่อมาเพื่อรักษาความต่อเนื่องของ Flow
     var qRoomTypeId = Context.Request.Query["roomTypeId"].ToString();
     var qCheckIn = Context.Request.Query["checkIn"].ToString();
     var qCheckOut = Context.Request.Query["checkOut"].ToString();
     var qGuests = Context.Request.Query["guests"].ToString();
-    var qRooms = Context.Request.Query["rooms"].ToString();
     var qPromoCode = Context.Request.Query["promoCode"].ToString();
-    var qPromoName = Context.Request.Query["promoName"].ToString();
+
+    var roomTypes = ViewBag.RoomTypes as List<StayMate_Kavinvee_0576.Models.RoomType> 
+                    ?? new List<StayMate_Kavinvee_0576.Models.RoomType>();
+    var activePromos = ViewBag.ActivePromotions as List<StayMate_Kavinvee_0576.Models.Promotion>
+                       ?? new List<StayMate_Kavinvee_0576.Models.Promotion>();
+    var userProfile = ViewBag.CurrentUser as StayMate_Kavinvee_0576.Models.User;
+
+    // หารายละเอียดประเภทห้องเริ่มต้น
+    var parsedInitId = byte.TryParse(qRoomTypeId, out var tempId) ? tempId : (byte)2;
+    var currentRoomType = roomTypes.FirstOrDefault(rt => rt.RoomTypeId == parsedInitId) 
+                          ?? roomTypes.FirstOrDefault() 
+                          ?? new StayMate_Kavinvee_0576.Models.RoomType { RoomTypeId = 2, TypeName = "Deluxe Room", TypeCode = "RM-DLX-02", BasePrice = 2600 };
+
+    // ฟังก์ชันหารูปประกอบห้องจริง
+    string GetRoomImage(string? code)
+    {
+        var key = (code ?? "").ToLower();
+        if (key.Contains("std")) return "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=800&q=80";
+        if (key.Contains("fam")) return "https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=800&q=80";
+        if (key.Contains("sui")) return "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80";
+        return "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80";
+    }
+
+    // แปลงออบเจกต์ประเภทห้องพักจากฐานข้อมูลจริงเป็น JSON
+    var roomTypesJson = JsonSerializer.Serialize(roomTypes.Select(rt => new {
+        id = rt.RoomTypeId,
+        name = rt.TypeName,
+        code = rt.TypeCode,
+        price = rt.BasePrice,
+        img = GetRoomImage(rt.TypeCode)
+    }));
+
+    // แปลงรายการโปรโมชั่นจากฐานข้อมูลจริงเป็น JSON
+    var promotionsJson = JsonSerializer.Serialize(activePromos.Select(p => new {
+        promoId = p.PromotionId,
+        promoCode = p.PromoCode,
+        promoName = p.PromoName,
+        discountType = p.DiscountType,
+        discountPercent = p.DiscountPercent,
+        minGuests = p.MinGuests ?? 1,
+        minNights = p.MinNights ?? 1,
+        applicableRoomTypeId = p.ApplicableRoomTypeId
+    }));
 }
 
 @section Styles {
@@ -21,13 +63,11 @@
 }
 
 <div class="customer-co-wrapper" id="checkoutPageRoot"
-     data-init-room-type-id="@(string.IsNullOrEmpty(qRoomTypeId) ? "2" : qRoomTypeId)"
+     data-init-room-type-id="@currentRoomType.RoomTypeId"
      data-init-check-in="@qCheckIn"
      data-init-check-out="@qCheckOut"
-     data-init-guests="@qGuests"
-     data-init-rooms="@qRooms"
-     data-init-promo-code="@qPromoCode"
-     data-init-promo-name="@qPromoName">
+     data-init-guests="@(string.IsNullOrEmpty(qGuests) ? "2" : qGuests)"
+     data-init-promo-code="@qPromoCode">
 
     <!-- =========================================================
          1. BOOKING PROGRESS BAR
@@ -66,20 +106,18 @@
          MAIN TWO-COLUMN LAYOUT
          ========================================================= -->
     <div class="container pb-5">
-        <!-- ฟอร์มหลอกสำหรับจอง โดยใช้ Client-Side Handling ในการรันสลับหน้าจอ (Step 1 -> Step 2 -> Success) -->
         <form id="checkoutForm" onsubmit="return false;" class="row g-4 position-relative">
-            
+            @Html.AntiForgeryToken()
+
             <!-- COLUMN LEFT: Guest Details & Payment Method (8 Cols) -->
             <div class="col-lg-8" id="checkoutLeftColumn">
                 
-                <!-- =====================================================
-                     STEP 1: GUEST INFORMATION PANEL
-                     ===================================================== -->
+                <!-- STEP 1: GUEST INFORMATION PANEL -->
                 <div class="room-details-block p-4 mb-4" id="panelGuestInfo" data-aos="fade-up">
                     <div class="customer-co-panel-header">
                         <span class="customer-co-panel-eyebrow"><i class="fa-solid fa-user-check me-1"></i> STEP 1 OF 2</span>
                         <h2 class="customer-co-panel-title">Guest Information · ข้อมูลผู้เข้าพัก</h2>
-                        <p class="text-secondary small mb-0">กรุณากรอกข้อมูลเพื่อใช้ระบุสิทธิ์ในการลงทะเบียนเข้าพักจริงที่เครื่อง Smart Check-in Kiosk ของโรงแรม</p>
+                        <p class="text-secondary small mb-0">กรุณากรอกข้อมูลเพื่อใช้ระบุสิทธิ์ในการจองและตรวจสอบข้อมูลกับฐานข้อมูลโรงแรม</p>
                     </div>
 
                     <div class="row g-3">
@@ -87,7 +125,7 @@
                             <label for="guestFullName" class="customer-co-label">ชื่อ - นามสกุล (Full Name) <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fa-regular fa-user"></i></span>
-                                <input type="text" id="guestFullName" class="form-control customer-co-input" required placeholder="เช่น นายวิวัฒน์ มุ่งมั่น" value="@(User.Identity?.IsAuthenticated == true ? User.Identity.Name : "")" />
+                                <input type="text" id="guestFullName" class="form-control customer-co-input" required placeholder="เช่น นายวิวัฒน์ มุ่งมั่น" value="@(userProfile?.FullName ?? User.Identity?.Name)" />
                             </div>
                         </div>
 
@@ -95,7 +133,7 @@
                             <label for="guestPhone" class="customer-co-label">เบอร์โทรศัพท์ (Phone Number) <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fa-solid fa-phone"></i></span>
-                                <input type="tel" id="guestPhone" class="form-control customer-co-input" required placeholder="เช่น 0897654321" />
+                                <input type="tel" id="guestPhone" class="form-control customer-co-input" required placeholder="เช่น 0897654321" value="@userProfile?.Phone" />
                             </div>
                         </div>
 
@@ -103,7 +141,7 @@
                             <label for="guestEmail" class="customer-co-label">อีเมล (Email Address) <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fa-regular fa-envelope"></i></span>
-                                <input type="email" id="guestEmail" class="form-control customer-co-input" required placeholder="เช่น wivat.m@staymate.com" />
+                                <input type="email" id="guestEmail" class="form-control customer-co-input" required placeholder="เช่น wivat.m@staymate.com" value="@userProfile?.Email" />
                             </div>
                         </div>
 
@@ -113,10 +151,10 @@
                                 <span class="input-group-text"><i class="fa-solid fa-user-group"></i></span>
                                 <select id="guestCapacity" class="form-select customer-co-input">
                                     <option value="1">1 ท่าน</option>
-                                    <option value="2" selected>2 ท่าน</option>
+                                    <option value="2">2 ท่าน (แนะนำ)</option>
                                     <option value="3">3 ท่าน (เสริมเตียง)</option>
                                     <option value="4">4 ท่าน</option>
-                                    <option value="5">5 ท่าน (สวีต)</option>
+                                    <option value="5">5 ท่าน</option>
                                     <option value="6">6 ท่าน (ความจุสูงสุด)</option>
                                 </select>
                             </div>
@@ -124,8 +162,7 @@
 
                         <div class="col-12">
                             <label for="specialRequest" class="customer-co-label">คำขอพิเศษเพิ่มเติม (Special Request)</label>
-                            <textarea id="specialRequest" rows="3" class="form-control customer-co-textarea" placeholder="เช่น ขอห้องพักชั้นสูง, ขอหมอนเสริม, เตรียมส้อมและจานเสริมในห้องนอน..."></textarea>
-                            <small class="text-muted"><i class="fa-solid fa-circle-info text-info me-1"></i> คำขอพิเศษขึ้นอยู่กับความพร้อมของห้องพัก ณ วันเช็คอิน</small>
+                            <textarea id="specialRequest" rows="3" class="form-control customer-co-textarea" placeholder="เช่น ขอห้องพักชั้นสูง, ขอหมอนเสริม..."></textarea>
                         </div>
                     </div>
 
@@ -137,25 +174,22 @@
                     </div>
                 </div>
 
-                <!-- =====================================================
-                     STEP 2: PAYMENT METHOD PANEL (โชว์เมื่อเข้า Step 2)
-                     ===================================================== -->
+                <!-- STEP 2: PAYMENT METHOD PANEL -->
                 <div class="room-details-block p-4 mb-4 d-none" id="panelPayment" data-aos="fade-up">
                     <div class="customer-co-panel-header">
                         <span class="customer-co-panel-eyebrow"><i class="fa-solid fa-credit-card me-1"></i> STEP 2 OF 2</span>
-                        <h2 class="customer-co-panel-title">Secure Payment · วิธีชำระเงินด่วน</h2>
-                        <p class="text-secondary small mb-0">ระบบจัดทำ PromptPay QR Code จำลองให้ชำระเงินตามจำนวนสุทธิ เมื่อโอนเงินแล้วกรุณาอัปโหลดรูปสลิปหลักฐานการโอนเงินด้านล่าง</p>
+                        <h2 class="customer-co-panel-title">Secure Payment · ชำระเงินผ่านการสแกน</h2>
+                        <p class="text-secondary small mb-0">โอนเงินด้วย PromptPay หรือ บัญชีธนาคาร จากนั้นอัปโหลดภาพหลักฐานสลิปการโอนเงินด้านล่างเพื่อบันทึกลง Database</p>
                     </div>
 
                     <div class="row g-4 mb-4">
-                        <!-- QR Code จำลอง (ซ้าย) -->
                         <div class="col-md-5 text-center border-md-end pe-md-4">
                             <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill mb-2 px-3 py-1 fw-bold">
                                 <i class="fa-solid fa-qrcode me-1"></i> QR PROMPTPAY (MOCK)
                             </span>
                             
                             <div class="customer-co-qr-wrap p-3 border rounded-4 d-inline-block bg-white shadow-sm">
-                                <img id="promptPayQrImg" src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=STAYMATE-CHECKOUT-MOCK-PAYMENT" alt="PromptPay QR Code Mock" class="img-fluid" />
+                                <img id="promptPayQrImg" src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=STAYMATE-INITIAL" alt="PromptPay QR Code" class="img-fluid" />
                             </div>
                             
                             <small class="text-muted d-block mt-2">
@@ -163,44 +197,43 @@
                             </small>
                         </div>
 
-                        <!-- รายละเอียดบัญชีตัวอย่าง (ขวา) -->
                         <div class="col-md-7">
                             <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-university text-primary me-2"></i>ข้อมูลบัญชีธนาคารสำหรับโอนเงิน</h5>
                             
                             <div class="customer-co-bank-card mb-3">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <strong class="text-dark"><i class="fa-solid fa-building-columns text-primary me-1"></i> ธนาคารไทยพาณิชย์ (SCB)</strong>
-                                    <span class="badge bg-primary-subtle text-primary rounded">บัญชีทางการ</span>
+                                    <span class="badge bg-primary-subtle text-primary rounded">บัญชีหลัก</span>
                                 </div>
                                 <div class="customer-co-bank-detail mb-1">
                                     <span>เลขที่บัญชี:</span>
                                     <strong class="customer-co-mono-font fs-6">123-456-789-0</strong>
                                 </div>
                                 <div class="customer-co-bank-detail">
-                                    <span>ชื่อบัญชีตัวอย่าง:</span>
+                                    <span>ชื่อบัญชี:</span>
                                     <strong>บริษัท สเตย์เมท โฮเทล จำกัด (สำนักงานใหญ่)</strong>
                                 </div>
                             </div>
 
                             <div class="p-3 rounded-4 bg-light border small text-secondary">
                                 <strong><i class="fa-solid fa-shield-halved text-success me-1"></i> Security Notice:</strong>
-                                ระบบเช็คเอาท์จำลองนี้มีมาตรการความปลอดภัยสูงสุด ข้อมูลสลิปจะได้รับการเข้ารหัสและนำส่งไปยังเจ้าหน้าที่การเงินเพื่ออนุมัติสิทธิ์ Digital Pass ทันทีใน 5-15 นาที
+                                ข้อมูลและหลักฐานการชำระเงินของท่าน จะได้รับการตรวจสอบและบันทึกเข้าสู่ฐานข้อมูลระบบหลักอย่างปลอดภัย
                             </div>
                         </div>
                     </div>
 
-                    <!-- แถบอัปโหลดสลิปเงินโอนพร้อมรูปพรีวิว -->
+                    <!-- อัปโหลดสลิป -->
                     <div class="p-4 rounded-4 border bg-light mb-4">
                         <h5 class="fw-bold text-dark mb-2"><i class="fa-solid fa-file-invoice-dollar text-primary me-2"></i>อัปโหลดสลิปการโอนเงิน (Upload Payment Slip) <span class="text-danger">*</span></h5>
-                        <p class="text-muted small">ระบบจะจำลองการตรวจสอบสลิปหลังกดยืนยันการจอง</p>
+                        <p class="text-muted small">กรุณาอัปโหลดไฟล์รูปภาพสลิปที่ถูกต้องเพื่อใช้ในการอนุมัติใบจอง</p>
 
                         <div class="row g-3 align-items-center">
                             <div class="col-md-6">
                                 <div class="customer-co-upload-zone" onclick="document.getElementById('slipUploadInput').click()">
                                     <i class="fa-solid fa-cloud-arrow-up fs-2 text-primary mb-2"></i>
                                     <strong>เลือกไฟล์รูปภาพสลิปที่นี่</strong>
-                                    <small class="text-muted">รองรับ JPEG, PNG (ไม่เกิน 5MB)</small>
-                                    <input type="file" id="slipUploadInput" accept="image/jpeg, image/png" class="d-none" onchange="previewPaymentSlip(this)" />
+                                    <small class="text-muted">JPEG, PNG (ไม่เกิน 5MB)</small>
+                                    <input type="file" id="slipUploadInput" name="slipFile" accept="image/jpeg, image/png" class="d-none" onchange="previewPaymentSlip(this)" />
                                 </div>
                             </div>
                             <div class="col-md-6 text-center">
@@ -218,11 +251,10 @@
                         </div>
                     </div>
 
-                    <!-- ปุ่มควบคุมของ Step 2 -->
                     <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                        <button type="button" class="customer-mb-btn-outline" onclick="navigateToStep(1)">
+                        <button type="button" class="customer-mb-btn-outline btn border rounded-pill px-3" onclick="navigateToStep(1)">
                             <i class="fa-solid fa-arrow-left me-1"></i>
-                            <span>ย้อนกลับไปแก้ไขข้อมูลผู้เข้าพัก</span>
+                            <span>ย้อนกลับ</span>
                         </button>
                         <button type="button" id="btnConfirmBooking" class="customer-co-btn-book" onclick="submitBookingForm()">
                             <i class="fa-solid fa-circle-check"></i>
@@ -239,33 +271,51 @@
                     <div class="room-details-panel-header">
                         <div>
                             <span class="room-details-panel-tag">BOOKING SUMMARY</span>
-                            <h3 class="room-details-panel-room" id="lblSummaryRoomType">Deluxe Room</h3>
+                            <h3 class="room-details-panel-room" id="lblSummaryRoomType">@currentRoomType.TypeName</h3>
                         </div>
                         <span class="customer-co-icon-box"><i class="fa-solid fa-hotel"></i></span>
                     </div>
 
-                    <!-- รูปภาพประเภทห้องที่จอง -->
                     <div class="customer-co-summary-img-box">
-                        <img id="summaryRoomImg" src="https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80" alt="Room Preview" />
-                        <span class="customer-co-summary-badge" id="lblSummaryCode">RM-DLX-02</span>
+                        <img id="summaryRoomImg" src="@GetRoomImage(currentRoomType.TypeCode)" alt="Room Preview" />
+                        <span class="customer-co-summary-badge" id="lblSummaryCode">@currentRoomType.TypeCode</span>
                     </div>
 
                     <div class="customer-co-summary-body">
-                        <!-- กำหนดการเข้าพักที่สอดคล้องจากการสุ่มคำนวณ -->
+                        
+                        <!-- ปรับแก้ HTML ส่วน Check-in / Check-out พร้อมปฏิทินที่กดเปลี่ยนได้จริง -->
                         <div class="customer-co-summary-dates mb-3">
-                            <div class="row g-2">
+                            <div class="row g-3">
                                 <div class="col-6">
-                                    <small><i class="fa-regular fa-calendar-plus text-primary me-1"></i> Check-in Date</small>
-                                    <strong id="summaryCheckIn">17 พ.ย. 2026</strong>
+                                    <label for="checkInInput" class="customer-co-date-label">
+                                        <i class="fa-regular fa-calendar-plus text-primary me-1"></i>
+                                        Check-in Date
+                                    </label>
+                                    <input type="date"
+                                           id="checkInInput"
+                                           class="form-control customer-co-date-input"
+                                           required />
+                                    <strong id="summaryCheckIn" class="d-block mt-1">-</strong>
                                 </div>
+
                                 <div class="col-6">
-                                    <small><i class="fa-regular fa-calendar-minus text-primary me-1"></i> Check-out Date</small>
-                                    <strong id="summaryCheckOut">18 พ.ย. 2026</strong>
+                                    <label for="checkOutInput" class="customer-co-date-label">
+                                        <i class="fa-regular fa-calendar-minus text-primary me-1"></i>
+                                        Check-out Date
+                                    </label>
+                                    <input type="date"
+                                           id="checkOutInput"
+                                           class="form-control customer-co-date-input"
+                                           required />
+                                    <strong id="summaryCheckOut" class="d-block mt-1">-</strong>
                                 </div>
                             </div>
+                            <small class="text-primary d-block mt-2">
+                                <i class="fa-solid fa-circle-info me-1"></i>
+                                สามารถกดเลือกวันเข้าพักและวันออกจากปฏิทินได้
+                            </small>
                         </div>
 
-                        <!-- ข้อมูลสเปกเข้าพักแบบสรุป -->
                         <div class="row g-2 mb-4">
                             <div class="col-6">
                                 <div class="customer-co-mini-chip">
@@ -281,14 +331,14 @@
                             </div>
                         </div>
 
-                        <!-- แถบเลือกเปลี่ยนประเภทห้องเพื่อทดสอบหน้า Checkout (Simulator) -->
+                        <!-- แถบเลือกเปลี่ยนประเภทห้องเพื่อทดสอบหน้า Checkout -->
                         <div class="p-3 rounded-4 border bg-light mb-4">
                             <label for="simRoomSelect" class="customer-co-label small fw-bold"><i class="fa-solid fa-repeat text-primary me-1"></i> จำลองเปลี่ยนห้องพัก (ทดสอบ UI):</label>
                             <select id="simRoomSelect" class="form-select form-select-sm customer-co-input" style="height:38px; font-size:0.8rem;">
-                                <option value="1">Standard Room (฿1,800/คืน)</option>
-                                <option value="2" selected>Deluxe Room (฿2,600/คืน)</option>
-                                <option value="3">Family Room (฿3,900/คืน)</option>
-                                <option value="4">Suite Room (฿5,800/คืน)</option>
+                                @foreach (var rt in roomTypes)
+                                {
+                                    <option value="@rt.RoomTypeId" selected="@(rt.RoomTypeId == currentRoomType.RoomTypeId)">@rt.TypeName (฿@rt.BasePrice.ToString("N0")/คืน)</option>
+                                }
                             </select>
                         </div>
 
@@ -296,24 +346,20 @@
                         <div class="room-details-price-breakdown">
                             <div class="room-details-breakdown-row">
                                 <span>ราคาห้องพัก (<span id="lblBaseNights">1</span> คืน × <span id="lblBaseRooms">1</span> ห้อง)</span>
-                                <strong id="lblBasePrice">฿2,600</strong>
+                                <strong id="lblBasePrice">฿0</strong>
                             </div>
                             <div class="room-details-breakdown-row text-success">
                                 <span>ส่วนลดโปรโมชั่นสมาชิก (Promo Code)</span>
                                 <strong id="lblPromoDiscount">-฿0</strong>
                             </div>
                             <div class="room-details-breakdown-row text-success">
-                                <span>ส่วนลดเพิ่มเติม (E-Voucher)</span>
+                                <span>ส่วนลดออนท็อปอื่นๆ</span>
                                 <strong id="lblExtraDiscount">-฿0</strong>
-                            </div>
-                            <div class="room-details-breakdown-row text-muted small">
-                                <span>ภาษีและค่าบริการ (Tax &amp; Service)</span>
-                                <span>รวมในยอดสุทธิแล้ว</span>
                             </div>
                             <hr class="my-2" />
                             <div class="d-flex justify-content-between align-items-baseline">
                                 <span class="fw-bold text-dark">ยอดชำระสุทธิ (Net Total)</span>
-                                <span class="room-details-net-total fs-4" id="lblNetTotal">฿2,600</span>
+                                <span class="room-details-net-total fs-4" id="lblNetTotal">฿0</span>
                             </div>
                         </div>
                     </div>
@@ -323,25 +369,23 @@
         </form>
     </div>
 
-    <!-- =========================================================
-         SUCCESS BOOKING MODAL (Success Popup หลังกดยืนยันสำเร็จ)
-         ========================================================= -->
+    <!-- SUCCESS BOOKING MODAL -->
     <div class="modal fade customer-co-success-modal" id="successBookingModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content customer-co-success-modal-content text-center">
                 <div class="modal-body p-5">
-                    <div class="customer-co-success-icon-wrap mb-4">
+                    <div class="customer-co-success-icon-wrap mb-4" style="font-size: 55px; color: #198754;">
                         <i class="fa-solid fa-circle-check"></i>
                     </div>
 
                     <h2 class="fw-bold text-dark mb-2">สำรองห้องพักเรียบร้อยแล้ว!</h2>
-                    <p class="text-info fw-bold mb-3"><i class="fa-solid fa-shield-halved me-1"></i> Smart Checkout Completed Successfully</p>
+                    <p class="text-info fw-bold mb-3"><i class="fa-solid fa-shield-halved me-1"></i> Smart Booking Saved in Database Successfully</p>
 
                     <div class="p-3 bg-light rounded-4 border mb-4 text-start small text-secondary">
-                        <div class="mb-2"><strong><i class="fa-solid fa-receipt text-primary me-1"></i> รายการจองจำลองของคุณสำเร็จแล้ว:</strong></div>
+                        <div class="mb-2"><strong><i class="fa-solid fa-receipt text-primary me-1"></i> ใบยืนยันรายการจองจริงของคุณสำเร็จแล้ว:</strong></div>
                         <div class="d-flex justify-content-between mb-1">
                             <span>รหัสการจอง:</span>
-                            <strong class="text-dark">BK-MOCK-202699</strong>
+                            <strong class="text-dark" id="lblSuccessCode">BK-XXXXX</strong>
                         </div>
                         <div class="d-flex justify-content-between mb-1">
                             <span>ประเภทห้องพัก:</span>
@@ -349,16 +393,19 @@
                         </div>
                         <div class="d-flex justify-content-between mb-1">
                             <span>กำหนดเข้าพัก:</span>
-                            <strong class="text-dark" id="lblSuccessDates">17 พ.ย. 2026 - 18 พ.ย. 2026</strong>
+                            <strong class="text-dark" id="lblSuccessDates">-</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>ยอดเงินที่ชำระจริง:</span>
+                            <strong class="text-primary fs-6" id="lblSuccessAmount">฿0</strong>
                         </div>
                         <hr class="my-2" />
-                        <div class="small text-muted text-center">* หมายเหตุ: ระบบนี้เป็นหน้าเว็บจำลองสำหรับทดสอบ UI/UX (Mockup) เท่านั้น ไม่ใช่การทำธุรกรรมและการจองจริงในระบบหลักของโรงแรม</div>
+                        <div class="small text-muted text-center">* สลิปการโอนเงินและรายการจองได้ถูกนำส่งเข้าระบบฐานข้อมูล เรียบร้อยครับ</div>
                     </div>
 
                     <div class="d-grid gap-2">
-                        <!-- ปุ่มไปดูประวัติการจองในหน้า MyBookings.cshtml -->
-                        <a asp-controller="Customer" asp-action="MyBookings" class="customer-co-btn-cyan justify-content-center py-3">
-                            <i class="fa-solid fa-receipt"></i>
+                        <a asp-controller="Customer" asp-action="MyBookings" class="customer-co-btn-cyan justify-content-center py-3 text-white">
+                            <i class="fa-solid fa-receipt me-1"></i>
                             <span>ไปยังหน้าการจองของฉัน (My Bookings)</span>
                         </a>
                         <a asp-controller="Customer" asp-action="Index" class="btn btn-outline-secondary rounded-pill py-2">
@@ -370,15 +417,13 @@
         </div>
     </div>
 
-    <!-- =========================================================
-         LOADING OVERLAY PANEL (ระหว่างประมวลผลสลิปเงินโอน)
-         ========================================================= -->
-    <div class="customer-co-loading-overlay d-none" id="coLoadingOverlay" aria-hidden="true">
+    <!-- LOADING OVERLAY PANEL -->
+    <div class="customer-co-loading-overlay d-none" id="coLoadingOverlay" aria-hidden="true" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 9999; display: flex; align-items: center; justify-content: center;">
         <div class="text-center text-white">
             <div class="spinner-border text-info" style="width: 3.5rem; height: 3.5rem;" role="status">
                 <span class="visually-hidden">Loading...</span>
             </div>
-            <h4 class="fw-bold mt-3">กำลังส่งหลักฐานและสร้างรหัสใบจองอัจฉริยะ...</h4>
+            <h4 class="fw-bold mt-3">กำลังส่งสลิปและบันทึกสิทธิ์จองลงตารางฐานข้อมูล...</h4>
             <p class="opacity-75">กรุณาอย่าปิดหน้าต่างระบบหรือกดโหลดหน้าใหม่</p>
         </div>
     </div>
@@ -388,64 +433,122 @@
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
     <script>
+        // รับ Catalog ข้อมูลห้องพักและโปรโมชั่นทั้งหมดจาก DB มาคำนวณราคาแบบ Dynamic
+        const dbRooms = @Html.Raw(roomTypesJson);
+        const dbPromotions = @Html.Raw(promotionsJson);
+
         document.addEventListener("DOMContentLoaded", function () {
-            // โหลดสคริปต์ AOS ค้นหาและเตรียมลอจิกจำลอง
             if (typeof AOS !== "undefined") {
                 AOS.init({ duration: 650, once: true });
             }
 
-            // รับข้อมูลพารามิเตอร์ทั้งหมดจากหน้าเว็บที่ส่งมาเพื่อตั้งค่าเริ่มต้น
             const pageRoot = document.getElementById("checkoutPageRoot");
-            const initRoomTypeId = pageRoot.dataset.initRoomTypeId || "2";
+            const initRoomTypeId = parseInt(pageRoot.dataset.initRoomTypeId || "2", 10);
             const initCheckIn = pageRoot.dataset.initCheckIn;
             const initCheckOut = pageRoot.dataset.initCheckOut;
-            const initGuests = pageRoot.dataset.initGuests || "2";
-            const initRooms = pageRoot.dataset.initRooms || "1";
+            const initGuests = parseInt(pageRoot.dataset.initGuests || "2", 10);
             const initPromoCode = pageRoot.dataset.initPromoCode;
-            const initPromoName = pageRoot.dataset.initPromoName;
 
             const roomSelector = document.getElementById("simRoomSelect");
-            const checkInInput = document.getElementById("guestFullName"); // ใช้ตั้งค่าชื่อ
+            const guestCapacityEl = document.getElementById("guestCapacity");
 
-            // Mock ข้อมูลห้องพักทั้ง 4 แบบในระบบ
-            const mockRooms = {
-                1: { name: "Standard Room", code: "RM-STD-01", price: 1800, img: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=800&q=80" },
-                2: { name: "Deluxe Room", code: "RM-DLX-02", price: 2600, img: "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80" },
-                3: { name: "Family Room", code: "RM-FAM-03", price: 3900, img: "https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=800&q=80" },
-                4: { name: "Suite Room", code: "RM-SUI-04", price: 5800, img: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80" }
-            };
+            // กำหนดค่าตั้งต้นใน Select และฟอร์ม
+            roomSelector.value = initRoomTypeId;
+            guestCapacityEl.value = initGuests;
 
-            // ตั้งค่าค่าเริ่มต้นในฟอร์มจำลอง
-            if (initRoomTypeId && mockRooms[initRoomTypeId]) {
-                roomSelector.value = initRoomTypeId;
-            }
+            const checkInInput = document.getElementById("checkInInput");
+            const checkOutInput = document.getElementById("checkOutInput");
 
             const pad = (n) => String(n).padStart(2, "0");
-            const formatDateInput = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
-            // จัดการข้อมูลกำหนดการเข้าพัก
-            let checkInDate = initCheckIn ? new Date(initCheckIn + "T00:00:00") : new Date();
-            let checkOutDate = initCheckOut ? new Date(initCheckOut + "T00:00:00") : new Date();
-            if (!initCheckOut) {
-                checkOutDate.setDate(checkInDate.getDate() + 1);
+            const toInputDate = (d) =>
+                `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+            const parseLocalDate = (value) => {
+                if (!value) return null;
+
+                const parts = value.split("-").map(Number);
+                if (parts.length !== 3 || parts.some(Number.isNaN)) return null;
+
+                return new Date(parts[0], parts - 1, parts[2]);
+            };
+
+            const addDays = (date, days) => {
+                const result = new Date(date);
+                result.setDate(result.getDate() + days);
+                return result;
+            };
+
+            const formatThaiDate = (date) =>
+                date.toLocaleDateString("th-TH", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric"
+                });
+
+            // วันที่ปัจจุบัน โดยไม่ใช้เวลา UTC
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const todayText = toInputDate(today);
+
+            // อ่านวันเริ่มต้นจาก URL / Dataset
+            let checkInDate = parseLocalDate(initCheckIn);
+            let checkOutDate = parseLocalDate(initCheckOut);
+
+            // ถ้าไม่มีวัน หรือวันที่ผ่านไปแล้ว ให้เริ่มจากวันนี้
+            if (!checkInDate || checkInDate < today) {
+                checkInDate = new Date(today);
             }
 
-            // คำนวณจำลองคืน
-            let nightsCount = Math.round((checkOutDate - checkInDate) / 86400000);
-            if (isNaN(nightsCount) || nightsCount <= 0) nightsCount = 1;
+            // วันออกต้องหลังวันเข้าอย่างน้อย 1 วัน
+            if (!checkOutDate || checkOutDate <= checkInDate) {
+                checkOutDate = addDays(checkInDate, 1);
+            }
 
-            document.getElementById("summaryCheckIn").textContent = checkInDate.toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" });
-            document.getElementById("summaryCheckOut").textContent = checkOutDate.toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" });
-            document.getElementById("lblSummaryNights").textContent = nightsCount;
-            document.getElementById("lblBaseNights").textContent = nightsCount;
+            // ตั้งค่า date picker
+            checkInInput.min = todayText;
+            checkOutInput.min = toInputDate(addDays(checkInDate, 1));
+
+            checkInInput.value = toInputDate(checkInDate);
+            checkOutInput.value = toInputDate(checkOutDate);
+
+            // คำนวณจำนวนคืน
+            let nightsCount = Math.round(
+                (checkOutDate - checkInDate) / 86400000
+            );
+
+            if (nightsCount < 1) nightsCount = 1;
+
+            // แสดงวันที่บน Booking Summary
+            function updateDateSummary() {
+                document.getElementById("summaryCheckIn").textContent =
+                    formatThaiDate(checkInDate);
+
+                document.getElementById("summaryCheckOut").textContent =
+                    formatThaiDate(checkOutDate);
+
+                document.getElementById("lblSummaryNights").textContent =
+                    nightsCount;
+
+                document.getElementById("lblBaseNights").textContent =
+                    nightsCount;
+            }
+
+            updateDateSummary();
             document.getElementById("lblSummaryGuests").textContent = initGuests;
-            document.getElementById("guestCapacity").value = initGuests;
 
-            // ฟังก์ชันคำนวณราคาทุกชนิด
+            // ตัวเก็บข้อมูลโปรโมชั่นที่ผ่านการตรวจสอบ
+            let activePromoId = null;
+            let activeNetTotal = 0;
+
             function calculatePrices() {
-                const roomType = roomSelector.value;
-                const roomInfo = mockRooms[roomType];
+                const selectedId = parseInt(roomSelector.value, 10);
+                const roomInfo = dbRooms.find(r => r.id === selectedId);
                 if (!roomInfo) return;
+
+                const searchGuests = parseInt(guestCapacityEl.value, 10);
+                document.getElementById("lblSummaryGuests").textContent = searchGuests;
 
                 // อัปเดตข้อมูลบน Summary Card
                 document.getElementById("lblSummaryRoomType").textContent = roomInfo.name;
@@ -455,149 +558,227 @@
                 const basePrice = roomInfo.price * nightsCount;
                 document.getElementById("lblBasePrice").textContent = `฿${basePrice.toLocaleString("en-US")}`;
 
-                // ตรรกะโปรโมชั่นจำลอง (คำนวณอัตโนมัติตามประเภทห้องพักและจำนวนคน)
+                // ค้นหาและจำลองคำนวณโปรโมชั่นที่มีในระบบ Database จริง
                 let promoDiscount = 0;
+                activePromoId = null;
+
+                if (Array.isArray(dbPromotions) && dbPromotions.length > 0) {
+                    dbPromotions.forEach(p => {
+                        const matchRoom = !p.applicableRoomTypeId || p.applicableRoomTypeId === selectedId;
+                        const matchGuests = searchGuests >= p.minGuests;
+                        const matchNights = nightsCount >= p.minNights;
+
+                        if (matchRoom && matchGuests && matchNights) {
+                            activePromoId = p.promoId;
+                            if (p.discountType === "free_extra_bed") {
+                                promoDiscount = 500 * nightsCount; // ค่าเตียงเสริมจำลองเฉลี่ย 500 บาท
+                            } else if (p.discountType === "percent_room") {
+                                promoDiscount = basePrice * (p.discountPercent / 100);
+                            } else if (p.discountType === "percent_extra_nights") {
+                                promoDiscount = roomInfo.price * (p.discountPercent / 100);
+                            }
+                        }
+                    });
+                }
+
+                // สิทธิ์ลดเพิ่ม E-Voucher หากมีการกรอกส่งมา
                 let voucherDiscount = 0;
-
-                // 1) มา 3 จ่าย 2
-                if (roomType >= 2 && (initGuests >= 3 || nightsCount >= 3)) {
-                    promoDiscount = roomInfo.price * Math.floor(nightsCount / 3) * 1;
-                }
-                // 2) Family & Gang Pack
-                else if (roomType >= 3 && initGuests >= 4) {
-                    promoDiscount = basePrice * 0.20; // 20%
-                }
-                // 3) Stay 3+ Nights
-                else if (nightsCount >= 3) {
-                    promoDiscount = basePrice * 0.15; // 15%
-                }
-
-                // 4) หากมีส่งรหัสส่วนลด E-Voucher มาจากหน้าอื่น หรือ Mock เพิ่ม
-                if (initPromoCode && initPromoCode !== "") {
+                if (initPromoCode) {
                     voucherDiscount = 500;
                 }
 
                 document.getElementById("lblPromoDiscount").textContent = `-฿${Math.round(promoDiscount).toLocaleString("en-US")}`;
                 document.getElementById("lblExtraDiscount").textContent = `-฿${Math.round(voucherDiscount).toLocaleString("en-US")}`;
 
-                const netTotal = Math.max(0, basePrice - promoDiscount - voucherDiscount);
-                document.getElementById("lblNetTotal").textContent = `฿${netTotal.toLocaleString("en-US")}`;
+                activeNetTotal = Math.max(0, basePrice - promoDiscount - voucherDiscount);
+                document.getElementById("lblNetTotal").textContent = `฿${activeNetTotal.toLocaleString("en-US")}`;
 
-                // อัปเดตค่า QR Code สลิปเงินโอนตามยอดที่คำนวณจริง
+                // อัปเดต QR Code จำลองตามราคาสุทธิ
                 const qrImg = document.getElementById("promptPayQrImg");
                 if (qrImg) {
-                    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=STAYMATE-PAYMENT-AMOUNT-${netTotal}`;
+                    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=STAYMATE-PAYMENT-AMOUNT-${activeNetTotal}`;
                 }
             }
 
-            roomSelector.addEventListener("change", calculatePrices);
-            calculatePrices();
-        });
+            // เปลี่ยนวัน Check-in
+            checkInInput.addEventListener("change", function () {
+                const selectedDate = parseLocalDate(this.value);
 
-        // ฟังก์ชันสลับเปลี่ยนขั้นตอน (Step 1 <-> Step 2)
-        function navigateToStep(stepNum) {
-            const step1Idx = document.getElementById("stepIndicator1");
-            const step2Idx = document.getElementById("stepIndicator2");
-            const step3Idx = document.getElementById("stepIndicator3");
-            const line1 = document.getElementById("progressLine1");
-            const line2 = document.getElementById("progressLine2");
-
-            const panelGuest = document.getElementById("panelGuestInfo");
-            const panelPay = document.getElementById("panelPayment");
-
-            if (stepNum === 2) {
-                // ตรวจสอบความถูกต้องของข้อมูลฟอร์มด่านที่ 1 เบื้องต้นก่อนไปชำระเงิน
-                const name = document.getElementById("guestFullName").value.trim();
-                const phone = document.getElementById("guestPhone").value.trim();
-                const email = document.getElementById("guestEmail").value.trim();
-
-                if (!name || !phone || !email) {
-                    alert("กรุณากรอกข้อมูลผู้เข้าพักที่มีเครื่องหมาย * ให้ครบถ้วนก่อนไปขั้นตอนถัดไปครับ");
+                if (!selectedDate || selectedDate < today) {
+                    alert("กรุณาเลือกวัน Check-in ตั้งแต่วันนี้เป็นต้นไป");
+                    this.value = toInputDate(checkInDate);
                     return;
                 }
 
-                panelGuest.classList.add("d-none");
-                panelPay.classList.remove("d-none");
+                checkInDate = selectedDate;
 
-                step1Idx.classList.add("active");
-                step2Idx.classList.add("active");
-                line1.classList.add("active");
-                window.scrollTo({ top: 120, behavior: "smooth" });
-            } else {
-                panelPay.classList.add("d-none");
-                panelGuest.classList.remove("d-none");
+                // วัน Check-out ต้องอยู่หลัง Check-in อย่างน้อย 1 วัน
+                const minimumCheckOut = addDays(checkInDate, 1);
+                checkOutInput.min = toInputDate(minimumCheckOut);
 
-                step2Idx.classList.remove("active");
-                line1.classList.remove("active");
-                window.scrollTo({ top: 120, behavior: "smooth" });
-            }
-        }
-
-        // ฟังก์ชันพรีวิวภาพสลิปการโอนเงินหลังผู้ใช้เลือกไฟล์ภาพ
-        function previewPaymentSlip(input) {
-            const placeholder = document.getElementById("slipPreviewPlaceholder");
-            const img = document.getElementById("slipPreviewImg");
-            const deleteBtn = document.getElementById("btnRemoveSlip");
-
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    img.src = e.target.result;
-                    img.classList.remove("d-none");
-                    placeholder.classList.add("d-none");
-                    deleteBtn.classList.remove("d-none");
-                };
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        // ฟังก์ชันลบรูปภาพสลิปที่เลือก
-        function removeSelectedSlip() {
-            const input = document.getElementById("slipUploadInput");
-            const placeholder = document.getElementById("slipPreviewPlaceholder");
-            const img = document.getElementById("slipPreviewImg");
-            const deleteBtn = document.getElementById("btnRemoveSlip");
-
-            input.value = "";
-            img.src = "";
-            img.classList.add("d-none");
-            placeholder.classList.remove("d-none");
-            deleteBtn.classList.add("d-none");
-        }
-
-        // ฟังก์ชันส่งฟอร์มและโชว์หน้าจอประมวลผลจำลองก่อนอนุมัติสิทธิ์ (Step 2 -> Success)
-        function submitBookingForm() {
-            const slipInput = document.getElementById("slipUploadInput");
-            if (!slipInput.files || slipInput.files.length === 0) {
-                alert("กรุณาเลือกหรืออัปโหลดภาพสลิปการโอนเงินเพื่อยืนยันรายการชำระเงินก่อนยืนยันการจองครับ");
-                return;
-            }
-
-            const overlay = document.getElementById("coLoadingOverlay");
-            overlay.classList.remove("d-none");
-
-            // จำลองหน่วงเวลา 2.2 วินาทีเพื่อความพรีเมียมของระบบก่อนส่งผลลัพธ์สำเร็จ
-            setTimeout(() => {
-                overlay.classList.add("d-none");
-
-                // สลับขั้นตอนสุดท้ายใน Progress Bar
-                document.getElementById("stepIndicator3").classList.add("active");
-                document.getElementById("progressLine2").classList.add("active");
-
-                // ดึงข้อมูลสรุปไปแสดงผลบน Success Modal
-                const finalRoomName = document.getElementById("lblSummaryRoomType").textContent;
-                const checkInText = document.getElementById("summaryCheckIn").textContent;
-                const checkOutText = document.getElementById("summaryCheckOut").textContent;
-
-                document.getElementById("lblSuccessRoom").textContent = finalRoomName;
-                document.getElementById("lblSuccessDates").textContent = `${checkInText} - ${checkOutText}`;
-
-                // สั่งเปิดป๊อปอัปผลลัพธ์ความสำเร็จจำลองขึ้นมาแสดง
-                const successModalEl = document.getElementById("successBookingModal");
-                if (successModalEl && typeof bootstrap !== "undefined") {
-                    bootstrap.Modal.getOrCreateInstance(successModalEl).show();
+                if (!checkOutDate || checkOutDate <= checkInDate) {
+                    checkOutDate = minimumCheckOut;
+                    checkOutInput.value = toInputDate(checkOutDate);
                 }
-            }, 2200);
-        }
+
+                nightsCount = Math.round(
+                    (checkOutDate - checkInDate) / 86400000
+                );
+
+                updateDateSummary();
+                calculatePrices();
+            });
+
+            // เปลี่ยนวัน Check-out
+            checkOutInput.addEventListener("change", function () {
+                const selectedDate = parseLocalDate(this.value);
+                const minimumCheckOut = addDays(checkInDate, 1);
+
+                if (!selectedDate || selectedDate < minimumCheckOut) {
+                    alert("วัน Check-out ต้องอยู่หลังวัน Check-in อย่างน้อย 1 วัน");
+                    this.value = toInputDate(checkOutDate);
+                    return;
+                }
+
+                checkOutDate = selectedDate;
+
+                nightsCount = Math.round(
+                    (checkOutDate - checkInDate) / 86400000
+                );
+
+                updateDateSummary();
+                calculatePrices();
+            });
+
+            // เปลี่ยนห้องหรือจำนวนผู้เข้าพัก
+            roomSelector.addEventListener("change", calculatePrices);
+            guestCapacityEl.addEventListener("change", calculatePrices);
+
+            // คำนวณราคาเริ่มต้น
+            calculatePrices();
+
+            // ส่งข้อมูลไปยัง Step 2 หรือบันทึกจริง
+            window.navigateToStep = function (stepNum) {
+                const step1Idx = document.getElementById("stepIndicator1");
+                const step2Idx = document.getElementById("stepIndicator2");
+                const line1 = document.getElementById("progressLine1");
+
+                const panelGuest = document.getElementById("panelGuestInfo");
+                const panelPay = document.getElementById("panelPayment");
+
+                if (stepNum === 2) {
+                    const name = document.getElementById("guestFullName").value.trim();
+                    const phone = document.getElementById("guestPhone").value.trim();
+                    const email = document.getElementById("guestEmail").value.trim();
+
+                    if (!name || !phone || !email) {
+                        alert("กรุณากรอกข้อมูลผู้เข้าพักที่มีเครื่องหมาย * ให้ครบถ้วนก่อนไปขั้นตอนถัดไปครับ");
+                        return;
+                    }
+
+                    panelGuest.classList.add("d-none");
+                    panelPay.classList.remove("d-none");
+
+                    step1Idx.classList.add("active");
+                    step2Idx.classList.add("active");
+                    line1.classList.add("active");
+                    window.scrollTo({ top: 120, behavior: "smooth" });
+                } else {
+                    panelPay.classList.add("d-none");
+                    panelGuest.classList.remove("d-none");
+
+                    step2Idx.classList.remove("active");
+                    line1.classList.remove("active");
+                    window.scrollTo({ top: 120, behavior: "smooth" });
+                }
+            };
+
+            window.previewPaymentSlip = function (input) {
+                const placeholder = document.getElementById("slipPreviewPlaceholder");
+                const img = document.getElementById("slipPreviewImg");
+                const deleteBtn = document.getElementById("btnRemoveSlip");
+
+                if (input.files && input.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        img.src = e.target.result;
+                        img.classList.remove("d-none");
+                        placeholder.classList.add("d-none");
+                        deleteBtn.classList.remove("d-none");
+                    };
+                    reader.readAsDataURL(input.files[0]);
+                }
+            };
+
+            window.removeSelectedSlip = function () {
+                const input = document.getElementById("slipUploadInput");
+                const placeholder = document.getElementById("slipPreviewPlaceholder");
+                const img = document.getElementById("slipPreviewImg");
+                const deleteBtn = document.getElementById("btnRemoveSlip");
+
+                input.value = "";
+                img.src = "";
+                img.classList.add("d-none");
+                placeholder.classList.remove("d-none");
+                deleteBtn.classList.add("d-none");
+            };
+
+            // บันทึกการจองจริงเข้าตารางผ่าน Ajax
+            window.submitBookingForm = function () {
+                const slipInput = document.getElementById("slipUploadInput");
+                if (!slipInput.files || slipInput.files.length === 0) {
+                    alert("กรุณาอัปโหลดหลักฐานการโอนเงิน (สลิป) เพื่อส่งยืนยันให้ระบบบันทึกรายการจองลงตารางใน Database");
+                    return;
+                }
+
+                const overlay = document.getElementById("coLoadingOverlay");
+                overlay.classList.remove("d-none");
+
+                // จัดเตรียม FormData ส่งเข้า Controller แบบ POST จริง
+                const formData = new FormData();
+                formData.append("__RequestVerificationToken", document.querySelector('input[name="__RequestVerificationToken"]').value);
+                formData.append("roomTypeId", roomSelector.value);
+                formData.append("checkIn", toInputDate(checkInDate));
+                formData.append("checkOut", toInputDate(checkOutDate));
+                formData.append("guests", guestCapacityEl.value);
+                formData.append("fullName", document.getElementById("guestFullName").value);
+                formData.append("email", document.getElementById("guestEmail").value);
+                formData.append("phone", document.getElementById("guestPhone").value);
+                formData.append("specialRequest", document.getElementById("specialRequest").value);
+                formData.append("promoId", activePromoId || "");
+                formData.append("netTotal", activeNetTotal);
+                formData.append("slipFile", slipInput.files[0]);
+
+                // ส่งคำร้องขอ Ajax POST
+                fetch("/Customer/SubmitBooking", {
+                    method: "POST",
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    overlay.classList.add("d-none");
+                    if (data.success) {
+                        document.getElementById("stepIndicator3").classList.add("active");
+                        document.getElementById("progressLine2").classList.add("active");
+
+                        document.getElementById("lblSuccessCode").textContent = data.bookingCode;
+                        document.getElementById("lblSuccessRoom").textContent = document.getElementById("lblSummaryRoomType").textContent;
+                        document.getElementById("lblSuccessDates").textContent = `${document.getElementById("summaryCheckIn").textContent} - ${document.getElementById("summaryCheckOut").textContent}`;
+                        document.getElementById("lblSuccessAmount").textContent = "฿" + data.netTotal;
+
+                        const successModalEl = document.getElementById("successBookingModal");
+                        if (successModalEl && typeof bootstrap !== "undefined") {
+                            bootstrap.Modal.getOrCreateInstance(successModalEl).show();
+                        }
+                    } else {
+                        alert("การสำรองล้มเหลว: " + data.message);
+                    }
+                })
+                .catch(error => {
+                    overlay.classList.add("d-none");
+                    alert("เกิดข้อผิดพลาดทางเทคนิคในการเชื่อมโยงฐานข้อมูล: " + error);
+                });
+            };
+        });
     </script>
 }

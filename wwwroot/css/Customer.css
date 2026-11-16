@@ -5189,6 +5189,241 @@ html {
     justify-content: center;
 }
 
+/* =========================================
+   CHECKOUT - BOOKING SUMMARY CARD
+   ========================================= */
+
+.customer-co-summary-panel {
+    display: block !important;
+    width: 100%;
+    position: sticky;
+    top: 100px;
+
+    background: #ffffff !important;
+    border: 1px solid #dbe5f2 !important;
+    border-radius: 18px !important;
+    overflow: hidden;
+
+    box-shadow: 0 8px 28px rgba(15, 23, 42, 0.09) !important;
+    padding: 0 !important;
+    color: #172033;
+}
+
+/* Header */
+.customer-co-summary-panel .room-details-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+
+    padding: 18px 20px 14px;
+    background: #ffffff;
+}
+
+.customer-co-summary-panel .room-details-panel-tag {
+    display: block;
+    color: #64748b;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.7px;
+    margin-bottom: 4px;
+}
+
+.customer-co-summary-panel .room-details-panel-room {
+    color: #111827;
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+/* Hotel Icon */
+.customer-co-icon-box {
+    flex-shrink: 0;
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    background: #e0f7fa;
+    color: #0891b2;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+/* Room Image */
+.customer-co-summary-img-box {
+    position: relative;
+    width: 100%;
+    height: 165px;
+    overflow: hidden;
+    background: #e2e8f0;
+}
+
+.customer-co-summary-img-box img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Room Code Badge */
+.customer-co-summary-badge {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+
+    background: rgba(7, 13, 30, 0.88);
+    color: #ffffff;
+
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+}
+
+/* Summary Content */
+.customer-co-summary-body {
+    padding: 16px 18px 20px;
+    background: #ffffff;
+}
+
+/* Check-in / Check-out */
+.customer-co-summary-dates {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 11px 12px;
+}
+
+.customer-co-summary-dates small {
+    display: block;
+    font-size: 0.7rem;
+    color: #64748b;
+    margin-bottom: 4px;
+}
+
+.customer-co-summary-dates strong {
+    display: block;
+    font-size: 0.82rem;
+    color: #111827;
+}
+
+/* Nights / Guests */
+.customer-co-mini-chip {
+    min-height: 36px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 7px 8px;
+
+    font-size: 0.76rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+/* Room Selector */
+.customer-co-summary-panel #simRoomSelect {
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+}
+
+.customer-co-summary-panel #simRoomSelect:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+/* Price Breakdown */
+.customer-co-summary-panel .room-details-price-breakdown {
+    border-top: 1px solid #e2e8f0;
+    padding-top: 12px;
+}
+
+.customer-co-summary-panel .room-details-breakdown-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 9px;
+    font-size: 0.78rem;
+    color: #475569;
+}
+
+.customer-co-summary-panel .room-details-breakdown-row strong {
+    color: #172033;
+    white-space: nowrap;
+    font-weight: 700;
+}
+
+.customer-co-summary-panel .room-details-breakdown-row.text-success,
+.customer-co-summary-panel .room-details-breakdown-row.text-success strong {
+    color: #15803d !important;
+}
+
+.customer-co-summary-panel .room-details-net-total {
+    color: #172033;
+    font-weight: 700;
+}
+
+/* Responsive */
+@media (max-width: 991.98px) {
+    .customer-co-summary-panel {
+        position: static;
+        top: auto;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .customer-co-summary-panel .room-details-panel-header {
+        padding: 15px;
+    }
+
+    .customer-co-summary-body {
+        padding: 14px;
+    }
+
+    .customer-co-summary-img-box {
+        height: 190px;
+    }
+}
+
+/* Checkout - Editable Check-in / Check-out */
+
+.customer-co-date-label {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 6px;
+}
+
+.customer-co-date-input {
+    width: 100%;
+    min-width: 0;
+    height: 38px;
+    padding: 6px 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #172033;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+}
+
+.customer-co-date-input:focus {
+    border-color: #2563eb;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.customer-co-summary-dates strong {
+    font-size: 0.78rem;
+    color: #172033;
+}
+
 /* 6. MODAL & LOADING */
 .customer-co-success-modal-content {
     border-radius: 26px;
