@@ -10,6 +10,10 @@
     var promoCount = Model.Promotions.Count;
     var roomCount = Model.Rooms.Count;
 
+    // ความจุสูงสุดจริงจากประเภทห้องใน DB ใช้สร้างตัวเลือกจำนวนผู้เข้าพัก
+    var maxGuests = Model.Rooms.Any() ? Model.Rooms.Max(r => (int)r.MaxGuests) : 2;
+    var defaultGuests = Math.Min(2, maxGuests);
+
     var thMonths = new[] { "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค." };
     string ThDate(DateOnly d) => $"{d.Day:00} {thMonths[d.Month - 1]} {d.Year}";
 
@@ -99,7 +103,7 @@
                             <i class="fa-solid fa-shield-check text-info"></i>
                             <div>
                                 <strong>Member Privilege</strong>
-                                <span>รับสิทธิ์ใช้โปรโมชั่นครบทั้ง @promoCount แคมเปญ</span>
+                                <span>รับสิทธิ์ใช้โปรโมชั่นที่เปิดอยู่ @promoCount แคมเปญ</span>
                             </div>
                         </div>
                         <div class="customer-home-highlight-divider"></div>
@@ -187,11 +191,6 @@
                     </span>
                 </div>
 
-                @* 
-                    [BACKEND INTEGRATION NOTE]:
-                    เมื่อระบบค้นหาห้องว่างใน CustomerController -> RoomAvailability พร้อมรับ Query Parameter แล้ว
-                    สามารถเปลี่ยนการส่งค่าจาก Form ด้านล่างให้ส่ง checkIn, checkOut, guests, rooms ไปยัง Action RoomAvailability ได้ทันที
-                *@
                 <form asp-controller="Customer" asp-action="RoomAvailability" method="get" class="customer-home-search-form">
                     <div class="row g-3 align-items-end">
                         <!-- Check-in Date -->
@@ -210,17 +209,16 @@
                             <input type="date" id="chCheckOutDate" name="checkOut" class="form-control customer-home-input" required />
                         </div>
 
-                        <!-- Guests Count -->
+                        <!-- Guests Count (ตามความจุสูงสุดของประเภทห้องใน DB) -->
                         <div class="col-12 col-sm-6 col-lg-2">
                             <label for="chGuestCount" class="customer-home-label">
                                 <i class="fa-solid fa-user-group text-primary me-1"></i> จำนวนผู้เข้าพัก
                             </label>
                             <select id="chGuestCount" name="guests" class="form-select customer-home-input">
-                                <option value="1">1 ท่าน</option>
-                                <option value="2" selected>2 ท่าน (ยอดนิยม)</option>
-                                <option value="3">3 ท่าน (เตียงเสริม)</option>
-                                <option value="4">4 ท่าน (Family)</option>
-                                <option value="5">5–6 ท่าน (Suite)</option>
+                                @for (var g = 1; g <= maxGuests; g++)
+                                {
+                                    <option value="@g" selected="@(g == defaultGuests)">@g ท่าน</option>
+                                }
                             </select>
                         </div>
 
@@ -232,7 +230,7 @@
                             <select id="chRoomCount" name="rooms" class="form-select customer-home-input">
                                 <option value="1" selected>1 ห้อง</option>
                                 <option value="2">2 ห้อง</option>
-                                <option value="3">3 ห้อง (มา 3 จ่าย 2)</option>
+                                <option value="3">3 ห้อง</option>
                                 <option value="4">4 ห้องขึ้นไป</option>
                             </select>
                         </div>
@@ -249,8 +247,8 @@
                     <div class="customer-home-search-quickbar">
                         <span class="customer-home-quickbar-label"><i class="fa-solid fa-wand-magic-sparkles text-primary me-1"></i> ทางลัดยอดนิยม:</span>
                         <a asp-controller="Customer" asp-action="RoomAvailability" class="customer-home-quick-tag">🛏️ เช็คห้องว่างวันนี้</a>
-                        <a asp-controller="Customer" asp-action="Promotions" class="customer-home-quick-tag">🔥 โปรโมชั่น มา 3 จ่าย 2</a>
-                        <a asp-controller="Customer" asp-action="Rooms" class="customer-home-quick-tag">👨‍👩‍👧‍👦 ห้องพักครอบครัว Family</a>
+                        <a asp-controller="Customer" asp-action="Promotions" class="customer-home-quick-tag">🔥 โปรโมชั่นทั้งหมด (@promoCount)</a>
+                        <a asp-controller="Customer" asp-action="Rooms" class="customer-home-quick-tag">🏨 ดูห้องพักทั้งหมด (@roomCount ประเภท)</a>
                         <a asp-controller="Customer" asp-action="MyBookings" class="customer-home-quick-tag">📋 ดูการจองของฉัน</a>
                     </div>
                 </form>
@@ -259,7 +257,7 @@
     </section>
 
     <!-- =========================================================
-         SECTION 3: MY BOOKING OVERVIEW (สำคัญที่สุดสำหรับหน้าสมาชิก)
+         SECTION 3: MY BOOKING OVERVIEW
          ========================================================= -->
     <section class="customer-home-section" id="myBookingOverview">
         <div class="container">
@@ -417,7 +415,7 @@
     </section>
 
     <!-- =========================================================
-         SECTION 4: FEATURED ROOMS (4 ประเภทห้องพัก)
+         SECTION 4: FEATURED ROOMS
          ========================================================= -->
     <section class="customer-home-section customer-home-bg-alt" id="featuredRooms">
         <div class="container">
@@ -437,13 +435,6 @@
                 </a>
             </div>
 
-            @* 
-                [BACKEND INTEGRATION NOTE - FEATURED ROOMS]:
-                เมื่อส่งรายการห้องพักจริงมาจากฐานข้อมูลผ่าน ViewModel หรือ ViewBag แล้ว
-                สามารถใช้คำสั่ง C# foreach วนลูปเพื่อแสดงรายละเอียดและราคาเริ่มต้นตามประเภทห้องต่าง ๆ ได้:
-                
-                foreach (var r in Model.RoomTypes) { ... }
-            *@
             <div class="row g-4">
                 @if (!Model.Rooms.Any())
                 {
@@ -503,7 +494,7 @@
     </section>
 
     <!-- =========================================================
-         SECTION 5: SPECIAL PROMOTIONS (5 โปรโมชั่นหลัก)
+         SECTION 5: SPECIAL PROMOTIONS
          ========================================================= -->
     <section class="customer-home-promo-section" id="specialPromotions">
         <div class="container">
@@ -514,7 +505,7 @@
                     </span>
                     <h2 class="customer-home-section-title text-white">Special Promotions · @promoCount โปรโมชั่นพิเศษสำหรับสมาชิก</h2>
                     <p class="customer-home-section-subtitle text-light opacity-75">
-                        คัดสรรดีลสุดคุ้มครบทั้ง 5 รูปแบบ เลือกใช้สิทธิ์ในการจองครั้งถัดไปของคุณได้ทันที
+                        เลือกใช้สิทธิ์โปรโมชั่นในการจองครั้งถัดไปของคุณได้ทันที
                     </p>
                 </div>
 
@@ -577,7 +568,7 @@
     </section>
 
     <!-- =========================================================
-         SECTION 6: HOTEL FACILITIES (5 สิ่งอำนวยความสะดวกหลัก)
+         SECTION 6: HOTEL FACILITIES
          ========================================================= -->
     <section class="customer-home-section" id="hotelFacilities">
         <div class="container">
@@ -675,7 +666,7 @@
     </section>
 
     <!-- =========================================================
-         SECTION 7: WHY CHOOSE STAYMATE (5 จุดเด่นหลัก)
+         SECTION 7: WHY CHOOSE STAYMATE
          ========================================================= -->
     <section class="customer-home-section customer-home-why-section" id="whyChooseStayMate">
         <div class="container">
@@ -709,7 +700,7 @@
                         <div class="customer-home-why-icon"><i class="fa-solid fa-tags"></i></div>
                         <h4 class="customer-home-why-title">Exclusive Promotions</h4>
                         <p class="customer-home-why-desc">
-                            สิทธิพิเศษเฉพาะสมาชิกครบทั้ง 5 แคมเปญหลัก ไม่ว่าจะมาเดี่ยว มาเป็นแก๊ง ครอบครัว หรือพักระยะยาว ก็เลือกรับส่วนลดที่ตรงใจได้เสมอ
+                            สิทธิพิเศษเฉพาะสมาชิก ปัจจุบันมี @promoCount โปรโมชั่นที่เปิดใช้งาน เลือกรับส่วนลดที่ตรงกับการเข้าพักของคุณได้
                         </p>
                     </div>
                 </div>
@@ -769,7 +760,14 @@
                     </span>
                     <h2 class="customer-home-section-title">Customer Reviews · เสียงตอบรับจากผู้เข้าพัก</h2>
                     <p class="customer-home-section-subtitle">
-                        ตัวอย่างความประทับใจจากลูกค้าที่เข้าพักในห้องพักแต่ละประเภทของ StayMate Hotel
+                        @if (Model.AverageRating.HasValue)
+                        {
+                            <text>คะแนนเฉลี่ย @Model.AverageRating.Value.ToString("0.0") / 5 จาก @Model.ReviewCount รีวิว</text>
+                        }
+                        else
+                        {
+                            <text>ยังไม่มีรีวิว</text>
+                        }
                     </p>
                 </div>
                 <div class="d-flex align-items-center flex-wrap gap-2">
@@ -809,7 +807,10 @@
                                         }
                                     </div>
                                 </div>
-                                <p class="customer-home-review-comment">"@rv.Comment"</p>
+                                @if (!string.IsNullOrWhiteSpace(rv.Comment))
+                                {
+                                    <p class="customer-home-review-comment">@rv.Comment</p>
+                                }
                                 <div class="customer-home-review-footer">
                                     <span><i class="fa-solid fa-circle-check text-success me-1"></i> รีวิวจากผู้เข้าพักจริง</span>
                                     <small class="text-muted">คะแนน @rv.Rating.ToString("0.0") / 5</small>
@@ -824,7 +825,7 @@
     </section>
 
     <!-- =========================================================
-         SECTION 9: CALL TO ACTION (CTA)
+         SECTION 9: CALL TO ACTION
          ========================================================= -->
     <section class="customer-home-cta-section" id="callToAction">
         <div class="container">
@@ -916,7 +917,7 @@
                 );
             }
 
-            // 3. Swiper: Promotion Carousel (5 โปรโมชั่น)
+            // 3. Swiper: Promotion Carousel
             const promoSwiperEl = document.querySelector(".customer-home-promo-swiper");
             if (typeof Swiper !== "undefined" && promoSwiperEl) {
                 new Swiper(".customer-home-promo-swiper", {

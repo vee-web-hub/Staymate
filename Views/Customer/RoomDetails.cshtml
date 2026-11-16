@@ -1,26 +1,40 @@
 @model List<StayMate_Kavinvee_0576.Models.RoomType>
+@using StayMate_Kavinvee_0576.Models.ViewModels
 @{
     Layout = "~/Views/Shared/_CustomerLayout.cshtml";
-    ViewData["Title"] = "รายละเอียดประเภทห้องพักอัจฉริยะ";
+    ViewData["Title"] = "รายละเอียดประเภทห้องพัก";
 
-    // ดึงค่า id จาก Route เพื่อทราบว่าต้องการเริ่มโฟกัสที่ห้องไหน
-    var routeIdStr = ViewContext.RouteData.Values["id"]?.ToString()
-                     ?? Context.Request.Query["id"].ToString();
-    uint focusRoomId = 1;
-    if (!string.IsNullOrWhiteSpace(routeIdStr) && uint.TryParse(routeIdStr, out var tempId))
+    // ห้องที่ต้องการให้เลื่อนไปหา (จาก controller หรือ route)
+    int focusRoomId = 0;
+    if (ViewBag.SelectedRoomTypeId is byte selId)
+    {
+        focusRoomId = selId;
+    }
+    else if (int.TryParse(ViewContext.RouteData.Values["id"]?.ToString() ?? Context.Request.Query["id"].ToString(), out var tempId))
     {
         focusRoomId = tempId;
     }
+    var firstRoomId = Model.FirstOrDefault()?.RoomTypeId ?? 0;
+    var scrollRoomId = (focusRoomId > 0 && focusRoomId != firstRoomId && Model.Any(r => r.RoomTypeId == focusRoomId))
+        ? focusRoomId
+        : 0;
 
-    // รับค่า Query String เพื่อส่งต่อไปยังหน้าจองห้องพัก
-    var qCheckIn = Context.Request.Query["checkIn"].ToString();
-    var qCheckOut = Context.Request.Query["checkOut"].ToString();
-    var qGuests = Context.Request.Query["guests"].ToString();
-    var qRooms = Context.Request.Query["rooms"].ToString();
+    // ส่งต่อค่าค้นหาไปหน้าจอง (ส่งเฉพาะที่มีค่า)
+    string? Q(string key) => string.IsNullOrWhiteSpace(Context.Request.Query[key].ToString()) ? null : Context.Request.Query[key].ToString();
+    var qCheckIn = Q("checkIn");
+    var qCheckOut = Q("checkOut");
+    var qGuests = Q("guests");
+    var qRooms = Q("rooms");
 
-    // ฟังก์ชันช่วยจับคู่รูปภาพตามประเภทห้อง
-    string GetRoomImage(string typeCode) {
-        return typeCode.ToLower() switch
+    // รีวิวจริงจาก DB (ส่งมาจาก controller ผ่าน ViewBag; ถ้าไม่มีจะซ่อนส่วนรีวิว)
+    var reviews = ViewBag.Reviews as List<CustomerReviewItem> ?? new List<CustomerReviewItem>();
+    int reviewCount = ViewBag.ReviewCount is int rc ? rc : reviews.Count;
+    double? averageRating = ViewBag.AverageRating as double?;
+
+    // รูปภาพตามประเภทห้อง
+    string GetRoomImage(string? typeCode)
+    {
+        return (typeCode ?? "").ToLower() switch
         {
             "std" or "standard" => "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=1400&q=85",
             "dlx" or "deluxe" => "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1400&q=85",
@@ -29,6 +43,9 @@
             _ => "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1400&q=85"
         };
     }
+
+    const string galleryImg2 = "https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=900&q=80";
+    const string galleryImg3 = "https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?auto=format&fit=crop&w=900&q=80";
 }
 
 @section Styles {
@@ -39,7 +56,7 @@
     <link rel="stylesheet" href="~/css/Customer.css" asp-append-version="true" />
 }
 
-<div class="room-details-wrapper" id="roomDetailsPageRoot" data-focus-id="@focusRoomId">
+<div class="room-details-wrapper" id="roomDetailsPageRoot" data-scroll-id="@scrollRoomId">
     <!-- PAGE HEADER -->
     <section class="customer-ra-header mb-5">
         <div class="customer-ra-header-bg" style="background-image: url('https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=2000&q=80');"></div>
@@ -52,193 +69,192 @@
                     <li class="breadcrumb-item active" aria-current="page">รายละเอียดประเภทห้องพัก</li>
                 </ol>
             </nav>
-            <span class="customer-ra-eyebrow"><span class="customer-ra-live-dot"></span> LUXURY ROOM SHOWCASE</span>
-            <h1 class="customer-ra-title">ประเภทห้องพักอัจฉริยะ · StayMate Room Showcase</h1>
-            <p class="customer-ra-subtitle mb-0">สัมผัสความหรูหราทันสมัยผ่านห้องพักที่เราออกแบบด้วยแนวคิด Futuristic Boutique Luxury พร้อมระบบควบคุมอัจฉริยะ</p>
+            <span class="customer-ra-eyebrow"><span class="customer-ra-live-dot"></span> ROOM TYPES</span>
+            <h1 class="customer-ra-title">ประเภทห้องพัก</h1>
+            <p class="customer-ra-subtitle mb-0">ดูรายละเอียด ความจุ และราคาของแต่ละประเภทห้อง</p>
         </div>
     </section>
 
-    <!-- Quick Room Jumper Swapper -->
-    <div class="container mb-5">
-        <div class="room-details-topbar justify-content-center">
-            <div class="room-details-switcher">
-                <span class="room-details-switcher-label"><i class="fa-solid fa-repeat me-1"></i> สลับเลื่อนดูห้อง:</span>
-                @foreach (var r in Model)
-                {
-                    <button type="button" class="room-details-switch-pill" onclick="scrollToRoomSection('room-block-@r.RoomTypeId')">@r.TypeName</button>
-                }
+    @if (Model.Count == 0)
+    {
+        <div class="container mb-5">
+            <div class="text-center py-5 text-muted">
+                <i class="fa-solid fa-bed fs-1 d-block mb-3 opacity-50"></i>
+                ยังไม่มีข้อมูลประเภทห้องพัก
             </div>
         </div>
-    </div>
-
-    <!-- ROOM SHOWCASE CONTENT -->
-    <div class="container">
-        @foreach (var room in Model)
-        {
-            var mainImgUrl = GetRoomImage(room.TypeCode);
-            <section id="room-block-@room.RoomTypeId" class="room-details-block p-4 mb-5" data-aos="fade-up">
-                <div class="row g-4">
-                    <!-- Photo Gallery (Left) -->
-                    <div class="col-lg-7">
-                        <div class="room-details-gallery-main mb-3" style="height: 380px;">
-                            <img id="img-main-@room.RoomTypeId" src="@mainImgUrl" alt="@room.TypeName" />
-                            <span class="room-details-caption-pill"><i class="fa-solid fa-camera me-1"></i> มุมห้องพักหลัก (Main Room Area)</span>
-                        </div>
-                        <div class="row g-2">
-                            <div class="col-4">
-                                <div class="room-details-gallery-thumb" onclick="swapMainImage(@room.RoomTypeId, '@mainImgUrl', 'มุมห้องพักหลัก')">
-                                    <img src="@mainImgUrl" alt="@room.TypeName 1" />
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="room-details-gallery-thumb" onclick="swapMainImage(@room.RoomTypeId, 'https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=900&q=80', 'มุมทำงานและโซนพักผ่อน')">
-                                    <img src="https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=400&q=80" alt="@room.TypeName 2" />
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="room-details-gallery-thumb" onclick="swapMainImage(@room.RoomTypeId, 'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?auto=format&fit=crop&w=900&q=80', 'ห้องน้ำระบบพรีเมียม')">
-                                    <img src="https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?auto=format&fit=crop&w=400&q=80" alt="@room.TypeName 3" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Room Specifications (Right) -->
-                    <div class="col-lg-5 d-flex flex-column justify-content-between">
-                        <div>
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <div>
-                                    <span class="room-details-series-badge">CODE: @room.TypeCode · SMART SYSTEM</span>
-                                    <h2 class="fw-bold text-dark mt-1">@room.TypeName</h2>
-                                </div>
-                                <div class="text-end">
-                                    <span class="fs-3 fw-bold text-primary">฿@room.BasePrice.ToString("N0")</span><small class="text-muted">/คืน</small>
-                                </div>
-                            </div>
-                            <p class="text-secondary small mb-3">@room.Description</p>
-
-                            <!-- Specifications from Database -->
-                            <div class="row g-2 mb-3">
-                                <div class="col-6">
-                                    <div class="room-details-overview-card p-2">
-                                        <i class="fa-solid fa-user-group text-primary me-2"></i>
-                                        <small>พักสูงสุด @room.MaxGuests ท่าน</small>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="room-details-overview-card p-2">
-                                        <i class="fa-solid fa-bed text-primary me-2"></i>
-                                        <small>@room.BedType</small>
-                                    </div>
-                                </div>
-                                <div class="col-12">
-                                    <div class="room-details-overview-card p-2">
-                                        <i class="fa-solid fa-circle-info text-primary me-2"></i>
-                                        <small>เตียงเสริม: @(room.AllowExtraBed ? $"รองรับ (฿{room.ExtraBedPrice.ToString("N0")}/คืน)" : "ไม่รองรับเตียงเสริม")</small>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Amenities & Highlights -->
-                            <h6 class="fw-bold text-dark mb-2"><i class="fa-solid fa-list-check text-primary me-2"></i>ระบบอัจฉริยะในห้องพัก</h6>
-                            <ul class="sm-amenity-list mb-4" style="font-size:0.85rem;">
-                                <li><i class="fa-solid fa-check text-success"></i> ระบบเชื่อมต่อ Wi-Fi ความเร็วสูง & Smart TV 55" - 65"</li>
-                                <li><i class="fa-solid fa-check text-success"></i> ระบบควบคุมไฟ Mood Lighting ปรับระดับความสว่างผ่านแผงควบคุม</li>
-                                <li><i class="fa-solid fa-check text-success"></i> มินิบาร์ระดับพรีเมียมและเครื่องปรับอากาศควบคุมอุณหภูมิคงที่</li>
-                            </ul>
-                        </div>
-
-                        <!-- Booking Button & Promotion Badge -->
-                        <div class="pt-3 border-top d-flex justify-content-between align-items-center">
-                            <span class="text-success small fw-semibold"><i class="fa-solid fa-circle-check"></i> ราคารวมบริการอาหารเช้า</span>
-                            <a asp-controller="Customer" asp-action="Checkout" 
-                               asp-route-roomTypeId="@room.RoomTypeId" 
-                               asp-route-checkIn="@qCheckIn" 
-                               asp-route-checkOut="@qCheckOut" 
-                               asp-route-guests="@qGuests" 
-                               class="customer-ra-btn-book">
-                                <i class="fa-solid fa-calendar-check me-1"></i> จองห้องพักนี้
-                            </a>
-                        </div>
-                    </div>
+    }
+    else
+    {
+        <!-- Quick Room Switcher -->
+        <div class="container mb-5">
+            <div class="room-details-topbar justify-content-center">
+                <div class="room-details-switcher">
+                    <span class="room-details-switcher-label"><i class="fa-solid fa-repeat me-1"></i> เลื่อนไปยังห้อง:</span>
+                    @foreach (var r in Model)
+                    {
+                        <button type="button" class="room-details-switch-pill" onclick="scrollToRoomSection('room-block-@r.RoomTypeId')">@r.TypeName</button>
+                    }
                 </div>
-            </section>
-        }
-    </div>
+            </div>
+        </div>
 
-    <!-- =========================================================
-         DYNAMIC REVIEW SYSTEM PREVIEW (รีวิวผู้เข้าพัก)
-         ========================================================= -->
-    <section class="customer-home-section customer-home-bg-alt" id="roomReviewsSection" data-aos="fade-up">
+        <!-- ROOM CONTENT -->
         <div class="container">
-            <div class="customer-home-section-header">
-                <div class="d-flex justify-content-between align-items-end w-100 flex-wrap">
-                    <div>
-                        <span class="customer-home-eyebrow"><i class="fa-solid fa-comments me-1"></i> VERIFIED GUEST FEEDBACK</span>
-                        <h2 class="customer-home-section-title">Reviews &amp; Ratings · รีวิวจากผู้เข้าพักจริง</h2>
-                        <p class="customer-home-section-subtitle mb-0">ความเห็นบางส่วนจากลูกค้าผู้เข้าพักจริงในแต่ละประเภทห้องพักอัจฉริยะของโรงแรม</p>
-                    </div>
-                    <a asp-controller="Customer" asp-action="Reviews" class="customer-home-link-arrow text-primary fw-semibold">
-                        <span>ดูรีวิวและคอมเมนต์ทั้งหมด</span>
-                        <i class="fa-solid fa-arrow-right ms-1"></i>
-                    </a>
-                </div>
-            </div>
-            <div class="row g-4 mt-3">
-                <div class="col-12 col-lg-4">
-                    <div class="customer-home-review-card h-100 p-4 border rounded bg-white shadow-sm">
-                        <div class="customer-home-review-top d-flex justify-content-between mb-3">
-                            <div class="customer-home-reviewer d-flex align-items-center">
-                                <div class="customer-home-avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold me-3" style="width: 45px; height: 45px;">ก</div>
-                                <div>
-                                    <h5 class="customer-home-reviewer-name mb-0 fw-semibold fs-6">คุณกวินท์</h5>
-                                    <span class="customer-home-review-room text-muted" style="font-size: 0.8rem;"><i class="fa-solid fa-bed text-primary me-1"></i> Standard Room</span>
+            @foreach (var room in Model)
+            {
+                var mainImgUrl = GetRoomImage(room.TypeCode);
+                <section id="room-block-@room.RoomTypeId" class="room-details-block p-4 mb-5" data-aos="fade-up">
+                    <div class="row g-4">
+                        <!-- Gallery -->
+                        <div class="col-lg-7">
+                            <div class="room-details-gallery-main mb-3" style="height: 380px;">
+                                <img id="img-main-@room.RoomTypeId" src="@mainImgUrl" alt="@room.TypeName" />
+                                <span class="room-details-caption-pill"><i class="fa-solid fa-camera me-1"></i> ภาพที่ 1</span>
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-4">
+                                    <div class="room-details-gallery-thumb" onclick="swapMainImage(@room.RoomTypeId, '@mainImgUrl', 'ภาพที่ 1')">
+                                        <img src="@mainImgUrl" alt="@room.TypeName 1" />
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="room-details-gallery-thumb" onclick="swapMainImage(@room.RoomTypeId, '@galleryImg2', 'ภาพที่ 2')">
+                                        <img src="https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=400&q=80" alt="@room.TypeName 2" />
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="room-details-gallery-thumb" onclick="swapMainImage(@room.RoomTypeId, '@galleryImg3', 'ภาพที่ 3')">
+                                        <img src="https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?auto=format&fit=crop&w=400&q=80" alt="@room.TypeName 3" />
+                                    </div>
                                 </div>
                             </div>
-                            <div class="customer-home-stars text-warning fw-bold"><i class="fa-solid fa-star me-1"></i>5.0</div>
                         </div>
-                        <p class="customer-home-review-comment text-secondary mb-0 small">
-                            "ห้อง Standard สวยตรงปกและสะอาดมากครับ ระบบปรับไฟ Mood Lighting ข้างเตียงและในห้องน้ำใช้งานง่าย เตียงนุ่มหลับสบาย และอินเทอร์เน็ต Gigabit เร็วมากครับ"
-                        </p>
-                    </div>
-                </div>
-                <div class="col-12 col-lg-4">
-                    <div class="customer-home-review-card h-100 p-4 border rounded bg-white shadow-sm">
-                        <div class="customer-home-review-top d-flex justify-content-between mb-3">
-                            <div class="customer-home-reviewer d-flex align-items-center">
-                                <div class="customer-home-avatar bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center fw-bold me-3" style="width: 45px; height: 45px;">พ</div>
-                                <div>
-                                    <h5 class="customer-home-reviewer-name mb-0 fw-semibold fs-6">คุณพิมพ์ชนก</h5>
-                                    <span class="customer-home-review-room text-muted" style="font-size: 0.8rem;"><i class="fa-solid fa-bed text-primary me-1"></i> Deluxe Room</span>
+
+                        <!-- Specs -->
+                        <div class="col-lg-5 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <span class="room-details-series-badge">CODE: @room.TypeCode</span>
+                                        <h2 class="fw-bold text-dark mt-1">@room.TypeName</h2>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="fs-3 fw-bold text-primary">฿@room.BasePrice.ToString("N0")</span><small class="text-muted">/คืน</small>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="customer-home-stars text-warning fw-bold"><i class="fa-solid fa-star me-1"></i>5.0</div>
-                        </div>
-                        <p class="customer-home-review-comment text-secondary mb-0 small">
-                            "ประทับใจอ่างอาบน้ำริมกระจกมาก ๆ ค่ะ นอนแช่น้ำอุ่นพร้อมชมวิวกรุงเทพฯ ชั้นสูงยามค่ำคืนคืองานศิลปะสุด ๆ บริการรวดเร็วทันใจมากค่ะ"
-                        </p>
-                    </div>
-                </div>
-                <div class="col-12 col-lg-4">
-                    <div class="customer-home-review-card h-100 p-4 border rounded bg-white shadow-sm">
-                        <div class="customer-home-review-top d-flex justify-content-between mb-3">
-                            <div class="customer-home-reviewer d-flex align-items-center">
-                                <div class="customer-home-avatar bg-dark text-white rounded-circle d-flex align-items-center justify-content-center fw-bold me-3" style="width: 45px; height: 45px;">ธ</div>
-                                <div>
-                                    <h5 class="customer-home-reviewer-name mb-0 fw-semibold fs-6">คุณธนภัทร</h5>
-                                    <span class="customer-home-review-room text-muted" style="font-size: 0.8rem;"><i class="fa-solid fa-bed text-primary me-1"></i> Suite Room</span>
+
+                                @if (!string.IsNullOrWhiteSpace(room.Description))
+                                {
+                                    <p class="text-secondary small mb-3">@room.Description</p>
+                                }
+
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <div class="room-details-overview-card p-2">
+                                            <i class="fa-solid fa-user-group text-primary me-2"></i>
+                                            <small>
+                                                @(room.MinGuests == room.MaxGuests
+                                                    ? $"รองรับ {room.MaxGuests} ท่าน"
+                                                    : $"รองรับ {room.MinGuests}–{room.MaxGuests} ท่าน")
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="room-details-overview-card p-2">
+                                            <i class="fa-solid fa-bed text-primary me-2"></i>
+                                            <small>@(string.IsNullOrWhiteSpace(room.BedType) ? "-" : room.BedType)</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="room-details-overview-card p-2">
+                                            <i class="fa-solid fa-circle-info text-primary me-2"></i>
+                                            <small>เตียงเสริม: @(room.AllowExtraBed ? $"รองรับ (฿{room.ExtraBedPrice.ToString("N0")}/คืน)" : "ไม่รองรับเตียงเสริม")</small>
+                                        </div>
+                                    </div>
                                 </div>
+
+                                <h6 class="fw-bold text-dark mb-2"><i class="fa-solid fa-list-check text-primary me-2"></i>ระบบอัจฉริยะในห้องพัก</h6>
+                                <ul class="sm-amenity-list mb-4" style="font-size:0.85rem;">
+                                    <li><i class="fa-solid fa-check text-success"></i> ระบบเชื่อมต่อ Wi-Fi ความเร็วสูง & Smart TV 55" - 65"</li>
+                                    <li><i class="fa-solid fa-check text-success"></i> ระบบควบคุมไฟ Mood Lighting ปรับระดับความสว่างผ่านแผงควบคุม</li>
+                                    <li><i class="fa-solid fa-check text-success"></i> มินิบาร์ระดับพรีเมียมและเครื่องปรับอากาศควบคุมอุณหภูมิคงที่</li>
+                                </ul>
                             </div>
-                            <div class="customer-home-stars text-warning fw-bold"><i class="fa-solid fa-star me-1"></i>4.9</div>
+
+                            <div class="pt-3 border-top d-flex justify-content-between align-items-center">
+                                <span class="text-success small fw-semibold"><i class="fa-solid fa-circle-check"></i> ราคารวมบริการอาหารเช้า</span>
+                                <a asp-controller="Customer" asp-action="Checkout"
+                                   asp-route-roomTypeId="@room.RoomTypeId"
+                                   asp-route-checkIn="@qCheckIn"
+                                   asp-route-checkOut="@qCheckOut"
+                                   asp-route-guests="@qGuests"
+                                   asp-route-rooms="@qRooms"
+                                   class="customer-ra-btn-book">
+                                    <i class="fa-solid fa-calendar-check me-1"></i> จองห้องพักนี้
+                                </a>
+                            </div>
                         </div>
-                        <p class="customer-home-review-comment text-secondary mb-0 small">
-                            "ห้องสวีท Penthouse กว้างขวางและอัจฉริยะมากครับ แยกโซนห้องนั่งเล่นและเตียงได้ลงตัว มีสิทธิ์เครื่องดื่ม Sky Pool และ Executive Lounge คุ้มค่าที่สุด"
-                        </p>
                     </div>
-                </div>
-            </div>
+                </section>
+            }
         </div>
-    </section>
+    }
+
+    <!-- REVIEWS (จาก Database) -->
+    @if (reviews.Count > 0)
+    {
+        <section class="customer-home-section customer-home-bg-alt" id="roomReviewsSection" data-aos="fade-up">
+            <div class="container">
+                <div class="customer-home-section-header">
+                    <div class="d-flex justify-content-between align-items-end w-100 flex-wrap">
+                        <div>
+                            <span class="customer-home-eyebrow"><i class="fa-solid fa-comments me-1"></i> GUEST REVIEWS</span>
+                            <h2 class="customer-home-section-title">รีวิวจากผู้เข้าพัก</h2>
+                            <p class="customer-home-section-subtitle mb-0">
+                                @if (averageRating.HasValue)
+                                {
+                                    <text>คะแนนเฉลี่ย @averageRating.Value.ToString("0.0") จาก @reviewCount รีวิว</text>
+                                }
+                                else
+                                {
+                                    <text>@reviewCount รีวิว</text>
+                                }
+                            </p>
+                        </div>
+                        <a asp-controller="Customer" asp-action="Reviews" class="customer-home-link-arrow text-primary fw-semibold">
+                            <span>ดูรีวิวทั้งหมด</span>
+                            <i class="fa-solid fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="row g-4 mt-3">
+                    @foreach (var rv in reviews)
+                    {
+                        var initial = string.IsNullOrWhiteSpace(rv.UserName) ? "?" : rv.UserName.Trim().Substring(0, 1);
+                        <div class="col-12 col-lg-4">
+                            <div class="customer-home-review-card h-100 p-4 border rounded bg-white shadow-sm">
+                                <div class="customer-home-review-top d-flex justify-content-between mb-3">
+                                    <div class="customer-home-reviewer d-flex align-items-center">
+                                        <div class="customer-home-avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold me-3" style="width: 45px; height: 45px;">@initial</div>
+                                        <div>
+                                            <h5 class="customer-home-reviewer-name mb-0 fw-semibold fs-6">@rv.UserName</h5>
+                                            <span class="customer-home-review-room text-muted" style="font-size: 0.8rem;"><i class="fa-solid fa-bed text-primary me-1"></i> @rv.RoomTypeName</span>
+                                        </div>
+                                    </div>
+                                    <div class="customer-home-stars text-warning fw-bold"><i class="fa-solid fa-star me-1"></i>@rv.Rating.ToString("0.0")</div>
+                                </div>
+                                @if (!string.IsNullOrWhiteSpace(rv.Comment))
+                                {
+                                    <p class="customer-home-review-comment text-secondary mb-0 small">@rv.Comment</p>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </section>
+    }
 </div>
 
 @section Scripts {
@@ -246,29 +262,27 @@
     <script>
         function swapMainImage(roomNum, src, caption) {
             const mainImg = document.getElementById(`img-main-${roomNum}`);
-            if (mainImg) {
-                const captionPill = mainImg.nextElementSibling;
-                mainImg.style.opacity = "0.35";
-                setTimeout(() => {
-                    mainImg.src = src;
-                    mainImg.style.opacity = "1";
-                    if (captionPill) {
-                        captionPill.innerHTML = `<i class="fa-solid fa-camera me-1"></i> ${caption}`;
-                    }
-                }, 130);
-            }
+            if (!mainImg) return;
+            const captionPill = mainImg.nextElementSibling;
+            mainImg.style.opacity = "0.35";
+            setTimeout(() => {
+                mainImg.src = src;
+                mainImg.style.opacity = "1";
+                if (captionPill) {
+                    captionPill.textContent = "";
+                    const icon = document.createElement("i");
+                    icon.className = "fa-solid fa-camera me-1";
+                    captionPill.append(icon, " " + caption);
+                }
+            }, 130);
         }
 
         function scrollToRoomSection(sectionId) {
             const target = document.getElementById(sectionId);
             if (target) {
                 const headerOffset = 90;
-                const elementPosition = target.getBoundingClientRect().top;
-                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-                window.scrollTo({
-                    top: offsetPosition,
-                    behavior: "smooth"
-                });
+                const offsetPosition = target.getBoundingClientRect().top + window.pageYOffset - headerOffset;
+                window.scrollTo({ top: offsetPosition, behavior: "smooth" });
             }
         }
 
@@ -276,12 +290,9 @@
             if (typeof AOS !== "undefined") {
                 AOS.init({ duration: 650, once: true, offset: 50 });
             }
-            const rootEl = document.getElementById("roomDetailsPageRoot");
-            const focusId = rootEl.dataset.focusId;
-            if (focusId && focusId !== "1") {
-                setTimeout(() => {
-                    scrollToRoomSection(`room-block-${focusId}`);
-                }, 400);
+            const scrollId = document.getElementById("roomDetailsPageRoot").dataset.scrollId;
+            if (scrollId && scrollId !== "0") {
+                setTimeout(() => scrollToRoomSection(`room-block-${scrollId}`), 400);
             }
         });
     </script>

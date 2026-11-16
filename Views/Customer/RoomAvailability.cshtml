@@ -2,29 +2,31 @@
 @using System.Text.Json
 @{
     Layout = "~/Views/Shared/_CustomerLayout.cshtml";
-    ViewData["Title"] = "ค้นหาห้องพักและห้องว่าง";
+    ViewData["Title"] = "ค้นหาห้องพัก";
 
-    // รับค่า Query String กรณีส่งมาจากหน้า Customer Home (Quick Booking Search)
+    // ค่าที่ส่งมาจากหน้า Home (ค้นหาด่วน)
     var qCheckIn = Context.Request.Query["checkIn"].ToString();
     var qCheckOut = Context.Request.Query["checkOut"].ToString();
     var qGuests = Context.Request.Query["guests"].ToString();
     var qRoomType = Context.Request.Query["roomType"].ToString();
 
+    var roomList = Model ?? new List<StayMate_Kavinvee_0576.Models.RoomType>();
+
     var activePromos = ViewBag.ActivePromotions as List<StayMate_Kavinvee_0576.Models.Promotion>
                        ?? new List<StayMate_Kavinvee_0576.Models.Promotion>();
 
-    // คำนวณเพดานราคาสูงสุดจาก Database สำหรับ Slider (ปัดขึ้นหลักร้อย)
-    var maxDbPrice = Model != null && Model.Any()
-        ? (int)(Math.Ceiling(Model.Max(r => r.BasePrice) / 100m) * 100m) + 500
-        : 6500;
-    var minDbPrice = Model != null && Model.Any()
-        ? (int)Model.Min(r => r.BasePrice)
-        : 1000;
+    // ช่วงราคาของสไลเดอร์ (อ้างอิงจากราคาห้องจริง)
+    var maxDbPrice = roomList.Any() ? (int)(Math.Ceiling(roomList.Max(r => r.BasePrice) / 100m) * 100m) : 5000;
+    var minDbPrice = roomList.Any() ? (int)(Math.Floor(roomList.Min(r => r.BasePrice) / 100m) * 100m) : 0;
 
-    // ฟังก์ชันจับคู่รูปภาพตามรหัสหรือชื่อห้อง
+    // จำนวนผู้เข้าพักสูงสุดที่โรงแรมรองรับ
+    var maxCapacity = roomList.Any() ? roomList.Max(r => (int)r.MaxGuests) : 2;
+    var selectedGuests = int.TryParse(qGuests, out var g) ? Math.Clamp(g, 1, maxCapacity) : Math.Min(2, maxCapacity);
+
+    // รูปห้อง: จับคู่ลิงก์ตามรหัสหรือชื่อห้อง
     string GetRoomImage(string? code, string? name)
     {
-        var key = (code ?? name ?? "").ToLower();
+        var key = ((code ?? "") + " " + (name ?? "")).ToLower();
         if (key.Contains("std") || key.Contains("standard"))
             return "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=900&q=80";
         if (key.Contains("dlx") || key.Contains("deluxe"))
@@ -36,22 +38,6 @@
         return "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=900&q=80";
     }
 
-    // ฟังก์ชันกำหนดป้าย Badge สีและข้อความตามประเภทห้อง
-    (string BadgeText, string BadgeClass, int Rank, string Amenities) GetRoomMeta( StayMate_Kavinvee_0576.Models.RoomType rt)
-    {
-        var key = (rt.TypeCode ?? rt.TypeName ?? "").ToLower();
-        if (key.Contains("dlx") || key.Contains("deluxe"))
-            return ("MOST POPULAR", "customer-ra-badge-blue", 1, "Wi-Fi,Breakfast,Bathtub,City View");
-        if (key.Contains("std") || key.Contains("standard"))
-            return ("SMART VALUE", "customer-ra-badge-cyan", 2, "Wi-Fi,Breakfast");
-        if (key.Contains("fam") || key.Contains("family"))
-            return ("FAMILY & GANG", "customer-ra-badge-violet", 3, "Wi-Fi,Breakfast,Bathtub,City View");
-        if (key.Contains("sui") || key.Contains("suite"))
-            return ("ULTIMATE LUXURY", "customer-ra-badge-gold", 4, "Wi-Fi,Breakfast,Bathtub,City View");
-        return ("SMART ROOM", "customer-ra-badge-cyan", 5, "Wi-Fi,Breakfast");
-    }
-
-    // แปลงรายการโปรโมชั่นจาก Database เป็น JSON เพื่อให้ JavaScript ใช้จับคู่เงื่อนไขแบบ Real-time
     var promosJson = JsonSerializer.Serialize(activePromos.Select(p => new
     {
         promoCode = p.PromoCode,
@@ -60,6 +46,7 @@
         discountPercent = p.DiscountPercent,
         minGuests = p.MinGuests ?? 1,
         minNights = p.MinNights ?? 1,
+        requiresHoliday = p.RequiresHoliday,
         applicableRoomTypeId = p.ApplicableRoomTypeId
     }));
 }
@@ -68,29 +55,26 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" />
     <link rel="stylesheet" href="~/css/Customer.css" asp-append-version="true" />
 }
 
 <div class="customer-ra-wrapper">
 
     <!-- =========================================================
-         1. PAGE HEADER & BREADCRUMB
+         1. หัวหน้า
          ========================================================= -->
     <section class="customer-ra-header">
         <div class="customer-ra-header-bg"
              style="background-image: url('https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=2000&q=80');">
         </div>
         <div class="customer-ra-header-overlay"></div>
-        <div class="customer-ra-orb customer-ra-orb-cyan"></div>
-        <div class="customer-ra-orb customer-ra-orb-violet"></div>
 
         <div class="container position-relative z-2">
             <nav aria-label="breadcrumb" class="customer-ra-breadcrumb mb-3">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item">
                         <a asp-controller="Customer" asp-action="Index">
-                            <i class="fa-solid fa-house me-1"></i> หน้าแรกสำหรับสมาชิก
+                            <i class="fa-solid fa-house me-1"></i> หน้าแรก
                         </a>
                     </li>
                     <li class="breadcrumb-item active" aria-current="page">ค้นหาห้องพัก</li>
@@ -98,42 +82,30 @@
             </nav>
 
             <div class="row align-items-end g-3">
-                <div class="col-lg-8">
-                    <span class="customer-ra-eyebrow">
-                        <span class="customer-ra-live-dot"></span> SMART AVAILABILITY ENGINE
-                    </span>
-                    <h1 class="customer-ra-title">ค้นหาห้องพัก · StayMate Rooms</h1>
+                <div class="col-lg-9">
+                    <span class="customer-ra-eyebrow">ห้องพักของ StayMate</span>
+                    <h1 class="customer-ra-title">ค้นหาห้องพัก</h1>
                     <p class="customer-ra-subtitle mb-0">
-                        เลือกประเภทห้องพักที่ตรงใจ ตรวจสอบห้องว่างจากระบบฐานข้อมูล คำนวณราคาสุทธิตามจำนวนคืน และกดดูรายละเอียดดีไซน์ห้องพักแต่ละประเภทได้ทันที
+                        เลือกวันเข้าพักและจำนวนผู้เข้าพัก เปรียบเทียบประเภทห้อง ราคา และโปรโมชั่นที่ใช้ได้ ก่อนตัดสินใจจอง
                     </p>
-                </div>
-                <div class="col-lg-4 text-lg-end d-none d-lg-block">
-                    <div class="customer-ra-header-badge">
-                        <i class="fa-solid fa-bolt text-info"></i>
-                        <div>
-                            <strong>Real-Time Promo Matching</strong>
-                            <span>คำนวณสิทธิ์โปรโมชั่นอัตโนมัติตามฐานข้อมูลจริง</span>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- =========================================================
-         2. BOOKING SEARCH PANEL
+         2. แผงค้นหา
          ========================================================= -->
-    <section class="customer-ra-search-section" aria-label="แผงค้นหาห้องพัก">
+    <section class="customer-ra-search-section" aria-label="ค้นหาห้องพัก">
         <div class="container">
             <div class="customer-ra-search-panel">
                 <div class="customer-ra-search-top">
                     <div class="d-flex align-items-center flex-wrap gap-2">
-                        <span class="customer-ra-console-icon"><i class="fa-solid fa-sliders"></i></span>
-                        <span class="fw-bold text-dark">BOOKING SEARCH PANEL</span>
-                        <span class="customer-ra-console-pill">Smart Filter &amp; Rate Calculator</span>
+                        <span class="customer-ra-console-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        <span class="fw-bold text-dark">เลือกวันเข้าพักและจำนวนผู้เข้าพัก</span>
                     </div>
                     <span class="customer-ra-console-hint d-none d-md-inline">
-                        <i class="fa-solid fa-circle-check text-success me-1"></i> ราคาที่แสดงคำนวณตามจำนวนคืนและตรวจสอบเงื่อนไขโปรโมชั่นให้ทันที
+                        ราคารวมคำนวณตามจำนวนคืน (ยังไม่หักส่วนลด)
                     </span>
                 </div>
 
@@ -141,29 +113,27 @@
                     <div class="row g-3 align-items-end">
                         <div class="col-12 col-sm-6 col-lg-3">
                             <label for="raCheckIn" class="customer-ra-label">
-                                <i class="fa-regular fa-calendar-plus text-primary me-1"></i> วันเช็คอิน (Check-in Date)
+                                <i class="fa-regular fa-calendar-plus text-primary me-1"></i> วันเช็คอิน
                             </label>
                             <input type="date" id="raCheckIn" name="checkIn" value="@qCheckIn" class="form-control customer-ra-input" required />
                         </div>
 
                         <div class="col-12 col-sm-6 col-lg-3">
                             <label for="raCheckOut" class="customer-ra-label">
-                                <i class="fa-regular fa-calendar-minus text-primary me-1"></i> วันเช็คเอาท์ (Check-out Date)
+                                <i class="fa-regular fa-calendar-minus text-primary me-1"></i> วันเช็คเอาท์
                             </label>
                             <input type="date" id="raCheckOut" name="checkOut" value="@qCheckOut" class="form-control customer-ra-input" required />
                         </div>
 
                         <div class="col-12 col-sm-6 col-lg-2">
                             <label for="raGuests" class="customer-ra-label">
-                                <i class="fa-solid fa-user-group text-primary me-1"></i> จำนวนผู้เข้าพัก
+                                <i class="fa-solid fa-user-group text-primary me-1"></i> ผู้เข้าพัก
                             </label>
                             <select id="raGuests" name="guests" class="form-select customer-ra-input">
-                                <option value="1" selected="@(qGuests == "1")">1 ท่าน</option>
-                                <option value="2" selected="@(string.IsNullOrEmpty(qGuests) || qGuests == "2")">2 ท่าน (ยอดนิยม)</option>
-                                <option value="3" selected="@(qGuests == "3")">3 ท่าน (รองรับ 3 Pay 2)</option>
-                                <option value="4" selected="@(qGuests == "4")">4 ท่าน (Family / Gang)</option>
-                                <option value="5" selected="@(qGuests == "5")">5 ท่าน (Suite)</option>
-                                <option value="6" selected="@(qGuests == "6")">6 ท่าน (Suite สูงสุด)</option>
+                                @for (int n = 1; n <= maxCapacity; n++)
+                                {
+                                    <option value="@n" selected="@(n == selectedGuests)">@n ท่าน</option>
+                                }
                             </select>
                         </div>
 
@@ -172,13 +142,10 @@
                                 <i class="fa-solid fa-bed text-primary me-1"></i> ประเภทห้องพัก
                             </label>
                             <select id="raRoomType" name="roomType" class="form-select customer-ra-input">
-                                <option value="ALL" selected="@(string.IsNullOrEmpty(qRoomType) || qRoomType == "ALL")">ทุกประเภทห้องพัก</option>
-                                @if (Model != null)
+                                <option value="ALL" selected="@(string.IsNullOrEmpty(qRoomType) || qRoomType == "ALL")">ทุกประเภท</option>
+                                @foreach (var rt in roomList)
                                 {
-                                    foreach (var rt in Model)
-                                    {
-                                        <option value="@rt.TypeName" selected="@(qRoomType == rt.TypeName || qRoomType == rt.TypeCode)">@rt.TypeName</option>
-                                    }
+                                    <option value="@rt.TypeName" selected="@(qRoomType == rt.TypeName || qRoomType == rt.TypeCode)">@rt.TypeName</option>
                                 }
                             </select>
                         </div>
@@ -186,7 +153,7 @@
                         <div class="col-12 col-lg-2">
                             <button type="submit" id="btnRaSearch" class="customer-ra-btn-search w-100">
                                 <i class="fa-solid fa-magnifying-glass"></i>
-                                <span>Search Rooms</span>
+                                <span>ค้นหาห้อง</span>
                             </button>
                         </div>
                     </div>
@@ -196,16 +163,16 @@
     </section>
 
     <!-- =========================================================
-         3. SEARCH SUMMARY BAR
+         3. สรุปการค้นหา
          ========================================================= -->
-    <section class="customer-ra-summary-section" aria-label="สรุปผลการค้นหา">
+    <section class="customer-ra-summary-section" aria-label="สรุปการค้นหา">
         <div class="container">
             <div class="customer-ra-summary-bar">
                 <div class="customer-ra-summary-items">
                     <div class="customer-ra-summary-chip">
                         <i class="fa-regular fa-calendar-check text-primary"></i>
                         <div>
-                            <small>วันที่เข้าพัก – เช็คเอาท์</small>
+                            <small>วันที่เข้าพัก</small>
                             <strong id="summaryDateRange">-</strong>
                         </div>
                     </div>
@@ -215,7 +182,7 @@
                     <div class="customer-ra-summary-chip">
                         <i class="fa-solid fa-moon text-primary"></i>
                         <div>
-                            <small>ระยะเวลาเข้าพัก</small>
+                            <small>ระยะเวลา</small>
                             <strong><span id="summaryNights">1</span> คืน</strong>
                         </div>
                     </div>
@@ -225,8 +192,8 @@
                     <div class="customer-ra-summary-chip">
                         <i class="fa-solid fa-user-group text-primary"></i>
                         <div>
-                            <small>จำนวนผู้เข้าพัก</small>
-                            <strong>ผู้ใหญ่ <span id="summaryGuests">2</span> ท่าน</strong>
+                            <small>ผู้เข้าพัก</small>
+                            <strong><span id="summaryGuests">@selectedGuests</span> ท่าน</strong>
                         </div>
                     </div>
 
@@ -235,35 +202,34 @@
                     <div class="customer-ra-summary-chip customer-ra-summary-highlight">
                         <i class="fa-solid fa-door-open"></i>
                         <div>
-                            <small>ห้องพักที่พร้อมให้บริการ</small>
-                            <strong>พบ <span id="summaryFoundCount">@(Model?.Count ?? 0)</span> ประเภทห้องพัก</strong>
+                            <small>ผลการค้นหา</small>
+                            <strong>พบ <span id="summaryFoundCount">@roomList.Count</span> ประเภทห้องพัก</strong>
                         </div>
                     </div>
                 </div>
 
-                <div class="d-lg-none w-100 mt-2 pt-2 border-top d-flex justify-content-between align-items-center">
+                <div class="d-lg-none w-100 mt-2 pt-2 border-top">
                     <button type="button" class="customer-ra-btn-mobile-filter" data-bs-toggle="offcanvas" data-bs-target="#raFilterOffcanvas">
-                        <i class="fa-solid fa-filter me-1"></i> ตัวกรองห้องพัก (Filters)
+                        <i class="fa-solid fa-filter me-1"></i> ตัวกรอง
                     </button>
-                    <span class="small text-muted">ปรับแต่งเงื่อนไขได้</span>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- =========================================================
-         4. MAIN CONTENT
+         4. เนื้อหาหลัก
          ========================================================= -->
     <section class="customer-ra-main-section">
         <div class="container">
             <div class="row g-4">
 
-                <!-- 4A. FILTER PANEL (สร้างตัวกรองจาก Database) -->
+                <!-- 4A. ตัวกรอง -->
                 <div class="col-lg-3">
                     <div class="offcanvas-lg offcanvas-start customer-ra-offcanvas" tabindex="-1" id="raFilterOffcanvas">
                         <div class="offcanvas-header border-bottom">
                             <h5 class="offcanvas-title fw-bold">
-                                <i class="fa-solid fa-sliders text-primary me-2"></i>ตัวกรองการค้นหา
+                                <i class="fa-solid fa-sliders text-primary me-2"></i>ตัวกรอง
                             </h5>
                             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#raFilterOffcanvas"></button>
                         </div>
@@ -273,219 +239,169 @@
                                 <div class="customer-ra-filter-header">
                                     <div class="d-flex align-items-center gap-2">
                                         <i class="fa-solid fa-filter text-primary"></i>
-                                        <h3 class="customer-ra-filter-title mb-0">Filter Rooms</h3>
+                                        <h3 class="customer-ra-filter-title mb-0">ตัวกรอง</h3>
                                     </div>
                                     <button type="button" id="btnResetFilters" class="customer-ra-btn-reset">
-                                        <i class="fa-solid fa-rotate-left me-1"></i> Reset Filter
+                                        <i class="fa-solid fa-rotate-left me-1"></i> ล้างตัวกรอง
                                     </button>
                                 </div>
 
                                 <div class="customer-ra-filter-group">
                                     <h4 class="customer-ra-filter-subtitle">ประเภทห้องพัก</h4>
                                     <div class="customer-ra-check-list">
-                                        @if (Model != null)
+                                        @foreach (var rt in roomList)
                                         {
-                                            foreach (var rt in Model)
-                                            {
-                                                var isChecked = string.IsNullOrEmpty(qRoomType) || qRoomType == "ALL" || qRoomType == rt.TypeName || qRoomType == rt.TypeCode;
-                                                <label class="customer-ra-check-item">
-                                                    <input type="checkbox" class="form-check-input filter-room-type" value="@rt.TypeName" checked="@isChecked" />
-                                                    <span>@rt.TypeName</span>
-                                                    <small class="ms-auto text-muted">฿@rt.BasePrice.ToString("N0")</small>
-                                                </label>
-                                            }
+                                            var isChecked = string.IsNullOrEmpty(qRoomType) || qRoomType == "ALL" || qRoomType == rt.TypeName || qRoomType == rt.TypeCode;
+                                            <label class="customer-ra-check-item">
+                                                <input type="checkbox" class="form-check-input filter-room-type" value="@rt.TypeName" checked="@isChecked" />
+                                                <span>@rt.TypeName</span>
+                                                <small class="ms-auto text-muted">฿@rt.BasePrice.ToString("N0")</small>
+                                            </label>
                                         }
                                     </div>
                                 </div>
 
-                                <div class="customer-ra-filter-group">
+                                <div class="customer-ra-filter-group border-bottom-0 pb-0 mb-0">
                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                         <h4 class="customer-ra-filter-subtitle mb-0">งบประมาณต่อคืน</h4>
-                                        <span class="customer-ra-price-readout" id="priceRangeLabel">สูงสุด ฿@maxDbPrice.ToString("N0")</span>
+                                        <span class="customer-ra-price-readout" id="priceRangeLabel">ไม่เกิน ฿@maxDbPrice.ToString("N0")</span>
                                     </div>
                                     <input type="range" class="form-range customer-ra-range" id="filterMaxPrice" min="@minDbPrice" max="@maxDbPrice" step="100" value="@maxDbPrice" />
-                                </div>
-
-                                <div class="customer-ra-filter-group">
-                                    <h4 class="customer-ra-filter-subtitle">รองรับผู้เข้าพักอย่างน้อย</h4>
-                                    <div class="customer-ra-guest-pills">
-                                        <button type="button" class="customer-ra-guest-pill active" data-min-cap="1">ทั้งหมด</button>
-                                        <button type="button" class="customer-ra-guest-pill" data-min-cap="2">2+ ท่าน</button>
-                                        <button type="button" class="customer-ra-guest-pill" data-min-cap="3">3+ ท่าน</button>
-                                        <button type="button" class="customer-ra-guest-pill" data-min-cap="4">4+ ท่าน</button>
-                                    </div>
-                                </div>
-
-                                <div class="customer-ra-filter-group border-bottom-0 pb-0 mb-0">
-                                    <h4 class="customer-ra-filter-subtitle">สิ่งอำนวยความสะดวก</h4>
-                                    <div class="customer-ra-check-list">
-                                        <label class="customer-ra-check-item">
-                                            <input type="checkbox" class="form-check-input filter-amenity" value="Wi-Fi" />
-                                            <span><i class="fa-solid fa-wifi text-info me-2"></i>Free Wi-Fi 6</span>
-                                        </label>
-                                        <label class="customer-ra-check-item">
-                                            <input type="checkbox" class="form-check-input filter-amenity" value="Breakfast" />
-                                            <span><i class="fa-solid fa-mug-saucer text-info me-2"></i>อาหารเช้า (Breakfast)</span>
-                                        </label>
-                                        <label class="customer-ra-check-item">
-                                            <input type="checkbox" class="form-check-input filter-amenity" value="Bathtub" />
-                                            <span><i class="fa-solid fa-bath text-info me-2"></i>อ่างอาบน้ำ (Bathtub)</span>
-                                        </label>
-                                        <label class="customer-ra-check-item">
-                                            <input type="checkbox" class="form-check-input filter-amenity" value="City View" />
-                                            <span><i class="fa-solid fa-city text-info me-2"></i>วิวเมือง (City View)</span>
-                                        </label>
-                                    </div>
                                 </div>
                             </aside>
                         </div>
                     </div>
                 </div>
 
-                <!-- 4B. RESULTS COLUMN -->
+                <!-- 4B. ผลการค้นหา -->
                 <div class="col-lg-9">
                     <div class="customer-ra-sorting-bar mb-4">
                         <span class="customer-ra-result-badge">
-                            <i class="fa-solid fa-sparkles text-info me-1"></i>
-                            แสดง <strong id="visibleRoomCount">@(Model?.Count ?? 0)</strong> ประเภทห้องพัก
+                            แสดง <strong id="visibleRoomCount">@roomList.Count</strong> ประเภทห้องพัก
                         </span>
 
                         <div class="d-flex align-items-center gap-2 ms-auto">
                             <label for="raSortSelect" class="customer-ra-sort-label mb-0">เรียงตาม:</label>
                             <select id="raSortSelect" class="form-select customer-ra-sort-select">
-                                <option value="recommended" selected>แนะนำ (Recommended)</option>
-                                <option value="price-asc">ราคา: น้อยไปมาก</option>
+                                <option value="price-asc" selected>ราคา: น้อยไปมาก</option>
                                 <option value="price-desc">ราคา: มากไปน้อย</option>
                             </select>
                         </div>
                     </div>
 
-                    <!-- SKELETON LOADING -->
-                    <div id="raSkeletonContainer" class="customer-ra-skeleton-wrap d-none">
-                        <div class="customer-ra-skeleton-card">
-                            <div class="customer-ra-sk-img"></div>
-                            <div class="customer-ra-sk-body">
-                                <div class="customer-ra-sk-line w-25 mb-2"></div>
-                                <div class="customer-ra-sk-line w-50 mb-3"></div>
-                                <div class="customer-ra-sk-line w-100 mb-2"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ROOM AVAILABILITY CARDS (ดึงจาก Database จริง) -->
                     <div id="raRoomsContainer" class="customer-ra-cards-list">
-                        @if (Model != null && Model.Any())
+                        @foreach (var room in roomList)
                         {
-                            foreach (var room in Model)
-                            {
-                                var meta = GetRoomMeta(room);
-                                var imgUrl = GetRoomImage(room.TypeCode, room.TypeName);
-                                var availableCount = room.Rooms?.Count(r => r.Status == "available" && r.IsActive == true) ?? 0;
-                                var isFeatured = meta.Rank == 1;
+                            var imgUrl = GetRoomImage(room.TypeCode, room.TypeName);
+                            var availableCount = room.Rooms?.Count(r => r.Status == "available" && r.IsActive == true) ?? 0;
 
-                                <article class="customer-ra-room-card @(isFeatured ? "customer-ra-card-featured" : "")"
-                                         data-room-id="@room.RoomTypeId"
-                                         data-room-type="@room.TypeName"
-                                         data-price="@((int)room.BasePrice)"
-                                         data-max-guests="@room.MaxGuests"
-                                         data-recommended-rank="@meta.Rank"
-                                         data-amenities="@meta.Amenities">
-                                    <div class="row g-0">
-                                        <div class="col-md-5 col-xl-4">
-                                            <div class="customer-ra-img-wrap">
-                                                <img src="@imgUrl" alt="@room.TypeName" class="customer-ra-img" />
-                                                <span class="customer-ra-type-badge @meta.BadgeClass">@meta.BadgeText</span>
-                                                @if (availableCount > 0)
-                                                {
-                                                    <span class="customer-ra-avail-pill">
-                                                        <span class="customer-ra-dot-green"></span> ว่าง @availableCount ห้อง
-                                                    </span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="customer-ra-avail-pill">
-                                                        <span class="customer-ra-dot-green"></span> ว่างพร้อมจอง
-                                                    </span>
-                                                }
-                                            </div>
+                            <article class="customer-ra-room-card"
+                                     data-room-id="@room.RoomTypeId"
+                                     data-room-type="@room.TypeName"
+                                     data-price="@((int)room.BasePrice)"
+                                     data-min-guests="@room.MinGuests"
+                                     data-max-guests="@room.MaxGuests"
+                                     data-available="@availableCount">
+                                <div class="row g-0">
+                                    <div class="col-md-5 col-xl-4">
+                                        <div class="customer-ra-img-wrap">
+                                            <img src="@imgUrl" alt="@room.TypeName" class="customer-ra-img" loading="lazy" />
+                                            @if (availableCount > 0)
+                                            {
+                                                <span class="customer-ra-avail-pill">
+                                                    <span class="customer-ra-dot-green"></span> ว่าง @availableCount ห้อง
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="customer-ra-avail-pill">
+                                                    <span class="customer-ra-dot-green" style="background:#dc3545;"></span> ห้องเต็ม
+                                                </span>
+                                            }
                                         </div>
-                                        <div class="col-md-7 col-xl-8">
-                                            <div class="customer-ra-card-body">
-                                                <div class="customer-ra-card-top">
-                                                    <div>
-                                                        <span class="customer-ra-room-code">CODE: @room.TypeCode · STAYMATE SMART</span>
-                                                        <h2 class="customer-ra-room-title">@room.TypeName</h2>
-                                                    </div>
-                                                    <div class="customer-ra-price-box text-md-end">
-                                                        <small class="customer-ra-price-label">ราคาต่อคืน</small>
-                                                        <div class="customer-ra-price-night">฿@room.BasePrice.ToString("N0")<span>/คืน</span></div>
-                                                        <div class="customer-ra-price-total">
-                                                            รวม <span class="js-nights-count">1</span> คืน:
-                                                            <strong class="js-total-price">฿@room.BasePrice.ToString("N0")</strong>
-                                                        </div>
+                                    </div>
+                                    <div class="col-md-7 col-xl-8">
+                                        <div class="customer-ra-card-body">
+                                            <div class="customer-ra-card-top">
+                                                <div>
+                                                    <span class="customer-ra-room-code">รหัสห้อง: @room.TypeCode</span>
+                                                    <h2 class="customer-ra-room-title">@room.TypeName</h2>
+                                                </div>
+                                                <div class="customer-ra-price-box text-md-end">
+                                                    <small class="customer-ra-price-label">ราคาต่อคืน</small>
+                                                    <div class="customer-ra-price-night">฿@room.BasePrice.ToString("N0")<span>/คืน</span></div>
+                                                    <div class="customer-ra-price-total">
+                                                        รวม <span class="js-nights-count">1</span> คืน:
+                                                        <strong class="js-total-price">฿@room.BasePrice.ToString("N0")</strong>
                                                     </div>
                                                 </div>
+                                            </div>
 
-                                                <p class="customer-ra-room-desc">
-                                                    @(string.IsNullOrWhiteSpace(room.Description)
-                                                        ? $"ห้องพักดีไซน์ล้ำสมัย รองรับผู้เข้าพัก {room.MinGuests}–{room.MaxGuests} ท่าน พร้อมสิ่งอำนวยความสะดวกครบครัน"
-                                                        : room.Description)
-                                                </p>
+                                            <p class="customer-ra-room-desc">
+                                                @(string.IsNullOrWhiteSpace(room.Description)
+                                                    ? $"ห้องพักรองรับผู้เข้าพัก {room.MinGuests}–{room.MaxGuests} ท่าน"
+                                                    : room.Description)
+                                            </p>
 
-                                                <div class="customer-ra-specs-row">
+                                            <div class="customer-ra-specs-row">
+                                                <div class="customer-ra-spec-pill">
+                                                    <i class="fa-solid fa-user-group text-primary"></i> @room.MinGuests–@room.MaxGuests ท่าน
+                                                </div>
+                                                @if (!string.IsNullOrWhiteSpace(room.BedType))
+                                                {
                                                     <div class="customer-ra-spec-pill">
-                                                        <i class="fa-solid fa-user-group text-primary"></i> @room.MinGuests–@room.MaxGuests ท่าน
+                                                        <i class="fa-solid fa-bed text-primary"></i> @room.BedType
                                                     </div>
-                                                    @if (!string.IsNullOrWhiteSpace(room.BedType))
+                                                }
+                                                <div class="customer-ra-spec-pill">
+                                                    <i class="fa-solid fa-plus-circle text-primary"></i>
+                                                    @(room.AllowExtraBed ? $"เสริมเตียงได้ (+฿{room.ExtraBedPrice:N0})" : "ไม่รองรับเตียงเสริม")
+                                                </div>
+                                            </div>
+
+                                            <div class="customer-ra-promo-box">
+                                                <span class="customer-ra-promo-label">
+                                                    <i class="fa-solid fa-tag text-warning me-1"></i> โปรโมชั่นที่ใช้ได้:
+                                                </span>
+                                                <div class="customer-ra-promo-badges js-promo-badges"></div>
+                                            </div>
+
+                                            <div class="customer-ra-card-footer">
+                                                <div class="customer-ra-card-actions ms-auto">
+                                                    <a href="#" class="customer-ra-btn-outline js-details-link">
+                                                        <i class="fa-solid fa-circle-info"></i>
+                                                        <span>ดูรายละเอียดห้อง</span>
+                                                    </a>
+                                                    @if (availableCount > 0)
                                                     {
-                                                        <div class="customer-ra-spec-pill">
-                                                            <i class="fa-solid fa-bed text-primary"></i> @room.BedType
-                                                        </div>
-                                                    }
-                                                    <div class="customer-ra-spec-pill">
-                                                        <i class="fa-solid fa-plus-circle text-primary"></i>
-                                                        @(room.AllowExtraBed ? $"เสริมเตียงได้ (+฿{room.ExtraBedPrice:N0})" : "ไม่รองรับเตียงเสริม")
-                                                    </div>
-                                                </div>
-
-                                                <div class="customer-ra-promo-box">
-                                                    <span class="customer-ra-promo-label">
-                                                        <i class="fa-solid fa-bolt text-warning me-1"></i> โปรโมชั่นที่ใช้ได้:
-                                                    </span>
-                                                    <div class="customer-ra-promo-badges js-promo-badges"></div>
-                                                </div>
-
-                                                <div class="customer-ra-card-footer">
-                                                    <div class="customer-ra-policy-note">
-                                                        <i class="fa-solid fa-shield-halved text-success me-1"></i>
-                                                        @(room.AllowExtraBed ? "รองรับเตียงเสริม & โปรโมชั่นสมาชิก" : "จองตรงได้ราคาสมาชิกพร้อมอาหารเช้า")
-                                                    </div>
-                                                    <div class="customer-ra-card-actions">
-                                                        <a href="#" class="customer-ra-btn-outline js-details-link" data-room-id="@room.RoomTypeId">
-                                                            <i class="fa-solid fa-circle-info"></i>
-                                                            <span>ดูรายละเอียดห้อง (Room Details)</span>
-                                                        </a>
-                                                        <a href="#" class="customer-ra-btn-book js-book-link" data-room-id="@room.RoomTypeId">
+                                                        <a href="#" class="customer-ra-btn-book js-book-link">
                                                             <i class="fa-solid fa-calendar-check"></i>
-                                                            <span>จองห้องนี้ (Book Now)</span>
+                                                            <span>จองห้องนี้</span>
                                                         </a>
-                                                    </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="customer-ra-btn-book" style="opacity:.5; pointer-events:none;">
+                                                            <i class="fa-solid fa-ban"></i>
+                                                            <span>ห้องเต็ม</span>
+                                                        </span>
+                                                    }
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </article>
-                            }
+                                </div>
+                            </article>
                         }
                     </div>
 
-                    <!-- EMPTY STATE -->
+                    <!-- ไม่พบผลลัพธ์ -->
                     <div id="raEmptyState" class="customer-ra-empty-state d-none">
                         <div class="customer-ra-empty-icon"><i class="fa-solid fa-bed-pulse"></i></div>
                         <h3 class="customer-ra-empty-title">ไม่พบห้องพักที่ตรงกับเงื่อนไข</h3>
-                        <p class="customer-ra-empty-desc">ลองปรับลดตัวกรอง หรือขยายงบประมาณต่อคืนเพื่อดูห้องว่างทั้งหมดครับ</p>
+                        <p class="customer-ra-empty-desc">ลองปรับจำนวนผู้เข้าพัก เพิ่มงบประมาณ หรือเลือกประเภทห้องอื่น</p>
                         <button type="button" id="btnEmptyReset" class="customer-ra-btn-book mt-2">
-                            <i class="fa-solid fa-rotate-left"></i> ล้างตัวกรองทั้งหมด
+                            <i class="fa-solid fa-rotate-left"></i> ล้างตัวกรอง
                         </button>
                     </div>
                 </div>
@@ -496,11 +412,12 @@
 </div>
 
 @section Scripts {
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
     <script>
-        // ข้อมูลโปรโมชั่นที่เปิดใช้งานจริงจาก Database
         const dbPromotions = @Html.Raw(promosJson);
         const defaultMaxPrice = @maxDbPrice;
+        const defaultGuests = @selectedGuests;
+        const checkoutUrl = "@Url.Action("Checkout", "Customer")";
+        const roomDetailsUrl = "@Url.Action("RoomDetails", "Customer")";
 
         document.addEventListener("DOMContentLoaded", function () {
             const checkInEl = document.getElementById("raCheckIn");
@@ -518,236 +435,190 @@
             const roomTypeCheckboxes = document.querySelectorAll(".filter-room-type");
             const maxPriceInput = document.getElementById("filterMaxPrice");
             const priceRangeLabel = document.getElementById("priceRangeLabel");
-            const guestPills = document.querySelectorAll(".customer-ra-guest-pill");
-            const amenityCheckboxes = document.querySelectorAll(".filter-amenity");
             const sortSelect = document.getElementById("raSortSelect");
             const btnResetFilters = document.getElementById("btnResetFilters");
             const btnEmptyReset = document.getElementById("btnEmptyReset");
 
-            const skeletonContainer = document.getElementById("raSkeletonContainer");
             const roomsContainer = document.getElementById("raRoomsContainer");
             const emptyState = document.getElementById("raEmptyState");
             const roomCards = Array.from(document.querySelectorAll(".customer-ra-room-card"));
 
-            let selectedMinCapacity = 1;
+            const escapeHtml = (value) => String(value ?? "")
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
             const pad = (n) => String(n).padStart(2, "0");
             const toInputDate = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+            const toDate = (value) => new Date(value + "T00:00:00");
 
+            // ---------- วันที่เริ่มต้น ----------
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             const tomorrow = new Date(today);
             tomorrow.setDate(today.getDate() + 1);
 
             checkInEl.min = toInputDate(today);
-            if (!checkInEl.value) checkInEl.value = toInputDate(today);
-            checkOutEl.min = toInputDate(tomorrow);
-            if (!checkOutEl.value || new Date(checkOutEl.value + "T00:00:00") <= new Date(checkInEl.value + "T00:00:00")) {
-                const baseIn = new Date(checkInEl.value + "T00:00:00");
-                const nextD = new Date(baseIn);
-                nextD.setDate(baseIn.getDate() + 1);
-                checkOutEl.value = toInputDate(nextD);
+            if (!checkInEl.value || toDate(checkInEl.value) < today) checkInEl.value = toInputDate(today);
+
+            const initMinOut = toDate(checkInEl.value);
+            initMinOut.setDate(initMinOut.getDate() + 1);
+            checkOutEl.min = toInputDate(initMinOut);
+            if (!checkOutEl.value || toDate(checkOutEl.value) <= toDate(checkInEl.value)) {
+                checkOutEl.value = toInputDate(initMinOut);
             }
 
             checkInEl.addEventListener("change", function () {
                 if (!this.value) return;
-                const inDate = new Date(this.value + "T00:00:00");
+                const inDate = toDate(this.value);
                 const minOut = new Date(inDate);
                 minOut.setDate(inDate.getDate() + 1);
                 checkOutEl.min = toInputDate(minOut);
-                if (!checkOutEl.value || new Date(checkOutEl.value + "T00:00:00") <= inDate) {
+                if (!checkOutEl.value || toDate(checkOutEl.value) <= inDate) {
                     checkOutEl.value = toInputDate(minOut);
                 }
-                updateUI(false);
+                updateUI();
             });
 
-            checkOutEl.addEventListener("change", () => updateUI(false));
-            guestsEl.addEventListener("change", () => updateUI(false));
+            checkOutEl.addEventListener("change", updateUI);
+            guestsEl.addEventListener("change", updateUI);
 
             function getStayNights() {
-                const inDate = new Date(checkInEl.value + "T00:00:00");
-                const outDate = new Date(checkOutEl.value + "T00:00:00");
-                const diffTime = outDate - inDate;
-                const nights = Math.round(diffTime / (1000 * 60 * 60 * 24));
+                const nights = Math.round((toDate(checkOutEl.value) - toDate(checkInEl.value)) / 86400000);
                 return nights > 0 ? nights : 1;
             }
 
             function formatThaiDate(dateStr) {
                 if (!dateStr) return "-";
-                const d = new Date(dateStr + "T00:00:00");
-                return d.toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" });
+                return toDate(dateStr).toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" });
             }
 
-            function updateUI(withSkeleton = false) {
-                const run = () => {
-                    const nights = getStayNights();
-                    const searchGuests = parseInt(guestsEl.value || "2", 10);
-                    const maxPrice = parseInt(maxPriceInput.value || String(defaultMaxPrice), 10);
-                    const sortMode = sortSelect.value;
+            // ---------- โปรโมชั่นที่ตรงเงื่อนไข ----------
+            function buildPromoBadges(roomId, guests, nights) {
+                const colors = ["customer-ra-promo-blue", "customer-ra-promo-violet", "customer-ra-promo-cyan", "customer-ra-promo-indigo"];
+                const badges = [];
 
-                    const checkedTypes = Array.from(roomTypeCheckboxes).filter(cb => cb.checked).map(cb => cb.value);
-                    const checkedAmenities = Array.from(amenityCheckboxes).filter(cb => cb.checked).map(cb => cb.value);
+                dbPromotions.forEach(p => {
+                    const matchRoom = !p.applicableRoomTypeId || p.applicableRoomTypeId === roomId;
+                    if (!matchRoom || guests < (p.minGuests || 1) || nights < (p.minNights || 1)) return;
 
-                    summaryDateRangeEl.textContent = `${formatThaiDate(checkInEl.value)} – ${formatThaiDate(checkOutEl.value)}`;
-                    summaryNightsEl.textContent = nights;
-                    summaryGuestsEl.textContent = searchGuests;
+                    let detail = "";
+                    if (p.discountType === "percent_room" && p.discountPercent) {
+                        detail = ` (-${p.discountPercent}%)`;
+                    } else if (p.discountType === "percent_extra_nights" && p.discountPercent) {
+                        detail = ` (-${p.discountPercent}% คืนที่เพิ่ม)`;
+                    } else if (p.discountType === "free_extra_bed") {
+                        detail = " (ฟรีเตียงเสริม)";
+                    }
+                    if (p.requiresHoliday) detail += " · เฉพาะช่วงวันหยุดที่กำหนด";
 
-                    let visibleCount = 0;
+                    const colorCls = colors[badges.length % colors.length];
+                    badges.push(`<span class="customer-ra-promo-badge ${colorCls}"><i class="fa-solid fa-tag"></i> ${escapeHtml(p.promoName)}${escapeHtml(detail)}</span>`);
+                });
 
-                    roomCards.forEach(card => {
-                        const roomId = parseInt(card.dataset.roomId, 10);
-                        const roomType = card.dataset.roomType;
-                        const price = parseInt(card.dataset.price, 10);
-                        const maxGuests = parseInt(card.dataset.maxGuests, 10);
-                        const cardAmenities = (card.dataset.amenities || "").split(",").map(a => a.trim());
+                return badges.length > 0
+                    ? badges.join("")
+                    : `<span class="customer-ra-promo-none">ยังไม่มีโปรโมชั่นที่ตรงกับเงื่อนไขการเข้าพักนี้</span>`;
+            }
 
-                        // อัปเดตราคารวม
-                        const total = price * nights;
-                        const nightsSpan = card.querySelector(".js-nights-count");
-                        const totalStrong = card.querySelector(".js-total-price");
-                        if (nightsSpan) nightsSpan.textContent = nights;
-                        if (totalStrong) totalStrong.textContent = `฿${total.toLocaleString("en-US")}`;
+            // ---------- อัปเดตหน้าจอ ----------
+            function updateUI() {
+                const nights = getStayNights();
+                const guests = parseInt(guestsEl.value || String(defaultGuests), 10);
+                const maxPrice = parseInt(maxPriceInput.value || String(defaultMaxPrice), 10);
+                const sortMode = sortSelect.value;
+                const checkedTypes = Array.from(roomTypeCheckboxes).filter(cb => cb.checked).map(cb => cb.value);
 
-                        // ลิงก์ปุ่ม Book Now ไปหน้า Checkout
-                        const bookLink = card.querySelector(".js-book-link");
-                        if (bookLink) {
-                            bookLink.href = `/Customer/Checkout?roomTypeId=${roomId}&checkIn=${checkInEl.value}&checkOut=${checkOutEl.value}&guests=${searchGuests}&nights=${nights}`;
-                        }
+                summaryDateRangeEl.textContent = `${formatThaiDate(checkInEl.value)} – ${formatThaiDate(checkOutEl.value)}`;
+                summaryNightsEl.textContent = nights;
+                summaryGuestsEl.textContent = guests;
 
-                        // ลิงก์ปุ่ม View Details ย้ายไปหน้า RoomDetails.cshtml พร้อมส่ง Parameter วันที่และจำนวนคน
-                        const detailsLink = card.querySelector(".js-details-link");
-                        if (detailsLink) {
-                            detailsLink.href = `/Customer/RoomDetails/${roomId}?checkIn=${checkInEl.value}&checkOut=${checkOutEl.value}&guests=${searchGuests}`;
-                        }
+                let visibleCount = 0;
 
-                        // ตรวจสอบสถานะโปรโมชั่นจาก Database (และ Fallback กรณีไม่มีใน DB)
-                        const promoBadgesEl = card.querySelector(".js-promo-badges");
-                        if (promoBadgesEl) {
-                            let pBadges = [];
+                roomCards.forEach(card => {
+                    const roomId = parseInt(card.dataset.roomId, 10);
+                    const price = parseInt(card.dataset.price, 10);
+                    const minGuests = parseInt(card.dataset.minGuests, 10);
+                    const maxGuests = parseInt(card.dataset.maxGuests, 10);
 
-                            if (Array.isArray(dbPromotions) && dbPromotions.length > 0) {
-                                dbPromotions.forEach(p => {
-                                    const matchRoom = !p.applicableRoomTypeId || p.applicableRoomTypeId === roomId;
-                                    const matchGuests = searchGuests >= (p.minGuests || 1);
-                                    const matchNights = nights >= (p.minNights || 1);
+                    card.querySelector(".js-nights-count").textContent = nights;
+                    card.querySelector(".js-total-price").textContent = `฿${(price * nights).toLocaleString("en-US")}`;
 
-                                    if (matchRoom && (matchGuests && matchNights)) {
-                                        const badgeColors = ["customer-ra-promo-blue", "customer-ra-promo-violet", "customer-ra-promo-cyan", "customer-ra-promo-indigo"];
-                                        const colorCls = badgeColors[pBadges.length % badgeColors.length];
-                                        const pctText = p.discountPercent ? ` (-${p.discountPercent}%)` : "";
-                                        pBadges.push(`<span class="customer-ra-promo-badge ${colorCls}"><i class="fa-solid fa-tag"></i> ${p.promoName}${pctText}</span>`);
-                                    }
-                                });
-                            } else {
-                                // Fallback กรณีตาราง Promotions ยังว่าง
-                                if (roomId >= 2 && (searchGuests >= 3 || nights >= 3)) {
-                                    pBadges.push(`<span class="customer-ra-promo-badge customer-ra-promo-blue"><i class="fa-solid fa-user-plus"></i> 3 Pay 2 Extra Bed Free</span>`);
-                                }
-                                if (roomId >= 3 && searchGuests >= 4) {
-                                    pBadges.push(`<span class="customer-ra-promo-badge customer-ra-promo-violet"><i class="fa-solid fa-people-group"></i> Family &amp; Gang Pack (-20%)</span>`);
-                                }
-                                if (nights >= 3) {
-                                    pBadges.push(`<span class="customer-ra-promo-badge customer-ra-promo-cyan"><i class="fa-solid fa-moon"></i> Stay 3+ Nights Saver (-15%)</span>`);
-                                }
-                            }
+                    const query = `checkIn=${checkInEl.value}&checkOut=${checkOutEl.value}&guests=${guests}`;
 
-                            if (pBadges.length > 0) {
-                                promoBadgesEl.innerHTML = pBadges.join("");
-                            } else {
-                                promoBadgesEl.innerHTML = `<span class="customer-ra-promo-none">ราคาสมาชิกมาตรฐาน (เพิ่มจำนวนคืนหรือผู้เข้าพักเพื่อรับโปรฯ พิเศษ)</span>`;
-                            }
-                        }
+                    const bookLink = card.querySelector(".js-book-link");
+                    if (bookLink) bookLink.href = `${checkoutUrl}?roomTypeId=${roomId}&${query}`;
 
-                        // ตรรกะการกรอง
-                        const passType = checkedTypes.includes(roomType);
-                        const passPrice = price <= maxPrice;
-                        const passCapacity = maxGuests >= Math.max(searchGuests, selectedMinCapacity);
-                        const passAmenities = checkedAmenities.every(a => cardAmenities.includes(a));
+                    const detailsLink = card.querySelector(".js-details-link");
+                    if (detailsLink) detailsLink.href = `${roomDetailsUrl}/${roomId}?${query}`;
 
-                        if (passType && passPrice && passCapacity && passAmenities) {
-                            card.classList.remove("d-none");
-                            visibleCount++;
-                        } else {
-                            card.classList.add("d-none");
-                        }
-                    });
+                    card.querySelector(".js-promo-badges").innerHTML = buildPromoBadges(roomId, guests, nights);
 
-                    // ตรรกะการเรียงลำดับ
-                    const sorted = [...roomCards].sort((a, b) => {
+                    const passType = checkedTypes.includes(card.dataset.roomType);
+                    const passPrice = price <= maxPrice;
+                    const passCapacity = guests >= minGuests && guests <= maxGuests;
+
+                    const show = passType && passPrice && passCapacity;
+                    card.classList.toggle("d-none", !show);
+                    if (show) visibleCount++;
+                });
+
+                // เรียงตามราคา
+                [...roomCards]
+                    .sort((a, b) => {
                         const pa = parseInt(a.dataset.price, 10);
                         const pb = parseInt(b.dataset.price, 10);
-                        const ra = parseInt(a.dataset.recommendedRank, 10);
-                        const rb = parseInt(b.dataset.recommendedRank, 10);
-                        if (sortMode === "price-asc") return pa - pb;
-                        if (sortMode === "price-desc") return pb - pa;
-                        return ra - rb;
-                    });
-                    sorted.forEach(c => roomsContainer.appendChild(c));
+                        return sortMode === "price-desc" ? pb - pa : pa - pb;
+                    })
+                    .forEach(c => roomsContainer.appendChild(c));
 
-                    summaryFoundCountEl.textContent = visibleCount;
-                    visibleRoomCountEl.textContent = visibleCount;
+                summaryFoundCountEl.textContent = visibleCount;
+                visibleRoomCountEl.textContent = visibleCount;
 
-                    if (visibleCount === 0) {
-                        roomsContainer.classList.add("d-none");
-                        emptyState.classList.remove("d-none");
-                    } else {
-                        roomsContainer.classList.remove("d-none");
-                        emptyState.classList.add("d-none");
-                    }
-                };
+                roomsContainer.classList.toggle("d-none", visibleCount === 0);
+                emptyState.classList.toggle("d-none", visibleCount !== 0);
+            }
 
-                if (withSkeleton) {
-                    roomsContainer.classList.add("d-none");
-                    emptyState.classList.add("d-none");
-                    skeletonContainer.classList.remove("d-none");
-                    setTimeout(() => {
-                        skeletonContainer.classList.add("d-none");
-                        run();
-                    }, 300);
-                } else {
-                    run();
-                }
+            // บันทึกเงื่อนไขลง URL เพื่อให้แชร์/รีเฟรชแล้วค่าไม่หาย
+            function syncUrl() {
+                const params = new URLSearchParams({
+                    checkIn: checkInEl.value,
+                    checkOut: checkOutEl.value,
+                    guests: guestsEl.value,
+                    roomType: roomTypeSelectEl.value
+                });
+                history.replaceState(null, "", `${location.pathname}?${params.toString()}`);
             }
 
             searchForm.addEventListener("submit", function (e) {
                 e.preventDefault();
                 const sel = roomTypeSelectEl.value;
                 roomTypeCheckboxes.forEach(cb => cb.checked = (sel === "ALL" || cb.value === sel));
-                updateUI(true);
+                syncUrl();
+                updateUI();
             });
 
-            roomTypeCheckboxes.forEach(cb => cb.addEventListener("change", () => updateUI(false)));
+            roomTypeCheckboxes.forEach(cb => cb.addEventListener("change", updateUI));
+
             maxPriceInput.addEventListener("input", function () {
-                priceRangeLabel.textContent = `สูงสุด ฿${parseInt(this.value, 10).toLocaleString("en-US")}`;
-                updateUI(false);
+                priceRangeLabel.textContent = `ไม่เกิน ฿${parseInt(this.value, 10).toLocaleString("en-US")}`;
+                updateUI();
             });
-            guestPills.forEach(p => p.addEventListener("click", function () {
-                guestPills.forEach(x => x.classList.remove("active"));
-                this.classList.add("active");
-                selectedMinCapacity = parseInt(this.dataset.minCap, 10);
-                updateUI(false);
-            }));
-            amenityCheckboxes.forEach(cb => cb.addEventListener("change", () => updateUI(false)));
-            sortSelect.addEventListener("change", () => updateUI(false));
+
+            sortSelect.addEventListener("change", updateUI);
 
             function resetFilters() {
                 roomTypeSelectEl.value = "ALL";
-                guestsEl.value = "2";
                 roomTypeCheckboxes.forEach(cb => cb.checked = true);
-                amenityCheckboxes.forEach(cb => cb.checked = false);
                 maxPriceInput.value = String(defaultMaxPrice);
-                priceRangeLabel.textContent = `สูงสุด ฿${defaultMaxPrice.toLocaleString("en-US")}`;
-                selectedMinCapacity = 1;
-                guestPills.forEach((p, i) => p.classList.toggle("active", i === 0));
-                sortSelect.value = "recommended";
-                updateUI(true);
+                priceRangeLabel.textContent = `ไม่เกิน ฿${defaultMaxPrice.toLocaleString("en-US")}`;
+                sortSelect.value = "price-asc";
+                updateUI();
             }
 
             if (btnResetFilters) btnResetFilters.addEventListener("click", resetFilters);
             if (btnEmptyReset) btnEmptyReset.addEventListener("click", resetFilters);
 
-            updateUI(false);
-            if (typeof AOS !== "undefined") AOS.init({ duration: 650, once: true });
+            updateUI();
         });
     </script>
 }

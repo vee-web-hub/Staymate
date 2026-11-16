@@ -1,27 +1,22 @@
 @model StayMate_Kavinvee_0576.Models.User
 @{
     Layout = "~/Views/Shared/_CustomerLayout.cshtml";
-    ViewData["Title"] = "โปรไฟล์ส่วนตัว (My Profile)";
+    ViewData["Title"] = "โปรไฟล์ส่วนตัว";
 
     var fullName = !string.IsNullOrWhiteSpace(Model?.FullName)
         ? Model.FullName
         : (User.Identity?.Name ?? "สมาชิก StayMate");
 
     var nameParts = fullName.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
-
-var defaultFirstName = nameParts.Length > 0
-    ? nameParts[0]
-    : fullName;
-
-var defaultLastName = nameParts.Length > 1
-    ? nameParts[1]
-    : "";
+    var defaultFirstName = nameParts.Length > 0 ? nameParts[0] : fullName;
+    var defaultLastName = nameParts.Length > 1 ? nameParts[1] : "";
 
     var userEmail = !string.IsNullOrWhiteSpace(Model?.Email) ? Model.Email : "-";
     var userPhone = !string.IsNullOrWhiteSpace(Model?.Phone) ? Model.Phone : "-";
     var memberSinceText = Model != null && Model.CreatedAt != default
         ? Model.CreatedAt.ToString("MMMM yyyy", new System.Globalization.CultureInfo("th-TH"))
-        : "สมาชิกปัจจุบัน";
+        : "-";
+    var totalBookings = Model?.Bookings?.Count ?? 0;
 
     string MapBookingStatus(string? dbStatus)
     {
@@ -47,14 +42,14 @@ var defaultLastName = nameParts.Length > 1
         };
     }
 
-    // ดึงรายการจองล่าสุด 3 รายการจาก Database จริง
+    // รายการจองล่าสุด 3 รายการจาก Database
     var recentBookings = (Model?.Bookings ?? Enumerable.Empty<StayMate_Kavinvee_0576.Models.Booking>())
         .OrderByDescending(b => b.CreatedAt)
         .Take(3)
         .Select(b =>
         {
             var rtName = b.BookingRooms?.Select(br => br.RoomType?.TypeName).FirstOrDefault(n => !string.IsNullOrWhiteSpace(n))
-                         ?? "Standard Room";
+                         ?? "-";
             var mappedStat = MapBookingStatus(b.Status);
             return new
             {
@@ -80,41 +75,24 @@ var defaultLastName = nameParts.Length > 1
 
 <div class="customer-pf-wrapper">
 
-    <!-- =========================================================
-         1. PROFILE HEADER (Gradient Navy & Electric Blue)
-         ========================================================= -->
+    <!-- PROFILE HEADER -->
     <section class="customer-pf-header-section mb-4">
         <div class="container">
             <div class="customer-pf-hero-card" data-aos="fade-up">
                 <div class="customer-pf-hero-orb"></div>
 
                 <div class="row align-items-center g-4 position-relative z-2">
-                    <!-- รูปโปรไฟล์ขนาดใหญ่ + ปุ่มเปลี่ยนรูป -->
-                    <div class="col-12 col-md-auto text-center">
-                        <div class="customer-pf-avatar-wrap mx-auto">
-                            <img id="pfAvatarPreview"
-                                 src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
-                                 alt="Profile Avatar"
-                                 class="customer-pf-avatar-img" />
-                            <button type="button"
-                                    class="customer-pf-avatar-btn"
-                                    onclick="document.getElementById('pfAvatarInput').click()"
-                                    title="เปลี่ยนรูปโปรไฟล์">
-                                <i class="fa-solid fa-camera"></i>
-                            </button>
-                            <input type="file" id="pfAvatarInput" accept="image/*" class="d-none" onchange="handleAvatarUpload(this)" />
-                        </div>
-                    </div>
-
-                    <!-- ข้อมูลหลักของสมาชิกจาก Database -->
                     <div class="col-12 col-md">
                         <div class="d-flex align-items-center justify-content-center justify-content-md-start flex-wrap gap-2 mb-2">
                             <span class="customer-pf-member-badge">
-                                <i class="fa-solid fa-crown text-warning me-1"></i> STAYMATE PLATINUM MEMBER
+                                <i class="fa-solid fa-user me-1"></i> STAYMATE MEMBER
                             </span>
-                            <span class="customer-pf-since-pill">
-                                <i class="fa-regular fa-calendar-check text-info me-1"></i> Member Since: @memberSinceText
-                            </span>
+                            @if (memberSinceText != "-")
+                            {
+                                <span class="customer-pf-since-pill">
+                                    <i class="fa-regular fa-calendar-check text-info me-1"></i> สมาชิกตั้งแต่: @memberSinceText
+                                </span>
+                            }
                         </div>
 
                         <h1 class="customer-pf-name text-center text-md-start" id="headerFullName">
@@ -134,31 +112,22 @@ var defaultLastName = nameParts.Length > 1
                         </div>
                     </div>
 
-                    <!-- ปุ่มทางลัดตั้งค่าบน Header -->
                     <div class="col-12 col-lg-auto text-center text-lg-end">
-                        <div class="d-flex flex-wrap justify-content-center justify-content-lg-end gap-2">
-                            <button type="button" class="customer-pf-btn-glass" onclick="document.getElementById('pfAvatarInput').click()">
-                                <i class="fa-regular fa-image text-info"></i>
-                                <span>Change Picture</span>
-                            </button>
-                            <button type="button" class="customer-pf-btn-cyan" id="btnTopEditProfile" onclick="toggleProfileEditMode(true)">
-                                <i class="fa-solid fa-user-pen"></i>
-                                <span>Edit Profile</span>
-                            </button>
-                        </div>
+                        <button type="button" class="customer-pf-btn-cyan" id="btnTopEditProfile" onclick="toggleProfileEditMode(true)">
+                            <i class="fa-solid fa-user-pen"></i>
+                            <span>Edit Profile</span>
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- =========================================================
-         2. MAIN CONTENT GRID: LEFT (PERSONAL INFO & SETTINGS) + RIGHT (BOOKING HISTORY & ACTIONS)
-         ========================================================= -->
+    <!-- MAIN GRID -->
     <section class="container pb-5">
         <div class="row g-4">
 
-            <!-- คอลัมน์ซ้าย (7 Cols): Personal Information & Account Settings -->
+            <!-- ซ้าย: ข้อมูลส่วนตัว -->
             <div class="col-lg-7">
                 <div class="customer-pf-card h-100" data-aos="fade-up" data-aos-delay="50">
                     <div class="customer-pf-card-header">
@@ -167,14 +136,13 @@ var defaultLastName = nameParts.Length > 1
                             <h2 class="customer-pf-card-title mb-0">ข้อมูลส่วนตัวและตั้งค่าบัญชี</h2>
                         </div>
                         <span class="badge rounded-pill bg-secondary-subtle text-secondary px-3 py-2" id="pfEditStatusBadge">
-                            <i class="fa-solid fa-lock me-1"></i> โหมดแสดงผล (View Mode)
+                            <i class="fa-solid fa-lock me-1"></i> โหมดแสดงผล
                         </span>
                     </div>
 
                     <form id="pfPersonalForm" onsubmit="saveProfileChanges(event)">
                         @Html.AntiForgeryToken()
                         <div class="row g-3">
-                            <!-- 1. ชื่อ -->
                             <div class="col-sm-6">
                                 <label for="pfFirstName" class="customer-pf-label">ชื่อ (First Name) <span class="text-danger">*</span></label>
                                 <div class="input-group">
@@ -183,7 +151,6 @@ var defaultLastName = nameParts.Length > 1
                                 </div>
                             </div>
 
-                            <!-- 2. นามสกุล -->
                             <div class="col-sm-6">
                                 <label for="pfLastName" class="customer-pf-label">นามสกุล (Last Name)</label>
                                 <div class="input-group">
@@ -192,25 +159,22 @@ var defaultLastName = nameParts.Length > 1
                                 </div>
                             </div>
 
-                            <!-- 3. เบอร์โทรศัพท์ -->
                             <div class="col-sm-6">
-                                <label for="pfPhone" class="customer-pf-label">เบอร์โทรศัพท์ (Phone Number) <span class="text-danger">*</span></label>
+                                <label for="pfPhone" class="customer-pf-label">เบอร์โทรศัพท์ (Phone Number)</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="fa-solid fa-phone"></i></span>
-                                    <input type="tel" id="pfPhone" class="form-control customer-pf-input" value="@(Model?.Phone ?? "")" placeholder="กรอกเบอร์โทรศัพท์" disabled required />
+                                    <input type="tel" id="pfPhone" class="form-control customer-pf-input" value="@(Model?.Phone ?? "")" placeholder="กรอกเบอร์โทรศัพท์" maxlength="20" disabled />
                                 </div>
                             </div>
 
-                            <!-- 4. Email -->
                             <div class="col-sm-6">
                                 <label for="pfEmail" class="customer-pf-label">อีเมล (Email Address) <span class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="fa-regular fa-envelope"></i></span>
-                                    <input type="email" id="pfEmail" class="form-control customer-pf-input" value="@(Model?.Email ?? "")" disabled required />
+                                    <input type="email" id="pfEmail" class="form-control customer-pf-input" value="@(Model?.Email ?? "")" maxlength="120" disabled required />
                                 </div>
                             </div>
 
-                            <!-- 5. Username (Read-only) -->
                             <div class="col-sm-6">
                                 <label class="customer-pf-label">ชื่อบัญชีผู้ใช้ (Username)</label>
                                 <div class="input-group">
@@ -219,42 +183,30 @@ var defaultLastName = nameParts.Length > 1
                                 </div>
                             </div>
 
-                            <!-- 6. ระดับสมาชิก (Read-only) -->
                             <div class="col-sm-6">
-                                <label class="customer-pf-label">ระดับสมาชิก (Membership Tier)</label>
+                                <label class="customer-pf-label">จำนวนการจองทั้งหมด</label>
                                 <div class="input-group">
-                                    <span class="input-group-text"><i class="fa-solid fa-award text-warning"></i></span>
-                                    <input type="text" class="form-control customer-pf-input" value="Platinum Urban Member" disabled readonly />
+                                    <span class="input-group-text"><i class="fa-solid fa-receipt"></i></span>
+                                    <input type="text" class="form-control customer-pf-input" value="@totalBookings รายการ" disabled readonly />
                                 </div>
                             </div>
                         </div>
 
-                        <!-- =====================================================
-                             3. ACCOUNT SETTINGS BUTTONS
-                             ===================================================== -->
                         <div class="customer-pf-settings-bar mt-4 pt-3 border-top">
-                            <!-- ปุ่มชุดปกติ (แสดงเมื่อยังไม่เปิดโหมดแก้ไข) -->
-                            <div id="pfDefaultActions" class="d-flex flex-wrap gap-2 justify-content-between align-items-center w-100">
-                                <div class="d-flex flex-wrap gap-2">
-                                    <button type="button" class="customer-pf-btn-primary" onclick="toggleProfileEditMode(true)">
-                                        <i class="fa-solid fa-pen-to-square"></i>
-                                        <span>Edit Profile</span>
-                                    </button>
-                                    <button type="button" class="customer-pf-btn-outline" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
-                                        <i class="fa-solid fa-key"></i>
-                                        <span>Change Password</span>
-                                    </button>
-                                </div>
-                                <button type="button" class="customer-pf-btn-light" onclick="document.getElementById('pfAvatarInput').click()">
-                                    <i class="fa-solid fa-camera text-primary"></i>
-                                    <span>Change Profile Picture</span>
+                            <div id="pfDefaultActions" class="d-flex flex-wrap gap-2 align-items-center w-100">
+                                <button type="button" class="customer-pf-btn-primary" onclick="toggleProfileEditMode(true)">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                    <span>Edit Profile</span>
+                                </button>
+                                <button type="button" class="customer-pf-btn-outline" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                                    <i class="fa-solid fa-key"></i>
+                                    <span>Change Password</span>
                                 </button>
                             </div>
 
-                            <!-- ปุ่มชุดบันทึก/ยกเลิก (แสดงเฉพาะเมื่อกด Edit Profile) -->
                             <div id="pfEditingActions" class="d-none d-flex flex-wrap gap-2 justify-content-end w-100">
                                 <button type="button" class="btn btn-outline-secondary rounded-pill px-4" onclick="cancelProfileEdit()">
-                                    <i class="fa-solid fa-xmark me-1"></i> Cancel (ยกเลิก)
+                                    <i class="fa-solid fa-xmark me-1"></i> ยกเลิก
                                 </button>
                                 <button type="submit" id="btnSaveProfile" class="customer-pf-btn-save">
                                     <i class="fa-solid fa-floppy-disk"></i>
@@ -266,17 +218,14 @@ var defaultLastName = nameParts.Length > 1
                 </div>
             </div>
 
-            <!-- คอลัมน์ขวา (5 Cols): Booking History Preview (3 รายการ) & Account Actions -->
+            <!-- ขวา: ประวัติการจอง + Logout -->
             <div class="col-lg-5">
                 <div class="d-flex flex-column gap-4 h-100">
 
-                    <!-- =====================================================
-                         5. BOOKING HISTORY PREVIEW (รายการจองล่าสุด 3 รายการจาก DB)
-                         ===================================================== -->
                     <div class="customer-pf-card" data-aos="fade-up" data-aos-delay="100">
                         <div class="customer-pf-card-header">
                             <div>
-                                <span class="customer-pf-eyebrow"><i class="fa-solid fa-clock-rotate-left me-1"></i> RECENT STAYS</span>
+                                <span class="customer-pf-eyebrow"><i class="fa-solid fa-clock-rotate-left me-1"></i> RECENT BOOKINGS</span>
                                 <h3 class="customer-pf-card-title mb-0">ประวัติการจองล่าสุด</h3>
                             </div>
                             <a asp-controller="Customer" asp-action="MyBookings" class="customer-pf-link-sm">
@@ -298,7 +247,7 @@ var defaultLastName = nameParts.Length > 1
                                             <i class="fa-regular fa-calendar text-primary me-1"></i> @b.StayDates
                                         </div>
                                         <div class="d-flex justify-content-between align-items-center pt-2 border-top">
-                                            <span class="small text-muted">ยอดชำระ: <strong class="text-primary">฿@b.Amount.ToString("N0")</strong></span>
+                                            <span class="small text-muted">ยอดรวม: <strong class="text-primary">฿@b.Amount.ToString("N0")</strong></span>
                                             <a asp-controller="Customer" asp-action="BookingDetails" asp-route-id="@b.Id" class="btn btn-sm btn-light border rounded-pill px-3">
                                                 ดูรายละเอียด <i class="fa-solid fa-angle-right ms-1"></i>
                                             </a>
@@ -310,7 +259,7 @@ var defaultLastName = nameParts.Length > 1
                             {
                                 <div class="text-center py-4 text-muted small">
                                     <i class="fa-solid fa-suitcase-rolling fs-3 d-block mb-2 opacity-50"></i>
-                                    คุณยังไม่มีประวัติการจองห้องพักในระบบ
+                                    ยังไม่มีประวัติการจองห้องพัก
                                 </div>
                             }
                         </div>
@@ -318,21 +267,18 @@ var defaultLastName = nameParts.Length > 1
                         <div class="mt-3 pt-2">
                             <a asp-controller="Customer" asp-action="MyBookings" class="customer-pf-btn-outline w-100 justify-content-center">
                                 <i class="fa-solid fa-receipt"></i>
-                                <span>View All Bookings · ดูการจองทั้งหมด</span>
+                                <span>ดูการจองทั้งหมด</span>
                             </a>
                         </div>
                     </div>
 
-                    <!-- =====================================================
-                         6. ACCOUNT ACTIONS (ความปลอดภัยและปุ่ม Logout)
-                         ===================================================== -->
                     <div class="customer-pf-card mt-auto" data-aos="fade-up" data-aos-delay="150">
                         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                             <div>
                                 <h5 class="fw-bold text-dark mb-1">
                                     <i class="fa-solid fa-shield-halved text-primary me-2"></i>Account Actions
                                 </h5>
-                                <p class="text-secondary small mb-0">ออกจากระบบอย่างปลอดภัยเมื่อใช้งานเสร็จสิ้น</p>
+                                <p class="text-secondary small mb-0">ออกจากระบบเมื่อใช้งานเสร็จ</p>
                             </div>
 
                             <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
@@ -350,17 +296,15 @@ var defaultLastName = nameParts.Length > 1
         </div>
     </section>
 
-    <!-- =========================================================
-         4. CHANGE PASSWORD MODAL (พร้อมปุ่มแสดง/ซ่อนรหัสผ่าน)
-         ========================================================= -->
+    <!-- CHANGE PASSWORD MODAL -->
     <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content customer-pf-modal-content">
                 <div class="modal-header customer-pf-modal-header">
                     <div>
-                        <span class="customer-promo-badge-cyan mb-1 d-inline-block">SECURITY SETTINGS</span>
+                        <span class="customer-promo-badge-cyan mb-1 d-inline-block">SECURITY</span>
                         <h5 class="modal-title fw-bold text-white mb-0" id="changePasswordModalLabel">
-                            <i class="fa-solid fa-key text-info me-2"></i>เปลี่ยนรหัสผ่าน (Change Password)
+                            <i class="fa-solid fa-key text-info me-2"></i>เปลี่ยนรหัสผ่าน
                         </h5>
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -369,7 +313,7 @@ var defaultLastName = nameParts.Length > 1
                 <form id="pfPasswordForm" onsubmit="submitPasswordChange(event)">
                     <div class="modal-body p-4">
                         <div class="mb-3">
-                            <label for="oldPassword" class="customer-pf-label">รหัสผ่านเดิม (Current Password) <span class="text-danger">*</span></label>
+                            <label for="oldPassword" class="customer-pf-label">รหัสผ่านเดิม <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <input type="password" id="oldPassword" class="form-control customer-pf-input" required placeholder="กรอกรหัสผ่านเดิม" />
                                 <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('oldPassword', this)" aria-label="แสดงหรือซ่อนรหัสผ่าน">
@@ -379,7 +323,7 @@ var defaultLastName = nameParts.Length > 1
                         </div>
 
                         <div class="mb-3">
-                            <label for="newPassword" class="customer-pf-label">รหัสผ่านใหม่ (New Password) <span class="text-danger">*</span></label>
+                            <label for="newPassword" class="customer-pf-label">รหัสผ่านใหม่ <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <input type="password" id="newPassword" class="form-control customer-pf-input" minlength="6" required placeholder="อย่างน้อย 6 ตัวอักษร" />
                                 <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('newPassword', this)" aria-label="แสดงหรือซ่อนรหัสผ่าน">
@@ -389,7 +333,7 @@ var defaultLastName = nameParts.Length > 1
                         </div>
 
                         <div class="mb-2">
-                            <label for="confirmNewPassword" class="customer-pf-label">ยืนยันรหัสผ่านใหม่ (Confirm Password) <span class="text-danger">*</span></label>
+                            <label for="confirmNewPassword" class="customer-pf-label">ยืนยันรหัสผ่านใหม่ <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <input type="password" id="confirmNewPassword" class="form-control customer-pf-input" minlength="6" required placeholder="กรอกรหัสผ่านใหม่อีกครั้ง" />
                                 <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('confirmNewPassword', this)" aria-label="แสดงหรือซ่อนรหัสผ่าน">
@@ -413,19 +357,15 @@ var defaultLastName = nameParts.Length > 1
         </div>
     </div>
 
-    <!-- =========================================================
-         SUCCESS POPUP MODAL
-         ========================================================= -->
+    <!-- SUCCESS POPUP -->
     <div class="modal fade" id="pfSuccessModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content text-center p-4 rounded-4 border-0 shadow-lg">
                 <div class="customer-co-success-icon-wrap mx-auto mb-3" style="width:64px; height:64px; font-size:2.4rem;">
                     <i class="fa-solid fa-circle-check"></i>
                 </div>
-                <h5 class="fw-bold text-dark mb-1" id="pfSuccessTitle">บันทึกข้อมูลสำเร็จ!</h5>
-                <p class="text-secondary small mb-3" id="pfSuccessMessage">
-                    อัปเดตข้อมูลโปรไฟล์ของคุณเรียบร้อยแล้ว
-                </p>
+                <h5 class="fw-bold text-dark mb-1" id="pfSuccessTitle"></h5>
+                <p class="text-secondary small mb-3" id="pfSuccessMessage"></p>
                 <button type="button" class="customer-pf-btn-primary w-100 justify-content-center" data-bs-dismiss="modal">
                     ตกลง
                 </button>
@@ -457,8 +397,7 @@ var defaultLastName = nameParts.Length > 1
         }
 
         function toggleProfileEditMode(isEditing) {
-            const fields = ["pfFirstName", "pfLastName", "pfPhone", "pfEmail"];
-            fields.forEach(id => {
+            ["pfFirstName", "pfLastName", "pfPhone", "pfEmail"].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.disabled = !isEditing;
             });
@@ -469,11 +408,11 @@ var defaultLastName = nameParts.Length > 1
             const statusBadge = document.getElementById("pfEditStatusBadge");
             if (isEditing) {
                 statusBadge.className = "badge rounded-pill bg-primary-subtle text-primary px-3 py-2";
-                statusBadge.innerHTML = `<i class="fa-solid fa-pen me-1"></i> โหมดกำลังแก้ไข (Editing Mode)`;
+                statusBadge.innerHTML = `<i class="fa-solid fa-pen me-1"></i> โหมดกำลังแก้ไข`;
                 document.getElementById("pfFirstName").focus();
             } else {
                 statusBadge.className = "badge rounded-pill bg-secondary-subtle text-secondary px-3 py-2";
-                statusBadge.innerHTML = `<i class="fa-solid fa-lock me-1"></i> โหมดแสดงผล (View Mode)`;
+                statusBadge.innerHTML = `<i class="fa-solid fa-lock me-1"></i> โหมดแสดงผล`;
             }
         }
 
@@ -485,46 +424,35 @@ var defaultLastName = nameParts.Length > 1
             toggleProfileEditMode(false);
         }
 
+        function getAntiForgeryToken() {
+            return document.querySelector('#pfPersonalForm input[name="__RequestVerificationToken"]').value;
+        }
+
         function saveProfileChanges(e) {
             e.preventDefault();
 
-            const token = document.querySelector('#pfPersonalForm input[name="__RequestVerificationToken"]').value;
             const formData = new FormData();
-            formData.append("__RequestVerificationToken", token);
+            formData.append("__RequestVerificationToken", getAntiForgeryToken());
             formData.append("firstName", document.getElementById("pfFirstName").value);
             formData.append("lastName", document.getElementById("pfLastName").value);
             formData.append("phone", document.getElementById("pfPhone").value);
             formData.append("email", document.getElementById("pfEmail").value);
 
-            fetch("/Customer/UpdateProfile", {
-                method: "POST",
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    captureCurrentProfileState();
-                    document.getElementById("headerFullName").textContent = data.fullName;
-                    document.getElementById("headerEmail").textContent = data.email;
-                    document.getElementById("headerPhone").textContent = data.phone;
-                    toggleProfileEditMode(false);
-                    showProfileSuccessPopup("บันทึกโปรไฟล์สำเร็จ!", "อัปเดตข้อมูลส่วนตัวของคุณลงในระบบเรียบร้อยแล้ว");
-                } else {
-                    alert(data.message || "ไม่สามารถบันทึกข้อมูลได้");
-                }
-            })
-            .catch(err => alert("เกิดข้อผิดพลาดในการเชื่อมต่อ: " + err));
-        }
-
-        function handleAvatarUpload(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    document.getElementById("pfAvatarPreview").src = e.target.result;
-                    showProfileSuccessPopup("อัปเดตรูปโปรไฟล์สำเร็จ!", "เปลี่ยนรูปโปรไฟล์ของคุณเรียบร้อยแล้ว");
-                };
-                reader.readAsDataURL(input.files[0]);
-            }
+            fetch("/Customer/UpdateProfile", { method: "POST", body: formData })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        captureCurrentProfileState();
+                        document.getElementById("headerFullName").textContent = data.fullName;
+                        document.getElementById("headerEmail").textContent = data.email;
+                        document.getElementById("headerPhone").textContent = data.phone;
+                        toggleProfileEditMode(false);
+                        showProfileSuccessPopup("บันทึกโปรไฟล์สำเร็จ", "อัปเดตข้อมูลส่วนตัวเรียบร้อยแล้ว");
+                    } else {
+                        alert(data.message || "ไม่สามารถบันทึกข้อมูลได้");
+                    }
+                })
+                .catch(err => alert("เกิดข้อผิดพลาดในการเชื่อมต่อ: " + err));
         }
 
         function togglePasswordVisibility(inputId, btnEl) {
@@ -552,35 +480,29 @@ var defaultLastName = nameParts.Length > 1
             }
             alertEl.classList.add("d-none");
 
-            const token = document.querySelector('#pfPersonalForm input[name="__RequestVerificationToken"]').value;
             const formData = new FormData();
-            formData.append("__RequestVerificationToken", token);
+            formData.append("__RequestVerificationToken", getAntiForgeryToken());
             formData.append("oldPassword", oldPw);
             formData.append("newPassword", newPw);
 
-            fetch("/Customer/ChangePassword", {
-                method: "POST",
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    const pwModalEl = document.getElementById("changePasswordModal");
-                    bootstrap.Modal.getOrCreateInstance(pwModalEl).hide();
-                    document.getElementById("pfPasswordForm").reset();
-                    showProfileSuccessPopup("เปลี่ยนรหัสผ่านสำเร็จ!", "อัปเดตรหัสผ่านใหม่ของคุณเรียบร้อยแล้ว");
-                } else {
-                    alert(data.message || "ไม่สามารถเปลี่ยนรหัสผ่านได้");
-                }
-            })
-            .catch(err => alert("เกิดข้อผิดพลาดในการเชื่อมต่อ: " + err));
+            fetch("/Customer/ChangePassword", { method: "POST", body: formData })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        bootstrap.Modal.getOrCreateInstance(document.getElementById("changePasswordModal")).hide();
+                        document.getElementById("pfPasswordForm").reset();
+                        showProfileSuccessPopup("เปลี่ยนรหัสผ่านสำเร็จ", "อัปเดตรหัสผ่านใหม่เรียบร้อยแล้ว");
+                    } else {
+                        alert(data.message || "ไม่สามารถเปลี่ยนรหัสผ่านได้");
+                    }
+                })
+                .catch(err => alert("เกิดข้อผิดพลาดในการเชื่อมต่อ: " + err));
         }
 
         function showProfileSuccessPopup(title, msg) {
             document.getElementById("pfSuccessTitle").textContent = title;
             document.getElementById("pfSuccessMessage").textContent = msg;
-            const modalEl = document.getElementById("pfSuccessModal");
-            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+            bootstrap.Modal.getOrCreateInstance(document.getElementById("pfSuccessModal")).show();
         }
     </script>
 }

@@ -1,9 +1,9 @@
 @model StayMate_Kavinvee_0576.Models.User
 @{
     Layout = "~/Views/Shared/_CustomerLayout.cshtml";
-    ViewData["Title"] = "การจองของฉัน (My Bookings)";
+    ViewData["Title"] = "การจองของฉัน";
 
-    // ฟังก์ชันแปลงสถานะการจองจาก Database ให้ตรงกับระบบ UI
+    // แปลงสถานะการจองจากฐานข้อมูล (ค่าภายในใช้สำหรับกรอง ส่วนข้อความที่แสดงเป็นภาษาไทย)
     string MapBookingStatus(string? dbStatus)
     {
         return (dbStatus ?? "").ToLowerInvariant() switch
@@ -16,14 +16,22 @@
         };
     }
 
-    // ฟังก์ชันแปลงสถานะการชำระเงินจาก Database
+    string BookingStatusText(string s) => s switch
+    {
+        "Approved" => "ยืนยันแล้ว",
+        "Rejected" => "ไม่อนุมัติ",
+        "Completed" => "เข้าพักเสร็จสิ้น",
+        "Cancelled" => "ยกเลิกแล้ว",
+        _ => "รอดำเนินการ"
+    };
+
     string MapPaymentStatus(StayMate_Kavinvee_0576.Models.Booking b)
     {
         var latestPay = b.Payments?.OrderByDescending(p => p.CreatedAt).FirstOrDefault();
         if (latestPay == null)
         {
             var bStat = (b.Status ?? "").ToLowerInvariant();
-            if (bStat == "confirmed" || bStat == "checked_out" || bStat == "approved") return "Paid";
+            if (bStat == "confirmed" || bStat == "checked_in" || bStat == "checked_out" || bStat == "approved") return "Paid";
             if (bStat == "pending_approval") return "Pending Verification";
             if (bStat == "rejected") return "Rejected";
             return "Unpaid";
@@ -38,7 +46,14 @@
         };
     }
 
-    // ฟังก์ชันเลือกรูปภาพห้องพักตามประเภทห้อง
+    string PaymentStatusText(string s) => s switch
+    {
+        "Paid" => "ชำระแล้ว",
+        "Pending Verification" => "รอตรวจสอบสลิป",
+        "Rejected" => "สลิปไม่ผ่าน",
+        _ => "ยังไม่ชำระ"
+    };
+
     string GetRoomImage(string? code, string? name)
     {
         var key = ((code ?? "") + " " + (name ?? "")).ToLowerInvariant();
@@ -62,22 +77,30 @@
         var rt = firstRoom?.RoomType;
         var roomEntity = firstRoom?.Room;
 
-        var typeName = rt?.TypeName ?? "Standard Room";
+        var typeName = rt?.TypeName ?? "ห้องพัก";
         var typeCode = rt?.TypeCode ?? "";
         var roomTitle = roomEntity != null
-            ? $"{typeName} · ห้อง #{roomEntity.RoomNumber}"
+            ? $"{typeName} · ห้อง {roomEntity.RoomNumber}"
             : typeName;
 
-        var promoName = b.BookingPromotions?.Select(bp => bp.Promotion?.PromoName).FirstOrDefault(n => !string.IsNullOrWhiteSpace(n))
-                        ?? "ราคาสมาชิกมาตรฐาน";
+        var promoName = b.BookingPromotions?.Select(bp => bp.Promotion?.PromoName).FirstOrDefault(n => !string.IsNullOrWhiteSpace(n));
 
         var mappedBStatus = MapBookingStatus(b.Status);
         var mappedPStatus = MapPaymentStatus(b);
 
-        var hasQr = mappedBStatus == "Approved" || mappedBStatus == "Completed" || !string.IsNullOrWhiteSpace(b.QrCode);
-        var qrUrl = hasQr
-            ? $"https://api.qrserver.com/v1/create-qr-code/?size=260x260&data={Uri.EscapeDataString(!string.IsNullOrWhiteSpace(b.QrCode) ? b.QrCode : $"STAYMATE-{b.BookingCode}-{mappedBStatus.ToUpperInvariant()}")}"
+        // QR Code ใช้สำหรับเช็คอินเท่านั้น จึงแสดงเฉพาะรายการที่ยืนยันแล้ว
+        var hasQr = mappedBStatus == "Approved";
+        var qrText = hasQr
+            ? (!string.IsNullOrWhiteSpace(b.QrCode) ? b.QrCode : b.BookingCode)
             : "";
+
+        var qrReason = mappedBStatus switch
+        {
+            "Completed" => "เข้าพักเสร็จสิ้นแล้ว ไม่จำเป็นต้องใช้ QR Code",
+            "Rejected" => "รายการจองนี้ไม่ได้รับการอนุมัติ จึงไม่มี QR Code สำหรับเช็คอิน",
+            "Cancelled" => "รายการจองนี้ถูกยกเลิกแล้ว จึงไม่มี QR Code สำหรับเช็คอิน",
+            _ => "รายการจองนี้ยังอยู่ระหว่างตรวจสอบ ระบบจะแสดง QR Code เมื่อได้รับการยืนยัน"
+        };
 
         return new
         {
@@ -98,8 +121,8 @@
             BookingStatus = mappedBStatus,
             PaymentStatus = mappedPStatus,
             PromoName = promoName,
-            HasQrCode = hasQr,
-            QrCodeUrl = qrUrl
+            QrText = qrText,
+            QrReason = qrReason
         };
     }).ToList();
 
@@ -113,38 +136,32 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" />
     <link rel="stylesheet" href="~/css/Customer.css" asp-append-version="true" />
 }
 
 <div class="customer-mb-wrapper">
 
     <!-- =========================================================
-         1. PAGE HEADER
+         1. หัวหน้า
          ========================================================= -->
     <section class="customer-mb-header">
         <div class="container">
-            <nav aria-label="breadcrumb" class="customer-mb-breadcrumb mb-2" data-aos="fade-down">
+            <nav aria-label="breadcrumb" class="customer-mb-breadcrumb mb-2">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item">
                         <a asp-controller="Customer" asp-action="Index">
                             <i class="fa-solid fa-house me-1"></i> หน้าแรก
                         </a>
                     </li>
-                    <li class="breadcrumb-item active" aria-current="page">การจองของฉัน (My Bookings)</li>
+                    <li class="breadcrumb-item active" aria-current="page">การจองของฉัน</li>
                 </ol>
             </nav>
 
-            <div class="d-flex justify-content-between align-items-end flex-wrap gap-3" data-aos="fade-up">
+            <div class="d-flex justify-content-between align-items-end flex-wrap gap-3">
                 <div>
-                    <div class="d-flex align-items-center gap-2 mb-1">
-                        <span class="customer-mb-eyebrow mb-0">
-                            <i class="fa-solid fa-shield-halved me-1"></i> DIGITAL BOOKING MANAGEMENT
-                        </span>
-                    </div>
-                    <h1 class="customer-mb-title">My Bookings · การจองของฉัน</h1>
+                    <h1 class="customer-mb-title">การจองของฉัน</h1>
                     <p class="customer-mb-subtitle mb-0">
-                        ตรวจสอบสถานะการจอง การชำระเงิน ดูรายละเอียดใบจอง และเปิด Digital Travel Pass (QR Code) สำหรับเช็คอินเข้าพัก
+                        ตรวจสอบสถานะการจองและการชำระเงิน ดูรายละเอียดใบจอง และเปิด QR Code สำหรับเช็คอิน
                     </p>
                 </div>
 
@@ -159,63 +176,51 @@
     </section>
 
     <!-- =========================================================
-         2. BOOKING OVERVIEW DASHBOARD (4 CARDS)
+         2. สรุปภาพรวม
          ========================================================= -->
     <section class="customer-mb-dashboard-section" aria-label="สรุปภาพรวมการจอง">
         <div class="container">
             <div class="row g-3 g-md-4">
-                <!-- Card 1: Total Bookings -->
-                <div class="col-12 col-sm-6 col-xl-3" data-aos="fade-up" data-aos-delay="0">
+                <div class="col-12 col-sm-6 col-xl-3">
                     <div class="customer-mb-stat-card customer-mb-stat-navy">
-                        <div class="customer-mb-stat-icon">
-                            <i class="fa-solid fa-layer-group"></i>
-                        </div>
+                        <div class="customer-mb-stat-icon"><i class="fa-solid fa-layer-group"></i></div>
                         <div class="customer-mb-stat-content">
-                            <span class="customer-mb-stat-label">Total Bookings</span>
+                            <span class="customer-mb-stat-label">การจองทั้งหมด</span>
                             <h2 class="customer-mb-stat-value">@totalBookingsCount</h2>
-                            <small class="customer-mb-stat-desc">รายการจองห้องพักทั้งหมด</small>
+                            <small class="customer-mb-stat-desc">รายการจองทั้งหมดของคุณ</small>
                         </div>
                     </div>
                 </div>
 
-                <!-- Card 2: Upcoming Stays -->
-                <div class="col-12 col-sm-6 col-xl-3" data-aos="fade-up" data-aos-delay="60">
+                <div class="col-12 col-sm-6 col-xl-3">
                     <div class="customer-mb-stat-card customer-mb-stat-emerald">
-                        <div class="customer-mb-stat-icon">
-                            <i class="fa-solid fa-calendar-check"></i>
-                        </div>
+                        <div class="customer-mb-stat-icon"><i class="fa-solid fa-calendar-check"></i></div>
                         <div class="customer-mb-stat-content">
-                            <span class="customer-mb-stat-label">Upcoming Stays</span>
+                            <span class="customer-mb-stat-label">ใกล้เข้าพัก</span>
                             <h2 class="customer-mb-stat-value">@upcomingStaysCount</h2>
-                            <small class="customer-mb-stat-desc">อนุมัติแล้วและกำลังจะเข้าพัก</small>
+                            <small class="customer-mb-stat-desc">ยืนยันแล้วและกำลังจะเข้าพัก</small>
                         </div>
                     </div>
                 </div>
 
-                <!-- Card 3: Pending Bookings -->
-                <div class="col-12 col-sm-6 col-xl-3" data-aos="fade-up" data-aos-delay="120">
+                <div class="col-12 col-sm-6 col-xl-3">
                     <div class="customer-mb-stat-card customer-mb-stat-amber">
-                        <div class="customer-mb-stat-icon">
-                            <i class="fa-solid fa-hourglass-half"></i>
-                        </div>
+                        <div class="customer-mb-stat-icon"><i class="fa-solid fa-hourglass-half"></i></div>
                         <div class="customer-mb-stat-content">
-                            <span class="customer-mb-stat-label">Pending Bookings</span>
+                            <span class="customer-mb-stat-label">รอดำเนินการ</span>
                             <h2 class="customer-mb-stat-value">@pendingBookingsCount</h2>
-                            <small class="customer-mb-stat-desc">รอตรวจสอบการชำระเงิน/อนุมัติ</small>
+                            <small class="customer-mb-stat-desc">รอตรวจสอบการชำระเงินหรืออนุมัติ</small>
                         </div>
                     </div>
                 </div>
 
-                <!-- Card 4: Completed Stays -->
-                <div class="col-12 col-sm-6 col-xl-3" data-aos="fade-up" data-aos-delay="180">
+                <div class="col-12 col-sm-6 col-xl-3">
                     <div class="customer-mb-stat-card customer-mb-stat-blue">
-                        <div class="customer-mb-stat-icon">
-                            <i class="fa-solid fa-award"></i>
-                        </div>
+                        <div class="customer-mb-stat-icon"><i class="fa-solid fa-award"></i></div>
                         <div class="customer-mb-stat-content">
-                            <span class="customer-mb-stat-label">Completed Stays</span>
+                            <span class="customer-mb-stat-label">เข้าพักแล้ว</span>
                             <h2 class="customer-mb-stat-value">@completedStaysCount</h2>
-                            <small class="customer-mb-stat-desc">เข้าพักเสร็จสิ้นเรียบร้อยแล้ว</small>
+                            <small class="customer-mb-stat-desc">เข้าพักเสร็จสิ้นแล้ว</small>
                         </div>
                     </div>
                 </div>
@@ -224,18 +229,18 @@
     </section>
 
     <!-- =========================================================
-         3. BOOKING FILTER & SEARCH
+         3. ค้นหาและกรอง
          ========================================================= -->
     <section class="customer-mb-filter-section" aria-label="ค้นหาและกรองรายการจอง">
         <div class="container">
-            <div class="customer-mb-filter-panel" data-aos="fade-up">
+            <div class="customer-mb-filter-panel">
                 <div class="customer-mb-filter-top">
                     <div class="d-flex align-items-center gap-2">
                         <span class="customer-mb-filter-icon"><i class="fa-solid fa-sliders"></i></span>
-                        <h3 class="customer-mb-filter-heading mb-0">Search &amp; Filter Reservations</h3>
+                        <h3 class="customer-mb-filter-heading mb-0">ค้นหาและกรองรายการจอง</h3>
                     </div>
                     <button type="button" id="btnResetBookingFilters" class="customer-mb-btn-reset">
-                        <i class="fa-solid fa-rotate-left me-1"></i> Reset Filter
+                        <i class="fa-solid fa-rotate-left me-1"></i> ล้างตัวกรอง
                     </button>
                 </div>
 
@@ -243,59 +248,59 @@
                     <div class="row g-3 align-items-end">
                         <div class="col-12 col-sm-6 col-lg-2">
                             <label for="mbSearchBookingId" class="customer-mb-label">
-                                <i class="fa-solid fa-hashtag text-primary me-1"></i> Booking ID
+                                <i class="fa-solid fa-hashtag text-primary me-1"></i> รหัสการจอง
                             </label>
-                            <input type="text" id="mbSearchBookingId" class="form-control customer-mb-input" placeholder="ระบุรหัสการจอง..." />
+                            <input type="text" id="mbSearchBookingId" class="form-control customer-mb-input" placeholder="ค้นหารหัสการจอง" />
                         </div>
 
                         <div class="col-12 col-sm-6 col-lg-2">
                             <label for="mbSearchRoomName" class="customer-mb-label">
-                                <i class="fa-solid fa-bed text-primary me-1"></i> Room Name
+                                <i class="fa-solid fa-bed text-primary me-1"></i> ชื่อห้อง
                             </label>
-                            <input type="text" id="mbSearchRoomName" class="form-control customer-mb-input" placeholder="เช่น Deluxe, Suite" />
+                            <input type="text" id="mbSearchRoomName" class="form-control customer-mb-input" placeholder="เช่น Deluxe" />
                         </div>
 
                         <div class="col-12 col-sm-6 col-lg-2">
                             <label for="mbFilterBookingStatus" class="customer-mb-label">
-                                <i class="fa-solid fa-clipboard-check text-primary me-1"></i> Booking Status
+                                <i class="fa-solid fa-clipboard-check text-primary me-1"></i> สถานะการจอง
                             </label>
                             <select id="mbFilterBookingStatus" class="form-select customer-mb-input">
-                                <option value="ALL" selected>All Statuses</option>
-                                <option value="Pending">Pending (รออนุมัติ)</option>
-                                <option value="Approved">Approved (อนุมัติแล้ว)</option>
-                                <option value="Rejected">Rejected (ไม่อนุมัติ)</option>
-                                <option value="Completed">Completed (เสร็จสิ้น)</option>
-                                <option value="Cancelled">Cancelled (ยกเลิก)</option>
+                                <option value="ALL" selected>ทุกสถานะ</option>
+                                <option value="Pending">รอดำเนินการ</option>
+                                <option value="Approved">ยืนยันแล้ว</option>
+                                <option value="Rejected">ไม่อนุมัติ</option>
+                                <option value="Completed">เข้าพักเสร็จสิ้น</option>
+                                <option value="Cancelled">ยกเลิกแล้ว</option>
                             </select>
                         </div>
 
                         <div class="col-12 col-sm-6 col-lg-2">
                             <label for="mbFilterPaymentStatus" class="customer-mb-label">
-                                <i class="fa-solid fa-credit-card text-primary me-1"></i> Payment Status
+                                <i class="fa-solid fa-credit-card text-primary me-1"></i> สถานะการชำระเงิน
                             </label>
                             <select id="mbFilterPaymentStatus" class="form-select customer-mb-input">
-                                <option value="ALL" selected>All Payments</option>
-                                <option value="Unpaid">Unpaid (ยังไม่ชำระ)</option>
-                                <option value="Pending Verification">Pending Verification</option>
-                                <option value="Paid">Paid (ชำระแล้ว)</option>
-                                <option value="Rejected">Rejected (สลิปไม่ผ่าน)</option>
+                                <option value="ALL" selected>ทุกสถานะ</option>
+                                <option value="Unpaid">ยังไม่ชำระ</option>
+                                <option value="Pending Verification">รอตรวจสอบสลิป</option>
+                                <option value="Paid">ชำระแล้ว</option>
+                                <option value="Rejected">สลิปไม่ผ่าน</option>
                             </select>
                         </div>
 
                         <div class="col-12 col-sm-6 col-lg-2">
                             <label for="mbFilterCheckInDate" class="customer-mb-label">
-                                <i class="fa-regular fa-calendar text-primary me-1"></i> Check-in Date
+                                <i class="fa-regular fa-calendar text-primary me-1"></i> วันเช็คอิน
                             </label>
                             <input type="date" id="mbFilterCheckInDate" class="form-control customer-mb-input" />
                         </div>
 
                         <div class="col-12 col-sm-6 col-lg-2">
                             <label for="mbSortOrder" class="customer-mb-label">
-                                <i class="fa-solid fa-arrow-down-wide-short text-primary me-1"></i> Sorting
+                                <i class="fa-solid fa-arrow-down-wide-short text-primary me-1"></i> เรียงตาม
                             </label>
                             <select id="mbSortOrder" class="form-select customer-mb-input">
-                                <option value="newest" selected>Newest First (ใหม่สุด)</option>
-                                <option value="oldest">Oldest First (เก่าสุด)</option>
+                                <option value="newest" selected>ใหม่สุดก่อน</option>
+                                <option value="oldest">เก่าสุดก่อน</option>
                             </select>
                         </div>
                     </div>
@@ -305,16 +310,13 @@
     </section>
 
     <!-- =========================================================
-         4. BOOKING LIST (MODERN BOOKING CARDS)
+         4. รายการจอง
          ========================================================= -->
     <section class="customer-mb-list-section" aria-label="รายการจองห้องพัก">
         <div class="container">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                 <span class="customer-mb-result-counter">
-                    แสดง <strong id="mbVisibleCount">@totalBookingsCount</strong> จากทั้งหมด <strong>@totalBookingsCount</strong> รายการจอง
-                </span>
-                <span class="small text-muted">
-                    คลิก <strong>View Details</strong> เพื่อดูรายละเอียดใบยืนยันการจองและสถานะการชำระเงิน
+                    แสดง <strong id="mbVisibleCount">@totalBookingsCount</strong> จากทั้งหมด <strong>@totalBookingsCount</strong> รายการ
                 </span>
             </div>
 
@@ -359,7 +361,6 @@
                              data-timestamp="@item.CreatedAt.Ticks">
 
                         <div class="row g-0 align-items-stretch">
-                            <!-- ซ้าย: รูปห้องพัก -->
                             <div class="col-12 col-lg-3">
                                 <div class="customer-mb-card-img-wrap">
                                     <img src="@item.RoomImage" alt="@item.RoomName" class="customer-mb-card-img" loading="lazy" />
@@ -368,56 +369,58 @@
                                 </div>
                             </div>
 
-                            <!-- กลาง: รายละเอียดการจอง -->
                             <div class="col-12 col-lg-5">
                                 <div class="customer-mb-card-center">
                                     <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
                                         <span class="customer-mb-code-tag">
-                                            <i class="fa-solid fa-receipt text-primary me-1"></i> Booking ID: <strong>@item.BookingCode</strong>
+                                            <i class="fa-solid fa-receipt text-primary me-1"></i> รหัสการจอง: <strong>@item.BookingCode</strong>
                                         </span>
                                         <span class="text-muted small">· จองเมื่อ @item.CreatedAt.ToString("dd MMM yyyy")</span>
                                     </div>
 
                                     <h3 class="customer-mb-room-title">@item.RoomName</h3>
                                     <p class="customer-mb-room-sub mb-3">
-                                        ประเภทห้อง: <strong>@item.RoomType</strong> · แคมเปญ: <span class="text-primary fw-semibold">@item.PromoName</span>
+                                        ประเภทห้อง: <strong>@item.RoomType</strong>
+                                        @if (!string.IsNullOrWhiteSpace(item.PromoName))
+                                        {
+                                            <text> · โปรโมชั่น: <span class="text-primary fw-semibold">@item.PromoName</span></text>
+                                        }
                                     </p>
 
                                     <div class="customer-mb-meta-grid">
                                         <div class="customer-mb-meta-item">
-                                            <small><i class="fa-regular fa-calendar-plus text-primary me-1"></i> Check-in Date</small>
+                                            <small><i class="fa-regular fa-calendar-plus text-primary me-1"></i> เช็คอิน</small>
                                             <strong>@item.CheckIn.ToString("dd MMM yyyy")</strong>
                                         </div>
                                         <div class="customer-mb-meta-item">
-                                            <small><i class="fa-regular fa-calendar-minus text-primary me-1"></i> Check-out Date</small>
+                                            <small><i class="fa-regular fa-calendar-minus text-primary me-1"></i> เช็คเอาท์</small>
                                             <strong>@item.CheckOut.ToString("dd MMM yyyy")</strong>
                                         </div>
                                         <div class="customer-mb-meta-item">
-                                            <small><i class="fa-solid fa-moon text-primary me-1"></i> จำนวนคืนเข้าพัก</small>
+                                            <small><i class="fa-solid fa-moon text-primary me-1"></i> จำนวนคืน</small>
                                             <strong>@item.Nights คืน</strong>
                                         </div>
                                         <div class="customer-mb-meta-item">
-                                            <small><i class="fa-solid fa-user-group text-primary me-1"></i> ผู้เข้าพัก &amp; จำนวนห้อง</small>
+                                            <small><i class="fa-solid fa-user-group text-primary me-1"></i> ผู้เข้าพักและจำนวนห้อง</small>
                                             <strong>@item.Guests ท่าน · @item.RoomsCount ห้อง</strong>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- ขวา: สถานะ ราคา และปุ่มจัดการ -->
                             <div class="col-12 col-lg-4">
                                 <div class="customer-mb-card-right">
                                     <div class="customer-mb-status-row">
                                         <div class="customer-mb-status-group">
-                                            <small>Booking Status</small>
+                                            <small>สถานะการจอง</small>
                                             <span class="customer-mb-status-badge @bStatusClass">
-                                                <i class="fa-solid @bStatusIcon me-1"></i> @bStatus
+                                                <i class="fa-solid @bStatusIcon me-1"></i> @BookingStatusText(bStatus)
                                             </span>
                                         </div>
                                         <div class="customer-mb-status-group text-lg-end">
-                                            <small>Payment Status</small>
+                                            <small>การชำระเงิน</small>
                                             <span class="customer-mb-pay-badge @pStatusClass">
-                                                @pStatus
+                                                @PaymentStatusText(pStatus)
                                             </span>
                                         </div>
                                     </div>
@@ -446,7 +449,7 @@
                                            asp-route-id="@item.BookingId"
                                            class="customer-mb-btn-detail">
                                             <i class="fa-regular fa-file-lines"></i>
-                                            <span>View Details</span>
+                                            <span>ดูรายละเอียด</span>
                                         </a>
 
                                         <button type="button"
@@ -454,9 +457,10 @@
                                                 data-booking-code="@item.BookingCode"
                                                 data-room-name="@item.RoomName"
                                                 data-checkin="@item.CheckIn.ToString("dd MMM yyyy")"
-                                                data-qr-url="@item.QrCodeUrl">
+                                                data-qr-text="@item.QrText"
+                                                data-qr-reason="@item.QrReason">
                                             <i class="fa-solid fa-qrcode"></i>
-                                            <span>View QR Code</span>
+                                            <span>QR Code</span>
                                         </button>
                                     </div>
                                 </div>
@@ -466,29 +470,28 @@
                 }
             </div>
 
-            <!-- Empty State เมื่อยังไม่มีการจอง หรือกรองแล้วไม่เจอ -->
             <div id="mbFilterEmptyState" class="customer-mb-empty-card @(totalBookingsCount == 0 ? "" : "d-none") mt-3">
                 <div class="customer-mb-empty-icon-wrap">
                     <i class="fa-solid fa-suitcase-rolling"></i>
                 </div>
-                <h3 class="customer-mb-empty-title">No Bookings Found</h3>
+                <h3 class="customer-mb-empty-title">@(totalBookingsCount == 0 ? "ยังไม่มีรายการจอง" : "ไม่พบรายการที่ตรงกับเงื่อนไข")</h3>
                 <p class="customer-mb-empty-desc">
                     @(totalBookingsCount == 0
-                        ? "คุณยังไม่มีรายการจองห้องพักในระบบ สามารถกดค้นหาห้องว่างและสำรองห้องพักได้ทันที"
-                        : "ไม่พบรายการจองที่ตรงกับเงื่อนไขการค้นหา ลองกด Reset Filter เพื่อแสดงรายการจองทั้งหมด")
+                        ? "ค้นหาห้องพักที่ต้องการแล้วเริ่มจองได้ทันที"
+                        : "ลองล้างตัวกรองเพื่อแสดงรายการจองทั้งหมด")
                 </p>
                 @if (totalBookingsCount == 0)
                 {
                     <a asp-controller="Customer" asp-action="RoomAvailability" class="customer-mb-btn-primary mt-3">
                         <i class="fa-solid fa-magnifying-glass"></i>
-                        <span>ค้นหาห้องพักและจองตอนนี้</span>
+                        <span>ค้นหาห้องพัก</span>
                     </a>
                 }
                 else
                 {
                     <button type="button" id="btnEmptyFilterReset" class="customer-mb-btn-primary mt-3">
                         <i class="fa-solid fa-rotate-left"></i>
-                        <span>Reset Filter</span>
+                        <span>ล้างตัวกรอง</span>
                     </button>
                 }
             </div>
@@ -496,56 +499,56 @@
     </section>
 
     <!-- =========================================================
-         5. BOOKING STATUS INFORMATION
+         5. คำอธิบายสถานะ
          ========================================================= -->
     <section class="customer-mb-legend-section">
         <div class="container">
-            <div class="customer-mb-legend-card" data-aos="fade-up">
+            <div class="customer-mb-legend-card">
                 <div class="row g-4">
                     <div class="col-12 col-lg-7">
                         <h4 class="customer-mb-legend-title">
-                            <i class="fa-solid fa-circle-info text-primary me-2"></i>คำอธิบายสถานะการจอง (Booking Status)
+                            <i class="fa-solid fa-circle-info text-primary me-2"></i>ความหมายของสถานะการจอง
                         </h4>
                         <div class="customer-mb-legend-grid">
                             <div class="customer-mb-legend-item">
-                                <span class="customer-mb-status-badge customer-mb-badge-pending">Pending</span>
-                                <p class="mb-0">การจองกำลังรอการตรวจสอบและอนุมัติจากโรงแรม</p>
+                                <span class="customer-mb-status-badge customer-mb-badge-pending">รอดำเนินการ</span>
+                                <p class="mb-0">โรงแรมกำลังตรวจสอบการชำระเงินและการจองของคุณ</p>
                             </div>
                             <div class="customer-mb-legend-item">
-                                <span class="customer-mb-status-badge customer-mb-badge-approved">Approved</span>
-                                <p class="mb-0">การจองได้รับการยืนยันแล้ว พร้อมรับ QR Code สำหรับเช็คอิน</p>
+                                <span class="customer-mb-status-badge customer-mb-badge-approved">ยืนยันแล้ว</span>
+                                <p class="mb-0">การจองได้รับการยืนยัน สามารถใช้ QR Code เช็คอินได้</p>
                             </div>
                             <div class="customer-mb-legend-item">
-                                <span class="customer-mb-status-badge customer-mb-badge-rejected">Rejected</span>
-                                <p class="mb-0">การจองไม่ผ่านการอนุมัติ (ตรวจสอบสาเหตุในหน้า Booking Details)</p>
+                                <span class="customer-mb-status-badge customer-mb-badge-rejected">ไม่อนุมัติ</span>
+                                <p class="mb-0">การจองไม่ผ่านการอนุมัติ ดูเหตุผลได้ในหน้ารายละเอียด</p>
                             </div>
                             <div class="customer-mb-legend-item">
-                                <span class="customer-mb-status-badge customer-mb-badge-completed">Completed</span>
-                                <p class="mb-0">ลูกค้าเข้าพักและเช็คเอาท์เสร็จสิ้นแล้ว (สามารถเขียนรีวิวได้)</p>
+                                <span class="customer-mb-status-badge customer-mb-badge-completed">เข้าพักเสร็จสิ้น</span>
+                                <p class="mb-0">เช็คเอาท์เรียบร้อยแล้ว และสามารถเขียนรีวิวได้</p>
                             </div>
                         </div>
                     </div>
 
                     <div class="col-12 col-lg-5 border-lg-start ps-lg-4">
                         <h4 class="customer-mb-legend-title">
-                            <i class="fa-solid fa-wallet text-info me-2"></i>สถานะการชำระเงิน (Payment Status)
+                            <i class="fa-solid fa-wallet text-info me-2"></i>ความหมายของสถานะการชำระเงิน
                         </h4>
                         <div class="customer-mb-legend-grid">
                             <div class="customer-mb-legend-item">
-                                <span class="customer-mb-pay-badge customer-mb-pay-unpaid">Unpaid</span>
-                                <p class="mb-0">ยังไม่ได้ชำระเงิน หรือรอการแนบสลิปโอนเงิน</p>
+                                <span class="customer-mb-pay-badge customer-mb-pay-unpaid">ยังไม่ชำระ</span>
+                                <p class="mb-0">ยังไม่ได้ชำระเงินหรือยังไม่ได้แนบสลิป</p>
                             </div>
                             <div class="customer-mb-legend-item">
-                                <span class="customer-mb-pay-badge customer-mb-pay-verifying">Pending Verification</span>
-                                <p class="mb-0">แนบสลิปแล้ว อยู่ระหว่างเจ้าหน้าที่ตรวจสอบยอดเงิน</p>
+                                <span class="customer-mb-pay-badge customer-mb-pay-verifying">รอตรวจสอบสลิป</span>
+                                <p class="mb-0">แนบสลิปแล้ว เจ้าหน้าที่กำลังตรวจสอบยอดเงิน</p>
                             </div>
                             <div class="customer-mb-legend-item">
-                                <span class="customer-mb-pay-badge customer-mb-pay-paid">Paid</span>
-                                <p class="mb-0">ชำระเงินครบถ้วนและได้รับการยืนยันเรียบร้อยแล้ว</p>
+                                <span class="customer-mb-pay-badge customer-mb-pay-paid">ชำระแล้ว</span>
+                                <p class="mb-0">ตรวจสอบการชำระเงินเรียบร้อยแล้ว</p>
                             </div>
                             <div class="customer-mb-legend-item">
-                                <span class="customer-mb-pay-badge customer-mb-pay-rejected">Rejected</span>
-                                <p class="mb-0">หลักฐานการโอนเงินไม่ถูกต้อง กรุณาติดต่อฝ่ายบริการลูกค้า</p>
+                                <span class="customer-mb-pay-badge customer-mb-pay-rejected">สลิปไม่ผ่าน</span>
+                                <p class="mb-0">หลักฐานการโอนไม่ถูกต้อง กรุณาติดต่อโรงแรม</p>
                             </div>
                         </div>
                     </div>
@@ -555,39 +558,39 @@
     </section>
 
     <!-- =========================================================
-         6. QR CODE PREVIEW MODAL
+         6. MODAL QR CODE
          ========================================================= -->
     <div class="modal fade customer-mb-qr-modal" id="mbQrCodeModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content customer-mb-qr-modal-content">
                 <div class="modal-header customer-mb-qr-modal-header">
                     <div>
-                        <span class="customer-mb-qr-tag">DIGITAL TRAVEL PASS</span>
-                        <h5 class="modal-title fw-bold text-white mb-0">StayMate Booking QR Code</h5>
+                        <span class="customer-mb-qr-tag">QR CODE สำหรับเช็คอิน</span>
+                        <h5 class="modal-title fw-bold text-white mb-0">QR Code การจอง</h5>
                     </div>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="ปิด"></button>
                 </div>
 
                 <div class="modal-body p-4 text-center">
                     <div class="customer-mb-qr-info-strip mb-3">
                         <div>
-                            <small>Booking ID</small>
+                            <small>รหัสการจอง</small>
                             <strong id="qrModalBookingCode">-</strong>
                         </div>
                         <div>
-                            <small>Room</small>
+                            <small>ห้องพัก</small>
                             <strong id="qrModalRoomName">-</strong>
                         </div>
                         <div>
-                            <small>Check-in Date</small>
+                            <small>วันเช็คอิน</small>
                             <strong id="qrModalCheckIn">-</strong>
                         </div>
                     </div>
 
                     <div id="qrAvailableBox" class="customer-mb-qr-frame d-none">
-                        <img id="qrModalImage" src="" alt="Booking QR Code" class="img-fluid rounded-3 border p-2 bg-white" />
+                        <div id="qrModalCanvas" class="d-inline-block border rounded-3 p-2 bg-white"></div>
                         <small class="d-block text-muted mt-2">
-                            <i class="fa-solid fa-shield-check text-success me-1"></i> แสดง QR Code นี้ต่อเจ้าหน้าที่หรือตู้ Smart Kiosk เพื่อเช็คอิน
+                            แสดง QR Code นี้ต่อเจ้าหน้าที่เมื่อเช็คอิน
                         </small>
                     </div>
 
@@ -595,18 +598,16 @@
                         <div class="customer-mb-qr-unavail-icon">
                             <i class="fa-solid fa-qrcode"></i>
                         </div>
-                        <h6 class="fw-bold text-dark mb-1">QR Code is not available yet.</h6>
-                        <p class="text-muted small mb-0">
-                            รายการจองนี้ยังอยู่ระหว่างรอการอนุมัติ ระบบจะออก QR Code ให้ทันทีเมื่อสถานะเป็น Approved
-                        </p>
+                        <h6 class="fw-bold text-dark mb-1">ยังไม่มี QR Code</h6>
+                        <p class="text-muted small mb-0" id="qrUnavailableReason"></p>
                     </div>
                 </div>
 
                 <div class="modal-footer bg-light border-top justify-content-between">
-                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">ปิดหน้าต่าง</button>
-                    <a href="#" id="qrModalDownloadBtn" target="_blank" rel="noopener" class="customer-mb-btn-primary d-none">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">ปิด</button>
+                    <a href="#" id="qrModalDownloadBtn" class="customer-mb-btn-primary d-none">
                         <i class="fa-solid fa-download"></i>
-                        <span>เปิด/ดาวน์โหลด QR Code</span>
+                        <span>บันทึก QR Code</span>
                     </a>
                 </div>
             </div>
@@ -616,13 +617,9 @@
 </div>
 
 @section Scripts {
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            if (typeof AOS !== "undefined") {
-                AOS.init({ duration: 650, once: true, offset: 50 });
-            }
-
             const searchIdEl = document.getElementById("mbSearchBookingId");
             const searchRoomEl = document.getElementById("mbSearchRoomName");
             const filterBookStatusEl = document.getElementById("mbFilterBookingStatus");
@@ -658,18 +655,15 @@
                 sorted.forEach(card => {
                     cardsContainer.appendChild(card);
 
-                    const passId = !qId || card.dataset.bookingId.includes(qId);
-                    const passRoom = !qRoom || card.dataset.roomName.includes(qRoom);
-                    const passBs = (bStat === "ALL" || card.dataset.bookingStatus === bStat);
-                    const passPs = (pStat === "ALL" || card.dataset.paymentStatus === pStat);
-                    const passDate = (!cDate || card.dataset.checkin === cDate);
+                    const pass =
+                        (!qId || card.dataset.bookingId.includes(qId)) &&
+                        (!qRoom || card.dataset.roomName.includes(qRoom)) &&
+                        (bStat === "ALL" || card.dataset.bookingStatus === bStat) &&
+                        (pStat === "ALL" || card.dataset.paymentStatus === pStat) &&
+                        (!cDate || card.dataset.checkin === cDate);
 
-                    if (passId && passRoom && passBs && passPs && passDate) {
-                        card.classList.remove("d-none");
-                        visible++;
-                    } else {
-                        card.classList.add("d-none");
-                    }
+                    card.classList.toggle("d-none", !pass);
+                    if (pass) visible++;
                 });
 
                 visibleCountEl.textContent = visible;
@@ -692,30 +686,42 @@
             if (resetBtn) resetBtn.addEventListener("click", resetFilters);
             if (emptyResetBtn) emptyResetBtn.addEventListener("click", resetFilters);
 
-            // QR Modal
+            // ---------- QR Code (สร้างในเบราว์เซอร์ ไม่ส่งรหัสการจองไปบริการภายนอก) ----------
             const qrModalEl = document.getElementById("mbQrCodeModal");
+            const qrBox = document.getElementById("qrModalCanvas");
+            const availBox = document.getElementById("qrAvailableBox");
+            const unavailBox = document.getElementById("qrUnavailableBox");
+            const dlBtn = document.getElementById("qrModalDownloadBtn");
+
             document.querySelectorAll(".js-open-qr-modal").forEach(btn => {
                 btn.addEventListener("click", function () {
                     document.getElementById("qrModalBookingCode").textContent = this.dataset.bookingCode;
                     document.getElementById("qrModalRoomName").textContent = this.dataset.roomName;
                     document.getElementById("qrModalCheckIn").textContent = this.dataset.checkin;
 
-                    const qrUrl = (this.dataset.qrUrl || "").trim();
-                    const availBox = document.getElementById("qrAvailableBox");
-                    const unavailBox = document.getElementById("qrUnavailableBox");
-                    const qrImg = document.getElementById("qrModalImage");
-                    const dlBtn = document.getElementById("qrModalDownloadBtn");
+                    const qrText = (this.dataset.qrText || "").trim();
+                    dlBtn.classList.add("d-none");
+                    qrBox.innerHTML = "";
 
-                    if (qrUrl) {
-                        qrImg.src = qrUrl;
+                    if (qrText && typeof QRCode !== "undefined") {
+                        new QRCode(qrBox, { text: qrText, width: 240, height: 240, correctLevel: QRCode.CorrectLevel.M });
+
+                        setTimeout(() => {
+                            const img = qrBox.querySelector("img");
+                            if (img && img.src) {
+                                dlBtn.href = img.src;
+                                dlBtn.download = `staymate-${this.dataset.bookingCode}.png`;
+                                dlBtn.classList.remove("d-none");
+                            }
+                        }, 80);
+
                         availBox.classList.remove("d-none");
                         unavailBox.classList.add("d-none");
-                        dlBtn.href = qrUrl;
-                        dlBtn.classList.remove("d-none");
                     } else {
+                        document.getElementById("qrUnavailableReason").textContent =
+                            qrText ? "ไม่สามารถสร้าง QR Code ได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง" : (this.dataset.qrReason || "");
                         availBox.classList.add("d-none");
                         unavailBox.classList.remove("d-none");
-                        dlBtn.classList.add("d-none");
                     }
 
                     bootstrap.Modal.getOrCreateInstance(qrModalEl).show();

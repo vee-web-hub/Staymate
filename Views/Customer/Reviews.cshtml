@@ -2,7 +2,7 @@
 @using System.Text.Json
 @{
     Layout = "~/Views/Shared/_CustomerLayout.cshtml";
-    ViewData["Title"] = "รีวิวและความคิดเห็น (Guest Reviews)";
+    ViewData["Title"] = "รีวิวจากผู้เข้าพัก";
 
     var qBookingId = Context.Request.Query["bookingId"].ToString();
     var userBookings = ViewBag.UserBookings as List<StayMate_Kavinvee_0576.Models.Booking>
@@ -15,6 +15,12 @@
     int CountStar(int star) => reviewsList.Count(r => r.Rating == star);
     int PctStar(int star) => totalCount > 0 ? (int)Math.Round(CountStar(star) * 100.0 / totalCount) : 0;
 
+    string AvgStarClass(int i) =>
+        avgRating >= i ? "fa-solid fa-star"
+        : avgRating >= i - 0.5 ? "fa-solid fa-star-half-stroke"
+        : "fa-regular fa-star";
+
+    // สถานะภายใน (ใช้ตรวจสิทธิ์ในฝั่ง JS) และข้อความที่แสดงให้ผู้ใช้เห็น
     string MapBookingStatus(string? dbStatus)
     {
         return (dbStatus ?? "").ToLowerInvariant() switch
@@ -27,11 +33,20 @@
         };
     }
 
+    string StatusText(string mapped) => mapped switch
+    {
+        "Completed" => "เข้าพักเสร็จสิ้น",
+        "Approved" => "ยืนยันการจองแล้ว",
+        "Rejected" => "ไม่อนุมัติ",
+        "Cancelled" => "ยกเลิกแล้ว",
+        _ => "รอดำเนินการ"
+    };
+
     // แยกหัวข้อรีวิวออกจาก Comment กรณีบันทึกไว้ในรูปแบบ [หัวข้อ] รายละเอียด
     (string Title, string Body) ParseComment(string? rawComment, string roomType)
     {
         if (string.IsNullOrWhiteSpace(rawComment))
-            return ($"ความประทับใจจากการเข้าพักห้อง {roomType}", "-");
+            return ($"ประสบการณ์การเข้าพักห้อง {roomType}", "");
 
         var text = rawComment.Trim();
         if (text.StartsWith("[") && text.Contains("]"))
@@ -43,17 +58,17 @@
                     string.IsNullOrWhiteSpace(body) ? title : body);
         }
 
-        return ($"ความประทับใจจากการเข้าพักห้อง {roomType}", text);
+        return ($"ประสบการณ์การเข้าพักห้อง {roomType}", text);
     }
 
     var serializedReviews = JsonSerializer.Serialize(reviewsList.Select(r =>
     {
         var rtName = r.Booking?.BookingRooms?.Select(br => br.RoomType?.TypeName).FirstOrDefault(n => !string.IsNullOrWhiteSpace(n))
-                     ?? "Standard Room";
+                     ?? "ห้องพัก";
         var parsed = ParseComment(r.Comment, rtName);
         var reviewerName = !string.IsNullOrWhiteSpace(r.User?.FullName)
-            ? r.User.FullName
-            : (!string.IsNullOrWhiteSpace(r.Booking?.ContactName) ? r.Booking.ContactName : "สมาชิกผู้เข้าพัก");
+            ? r.User!.FullName
+            : (!string.IsNullOrWhiteSpace(r.Booking?.ContactName) ? r.Booking!.ContactName : "ผู้เข้าพัก");
 
         return new
         {
@@ -65,8 +80,7 @@
             reviewDateText = r.CreatedAt.ToString("dd MMM yyyy"),
             rating = (int)r.Rating,
             title = parsed.Title,
-            comment = parsed.Body,
-            photo = ""
+            comment = parsed.Body
         };
     }));
 }
@@ -82,7 +96,7 @@
 <div class="customer-rv-wrapper">
 
     <!-- =========================================================
-         1. REVIEW HERO SECTION
+         1. HERO
          ========================================================= -->
     <section class="customer-rv-hero mb-4">
         <div class="customer-rv-hero-bg"
@@ -98,24 +112,24 @@
                             <i class="fa-solid fa-house me-1"></i> หน้าแรก
                         </a>
                     </li>
-                    <li class="breadcrumb-item active text-light opacity-75" aria-current="page">รีวิวผู้เข้าพัก (Guest Reviews)</li>
+                    <li class="breadcrumb-item active text-light opacity-75" aria-current="page">รีวิวจากผู้เข้าพัก</li>
                 </ol>
             </nav>
 
             <div class="row align-items-end g-4">
                 <div class="col-lg-8">
                     <span class="customer-promo-badge-cyan mb-2 d-inline-block">
-                        <i class="fa-solid fa-star text-warning me-1"></i> VERIFIED GUEST EXPERIENCES
+                        <i class="fa-solid fa-star text-warning me-1"></i> รีวิวจากผู้เข้าพัก
                     </span>
-                    <h1 class="customer-rv-hero-title">Guest Experiences · เสียงจริงจากผู้เข้าพัก</h1>
+                    <h1 class="customer-rv-hero-title">ประสบการณ์จากผู้เข้าพัก StayMate</h1>
                     <p class="customer-rv-hero-desc mb-0">
-                        อ่านความประทับใจจากสมาชิกผู้เข้าพักจริงของ StayMate Hotel และร่วมแบ่งปันประสบการณ์การเข้าพักของคุณเพื่อช่วยให้เราพัฒนาบริการระดับ Futuristic Luxury ให้ดียิ่งขึ้น
+                        อ่านความคิดเห็นจากผู้ที่เข้าพักกับเรา และแบ่งปันประสบการณ์ของคุณเพื่อช่วยให้เราพัฒนาบริการให้ดียิ่งขึ้น
                     </p>
                 </div>
                 <div class="col-lg-4 text-lg-end">
                     <a href="#writeReviewSection" class="customer-promo-btn-cyan">
                         <i class="fa-solid fa-pen-nib"></i>
-                        <span>เขียนรีวิวการเข้าพักของคุณ</span>
+                        <span>เขียนรีวิว</span>
                     </a>
                 </div>
             </div>
@@ -125,63 +139,60 @@
     <div class="container pb-5">
 
         <!-- =========================================================
-             2. OVERALL RATING & BREAKDOWN (5 TO 1 STARS)
+             2. คะแนนเฉลี่ยและสัดส่วนคะแนน
              ========================================================= -->
         <section class="customer-rv-summary-card mb-4" data-aos="fade-up">
             <div class="row align-items-center g-4">
-                <!-- คะแนนเฉลี่ยรวม -->
                 <div class="col-12 col-md-4 text-center border-md-end">
                     <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-3 py-1 mb-2 fw-bold">
-                        OVERALL GUEST RATING
+                        คะแนนเฉลี่ยรวม
                     </span>
                     <div class="customer-rv-big-score">
                         <span id="rvAvgScore">@avgRating.ToString("0.0")</span><small>/5.0</small>
                     </div>
-                    <div class="customer-rv-stars-lg my-2">
-                        <i class="fa-solid fa-star"></i>
-                        <i class="fa-solid fa-star"></i>
-                        <i class="fa-solid fa-star"></i>
-                        <i class="fa-solid fa-star"></i>
-                        <i class="fa-solid fa-star-half-stroke"></i>
+                    <div class="customer-rv-stars-lg my-2" id="rvAvgStars" aria-hidden="true">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            <i class="@AvgStarClass(i)"></i>
+                        }
                     </div>
                     <p class="text-muted small mb-0">
-                        อ้างอิงจากทั้งหมด <strong id="rvTotalCount">@totalCount</strong> รีวิวผู้เข้าพักจริง
+                        จาก <strong id="rvTotalCount">@totalCount</strong> รีวิว
                     </p>
                 </div>
 
-                <!-- Rating Breakdown 5 ดาว ถึง 1 ดาว -->
                 <div class="col-12 col-md-8">
                     <div class="customer-rv-breakdown-list px-md-3">
                         <div class="customer-rv-bar-row">
-                            <span class="customer-rv-bar-label">5 Stars <i class="fa-solid fa-star text-warning"></i></span>
+                            <span class="customer-rv-bar-label">5 ดาว <i class="fa-solid fa-star text-warning"></i></span>
                             <div class="progress customer-rv-progress">
                                 <div class="progress-bar bg-warning" id="barPct5" style="width: @PctStar(5)%"></div>
                             </div>
                             <span class="customer-rv-bar-count" id="barCount5">@CountStar(5) รีวิว</span>
                         </div>
                         <div class="customer-rv-bar-row">
-                            <span class="customer-rv-bar-label">4 Stars <i class="fa-solid fa-star text-warning"></i></span>
+                            <span class="customer-rv-bar-label">4 ดาว <i class="fa-solid fa-star text-warning"></i></span>
                             <div class="progress customer-rv-progress">
                                 <div class="progress-bar bg-info" id="barPct4" style="width: @PctStar(4)%"></div>
                             </div>
                             <span class="customer-rv-bar-count" id="barCount4">@CountStar(4) รีวิว</span>
                         </div>
                         <div class="customer-rv-bar-row">
-                            <span class="customer-rv-bar-label">3 Stars <i class="fa-solid fa-star text-warning"></i></span>
+                            <span class="customer-rv-bar-label">3 ดาว <i class="fa-solid fa-star text-warning"></i></span>
                             <div class="progress customer-rv-progress">
                                 <div class="progress-bar bg-primary" id="barPct3" style="width: @PctStar(3)%"></div>
                             </div>
                             <span class="customer-rv-bar-count" id="barCount3">@CountStar(3) รีวิว</span>
                         </div>
                         <div class="customer-rv-bar-row">
-                            <span class="customer-rv-bar-label">2 Stars <i class="fa-solid fa-star text-warning"></i></span>
+                            <span class="customer-rv-bar-label">2 ดาว <i class="fa-solid fa-star text-warning"></i></span>
                             <div class="progress customer-rv-progress">
                                 <div class="progress-bar bg-secondary" id="barPct2" style="width: @PctStar(2)%"></div>
                             </div>
                             <span class="customer-rv-bar-count" id="barCount2">@CountStar(2) รีวิว</span>
                         </div>
                         <div class="customer-rv-bar-row mb-0">
-                            <span class="customer-rv-bar-label">1 Star <i class="fa-solid fa-star text-warning"></i></span>
+                            <span class="customer-rv-bar-label">1 ดาว <i class="fa-solid fa-star text-warning"></i></span>
                             <div class="progress customer-rv-progress">
                                 <div class="progress-bar bg-danger" id="barPct1" style="width: @PctStar(1)%"></div>
                             </div>
@@ -193,182 +204,193 @@
         </section>
 
         <!-- =========================================================
-             3. REVIEW FILTER & SORTING BAR
+             3. ตัวกรองและการเรียงลำดับ
              ========================================================= -->
         <section class="customer-rv-filter-bar mb-4" data-aos="fade-up">
             <div class="d-flex align-items-center flex-wrap gap-2">
-                <span class="fw-bold text-dark small me-1"><i class="fa-solid fa-filter text-primary me-1"></i> กรองคะแนน:</span>
-                <button type="button" class="customer-promo-filter-btn active js-rv-filter" data-star="ALL">All Reviews</button>
-                <button type="button" class="customer-promo-filter-btn js-rv-filter" data-star="5">5 Stars ★</button>
-                <button type="button" class="customer-promo-filter-btn js-rv-filter" data-star="4">4 Stars ★</button>
-                <button type="button" class="customer-promo-filter-btn js-rv-filter" data-star="3">3 Stars ★</button>
-                <button type="button" class="customer-promo-filter-btn js-rv-filter" data-star="2">2 Stars ★</button>
-                <button type="button" class="customer-promo-filter-btn js-rv-filter" data-star="1">1 Star ★</button>
+                <span class="fw-bold text-dark small me-1"><i class="fa-solid fa-filter text-primary me-1"></i> กรองตามคะแนน:</span>
+                <button type="button" class="customer-promo-filter-btn active js-rv-filter" data-star="ALL">ทั้งหมด</button>
+                <button type="button" class="customer-promo-filter-btn js-rv-filter" data-star="5">5 ดาว ★</button>
+                <button type="button" class="customer-promo-filter-btn js-rv-filter" data-star="4">4 ดาว ★</button>
+                <button type="button" class="customer-promo-filter-btn js-rv-filter" data-star="3">3 ดาว ★</button>
+                <button type="button" class="customer-promo-filter-btn js-rv-filter" data-star="2">2 ดาว ★</button>
+                <button type="button" class="customer-promo-filter-btn js-rv-filter" data-star="1">1 ดาว ★</button>
             </div>
 
             <div class="d-flex align-items-center gap-2 ms-auto">
                 <label for="rvSortSelect" class="small fw-bold text-secondary mb-0">เรียงตาม:</label>
                 <select id="rvSortSelect" class="form-select form-select-sm customer-mb-input" style="width: auto; min-width: 185px; height: 38px;">
-                    <option value="latest" selected>Latest (รีวิวล่าสุด)</option>
-                    <option value="highest">Highest Rating (คะแนนสูงสุด)</option>
-                    <option value="lowest">Lowest Rating (คะแนนต่ำสุด)</option>
+                    <option value="latest" selected>รีวิวล่าสุด</option>
+                    <option value="highest">คะแนนสูงสุด</option>
+                    <option value="lowest">คะแนนต่ำสุด</option>
                 </select>
             </div>
         </section>
 
         <!-- =========================================================
-             4. CUSTOMER REVIEW CARDS (ดึงจาก Database จริง)
+             4. รายการรีวิว
              ========================================================= -->
         <section class="mb-5">
             <div class="row g-4" id="rvCardsGrid"></div>
 
-            <div id="rvEmptyFilterBox" class="customer-mb-empty-card d-none mt-3">
+            <div id="rvEmptyBox" class="customer-mb-empty-card d-none mt-3">
                 <div class="customer-mb-empty-icon-wrap">
                     <i class="fa-regular fa-comment-dots"></i>
                 </div>
-                <h4 class="fw-bold text-dark">ยังไม่มีรายการรีวิวในระดับคะแนนที่คุณเลือก</h4>
-                <p class="text-muted small mb-0">ลองเลือกดู "All Reviews" หรือร่วมแบ่งปันรีวิวการเข้าพักของคุณด้านล่าง</p>
+                <h4 class="fw-bold text-dark" id="rvEmptyTitle">ยังไม่มีรีวิว</h4>
+                <p class="text-muted small mb-0" id="rvEmptyText">เป็นคนแรกที่แบ่งปันประสบการณ์การเข้าพักของคุณ</p>
             </div>
         </section>
 
         <!-- =========================================================
-             5 & 6. WRITE A REVIEW SECTION + REVIEW GUIDELINES
+             5. เขียนรีวิว + 6. เงื่อนไขการรีวิว
              ========================================================= -->
         <section id="writeReviewSection" class="pt-2" data-aos="fade-up">
             <div class="row g-4">
 
-                <!-- ฝั่งซ้าย (8 Cols): ฟอร์มเขียนรีวิว -->
                 <div class="col-lg-8">
                     <div class="customer-pf-card">
                         <div class="customer-pf-card-header">
                             <div>
-                                <span class="customer-pf-eyebrow"><i class="fa-solid fa-pen-to-square me-1"></i> SHARE YOUR STAY</span>
-                                <h2 class="customer-pf-card-title mb-0">Write a Review · เขียนรีวิวการเข้าพัก</h2>
+                                <span class="customer-pf-eyebrow"><i class="fa-solid fa-pen-to-square me-1"></i> แบ่งปันประสบการณ์</span>
+                                <h2 class="customer-pf-card-title mb-0">เขียนรีวิวการเข้าพัก</h2>
                             </div>
                             <span class="badge bg-info-subtle text-info-emphasis rounded-pill px-3 py-2">
-                                เฉพาะรายการที่ Completed
+                                เฉพาะการเข้าพักที่เสร็จสิ้นแล้ว
                             </span>
                         </div>
 
-                        <!-- กล่องแจ้งเตือนเมื่อไม่สามารถรีวิวได้ หรือเลือก Booking ที่รีวิวไปแล้ว -->
-                        <div id="rvDuplicateWarning" class="alert alert-warning d-none rounded-4 d-flex align-items-center gap-2" role="alert">
+                        <div id="rvDuplicateWarning" class="alert alert-warning d-none align-items-center gap-2 rounded-4" role="alert">
                             <i class="fa-solid fa-triangle-exclamation fs-5"></i>
-                            <div id="rvDuplicateWarningText">รายการจองนี้ได้ส่งรีวิวไปแล้ว ไม่สามารถส่งรีวิวซ้ำได้ครับ</div>
+                            <div id="rvDuplicateWarningText"></div>
                         </div>
 
-                        <form id="rvWriteForm" onsubmit="handleReviewSubmit(event)">
-                            @Html.AntiForgeryToken()
-                            <div class="row g-3">
-                                <!-- เลือก Booking ของลูกค้าจาก Database จริง -->
-                                <div class="col-12">
-                                    <label for="rvBookingSelect" class="customer-pf-label">
-                                        เลือกรายการจองของคุณ (Your Bookings) <span class="text-danger">*</span>
-                                    </label>
-                                    <select id="rvBookingSelect" class="form-select customer-pf-input" required onchange="checkBookingReviewEligibility()">
-                                        <option value="" disabled selected="@(string.IsNullOrEmpty(qBookingId))">-- เลือกรายการจองที่ต้องการรีวิว --</option>
-                                        @foreach (var b in userBookings)
-                                        {
-                                            var rType = b.BookingRooms?.Select(br => br.RoomType?.TypeName).FirstOrDefault(n => !string.IsNullOrWhiteSpace(n)) ?? "Standard Room";
-                                            var mappedStat = MapBookingStatus(b.Status);
-                                            var isReviewed = b.Review != null;
-                                            var statusTag = isReviewed
-                                                ? "ส่งรีวิวเรียบร้อยแล้ว"
-                                                : (mappedStat == "Completed" ? "Completed · พร้อมรีวิว" : $"{mappedStat} · ยังไม่เสร็จสิ้น");
+                        <div id="rvErrorBox" class="alert alert-danger d-none align-items-center gap-2 rounded-4" role="alert">
+                            <i class="fa-solid fa-circle-exclamation fs-5"></i>
+                            <div id="rvErrorText"></div>
+                        </div>
 
-                                            <option value="@b.BookingId"
-                                                    data-code="@b.BookingCode"
-                                                    data-room="@rType"
-                                                    data-stay="@b.CheckInDate.ToString("dd MMM yyyy") – @b.CheckOutDate.ToString("dd MMM yyyy")"
-                                                    data-status="@mappedStat"
-                                                    data-reviewed="@(isReviewed ? "true" : "false")"
-                                                    selected="@(qBookingId == b.BookingId.ToString())">
-                                                #@b.BookingCode · @rType (เข้าพัก @b.CheckInDate.ToString("dd MMM") – @b.CheckOutDate.ToString("dd MMM yyyy")) — [@statusTag]
-                                            </option>
-                                        }
-                                    </select>
-                                </div>
+                        @if (!userBookings.Any())
+                        {
+                            <div class="text-center py-4">
+                                <p class="text-muted mb-3">คุณยังไม่มีรายการจอง จึงยังไม่สามารถเขียนรีวิวได้</p>
+                                <a asp-controller="Customer" asp-action="Checkout" class="customer-pf-btn-primary d-inline-flex">
+                                    <i class="fa-solid fa-calendar-check"></i>
+                                    <span>จองห้องพัก</span>
+                                </a>
+                            </div>
+                        }
+                        else
+                        {
+                            <form id="rvWriteForm" onsubmit="handleReviewSubmit(event)">
+                                @Html.AntiForgeryToken()
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label for="rvBookingSelect" class="customer-pf-label">
+                                            รายการจองของคุณ <span class="text-danger">*</span>
+                                        </label>
+                                        <select id="rvBookingSelect" class="form-select customer-pf-input" required onchange="checkBookingReviewEligibility()">
+                                            <option value="" disabled selected="@(string.IsNullOrEmpty(qBookingId))">เลือกรายการจองที่ต้องการรีวิว</option>
+                                            @foreach (var b in userBookings)
+                                            {
+                                                var rType = b.BookingRooms?.Select(br => br.RoomType?.TypeName).FirstOrDefault(n => !string.IsNullOrWhiteSpace(n)) ?? "ห้องพัก";
+                                                var mappedStat = MapBookingStatus(b.Status);
+                                                var isReviewed = b.Review != null;
+                                                var statusTag = isReviewed
+                                                    ? "รีวิวแล้ว"
+                                                    : (mappedStat == "Completed" ? "พร้อมรีวิว" : StatusText(mappedStat));
 
-                                <!-- เลือกคะแนน 1–5 ดาว -->
-                                <div class="col-12">
-                                    <label class="customer-pf-label">คะแนนความพึงพอใจ (1–5 ดาว) <span class="text-danger">*</span></label>
-                                    <div class="customer-rv-star-picker-wrap">
-                                        <div class="customer-rv-star-picker" id="rvInteractiveStars">
-                                            <button type="button" class="rv-star-btn active" data-val="1" aria-label="1 ดาว"><i class="fa-solid fa-star"></i></button>
-                                            <button type="button" class="rv-star-btn active" data-val="2" aria-label="2 ดาว"><i class="fa-solid fa-star"></i></button>
-                                            <button type="button" class="rv-star-btn active" data-val="3" aria-label="3 ดาว"><i class="fa-solid fa-star"></i></button>
-                                            <button type="button" class="rv-star-btn active" data-val="4" aria-label="4 ดาว"><i class="fa-solid fa-star"></i></button>
-                                            <button type="button" class="rv-star-btn active" data-val="5" aria-label="5 ดาว"><i class="fa-solid fa-star"></i></button>
+                                                <option value="@b.BookingId"
+                                                        data-code="@b.BookingCode"
+                                                        data-room="@rType"
+                                                        data-status="@mappedStat"
+                                                        data-status-text="@StatusText(mappedStat)"
+                                                        data-reviewed="@(isReviewed ? "true" : "false")"
+                                                        selected="@(qBookingId == b.BookingId.ToString())">
+                                                    #@b.BookingCode · @rType (@b.CheckInDate.ToString("dd MMM") – @b.CheckOutDate.ToString("dd MMM yyyy")) · @statusTag
+                                                </option>
+                                            }
+                                        </select>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label class="customer-pf-label">คะแนนความพึงพอใจ <span class="text-danger">*</span></label>
+                                        <div class="customer-rv-star-picker-wrap">
+                                            <div class="customer-rv-star-picker" id="rvInteractiveStars">
+                                                <button type="button" class="rv-star-btn" data-val="1" aria-label="1 ดาว"><i class="fa-solid fa-star"></i></button>
+                                                <button type="button" class="rv-star-btn" data-val="2" aria-label="2 ดาว"><i class="fa-solid fa-star"></i></button>
+                                                <button type="button" class="rv-star-btn" data-val="3" aria-label="3 ดาว"><i class="fa-solid fa-star"></i></button>
+                                                <button type="button" class="rv-star-btn" data-val="4" aria-label="4 ดาว"><i class="fa-solid fa-star"></i></button>
+                                                <button type="button" class="rv-star-btn" data-val="5" aria-label="5 ดาว"><i class="fa-solid fa-star"></i></button>
+                                            </div>
+                                            <span class="customer-rv-star-text" id="rvStarLabel">กรุณาเลือกคะแนน</span>
+                                            <input type="hidden" id="rvSelectedRating" value="0" />
                                         </div>
-                                        <span class="customer-rv-star-text" id="rvStarLabel">5 ดาว (ประทับใจดีเยี่ยม)</span>
-                                        <input type="hidden" id="rvSelectedRating" value="5" />
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label for="rvTitleInput" class="customer-pf-label">หัวข้อรีวิว</label>
+                                        <input type="text" id="rvTitleInput" class="form-control customer-pf-input" maxlength="100" placeholder="สรุปประสบการณ์ของคุณสั้น ๆ" />
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label for="rvCommentInput" class="customer-pf-label">ความคิดเห็น <span class="text-danger">*</span></label>
+                                        <textarea id="rvCommentInput" rows="4" maxlength="2000" class="form-control customer-pf-textarea" required placeholder="เล่าประสบการณ์การเข้าพัก เช่น ความสะอาด สิ่งอำนวยความสะดวก และการบริการ"></textarea>
+                                    </div>
+
+                                    <div class="col-12 pt-2">
+                                        <button type="submit" id="btnSubmitReview" class="customer-pf-btn-primary px-4 py-2">
+                                            <i class="fa-solid fa-paper-plane"></i>
+                                            <span>ส่งรีวิว</span>
+                                        </button>
                                     </div>
                                 </div>
-
-                                <!-- หัวข้อรีวิว -->
-                                <div class="col-12">
-                                    <label for="rvTitleInput" class="customer-pf-label">หัวข้อรีวิว (Review Title) <span class="text-danger">*</span></label>
-                                    <input type="text" id="rvTitleInput" class="form-control customer-pf-input" required placeholder="เช่น ห้องพักสะอาด วิวสวย ระบบ Smart Room ล้ำสมัยมาก" />
-                                </div>
-
-                                <!-- รายละเอียดความคิดเห็น -->
-                                <div class="col-12">
-                                    <label for="rvCommentInput" class="customer-pf-label">รายละเอียดความคิดเห็น (Review Comment) <span class="text-danger">*</span></label>
-                                    <textarea id="rvCommentInput" rows="4" class="form-control customer-pf-textarea" required placeholder="แบ่งปันประสบการณ์การเข้าพัก ความสะอาด สิ่งอำนวยความสะดวก และการบริการที่คุณได้รับ..."></textarea>
-                                </div>
-
-                                <div class="col-12 pt-2">
-                                    <button type="submit" id="btnSubmitReview" class="customer-pf-btn-primary px-4 py-2">
-                                        <i class="fa-solid fa-paper-plane"></i>
-                                        <span>Submit Review · ส่งรีวิวการเข้าพัก</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
+                            </form>
+                        }
                     </div>
                 </div>
 
-                <!-- ฝั่งขวา (4 Cols): 6. Review Guidelines -->
                 <div class="col-lg-4">
                     <aside class="customer-rv-guidelines-card h-100">
                         <div class="d-flex align-items-center gap-2 mb-3">
                             <span class="customer-rv-guide-icon"><i class="fa-solid fa-shield-check"></i></span>
                             <div>
-                                <span class="small text-info fw-bold">STAYMATE POLICY</span>
-                                <h4 class="text-white fw-bold mb-0 fs-5">Review Guidelines</h4>
+                                <span class="small text-info fw-bold">เงื่อนไข</span>
+                                <h4 class="text-white fw-bold mb-0 fs-5">ข้อกำหนดการรีวิว</h4>
                             </div>
                         </div>
 
                         <p class="text-light opacity-75 small mb-3">
-                            เพื่อให้รีวิวของโรงแรมมีความน่าเชื่อถือและเป็นประโยชน์ต่อผู้เข้าพักท่านอื่น ระบบมีข้อกำหนดดังนี้:
+                            เพื่อให้รีวิวน่าเชื่อถือและเป็นประโยชน์ต่อผู้เข้าพักท่านอื่น
                         </p>
 
                         <ul class="customer-rv-guide-list">
                             <li>
                                 <i class="fa-solid fa-circle-check text-info"></i>
                                 <div>
-                                    <strong>เฉพาะรายการจองที่ Completed</strong>
-                                    <span>ผู้เข้าพักสามารถเขียนรีวิวได้หลังจากเช็คเอาท์และสถานะการจองเปลี่ยนเป็น Completed แล้วเท่านั้น</span>
+                                    <strong>รีวิวได้หลังเข้าพักเสร็จสิ้น</strong>
+                                    <span>เขียนรีวิวได้เมื่อเช็คเอาท์แล้วและสถานะการจองเป็น "เข้าพักเสร็จสิ้น"</span>
                                 </div>
                             </li>
                             <li>
                                 <i class="fa-solid fa-1 text-warning"></i>
                                 <div>
-                                    <strong>1 รายการจอง รีวิวได้ 1 ครั้ง</strong>
-                                    <span>แต่ละรหัสการจอง (Booking ID) สามารถส่งรีวิวได้เพียงครั้งเดียวเพื่อความโปร่งใสของคะแนนเฉลี่ย</span>
+                                    <strong>1 การจอง รีวิวได้ 1 ครั้ง</strong>
+                                    <span>แต่ละรายการจองส่งรีวิวได้เพียงครั้งเดียว และไม่สามารถแก้ไขภายหลังได้</span>
                                 </div>
                             </li>
                             <li>
                                 <i class="fa-solid fa-ban text-danger"></i>
                                 <div>
-                                    <strong>ป้องกันการส่งรีวิวซ้ำ</strong>
-                                    <span>หากคุณเลือกรายการจองที่เคยรีวิวไปแล้ว หรือรายการที่ยังไม่ได้เข้าพัก ระบบจะแจ้งเตือนและปิดปุ่มส่งรีวิวอัตโนมัติ</span>
+                                    <strong>ไม่สามารถส่งซ้ำ</strong>
+                                    <span>รายการจองที่รีวิวแล้ว หรือยังไม่เข้าพัก จะไม่สามารถส่งรีวิวได้</span>
                                 </div>
                             </li>
                         </ul>
 
                         <div class="mt-auto pt-3 border-top border-light border-opacity-25 small text-light opacity-75">
                             <i class="fa-solid fa-shield-halved text-info me-1"></i>
-                            <strong>Verified Reviews:</strong> รีวิวทุกข้อความเชื่อมโยงกับข้อมูลการเข้าพักจริงในฐานข้อมูล StayMate Hotel
+                            รีวิวทุกรายการมาจากผู้ที่เข้าพักกับ StayMate Hotel จริง
                         </div>
                     </aside>
                 </div>
@@ -379,7 +401,7 @@
     </div>
 
     <!-- =========================================================
-         SUCCESS REVIEW MODAL
+         MODAL ส่งรีวิวสำเร็จ
          ========================================================= -->
     <div class="modal fade" id="rvSuccessModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-sm">
@@ -387,12 +409,12 @@
                 <div class="customer-co-success-icon-wrap mx-auto mb-3" style="width:64px; height:64px; font-size:2.4rem;">
                     <i class="fa-solid fa-star text-warning"></i>
                 </div>
-                <h5 class="fw-bold text-dark mb-1">ขอบคุณสำหรับรีวิวครับ!</h5>
+                <h5 class="fw-bold text-dark mb-1">ขอบคุณสำหรับรีวิว</h5>
                 <p class="text-secondary small mb-3">
-                    บันทึกรีวิวการเข้าพักของคุณลงในฐานข้อมูลเรียบร้อยแล้ว
+                    เราได้รับรีวิวของคุณเรียบร้อยแล้ว
                 </p>
                 <button type="button" class="customer-pf-btn-primary w-100 justify-content-center" data-bs-dismiss="modal">
-                    ดูรีวิวของฉัน
+                    ปิด
                 </button>
             </div>
         </div>
@@ -409,12 +431,37 @@
         let currentSortMode = "latest";
 
         const starDescriptions = {
-            1: "1 ดาว (ต้องปรับปรุง)",
+            0: "กรุณาเลือกคะแนน",
+            1: "1 ดาว (ควรปรับปรุง)",
             2: "2 ดาว (พอใช้)",
             3: "3 ดาว (ปานกลาง)",
             4: "4 ดาว (ดีมาก)",
-            5: "5 ดาว (ประทับใจดีเยี่ยม)"
+            5: "5 ดาว (ยอดเยี่ยม)"
         };
+
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        }
+
+        function showBox(boxId, textId, message) {
+            const box = document.getElementById(boxId);
+            if (!box) return;
+            document.getElementById(textId).textContent = message;
+            box.classList.remove("d-none");
+            box.classList.add("d-flex");
+        }
+
+        function hideBox(boxId) {
+            const box = document.getElementById(boxId);
+            if (!box) return;
+            box.classList.add("d-none");
+            box.classList.remove("d-flex");
+        }
 
         document.addEventListener("DOMContentLoaded", function () {
             if (typeof AOS !== "undefined") {
@@ -424,7 +471,6 @@
             renderReviewCards();
             checkBookingReviewEligibility();
 
-            // Filter Buttons
             document.querySelectorAll(".js-rv-filter").forEach(btn => {
                 btn.addEventListener("click", function () {
                     document.querySelectorAll(".js-rv-filter").forEach(b => b.classList.remove("active"));
@@ -434,16 +480,17 @@
                 });
             });
 
-            // Sort Select
             document.getElementById("rvSortSelect").addEventListener("change", function () {
                 currentSortMode = this.value;
                 renderReviewCards();
             });
 
-            // Interactive Star Picker
+            // ตัวเลือกดาว
             const starBtns = document.querySelectorAll(".rv-star-btn");
             const ratingInput = document.getElementById("rvSelectedRating");
             const starLabel = document.getElementById("rvStarLabel");
+            const starPicker = document.getElementById("rvInteractiveStars");
+            if (!starPicker) return;
 
             function paintStars(count) {
                 starBtns.forEach(btn => {
@@ -452,6 +499,8 @@
                 });
                 starLabel.textContent = starDescriptions[count] || "";
             }
+
+            paintStars(0);
 
             starBtns.forEach(btn => {
                 btn.addEventListener("mouseenter", function () {
@@ -464,8 +513,8 @@
                 });
             });
 
-            document.getElementById("rvInteractiveStars").addEventListener("mouseleave", function () {
-                paintStars(parseInt(ratingInput.value, 10));
+            starPicker.addEventListener("mouseleave", function () {
+                paintStars(parseInt(ratingInput.value, 10) || 0);
             });
         });
 
@@ -474,6 +523,18 @@
             document.getElementById("rvTotalCount").textContent = total;
             const avg = total > 0 ? (dbReviewsList.reduce((sum, x) => sum + x.rating, 0) / total) : 0;
             document.getElementById("rvAvgScore").textContent = avg.toFixed(1);
+
+            const starsEl = document.getElementById("rvAvgStars");
+            if (starsEl) {
+                let html = "";
+                for (let i = 1; i <= 5; i++) {
+                    const cls = avg >= i ? "fa-solid fa-star"
+                        : avg >= i - 0.5 ? "fa-solid fa-star-half-stroke"
+                        : "fa-regular fa-star";
+                    html += `<i class="${cls}"></i>`;
+                }
+                starsEl.innerHTML = html;
+            }
 
             for (let star = 1; star <= 5; star++) {
                 const c = dbReviewsList.filter(x => x.rating === star).length;
@@ -487,12 +548,10 @@
 
         function renderReviewCards() {
             const grid = document.getElementById("rvCardsGrid");
-            const emptyBox = document.getElementById("rvEmptyFilterBox");
+            const emptyBox = document.getElementById("rvEmptyBox");
 
-            let filtered = dbReviewsList.filter(item => {
-                if (currentStarFilter === "ALL") return true;
-                return item.rating === parseInt(currentStarFilter, 10);
-            });
+            const filtered = dbReviewsList.filter(item =>
+                currentStarFilter === "ALL" || item.rating === parseInt(currentStarFilter, 10));
 
             filtered.sort((a, b) => {
                 if (currentSortMode === "highest") return b.rating - a.rating;
@@ -504,6 +563,13 @@
 
             if (filtered.length === 0) {
                 grid.innerHTML = "";
+                if (dbReviewsList.length === 0) {
+                    document.getElementById("rvEmptyTitle").textContent = "ยังไม่มีรีวิว";
+                    document.getElementById("rvEmptyText").textContent = "เป็นคนแรกที่แบ่งปันประสบการณ์การเข้าพักของคุณ";
+                } else {
+                    document.getElementById("rvEmptyTitle").textContent = "ไม่มีรีวิวในระดับคะแนนที่เลือก";
+                    document.getElementById("rvEmptyText").textContent = "ลองเลือก \"ทั้งหมด\" หรือระดับคะแนนอื่น";
+                }
                 emptyBox.classList.remove("d-none");
                 return;
             }
@@ -516,7 +582,10 @@
                     starsHtml += `<i class="${s <= r.rating ? "fa-solid text-warning" : "fa-regular text-muted"} fa-star"></i>`;
                 }
 
-                const initialChar = (r.name || "U").trim().charAt(0);
+                const initialChar = escapeHtml((r.name || "U").trim().charAt(0));
+                const bodyHtml = r.comment
+                    ? `<p class="text-secondary small lh-lg mb-0">${escapeHtml(r.comment)}</p>`
+                    : "";
 
                 return `
                     <div class="col-12 col-md-6">
@@ -527,21 +596,21 @@
                                         ${initialChar}
                                     </div>
                                     <div>
-                                        <h5 class="customer-rv-user-name mb-0">${r.name}</h5>
+                                        <h5 class="customer-rv-user-name mb-0">${escapeHtml(r.name)}</h5>
                                         <div class="small text-muted">
-                                            <span class="text-primary fw-semibold"><i class="fa-solid fa-bed me-1"></i>${r.roomType}</span>
-                                            · เข้าพัก: ${r.stayDate}
+                                            <span class="text-primary fw-semibold"><i class="fa-solid fa-bed me-1"></i>${escapeHtml(r.roomType)}</span>
+                                            · เข้าพัก ${escapeHtml(r.stayDate)}
                                         </div>
                                     </div>
                                 </div>
                                 <div class="text-end">
                                     <div class="customer-rv-stars-sm">${starsHtml}</div>
-                                    <small class="text-muted" style="font-size:0.72rem;">รีวิวเมื่อ ${r.reviewDateText}</small>
+                                    <small class="text-muted" style="font-size:0.72rem;">${escapeHtml(r.reviewDateText)}</small>
                                 </div>
                             </div>
 
-                            <h6 class="fw-bold text-dark mb-2">“${r.title}”</h6>
-                            <p class="text-secondary small lh-lg mb-0">${r.comment}</p>
+                            <h6 class="fw-bold text-dark mb-2">${escapeHtml(r.title)}</h6>
+                            ${bodyHtml}
                         </article>
                     </div>
                 `;
@@ -550,50 +619,67 @@
 
         function checkBookingReviewEligibility() {
             const sel = document.getElementById("rvBookingSelect");
-            if (!sel || sel.selectedIndex < 0) return false;
-            const opt = sel.options[sel.selectedIndex];
-            const warningBox = document.getElementById("rvDuplicateWarning");
-            const warningText = document.getElementById("rvDuplicateWarningText");
             const submitBtn = document.getElementById("btnSubmitReview");
+            if (!sel || !submitBtn || sel.selectedIndex < 0) return false;
 
-            if (!opt || !opt.value) return false;
+            const opt = sel.options[sel.selectedIndex];
+            if (!opt || !opt.value) {
+                hideBox("rvDuplicateWarning");
+                return false;
+            }
 
             const code = opt.getAttribute("data-code") || opt.value;
             const status = opt.getAttribute("data-status");
+            const statusText = opt.getAttribute("data-status-text") || "";
             const reviewed = opt.getAttribute("data-reviewed") === "true";
 
             if (status !== "Completed") {
-                warningText.textContent = `ไม่สามารถรีวิวรายการ #${code} ได้ เนื่องจากสถานะการจองยังเป็น ${status} (ต้องเป็น Completed เท่านั้น)`;
-                warningBox.classList.remove("d-none");
+                showBox("rvDuplicateWarning", "rvDuplicateWarningText",
+                    `ยังไม่สามารถรีวิวรายการ #${code} ได้ เนื่องจากสถานะปัจจุบันคือ "${statusText}" (รีวิวได้เมื่อเข้าพักเสร็จสิ้นแล้วเท่านั้น)`);
                 submitBtn.disabled = true;
                 return false;
             }
 
             if (reviewed) {
-                warningText.textContent = `รายการจอง #${code} ได้ส่งรีวิวไปแล้ว (1 รายการจองสามารถรีวิวได้เพียงครั้งเดียว)`;
-                warningBox.classList.remove("d-none");
+                showBox("rvDuplicateWarning", "rvDuplicateWarningText",
+                    `รายการจอง #${code} ได้ส่งรีวิวไปแล้ว (1 รายการจองรีวิวได้ 1 ครั้ง)`);
                 submitBtn.disabled = true;
                 return false;
             }
 
-            warningBox.classList.add("d-none");
+            hideBox("rvDuplicateWarning");
             submitBtn.disabled = false;
             return true;
         }
 
+        function resetWriteForm() {
+            document.getElementById("rvWriteForm").reset();
+            document.getElementById("rvSelectedRating").value = "0";
+            document.querySelectorAll(".rv-star-btn").forEach(b => b.classList.remove("active"));
+            document.getElementById("rvStarLabel").textContent = starDescriptions[0];
+        }
+
         function handleReviewSubmit(e) {
             e.preventDefault();
+            hideBox("rvErrorBox");
+
             if (!checkBookingReviewEligibility()) return;
 
             const sel = document.getElementById("rvBookingSelect");
             const opt = sel.options[sel.selectedIndex];
             const bookingId = opt.value;
             const code = opt.getAttribute("data-code") || bookingId;
-            const roomType = opt.getAttribute("data-room") || "Standard Room";
-            const rating = parseInt(document.getElementById("rvSelectedRating").value, 10) || 5;
+            const roomType = opt.getAttribute("data-room") || "ห้องพัก";
+            const rating = parseInt(document.getElementById("rvSelectedRating").value, 10) || 0;
             const title = document.getElementById("rvTitleInput").value.trim();
             const comment = document.getElementById("rvCommentInput").value.trim();
             const token = document.querySelector('#rvWriteForm input[name="__RequestVerificationToken"]').value;
+            const submitBtn = document.getElementById("btnSubmitReview");
+
+            if (rating < 1) {
+                showBox("rvErrorBox", "rvErrorText", "กรุณาเลือกคะแนนความพึงพอใจ");
+                return;
+            }
 
             const formData = new FormData();
             formData.append("__RequestVerificationToken", token);
@@ -601,6 +687,8 @@
             formData.append("rating", rating);
             formData.append("title", title);
             formData.append("comment", comment);
+
+            submitBtn.disabled = true;
 
             fetch("/Customer/SubmitReview", {
                 method: "POST",
@@ -612,20 +700,23 @@
                     dbReviewsList.unshift(data.review);
 
                     opt.setAttribute("data-reviewed", "true");
-                    opt.textContent = `#${code} · ${roomType} — [ส่งรีวิวเรียบร้อยแล้ว]`;
+                    opt.textContent = `#${code} · ${roomType} · รีวิวแล้ว`;
 
-                    document.getElementById("rvWriteForm").reset();
+                    resetWriteForm();
                     currentStarFilter = "ALL";
                     document.querySelectorAll(".js-rv-filter").forEach((b, i) => b.classList.toggle("active", i === 0));
                     renderReviewCards();
 
-                    const modalEl = document.getElementById("rvSuccessModal");
-                    bootstrap.Modal.getOrCreateInstance(modalEl).show();
+                    bootstrap.Modal.getOrCreateInstance(document.getElementById("rvSuccessModal")).show();
                 } else {
-                    alert(data.message || "ไม่สามารถส่งรีวิวได้");
+                    showBox("rvErrorBox", "rvErrorText", data.message || "ไม่สามารถส่งรีวิวได้ กรุณาลองใหม่อีกครั้ง");
+                    submitBtn.disabled = false;
                 }
             })
-            .catch(err => alert("เกิดข้อผิดพลาดในการเชื่อมต่อ: " + err));
+            .catch(() => {
+                showBox("rvErrorBox", "rvErrorText", "เชื่อมต่อไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+                submitBtn.disabled = false;
+            });
         }
     </script>
 }

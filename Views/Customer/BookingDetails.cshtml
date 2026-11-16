@@ -7,14 +7,25 @@
                      ?? Context.Request.Query["id"].ToString();
     uint.TryParse(routeIdStr, out var requestedId);
 
-    // ดึงใบจองที่ตรงกับ ID (หรือใบจองแรกใน Model ที่ Controller กรองมาให้แล้ว)
+    // Controller กรองเฉพาะการจองของผู้ใช้ปัจจุบันมาให้แล้ว
     var booking = Model?.Bookings?.FirstOrDefault(b => b.BookingId == requestedId)
                   ?? Model?.Bookings?.FirstOrDefault();
 
-    var firstRoom = booking?.BookingRooms?.FirstOrDefault();
+    if (booking == null)
+    {
+        ViewData["Title"] = "ไม่พบรายการจอง";
+        <div class="container py-5 text-center">
+            <h3 class="fw-bold text-dark mb-2">ไม่พบรายการจอง</h3>
+            <p class="text-muted mb-3">รายการจองนี้ไม่มีอยู่ หรือไม่ใช่ของบัญชีนี้</p>
+            <a asp-controller="Customer" asp-action="MyBookings" class="btn btn-outline-secondary rounded-pill px-4">กลับไปการจองของฉัน</a>
+        </div>
+        return;
+    }
+
+    var firstRoom = booking.BookingRooms?.FirstOrDefault();
     var rt = firstRoom?.RoomType;
     var roomEntity = firstRoom?.Room;
-    var latestPayment = booking?.Payments?.OrderByDescending(p => p.CreatedAt).FirstOrDefault();
+    var latestPayment = booking.Payments?.OrderByDescending(p => p.CreatedAt).FirstOrDefault();
 
     string MapBookingStatus(string? dbStatus)
     {
@@ -28,12 +39,21 @@
         };
     }
 
-    string MapPaymentStatus(StayMate_Kavinvee_0576.Models.Booking? b, StayMate_Kavinvee_0576.Models.Payment? p)
+    string BookingStatusText(string s) => s switch
+    {
+        "Approved" => "ยืนยันแล้ว",
+        "Rejected" => "ไม่อนุมัติ",
+        "Completed" => "เข้าพักเสร็จสิ้น",
+        "Cancelled" => "ยกเลิกแล้ว",
+        _ => "รอดำเนินการ"
+    };
+
+    string MapPaymentStatus(StayMate_Kavinvee_0576.Models.Booking b, StayMate_Kavinvee_0576.Models.Payment? p)
     {
         if (p == null)
         {
-            var bStat = (b?.Status ?? "").ToLowerInvariant();
-            if (bStat == "confirmed" || bStat == "checked_out" || bStat == "approved") return "Paid";
+            var bStat = (b.Status ?? "").ToLowerInvariant();
+            if (bStat == "confirmed" || bStat == "checked_in" || bStat == "checked_out" || bStat == "approved") return "Paid";
             if (bStat == "pending_approval") return "Pending Verification";
             if (bStat == "rejected") return "Rejected";
             return "Unpaid";
@@ -47,6 +67,14 @@
             _ => "Unpaid"
         };
     }
+
+    string PaymentStatusText(string s) => s switch
+    {
+        "Paid" => "ชำระแล้ว",
+        "Pending Verification" => "รอตรวจสอบสลิป",
+        "Rejected" => "สลิปไม่ผ่าน",
+        _ => "ยังไม่ชำระ"
+    };
 
     string GetRoomImage(string? code, string? name)
     {
@@ -62,69 +90,70 @@
         return "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1000&q=80";
     }
 
-    string bookingCode = booking?.BookingCode ?? "-";
-    string guestName = !string.IsNullOrWhiteSpace(booking?.ContactName)
+    string bookingCode = booking.BookingCode ?? "-";
+    string guestName = !string.IsNullOrWhiteSpace(booking.ContactName)
         ? booking.ContactName
-        : (!string.IsNullOrWhiteSpace(Model?.FullName) ? Model.FullName : "สมาชิก StayMate");
-    string contactEmail = booking?.ContactEmail ?? Model?.Email ?? "-";
-    string contactPhone = booking?.ContactPhone ?? Model?.Phone ?? "-";
+        : (!string.IsNullOrWhiteSpace(Model?.FullName) ? Model.FullName : "ผู้เข้าพัก");
+    string contactEmail = booking.ContactEmail ?? Model?.Email ?? "-";
+    string contactPhone = booking.ContactPhone ?? Model?.Phone ?? "-";
 
-    string roomType = rt?.TypeName ?? "Standard Room";
-    byte roomTypeId = rt?.RoomTypeId ?? 1;
-    string roomName = roomEntity != null ? $"{roomType} · ห้อง #{roomEntity.RoomNumber}" : roomType;
+    string roomType = rt?.TypeName ?? "ห้องพัก";
+    string roomName = roomEntity != null ? $"{roomType} · ห้อง {roomEntity.RoomNumber}" : roomType;
     string roomImage = GetRoomImage(rt?.TypeCode, rt?.TypeName);
 
-    string checkInText = booking != null ? $"{booking.CheckInDate:dd MMM yyyy} (ตั้งแต่ 14:00 น.)" : "-";
-    string checkOutText = booking != null ? $"{booking.CheckOutDate:dd MMM yyyy} (ก่อน 12:00 น.)" : "-";
-    string bookedDateText = booking != null ? booking.CreatedAt.ToString("dd MMM yyyy · HH:mm น.") : "-";
+    string checkInText = booking.CheckInDate.ToString("dd MMM yyyy");
+    string checkOutText = booking.CheckOutDate.ToString("dd MMM yyyy");
+    string bookedDateText = booking.CreatedAt.ToString("dd MMM yyyy · HH:mm น.");
 
-    int nights = booking != null ? (int)booking.Nights : 1;
-    int guests = booking != null ? (int)booking.NumGuests : 2;
-    int roomsCount = booking?.BookingRooms != null && booking.BookingRooms.Any() ? booking.BookingRooms.Count : 1;
+    int nights = (int)booking.Nights;
+    int guests = (int)booking.NumGuests;
+    int roomsCount = booking.BookingRooms != null && booking.BookingRooms.Any() ? booking.BookingRooms.Count : 1;
 
-    string bedType = !string.IsNullOrWhiteSpace(rt?.BedType) ? rt.BedType : "เตียงมาตรฐาน";
+    string? bedType = rt?.BedType;
     if (firstRoom != null && firstRoom.ExtraBedQty > 0)
     {
-        bedType += $" + เตียงเสริม {firstRoom.ExtraBedQty} เตียง";
+        bedType = string.IsNullOrWhiteSpace(bedType)
+            ? $"เตียงเสริม {firstRoom.ExtraBedQty} เตียง"
+            : $"{bedType} + เตียงเสริม {firstRoom.ExtraBedQty} เตียง";
     }
 
-    decimal roomPrice = booking?.RoomAmount ?? 0m;
-    decimal promoDiscount = booking?.DiscountAmount ?? 0m;
-    decimal taxAmount = booking?.TaxAmount ?? 0m;
-    decimal totalAmount = booking?.TotalAmount ?? 0m;
+    decimal roomPrice = booking.RoomAmount;
+    decimal promoDiscount = booking.DiscountAmount;
+    decimal taxAmount = booking.TaxAmount;
+    decimal totalAmount = booking.TotalAmount;
 
-    string promoName = booking?.BookingPromotions?.Select(bp => bp.Promotion?.PromoName).FirstOrDefault(n => !string.IsNullOrWhiteSpace(n))
-                       ?? "ราคาสมาชิกมาตรฐาน";
+    string? promoName = booking.BookingPromotions?.Select(bp => bp.Promotion?.PromoName).FirstOrDefault(n => !string.IsNullOrWhiteSpace(n));
 
-    string bookingStatus = MapBookingStatus(booking?.Status);
+    string bookingStatus = MapBookingStatus(booking.Status);
     string paymentStatus = MapPaymentStatus(booking, latestPayment);
 
-    string paymentMethod = latestPayment != null
-        ? (latestPayment.Method == "PROMPTPAY" ? "PromptPay QR / โอนเงินผ่านธนาคาร" : latestPayment.Method)
-        : "รอข้อมูลการชำระเงิน";
+    string? paymentMethod = latestPayment == null
+        ? null
+        : (latestPayment.Method ?? "").ToUpperInvariant() switch
+        {
+            "PROMPTPAY" => "PromptPay",
+            "BANK_TRANSFER" => "โอนผ่านธนาคาร",
+            _ => latestPayment.Method
+        };
 
-    string paymentRef = latestPayment != null
+    string? paymentRef = latestPayment != null
         ? $"PAY-{latestPayment.PaymentId:D5} ({latestPayment.CreatedAt:dd/MM/yyyy HH:mm})"
-        : "-";
+        : null;
 
-    string adminNote = bookingStatus switch
+    string statusNote = bookingStatus switch
     {
-        "Approved" => "ตรวจสอบยอดโอนเงินและยืนยันห้องพักเรียบร้อยแล้ว ลูกค้าสามารถใช้ Digital QR Code เช็คอินที่โรงแรมได้ทันที",
-        "Completed" => "ลูกค้าเข้าพักและเช็คเอาท์เสร็จสิ้นเรียบร้อยแล้ว ขอบคุณที่เลือกพักกับ StayMate Hotel",
+        "Approved" => "การจองของคุณได้รับการยืนยันแล้ว กรุณาแสดง QR Code ด้านข้างเมื่อเช็คอิน",
+        "Completed" => "เข้าพักเสร็จสิ้นแล้ว ขอบคุณที่เลือกพักกับ StayMate Hotel",
         "Rejected" => !string.IsNullOrWhiteSpace(latestPayment?.RejectReason)
-            ? $"ไม่อนุมัติการจอง เนื่องจาก: {latestPayment.RejectReason}"
-            : "ไม่อนุมัติการจอง เนื่องจากหลักฐานการชำระเงินไม่ถูกต้อง กรุณาติดต่อฝ่ายบริการลูกค้า",
-        "Cancelled" => "รายการจองนี้ถูกยกเลิกเรียบร้อยแล้ว",
-        _ => "ได้รับข้อมูลการจองและหลักฐานการโอนเงินแล้ว ขณะนี้อยู่ระหว่างเจ้าหน้าที่ตรวจสอบและอนุมัติรายการ"
+            ? $"การจองไม่ได้รับการอนุมัติ เนื่องจาก: {latestPayment.RejectReason}"
+            : "การจองไม่ได้รับการอนุมัติ กรุณาติดต่อโรงแรมเพื่อสอบถามรายละเอียด",
+        "Cancelled" => "รายการจองนี้ถูกยกเลิกแล้ว",
+        _ => "ได้รับการจองของคุณแล้ว เจ้าหน้าที่กำลังตรวจสอบการชำระเงิน เมื่อตรวจสอบเสร็จสถานะจะอัปเดตที่หน้านี้"
     };
 
-    bool hasQr = bookingStatus == "Approved" || bookingStatus == "Completed" || !string.IsNullOrWhiteSpace(booking?.QrCode);
-    string qrData = !string.IsNullOrWhiteSpace(booking?.QrCode)
-        ? booking.QrCode
-        : $"STAYMATE-{bookingCode}-{bookingStatus.ToUpperInvariant()}";
-    string qrUrl = hasQr
-        ? $"https://api.qrserver.com/v1/create-qr-code/?size=280x280&data={Uri.EscapeDataString(qrData)}"
-        : "";
+    // QR Code ใช้สำหรับเช็คอิน จึงแสดงเฉพาะรายการที่ยืนยันแล้ว
+    bool hasQr = bookingStatus == "Approved";
+    string qrText = !string.IsNullOrWhiteSpace(booking.QrCode) ? booking.QrCode : bookingCode;
 
     string bBadgeClass = bookingStatus switch
     {
@@ -150,14 +179,13 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" />
     <link rel="stylesheet" href="~/css/Customer.css" asp-append-version="true" />
 }
 
 <div class="customer-mb-wrapper">
 
     <!-- =========================================================
-         1. HEADER & BREADCRUMB
+         1. หัวหน้า
          ========================================================= -->
     <section class="customer-mb-header">
         <div class="container">
@@ -168,7 +196,7 @@
                             <a asp-controller="Customer" asp-action="Index"><i class="fa-solid fa-house me-1"></i> หน้าแรก</a>
                         </li>
                         <li class="breadcrumb-item">
-                            <a asp-controller="Customer" asp-action="MyBookings">การจองของฉัน (My Bookings)</a>
+                            <a asp-controller="Customer" asp-action="MyBookings">การจองของฉัน</a>
                         </li>
                         <li class="breadcrumb-item active" aria-current="page">#@bookingCode</li>
                     </ol>
@@ -177,65 +205,59 @@
 
             <div class="d-flex justify-content-between align-items-end flex-wrap gap-3">
                 <div>
-                    <span class="customer-mb-eyebrow">
-                        <i class="fa-solid fa-file-invoice me-1"></i> BOOKING CONFIRMATION &amp; STATUS
-                    </span>
-                    <h1 class="customer-mb-title mb-1">Booking ID: #@bookingCode</h1>
+                    <h1 class="customer-mb-title mb-1">รหัสการจอง #@bookingCode</h1>
                     <p class="customer-mb-subtitle mb-0">
-                        ทำรายการเมื่อ @bookedDateText · ผู้ติดต่อ: <strong>@guestName</strong> (@contactPhone · @contactEmail)
+                        จองเมื่อ @bookedDateText · ผู้ติดต่อ: <strong>@guestName</strong> (@contactPhone · @contactEmail)
                     </p>
                 </div>
 
                 <div class="d-flex flex-wrap gap-2">
                     <button type="button" class="customer-mb-btn-outline" onclick="window.print()">
                         <i class="fa-solid fa-print"></i>
-                        <span>พิมพ์ใบยืนยันการจอง</span>
+                        <span>พิมพ์ใบจอง</span>
                     </button>
                     <a asp-controller="Customer" asp-action="MyBookings" class="customer-mb-btn-primary">
                         <i class="fa-solid fa-arrow-left"></i>
-                        <span>กลับไปหน้าการจองของฉัน</span>
+                        <span>กลับไปการจองของฉัน</span>
                     </a>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- =========================================================
-         2. APPROVAL TIMELINE & MAIN DETAILS
-         ========================================================= -->
     <section class="container pb-5">
         <div class="row g-4">
 
-            <!-- คอลัมน์ซ้าย (8 Cols): สถานะอนุมัติ, ข้อมูลห้องพัก, รายละเอียดราคา -->
+            <!-- คอลัมน์ซ้าย -->
             <div class="col-lg-8">
 
-                <!-- การ์ดสถานะการอนุมัติ (Approval Status Banner) -->
-                <div class="room-details-block p-4 mb-4" data-aos="fade-up">
+                <!-- สถานะ -->
+                <div class="room-details-block p-4 mb-4">
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 pb-3 mb-3 border-bottom">
                         <div>
-                            <small class="text-muted d-block">สถานะใบจอง (Booking Status)</small>
+                            <small class="text-muted d-block">สถานะการจอง</small>
                             <span class="customer-mb-status-badge @bBadgeClass fs-6 mt-1">
-                                <i class="fa-solid fa-circle-info me-1"></i> @bookingStatus
+                                <i class="fa-solid fa-circle-info me-1"></i> @BookingStatusText(bookingStatus)
                             </span>
                         </div>
                         <div class="text-md-end">
-                            <small class="text-muted d-block">สถานะการชำระเงิน (Payment Status)</small>
+                            <small class="text-muted d-block">สถานะการชำระเงิน</small>
                             <span class="customer-mb-pay-badge @pBadgeClass fs-6 mt-1">
-                                @paymentStatus
+                                @PaymentStatusText(paymentStatus)
                             </span>
                         </div>
                     </div>
 
                     <div class="p-3 rounded-4 bg-light border">
                         <strong class="d-block text-dark mb-1">
-                            <i class="fa-solid fa-bullhorn text-primary me-2"></i>สถานะและการตรวจสอบ (Verification Note):
+                            <i class="fa-solid fa-bullhorn text-primary me-2"></i>หมายเหตุ
                         </strong>
-                        <p class="text-secondary small mb-0">@adminNote</p>
+                        <p class="text-secondary small mb-0">@statusNote</p>
                     </div>
                 </div>
 
-                <!-- การ์ดรายละเอียดห้องพักและกำหนดการเข้าพัก -->
-                <div class="room-details-block p-4 mb-4" data-aos="fade-up" data-aos-delay="50">
+                <!-- ห้องพักและการเข้าพัก -->
+                <div class="room-details-block p-4 mb-4">
                     <h4 class="fw-bold text-dark mb-3">
                         <i class="fa-solid fa-bed text-primary me-2"></i>รายละเอียดห้องพักและการเข้าพัก
                     </h4>
@@ -247,21 +269,27 @@
                         <div class="col-md-7">
                             <span class="room-details-series-badge mb-2 d-inline-block">@roomType</span>
                             <h3 class="fw-bold text-dark mb-1">@roomName</h3>
-                            <p class="text-muted small mb-2"><i class="fa-solid fa-bed text-primary me-1"></i> รูปแบบเตียง: @bedType</p>
-                            <p class="text-muted small mb-0"><i class="fa-solid fa-tags text-info me-1"></i> โปรโมชั่นที่ใช้: <strong>@promoName</strong></p>
+                            @if (!string.IsNullOrWhiteSpace(bedType))
+                            {
+                                <p class="text-muted small mb-2"><i class="fa-solid fa-bed text-primary me-1"></i> เตียง: @bedType</p>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(promoName))
+                            {
+                                <p class="text-muted small mb-0"><i class="fa-solid fa-tags text-info me-1"></i> โปรโมชั่นที่ใช้: <strong>@promoName</strong></p>
+                            }
                         </div>
                     </div>
 
                     <div class="row g-3">
                         <div class="col-sm-6">
                             <div class="customer-mb-meta-item p-3">
-                                <small><i class="fa-regular fa-calendar-plus text-primary me-1"></i> วันเช็คอิน (Check-in)</small>
+                                <small><i class="fa-regular fa-calendar-plus text-primary me-1"></i> วันเช็คอิน</small>
                                 <strong class="fs-6">@checkInText</strong>
                             </div>
                         </div>
                         <div class="col-sm-6">
                             <div class="customer-mb-meta-item p-3">
-                                <small><i class="fa-regular fa-calendar-minus text-primary me-1"></i> วันเช็คเอาท์ (Check-out)</small>
+                                <small><i class="fa-regular fa-calendar-minus text-primary me-1"></i> วันเช็คเอาท์</small>
                                 <strong class="fs-6">@checkOutText</strong>
                             </div>
                         </div>
@@ -274,24 +302,24 @@
                         <div class="col-sm-6">
                             <div class="customer-mb-meta-item p-3">
                                 <small><i class="fa-solid fa-user-group text-primary me-1"></i> จำนวนผู้เข้าพัก</small>
-                                <strong class="fs-6">ผู้ใหญ่ @guests ท่าน</strong>
+                                <strong class="fs-6">@guests ท่าน</strong>
                             </div>
                         </div>
                     </div>
 
-                    @if (!string.IsNullOrWhiteSpace(booking?.SpecialRequest))
+                    @if (!string.IsNullOrWhiteSpace(booking.SpecialRequest))
                     {
                         <div class="mt-3 p-3 rounded-4 bg-light border">
-                            <small class="text-muted d-block"><i class="fa-regular fa-comment-dots text-primary me-1"></i> คำขอพิเศษเพิ่มเติม (Special Request)</small>
+                            <small class="text-muted d-block"><i class="fa-regular fa-comment-dots text-primary me-1"></i> คำขอเพิ่มเติม</small>
                             <strong class="text-dark small">@booking.SpecialRequest</strong>
                         </div>
                     }
                 </div>
 
-                <!-- การ์ดสรุปยอดชำระเงิน (Payment & Price Breakdown) -->
-                <div class="room-details-block p-4 mb-4" data-aos="fade-up" data-aos-delay="100">
+                <!-- สรุปยอดชำระ -->
+                <div class="room-details-block p-4 mb-4">
                     <h4 class="fw-bold text-dark mb-3">
-                        <i class="fa-solid fa-file-invoice-dollar text-primary me-2"></i>รายละเอียดการชำระเงิน (Payment Summary)
+                        <i class="fa-solid fa-file-invoice-dollar text-primary me-2"></i>สรุปการชำระเงิน
                     </h4>
 
                     <div class="customer-mb-price-box p-3 mb-3">
@@ -302,44 +330,40 @@
                         @if (promoDiscount > 0)
                         {
                             <div class="customer-mb-price-line text-success mb-2">
-                                <span>ส่วนลดโปรโมชั่น (@promoName)</span>
+                                <span>ส่วนลด@(string.IsNullOrWhiteSpace(promoName) ? "" : $" ({promoName})")</span>
                                 <strong>-฿@promoDiscount.ToString("N0")</strong>
                             </div>
                         }
                         @if (taxAmount > 0)
                         {
                             <div class="customer-mb-price-line text-muted mb-2">
-                                <span>ภาษีมูลค่าเพิ่มและค่าบริการ (Tax &amp; Service)</span>
+                                <span>ภาษีและค่าบริการ</span>
                                 <span>฿@taxAmount.ToString("N0")</span>
                             </div>
                         }
-                        else
-                        {
-                            <div class="customer-mb-price-line text-muted mb-2">
-                                <span>ภาษีมูลค่าเพิ่มและค่าบริการ (VAT &amp; Service Charge)</span>
-                                <span>รวมในราคาห้องพักแล้ว</span>
-                            </div>
-                        }
                         <div class="customer-mb-price-total pt-3 mt-2">
-                            <span class="fs-6">ยอดชำระเงินสุทธิ (Total Amount)</span>
+                            <span class="fs-6">ยอดชำระสุทธิ</span>
                             <strong class="fs-3 text-primary">฿@totalAmount.ToString("N0")</strong>
                         </div>
                     </div>
 
-                    <div class="row g-3 small text-secondary align-items-center">
-                        <div class="col-md-6">
-                            <i class="fa-solid fa-credit-card text-primary me-1"></i> ช่องทางการชำระเงิน: <strong>@paymentMethod</strong>
+                    @if (latestPayment != null)
+                    {
+                        <div class="row g-3 small text-secondary align-items-center">
+                            <div class="col-md-6">
+                                <i class="fa-solid fa-credit-card text-primary me-1"></i> ช่องทางชำระเงิน: <strong>@paymentMethod</strong>
+                            </div>
+                            <div class="col-md-6 text-md-end">
+                                <i class="fa-solid fa-receipt text-primary me-1"></i> รหัสการชำระเงิน: <strong>@paymentRef</strong>
+                            </div>
                         </div>
-                        <div class="col-md-6 text-md-end">
-                            <i class="fa-solid fa-receipt text-primary me-1"></i> เลขอ้างอิงการชำระเงิน: <strong>@paymentRef</strong>
-                        </div>
-                    </div>
+                    }
 
                     @if (!string.IsNullOrWhiteSpace(latestPayment?.SlipImagePath))
                     {
                         <div class="mt-3 pt-3 border-top">
                             <a href="@latestPayment.SlipImagePath" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary rounded-pill px-3">
-                                <i class="fa-regular fa-image me-1"></i> ดูหลักฐานสลิปการโอนเงินที่แนบไว้
+                                <i class="fa-regular fa-image me-1"></i> ดูสลิปที่แนบไว้
                             </a>
                         </div>
                     }
@@ -347,26 +371,23 @@
 
             </div>
 
-            <!-- คอลัมน์ขวา (4 Cols): DIGITAL TRAVEL PASS (QR CODE) & QUICK ACTIONS -->
+            <!-- คอลัมน์ขวา: QR Code -->
             <div class="col-lg-4">
-                <div class="customer-mb-qr-modal-content bg-white shadow-sm border p-4 text-center mb-4" data-aos="fade-left">
-                    <span class="badge bg-dark text-info border border-info px-3 py-2 rounded-pill mb-2">
-                        <i class="fa-solid fa-qrcode me-1"></i> STAYMATE DIGITAL PASS
-                    </span>
+                <div class="customer-mb-qr-modal-content bg-white shadow-sm border p-4 text-center mb-4">
                     <h4 class="fw-bold text-dark mb-1">QR Code สำหรับเช็คอิน</h4>
-                    <p class="text-muted small mb-3">Booking ID: <strong>#@bookingCode</strong></p>
+                    <p class="text-muted small mb-3">รหัสการจอง: <strong>#@bookingCode</strong></p>
 
                     @if (hasQr)
                     {
                         <div class="p-3 bg-light rounded-4 border d-inline-block mb-3">
-                            <img src="@qrUrl" alt="QR Code #@bookingCode" class="img-fluid rounded-3" style="max-width: 220px;" />
+                            <div id="detailQrBox"></div>
                         </div>
                         <p class="text-success small fw-semibold mb-3">
-                            <i class="fa-solid fa-circle-check me-1"></i> อนุมัติแล้ว พร้อมสแกนเข้าพักที่ Smart Kiosk
+                            <i class="fa-solid fa-circle-check me-1"></i> การจองยืนยันแล้ว แสดง QR Code นี้ต่อเจ้าหน้าที่เมื่อเช็คอิน
                         </p>
-                        <a href="@qrUrl" target="_blank" rel="noopener" class="customer-mb-btn-primary w-100 justify-content-center">
+                        <a href="#" id="detailQrDownload" class="customer-mb-btn-primary w-100 justify-content-center d-none">
                             <i class="fa-solid fa-download"></i>
-                            <span>ดาวน์โหลด QR Code</span>
+                            <span>บันทึก QR Code</span>
                         </a>
                     }
                     else
@@ -375,9 +396,13 @@
                             <div class="customer-mb-qr-unavail-icon">
                                 <i class="fa-solid fa-lock"></i>
                             </div>
-                            <h6 class="fw-bold text-dark mb-1">QR Code is not available yet.</h6>
+                            <h6 class="fw-bold text-dark mb-1">ยังไม่มี QR Code</h6>
                             <p class="text-muted small mb-0">
-                                ระบบจะแสดง QR Code ทันทีเมื่อสถานะใบจองของคุณเปลี่ยนเป็น <strong>Approved</strong>
+                                @(bookingStatus == "Pending"
+                                    ? "ระบบจะแสดง QR Code เมื่อการจองได้รับการยืนยัน"
+                                    : bookingStatus == "Completed"
+                                        ? "เข้าพักเสร็จสิ้นแล้ว ไม่จำเป็นต้องใช้ QR Code"
+                                        : "รายการจองนี้ไม่สามารถใช้เช็คอินได้")
                             </p>
                         </div>
                     }
@@ -387,15 +412,18 @@
                     <div class="d-grid gap-2">
                         @if (bookingStatus == "Completed")
                         {
-                            <a asp-controller="Customer" asp-action="Reviews" asp-route-bookingId="@booking?.BookingId" class="customer-mb-btn-primary justify-content-center">
+                            <a asp-controller="Customer" asp-action="Reviews" asp-route-bookingId="@booking.BookingId" class="customer-mb-btn-primary justify-content-center">
                                 <i class="fa-solid fa-star text-warning"></i>
-                                <span>เขียนรีวิวการเข้าพักครั้งนี้</span>
+                                <span>เขียนรีวิวการเข้าพัก</span>
                             </a>
                         }
-                        <a asp-controller="Customer" asp-action="RoomDetails" asp-route-id="@roomTypeId" class="customer-mb-btn-outline justify-content-center">
-                            <i class="fa-solid fa-bed"></i>
-                            <span>ดูข้อมูลห้องพัก (@roomType)</span>
-                        </a>
+                        @if (rt != null)
+                        {
+                            <a asp-controller="Customer" asp-action="RoomDetails" asp-route-id="@rt.RoomTypeId" class="customer-mb-btn-outline justify-content-center">
+                                <i class="fa-solid fa-bed"></i>
+                                <span>ดูข้อมูลห้อง @roomType</span>
+                            </a>
+                        }
                     </div>
                 </div>
             </div>
@@ -406,12 +434,31 @@
 </div>
 
 @section Scripts {
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            if (typeof AOS !== "undefined") {
-                AOS.init({ duration: 650, once: true });
-            }
-        });
-    </script>
+    @if (hasQr)
+    {
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const box = document.getElementById("detailQrBox");
+                const dl = document.getElementById("detailQrDownload");
+                if (!box || typeof QRCode === "undefined") return;
+
+                new QRCode(box, {
+                    text: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(qrText)),
+                    width: 220,
+                    height: 220,
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+
+                setTimeout(() => {
+                    const img = box.querySelector("img");
+                    if (img && img.src && dl) {
+                        dl.href = img.src;
+                        dl.download = "staymate-@(bookingCode).png";
+                        dl.classList.remove("d-none");
+                    }
+                }, 80);
+            });
+        </script>
+    }
 }

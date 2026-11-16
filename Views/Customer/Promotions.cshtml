@@ -1,141 +1,168 @@
 @model List<StayMate_Kavinvee_0576.Models.Promotion>
 @using System.Text.Json
+@using System.Globalization
 @{
     Layout = "~/Views/Shared/_CustomerLayout.cshtml";
-    ViewData["Title"] = "โปรโมชั่นพิเศษสำหรับสมาชิก";
+    ViewData["Title"] = "โปรโมชั่น";
 
-    var now = DateTime.Now;
+    var cult = CultureInfo.InvariantCulture;
+    var today = DateOnly.FromDateTime(DateTime.Today);
 
-    // ฟังก์ชันช่วยจัดรูปแบบหัวข้อ/แท็กแกลเลอรีตามประเภทส่วนลด
-    string GetPromoBadgeText(string discountType, decimal? discountVal)
+    // ---------- Helpers ----------
+    string Pct(decimal? v) => v.HasValue ? v.Value.ToString("0.##", cult) : "";
+    string Fmt(DateOnly? d) => d.HasValue ? d.Value.ToString("dd MMM yyyy", cult) : "";
+    decimal? TopPct(decimal? max, decimal? pct) => max ?? pct;
+
+    string PeriodText(DateOnly? from, DateOnly? to)
     {
-        return discountType.ToLower() switch
+        if (from.HasValue && to.HasValue) return $"{Fmt(from)} – {Fmt(to)}";
+        if (from.HasValue) return $"ตั้งแต่ {Fmt(from)}";
+        if (to.HasValue) return $"ถึง {Fmt(to)}";
+        return "ไม่จำกัดระยะเวลา";
+    }
+
+    string GetTopBadge(string? type, bool hasVoucher)
+    {
+        return (type ?? "").ToLower() switch
         {
-            "free_extra_bed" => "HOT DEAL · FREE EXTRA BED",
-            "percent_room" => $"MEMBER DISCOUNT · SAVE {discountVal:0.##}%",
-            "percent_extra_nights" => $"LONG STAY SAVER · EXTRA NIGHTS",
-            _ => "SPECIAL OFFERS · CAMPAIGNS"
+            "free_extra_bed" => "FREE EXTRA BED",
+            "percent_room" => "ROOM DISCOUNT",
+            "percent_extra_nights" => "EXTRA NIGHTS SAVER",
+            _ => hasVoucher ? "E-VOUCHER" : "SPECIAL OFFER"
         };
     }
 
-    string GetPromoDiscountBadge(string discountType, decimal? discountVal)
+    string GetDiscountBadge(string? type, decimal? pct, decimal? pctMax, bool hasVoucher)
     {
-        return discountType.ToLower() switch
-        {
-            "free_extra_bed" => "FREE BED",
-            "percent_room" => $"-{discountVal:0.##}% ROOM",
-            "percent_extra_nights" => $"SAVE {discountVal:0.##}%",
-            _ => "SPECIAL DEAL"
-        };
+        var t = (type ?? "").ToLower();
+        if (t == "free_extra_bed") return "FREE BED";
+        if (t == "percent_room")
+            return pctMax.HasValue && pctMax != pct ? $"SAVE UP TO {Pct(pctMax)}%" : $"-{Pct(pct)}% ROOM";
+        if (t == "percent_extra_nights") return $"SAVE {Pct(pct)}%";
+        return hasVoucher ? "E-VOUCHER" : "SPECIAL DEAL";
     }
 
-    // ฟังก์ชันกำหนดคลาสสี (Theme) และรูปภาพตามรหัสหรือไอดีห้องพักเพื่อรักษาดีไซน์เดิม
-    (string ThemeClass, string ImageUrl, string Tagline) GetPromoDesign(string? promoCode, byte? roomTypeId, string? roomName)
+    // รูปภาพและธีมสี (ใช้ลิงก์เดิม วนตามลำดับโปรโมชั่น)
+    string[] promoImages =
     {
-        var code = (promoCode ?? "").ToUpper();
-        if (code.Contains("STAY3PAY2") || roomTypeId == 2)
-        {
-            return ("cp-theme-blue", 
-                    "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1000&q=80",
-                    $"มา 3 จ่าย 2 · พัก {roomName ?? "Deluxe Room"} 3 ท่าน จ่ายเพียง 2 คืน");
-        }
-        if (code.Contains("FAMGANG") || roomTypeId == 3)
-        {
-            return ("cp-theme-violet", 
-                    "https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=1000&q=80",
-                    "คุ้มค่าสูงสุดสำหรับครอบครัวและแก๊งเพื่อน พักสบายยกแก๊ง");
-        }
-        if (code.Contains("STAY3PLUS") || code.Contains("SAVER"))
-        {
-            return ("cp-theme-cyan", 
-                    "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=1000&q=80",
-                    "เข้าพักตั้งแต่ 3 คืนขึ้นไป ยิ่งพักนานยิ่งประหยัด");
-        }
-        if (code.Contains("WEEK") || code.Contains("LONG"))
-        {
-            return ("cp-theme-blue-violet", 
-                    "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1000&q=80",
-                    "เปลี่ยนบรรยากาศมาพักผ่อนหรือ Workation รับส่วนลดพักระยะยาว");
-        }
-        return ("cp-theme-violet-blue", 
-                "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1000&q=80",
-                "ฉลองเทศกาลและวันหยุดยาวอย่างเหนือระดับกับดีลพิเศษ");
-    }
-
-    // ฟังก์ชันจัดกลุ่มหมวดหมู่สำหรับตัวกรอง JS
-    string GetFilterCategory(string discountType, ushort? minNights, byte? minGuests)
+        "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1000&q=80",
+        "https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=1000&q=80",
+        "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=1000&q=80",
+        "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1000&q=80",
+        "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1000&q=80"
+    };
+    string[] promoThemes =
     {
-        var cats = new List<string> { "popular" };
-        if (discountType == "percent_extra_nights" || (minNights.HasValue && minNights.Value >= 3))
-        {
-            cats.Add("stay-long");
-        }
-        if (discountType == "free_extra_bed" || (minGuests.HasValue && minGuests.Value >= 3))
-        {
-            cats.Add("group-pack");
-        }
-        return string.Join(" ", cats);
-    }
+        "cp-theme-blue", "cp-theme-violet", "cp-theme-cyan", "cp-theme-blue-violet", "cp-theme-violet-blue"
+    };
 
-    // แปลงข้อมูล Database โปรโมชั่นเป็นรายการออบเจกต์จำลองสำหรับใช้ในสไลเดอร์และโมดอล
-    var promoItemList = Model.Select(p => {
+    // ---------- แปลงข้อมูลจาก Database ----------
+    var promoItemList = Model.Select((p, i) =>
+    {
+        var type = (p.DiscountType ?? "").ToLower();
+        var hasVoucher = p.VoucherMinValue.HasValue && p.VoucherMaxValue.HasValue;
         var roomName = p.ApplicableRoomType != null ? p.ApplicableRoomType.TypeName : "ทุกประเภทห้องพัก";
-        var design = GetPromoDesign(p.PromoCode, p.ApplicableRoomTypeId, roomName);
-        var filterCats = GetFilterCategory(p.DiscountType, p.MinNights, p.MinGuests);
-        
-        // สรรค์สร้างสิทธิประโยชน์จากคอลัมน์ระบบฐานข้อมูล
-        var benefitsList = new List<string>();
-        if (p.DiscountType == "free_extra_bed") {
-            benefitsList.Add("ฟรี! เตียงเสริมพิเศษสำหรับผู้เข้าพักเสริมตลอดการเข้าพัก");
-        } else if (p.DiscountType == "percent_room") {
-            benefitsList.Add($"รับส่วนลดค่าห้องพักทันที {p.DiscountPercent:0.##}% จากราคามาตรฐาน");
-        } else if (p.DiscountType == "percent_extra_nights") {
-            benefitsList.Add($"พักครบ {p.MinNights} คืนแรก รับส่วนลดเพิ่มทันที {p.DiscountPercent:0.##}% สำหรับคืนถัดไป");
-        }
-        
-        if (p.VoucherMinValue.HasValue && p.VoucherMaxValue.HasValue) {
-            benefitsList.Add($"ฟรี! สิทธิ์จับคู่รับคูปองเงินสด E-Voucher สูงสุด ฿{p.VoucherMaxValue:N0}");
-        } else {
-            benefitsList.Add("ฟรี! บุฟเฟต์อาหารเช้าและสิทธิ์เข้าใช้สระว่ายน้ำส่วนกลาง");
-        }
-        benefitsList.Add("ฟรี! สิทธิ์การเชื่อมต่อ Wi-Fi ความเร็วสูงภายในพื้นที่ห้องพัก");
 
-        return new {
+        var isExpired = p.ValidTo.HasValue && p.ValidTo.Value < today;
+        var notStarted = p.ValidFrom.HasValue && p.ValidFrom.Value > today;
+        var canBook = !isExpired && !notStarted;
+
+        // สิทธิประโยชน์ (เฉพาะที่มีในฐานข้อมูล)
+        var benefits = new List<string>();
+        if (type == "free_extra_bed")
+        {
+            benefits.Add("ฟรีค่าเตียงเสริม");
+        }
+        else if (type == "percent_room")
+        {
+            benefits.Add(p.DiscountPercentMax.HasValue && p.DiscountPercentMax != p.DiscountPercent
+                ? $"ลดค่าห้อง {Pct(p.DiscountPercent)}–{Pct(p.DiscountPercentMax)}%"
+                : $"ลดค่าห้อง {Pct(p.DiscountPercent)}%");
+        }
+        else if (type == "percent_extra_nights")
+        {
+            benefits.Add($"ลด {Pct(p.DiscountPercent)}% ในคืนที่เพิ่ม"
+                + (p.MaxDiscountNights is > 0 ? $" (สูงสุด {p.MaxDiscountNights} คืน)" : ""));
+        }
+        if (hasVoucher)
+        {
+            benefits.Add($"E-Voucher ฿{p.VoucherMinValue:N0}–฿{p.VoucherMaxValue:N0}");
+        }
+
+        // เงื่อนไข
+        var conds = new List<string>();
+        if (p.MinNights is > 0) conds.Add($"พักขั้นต่ำ {p.MinNights} คืน");
+        if (p.MinGuests is > 0) conds.Add($"ผู้เข้าพักตั้งแต่ {p.MinGuests} ท่านขึ้นไป");
+        if (p.RequiresHoliday) conds.Add("ช่วงวันหยุด/เทศกาลที่กำหนด");
+        if (p.ApplicableRoomType != null) conds.Add($"เฉพาะห้อง {p.ApplicableRoomType.TypeName}");
+        var condText = conds.Count > 0 ? string.Join(" · ", conds) : "ไม่มีเงื่อนไขขั้นต่ำ";
+
+        // หมวดหมู่สำหรับตัวกรอง
+        var cats = new List<string>();
+        if (type == "percent_room") cats.Add("room-discount");
+        if (type == "percent_extra_nights" || p.MinNights is >= 3) cats.Add("stay-long");
+        if (type == "free_extra_bed" || p.MinGuests is >= 3) cats.Add("group-pack");
+        if (hasVoucher) cats.Add("voucher");
+
+        var isPercent = type == "percent_room" || type == "percent_extra_nights";
+
+        // ข้อความสถานะบนรูป
+        var statusText = isExpired ? "โปรโมชั่นสิ้นสุดแล้ว"
+            : notStarted ? $"เริ่มใช้ได้ {Fmt(p.ValidFrom)}"
+            : p.ValidTo.HasValue ? "กำลังคำนวณเวลา..."
+            : "ไม่มีวันหมดอายุ";
+
+        return new
+        {
             PromoId = (int)p.PromotionId,
             PromoCode = p.PromoCode,
             PromoName = p.PromoName,
-            Tagline = design.Tagline,
-            Category = filterCats,
-            BadgeText = GetPromoBadgeText(p.DiscountType, p.DiscountPercent),
-            DiscountBadge = GetPromoDiscountBadge(p.DiscountType, p.DiscountPercent),
-            ThemeClass = design.ThemeClass,
-            ImageUrl = design.ImageUrl,
-            Description = string.IsNullOrWhiteSpace(p.Description) ? "โปรโมชั่นพิเศษที่คัดสรรมาเพื่อยกระดับทริปเดินทางและพักผ่อนของท่านผ่านบริการระดับพรีเมียม" : p.Description,
-            ValidFromStr = p.ValidFrom.HasValue ? p.ValidFrom.Value.ToString("yyyy-MM-dd") : "2026-01-01",
-            ValidUntilStr = p.ValidTo.HasValue
-    ? p.ValidTo.Value.ToString("yyyy-MM-dd")
-    : "2026-12-31",
-
-ValidUntilStrT235959 = p.ValidTo.HasValue
-    ? p.ValidTo.Value.ToString("yyyy-MM-dd") + "T23:59:59"
-    : "2026-12-31T23:59:59",
-            ApplicableRoomId = p.ApplicableRoomTypeId ?? 2,
+            Description = p.Description ?? "",
+            Tagline = condText,
+            Category = string.Join(" ", cats),
+            Categories = cats,
+            BadgeText = GetTopBadge(type, hasVoucher),
+            DiscountBadge = GetDiscountBadge(type, p.DiscountPercent, p.DiscountPercentMax, hasVoucher),
+            TopPercent = isPercent ? TopPct(p.DiscountPercentMax, p.DiscountPercent) : null,
+            ThemeClass = promoThemes[i % promoThemes.Length],
+            ImageUrl = promoImages[i % promoImages.Length],
+            PeriodText = PeriodText(p.ValidFrom, p.ValidTo),
+            ValidToText = p.ValidTo.HasValue ? Fmt(p.ValidTo) : "",
+            ValidToIso = p.ValidTo.HasValue ? p.ValidTo.Value.ToString("yyyy-MM-dd", cult) + "T23:59:59" : null,
+            StatusText = statusText,
+            IsExpired = isExpired,
+            NotStarted = notStarted,
+            CanBook = canBook,
+            ApplicableRoomId = p.ApplicableRoomTypeId,
             ApplicableRoomName = roomName,
-            RequiredGuests = p.MinGuests.HasValue && p.MinGuests > 0 ? $"ผู้เข้าพักตั้งแต่ {p.MinGuests} ท่านขึ้นไป" : "ตามความจุสูงสุดของประเภทห้องพัก",
-            MinNights = p.MinNights ?? 1,
-            Conditions = $"เข้าพักขั้นต่ำ {(p.MinNights ?? 1)} คืน และเป็นสมาชิก StayMate ในระบบขณะทำการสำรองห้องพัก",
-            Benefits = benefitsList.ToArray(),
-            HowToUse = $"ระบุรหัสคูปอง {p.PromoCode} หรือกดปุ่ม Book Now เพื่อระบบดำเนินการผูกสิทธิ์เข้าหน้าจองและชำระเงินโดยอัตโนมัติ"
+            Conditions = condText,
+            Benefits = benefits.ToArray(),
+            HasVoucher = hasVoucher,
+            VoucherMin = p.VoucherMinValue,
+            VoucherMax = p.VoucherMaxValue,
+            HowToUse = $"กดปุ่ม Book Now เพื่อไปยังหน้าจอง แล้วเลือกโปรโมชั่นรหัส {p.PromoCode}"
         };
     }).ToList();
 
     int totalCount = promoItemList.Count;
-    int popularCount = promoItemList.Count(p => p.Category.Contains("popular"));
-    int stayLongCount = promoItemList.Count(p => p.Category.Contains("stay-long"));
-    int groupPackCount = promoItemList.Count(p => p.Category.Contains("group-pack"));
+    int activeNowCount = promoItemList.Count(p => p.CanBook);
+    int roomDiscountCount = promoItemList.Count(p => p.Categories.Contains("room-discount"));
+    int stayLongCount = promoItemList.Count(p => p.Categories.Contains("stay-long"));
+    int groupPackCount = promoItemList.Count(p => p.Categories.Contains("group-pack"));
+    int voucherCount = promoItemList.Count(p => p.Categories.Contains("voucher"));
 
-    // หาโปรโมชั่นไฮไลท์รายการแรกเพื่อแสดงใน Banner เด่น (หรือหาตามเงื่อนไขที่ต้องการ)
-    var featuredPromo = promoItemList.FirstOrDefault() ?? (promoItemList.Any() ? promoItemList[0] : null);
+    // ส่วนลดสูงสุดจริงจากโปรโมชั่นที่ใช้งานได้ตอนนี้
+    decimal maxDiscount = promoItemList
+        .Where(p => p.CanBook && p.TopPercent.HasValue)
+        .Select(p => p.TopPercent!.Value)
+        .DefaultIfEmpty(0m)
+        .Max();
+
+    // โปรโมชั่นเด่น: ใช้งานได้ตอนนี้และส่วนลดสูงสุด (ถ้าไม่มีให้ใช้รายการแรกที่ใช้งานได้ / รายการแรก)
+    var featuredPromo = promoItemList.Where(p => p.CanBook).OrderByDescending(p => p.TopPercent ?? 0m).FirstOrDefault()
+                        ?? promoItemList.FirstOrDefault();
+
+    var voucherItems = promoItemList.Where(p => p.HasVoucher).ToList();
 }
 
 @section Styles {
@@ -150,7 +177,7 @@ ValidUntilStrT235959 = p.ValidTo.HasValue
 <div class="customer-promo-wrapper">
 
     <!-- =========================================================
-         3. PAGE HEADER / HERO SECTION
+         PAGE HEADER / HERO
          ========================================================= -->
     <section class="customer-promo-hero" id="promoHero">
         <div class="customer-promo-hero-bg" id="promoHeroBg"
@@ -161,7 +188,6 @@ ValidUntilStrT235959 = p.ValidTo.HasValue
         <div class="customer-promo-orb customer-promo-orb-violet"></div>
 
         <div class="container position-relative z-2 py-4">
-            <!-- Breadcrumb -->
             <nav aria-label="breadcrumb" class="customer-promo-breadcrumb mb-3 gsap-promo-hero">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item">
@@ -177,31 +203,32 @@ ValidUntilStrT235959 = p.ValidTo.HasValue
                 <div class="col-lg-8">
                     <div class="customer-promo-hero-badge gsap-promo-hero">
                         <span class="customer-promo-pulse"></span>
-                        <span>STAYMATE MEMBER PRIVILEGE · EXCLUSIVE CAMPAIGNS</span>
+                        <span>STAYMATE PROMOTIONS</span>
                     </div>
 
                     <h1 class="customer-promo-hero-title gsap-promo-hero">
-                        Exclusive Promotions<br />
-                        <span class="customer-promo-text-gradient">ดีลสุดพิเศษเพื่อการพักผ่อนเหนือระดับ</span>
+                        Promotions<br />
+                        <span class="customer-promo-text-gradient">โปรโมชั่นของ StayMate</span>
                     </h1>
 
                     <p class="customer-promo-hero-subtitle gsap-promo-hero">
-                        Discover exclusive deals and make every stay more rewarding.
-                        รับสิทธิ์โปรโมชั่นสุดคุ้มจาก StayMate Hotel ที่คัดสรรมาเพื่อสมาชิกโดยเฉพาะผ่านระบบฐานข้อมูลจริง ทั้งแคมเปญพักผ่อนครอบครัว พักระยะยาว และสิทธิประโยชน์อื่น ๆ อีกมากมาย
+                        ดูโปรโมชั่นที่เปิดให้ใช้งาน พร้อมสิทธิประโยชน์ เงื่อนไข และช่วงเวลาที่ใช้ได้ แล้วเลือกจองได้ทันที
                     </p>
                 </div>
 
-                <!-- Discount Counter Stats -->
                 <div class="col-lg-4">
                     <div class="customer-promo-counter-card gsap-promo-hero">
+                        @if (maxDiscount > 0)
+                        {
+                            <div class="customer-promo-counter-item">
+                                <span class="customer-promo-counter-num"><span class="js-counter" data-target="@((int)Math.Floor(maxDiscount))" data-final="@maxDiscount.ToString("0.##", cult)">0</span>%</span>
+                                <small>ส่วนลดสูงสุดที่ใช้ได้ขณะนี้</small>
+                            </div>
+                            <div class="customer-promo-counter-divider"></div>
+                        }
                         <div class="customer-promo-counter-item">
-                            <span class="customer-promo-counter-num"><span class="js-counter" data-target="33">0</span>%</span>
-                            <small>ประหยัดสูงสุดสำหรับทริป</small>
-                        </div>
-                        <div class="customer-promo-counter-divider"></div>
-                        <div class="customer-promo-counter-item">
-                            <span class="customer-promo-counter-num"><span class="js-counter" data-target="@totalCount">0</span></span>
-                            <small>แคมเปญพิเศษที่เปิดใช้งาน</small>
+                            <span class="customer-promo-counter-num"><span class="js-counter" data-target="@activeNowCount" data-final="@activeNowCount">0</span></span>
+                            <small>โปรโมชั่นที่ใช้ได้ขณะนี้</small>
                         </div>
                     </div>
                 </div>
@@ -212,7 +239,7 @@ ValidUntilStrT235959 = p.ValidTo.HasValue
     @if (featuredPromo != null)
     {
         <!-- =========================================================
-             4. FEATURED PROMOTION BANNER (ดึงข้อมูลแรกใน DB มาเป็นไฮไลท์เด่น)
+             FEATURED PROMOTION (ส่วนลดสูงสุดที่ใช้งานได้)
              ========================================================= -->
         <section class="customer-promo-featured-section" data-aos="fade-up">
             <div class="container">
@@ -222,12 +249,11 @@ ValidUntilStrT235959 = p.ValidTo.HasValue
                             <div class="customer-promo-featured-img-wrap">
                                 <img src="@featuredPromo.ImageUrl" alt="@featuredPromo.PromoName" class="customer-promo-featured-img" />
                                 <span class="customer-promo-featured-float-tag">
-                                    <i class="fa-solid fa-crown text-warning me-1"></i> HIGHLIGHT CAMPAIGN OF THE MONTH
+                                    <i class="fa-solid fa-crown text-warning me-1"></i> โปรโมชั่นแนะนำ
                                 </span>
                                 <div class="customer-promo-featured-discount-pill">
                                     <span>STAYMATE</span>
                                     <strong>@featuredPromo.DiscountBadge</strong>
-                                    <small>MEMBERS ONLY</small>
                                 </div>
                             </div>
                         </div>
@@ -236,24 +262,27 @@ ValidUntilStrT235959 = p.ValidTo.HasValue
                             <div class="customer-promo-featured-body">
                                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                                     <span class="customer-promo-badge-cyan">
-                                        <i class="fa-solid fa-bolt me-1"></i> FEATURED PROMOTION · CODE: @featuredPromo.PromoCode
+                                        <i class="fa-solid fa-bolt me-1"></i> CODE: @featuredPromo.PromoCode
                                     </span>
                                     <span class="customer-promo-date-pill">
-                                        <i class="fa-regular fa-calendar-check me-1"></i> @DateOnly.Parse(featuredPromo.ValidFromStr).ToString("dd MMM yyyy") – @DateOnly.Parse(featuredPromo.ValidUntilStr).ToString("dd MMM yyyy")
+                                        <i class="fa-regular fa-calendar-check me-1"></i> @featuredPromo.PeriodText
                                     </span>
                                 </div>
 
                                 <h2 class="customer-promo-featured-title">@featuredPromo.PromoName</h2>
-                                <p class="customer-promo-featured-desc">@featuredPromo.Description</p>
+                                @if (!string.IsNullOrWhiteSpace(featuredPromo.Description))
+                                {
+                                    <p class="customer-promo-featured-desc">@featuredPromo.Description</p>
+                                }
 
                                 <div class="customer-promo-featured-perks">
                                     <div class="customer-promo-perk-chip">
                                         <i class="fa-solid fa-bed text-info"></i>
-                                        <span>เฉพาะห้อง @featuredPromo.ApplicableRoomName</span>
+                                        <span>@featuredPromo.ApplicableRoomName</span>
                                     </div>
                                     <div class="customer-promo-perk-chip">
-                                        <i class="fa-solid fa-user-group text-info"></i>
-                                        <span>@featuredPromo.RequiredGuests</span>
+                                        <i class="fa-solid fa-circle-exclamation text-info"></i>
+                                        <span>@featuredPromo.Conditions</span>
                                     </div>
                                     <div class="customer-promo-perk-chip">
                                         <i class="fa-solid fa-percent text-info"></i>
@@ -263,13 +292,23 @@ ValidUntilStrT235959 = p.ValidTo.HasValue
 
                                 <div class="customer-promo-featured-footer">
                                     <div class="d-flex flex-wrap gap-3 align-items-center">
-                                        <a asp-controller="Customer" asp-action="Checkout"
-                                           asp-route-promoId="@featuredPromo.PromoId" asp-route-promoCode="@featuredPromo.PromoCode"
-                                           asp-route-roomTypeId="@featuredPromo.ApplicableRoomId" asp-route-guests="2"
-                                           class="customer-promo-btn-cyan">
-                                            <i class="fa-solid fa-calendar-check"></i>
-                                            <span>Book Now · จองโปรโมชั่นนี้</span>
-                                        </a>
+                                        @if (featuredPromo.CanBook)
+                                        {
+                                            <a asp-controller="Customer" asp-action="Checkout"
+                                               asp-route-promoId="@featuredPromo.PromoId"
+                                               asp-route-promoCode="@featuredPromo.PromoCode"
+                                               asp-route-roomTypeId="@featuredPromo.ApplicableRoomId"
+                                               class="customer-promo-btn-cyan">
+                                                <i class="fa-solid fa-calendar-check"></i>
+                                                <span>Book Now · จองโปรโมชั่นนี้</span>
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <button type="button" class="customer-promo-btn-disabled" disabled>
+                                                <i class="fa-solid fa-ban me-1"></i> @featuredPromo.StatusText
+                                            </button>
+                                        }
                                         <button type="button" class="customer-promo-btn-glass" onclick="openPromoDetailModal(@featuredPromo.PromoId)">
                                             <i class="fa-solid fa-circle-info text-info"></i>
                                             <span>ดูเงื่อนไขโดยละเอียด</span>
@@ -284,73 +323,86 @@ ValidUntilStrT235959 = p.ValidTo.HasValue
         </section>
     }
 
-    <!-- =========================================================
-         SWIPER QUICK CAROUSEL & CATEGORY FILTER BAR
-         ========================================================= -->
-    <section class="customer-promo-carousel-section pt-4" data-aos="fade-up">
-        <div class="container">
-            <div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-3">
-                <div>
-                    <span class="customer-promo-eyebrow"><i class="fa-solid fa-wand-magic-sparkles me-1"></i> QUICK HIGHLIGHTS SLIDER</span>
-                    <h3 class="customer-promo-sec-title mb-0">สรุปสิทธิพิเศษแคมเปญทั้งหมด (เลื่อนชมด่วน)</h3>
+    @if (totalCount > 0)
+    {
+        <!-- =========================================================
+             SWIPER & FILTER BAR
+             ========================================================= -->
+        <section class="customer-promo-carousel-section pt-4" data-aos="fade-up">
+            <div class="container">
+                <div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-3">
+                    <div>
+                        <span class="customer-promo-eyebrow"><i class="fa-solid fa-wand-magic-sparkles me-1"></i> OVERVIEW</span>
+                        <h3 class="customer-promo-sec-title mb-0">โปรโมชั่นทั้งหมด</h3>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="customer-promo-swiper-nav promo-swiper-prev" aria-label="ก่อนหน้า">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        <button type="button" class="customer-promo-swiper-nav promo-swiper-next" aria-label="ถัดไป">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
                 </div>
-                <div class="d-flex gap-2">
-                    <button type="button" class="customer-promo-swiper-nav promo-swiper-prev" aria-label="ก่อนหน้า">
-                        <i class="fa-solid fa-chevron-left"></i>
-                    </button>
-                    <button type="button" class="customer-promo-swiper-nav promo-swiper-next" aria-label="ถัดไป">
-                        <i class="fa-solid fa-chevron-right"></i>
-                    </button>
-                </div>
-            </div>
 
-            <!-- Swiper Carousel -->
-            <div class="swiper customer-promo-mini-swiper mb-4">
-                <div class="swiper-wrapper">
-                    @foreach (var item in promoItemList)
-                    {
-                        <div class="swiper-slide h-auto">
-                            <div class="customer-promo-mini-slide @item.ThemeClass" onclick="openPromoDetailModal(@item.PromoId)">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span class="badge bg-dark bg-opacity-50 text-info border border-info border-opacity-25 rounded-pill">@item.PromoCode</span>
-                                    <span class="fw-bold text-warning small">@item.DiscountBadge</span>
+                <div class="swiper customer-promo-mini-swiper mb-4">
+                    <div class="swiper-wrapper">
+                        @foreach (var item in promoItemList)
+                        {
+                            <div class="swiper-slide h-auto">
+                                <div class="customer-promo-mini-slide @item.ThemeClass" onclick="openPromoDetailModal(@item.PromoId)">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="badge bg-dark bg-opacity-50 text-info border border-info border-opacity-25 rounded-pill">@item.PromoCode</span>
+                                        <span class="fw-bold text-warning small">@item.DiscountBadge</span>
+                                    </div>
+                                    <h5 class="text-white fw-bold mb-1">@item.PromoName</h5>
+                                    <p class="text-light opacity-75 small mb-0">@item.Tagline</p>
                                 </div>
-                                <h5 class="text-white fw-bold mb-1">@item.PromoName</h5>
-                                <p class="text-light opacity-75 small mb-0">@item.Tagline</p>
                             </div>
-                        </div>
-                    }
+                        }
+                    </div>
                 </div>
-            </div>
 
-            <!-- Filter Bar -->
-            <div class="customer-promo-filter-bar" role="tablist" aria-label="กรองหมวดหมู่โปรโมชั่น">
-                <div class="d-flex align-items-center flex-wrap gap-2">
-                    <span class="customer-promo-filter-label">
-                        <i class="fa-solid fa-tags text-primary me-1"></i> หมวดหมู่โปรโมชั่น:
-                    </span>
-                    <button type="button" class="customer-promo-filter-btn active" data-filter="all">
-                        ทั้งหมด (@totalCount)
-                    </button>
-                    <button type="button" class="customer-promo-filter-btn" data-filter="popular">
-                        ดีลยอดนิยม (@popularCount)
-                    </button>
-                    <button type="button" class="customer-promo-filter-btn" data-filter="group-pack">
-                        ครอบครัว &amp; แก๊งเพื่อน (@groupPackCount)
-                    </button>
-                    <button type="button" class="customer-promo-filter-btn" data-filter="stay-long">
-                        พักระยะยาว (@stayLongCount)
-                    </button>
+                <div class="customer-promo-filter-bar" role="tablist" aria-label="กรองหมวดหมู่โปรโมชั่น">
+                    <div class="d-flex align-items-center flex-wrap gap-2">
+                        <span class="customer-promo-filter-label">
+                            <i class="fa-solid fa-tags text-primary me-1"></i> หมวดหมู่:
+                        </span>
+                        <button type="button" class="customer-promo-filter-btn active" data-filter="all">
+                            ทั้งหมด (@totalCount)
+                        </button>
+                        @if (roomDiscountCount > 0)
+                        {
+                            <button type="button" class="customer-promo-filter-btn" data-filter="room-discount">
+                                ส่วนลดค่าห้อง (@roomDiscountCount)
+                            </button>
+                        }
+                        @if (groupPackCount > 0)
+                        {
+                            <button type="button" class="customer-promo-filter-btn" data-filter="group-pack">
+                                หลายท่าน / เตียงเสริม (@groupPackCount)
+                            </button>
+                        }
+                        @if (stayLongCount > 0)
+                        {
+                            <button type="button" class="customer-promo-filter-btn" data-filter="stay-long">
+                                พักหลายคืน (@stayLongCount)
+                            </button>
+                        }
+                        @if (voucherCount > 0)
+                        {
+                            <button type="button" class="customer-promo-filter-btn" data-filter="voucher">
+                                E-Voucher (@voucherCount)
+                            </button>
+                        }
+                    </div>
                 </div>
-                <span class="text-muted small d-none d-lg-inline">
-                    <i class="fa-solid fa-shield-halved text-success me-1"></i> ตรวจสอบสถานะวันหมดอายุอัตโนมัติ
-                </span>
             </div>
-        </div>
-    </section>
+        </section>
+    }
 
     <!-- =========================================================
-         5. PROMOTION GRID CARDS
+         PROMOTION GRID
          ========================================================= -->
     <section class="customer-promo-grid-section py-4" id="promotionCardsSection">
         <div class="container">
@@ -361,9 +413,9 @@ ValidUntilStrT235959 = p.ValidTo.HasValue
                         <i class="fa-solid fa-ticket-simple"></i>
                     </div>
                     <h4 class="fw-bold text-dark mb-2">ขณะนี้ยังไม่มีโปรโมชั่นที่เปิดใช้งาน</h4>
-                    <p class="text-muted mb-4">ทีมงาน StayMate กำลังจัดเตรียมแคมเปญส่วนลดใหม่สำหรับสมาชิก โปรดกลับมาตรวจสอบอีกครั้งเร็ว ๆ นี้</p>
+                    <p class="text-muted mb-4">โปรดกลับมาตรวจสอบอีกครั้งในภายหลัง</p>
                     <a asp-controller="Customer" asp-action="RoomAvailability" class="customer-promo-btn-primary">
-                        <i class="fa-solid fa-magnifying-glass me-1"></i> ค้นหาห้องพักราคาสมาชิก
+                        <i class="fa-solid fa-magnifying-glass me-1"></i> ค้นหาห้องพัก
                     </a>
                 </div>
             }
@@ -373,18 +425,12 @@ ValidUntilStrT235959 = p.ValidTo.HasValue
                     @{ var delay = 0; }
                     @foreach (var p in promoItemList)
                     {
-                        var expDate = DateTime.Parse(p.ValidUntilStr);
-                        var startDate = DateTime.Parse(p.ValidFromStr);
-                        var isExpired = now.Date > expDate.Date;
-                        var isNotStarted = now.Date < startDate.Date;
-                        var canBook = !isExpired && !isNotStarted;
-
                         <div class="col-12 col-md-6 col-xl-4 customer-promo-card-col"
                              data-category="@p.Category"
                              data-aos="fade-up"
                              data-aos-delay="@delay">
 
-                            <article class="customer-promo-card @p.ThemeClass h-100 @(isExpired ? "is-expired" : "")">
+                            <article class="customer-promo-card @p.ThemeClass h-100 @(p.IsExpired ? "is-expired" : "")">
                                 <div class="customer-promo-card-img-wrap">
                                     <img src="@p.ImageUrl" alt="@p.PromoName" class="customer-promo-card-img" loading="lazy" />
                                     <div class="customer-promo-card-img-overlay"></div>
@@ -392,10 +438,9 @@ ValidUntilStrT235959 = p.ValidTo.HasValue
                                     <span class="customer-promo-top-badge">@p.BadgeText</span>
                                     <span class="customer-promo-discount-badge">@p.DiscountBadge</span>
 
-                                    <!-- Countdown Timer Bar -->
-                                    <div class="customer-promo-countdown-pill" data-end="@p.ValidUntilStrT235959">
+                                    <div class="customer-promo-countdown-pill" data-end="@(p.CanBook ? p.ValidToIso : null)">
                                         <i class="fa-regular fa-clock me-1"></i>
-                                        <span class="countdown-text">กำลังคำนวณเวลา...</span>
+                                        <span class="countdown-text">@p.StatusText</span>
                                     </div>
                                 </div>
 
@@ -413,42 +458,44 @@ ValidUntilStrT235959 = p.ValidTo.HasValue
                                     </div>
 
                                     <h3 class="customer-promo-card-title">@p.PromoName</h3>
-                                    <p class="customer-promo-card-tagline">@p.Tagline</p>
-                                    <p class="customer-promo-card-desc">@p.Description</p>
+                                    @if (!string.IsNullOrWhiteSpace(p.Description))
+                                    {
+                                        <p class="customer-promo-card-desc">@p.Description</p>
+                                    }
 
-                                    <!-- สิทธิประโยชน์ -->
-                                    <div class="customer-promo-benefits-box">
-                                        <strong class="d-block small mb-1 text-white">
-                                            <i class="fa-solid fa-gift text-info me-1"></i> สิทธิประโยชน์ที่ได้รับ:
-                                        </strong>
-                                        <ul class="customer-promo-benefits-list">
-                                            @foreach (var b in p.Benefits)
-                                            {
-                                                <li><i class="fa-solid fa-check text-info"></i> <span>@b</span></li>
-                                            }
-                                        </ul>
-                                    </div>
+                                    @if (p.Benefits.Length > 0)
+                                    {
+                                        <div class="customer-promo-benefits-box">
+                                            <strong class="d-block small mb-1 text-white">
+                                                <i class="fa-solid fa-gift text-info me-1"></i> สิทธิประโยชน์ที่ได้รับ:
+                                            </strong>
+                                            <ul class="customer-promo-benefits-list">
+                                                @foreach (var b in p.Benefits)
+                                                {
+                                                    <li><i class="fa-solid fa-check text-info"></i> <span>@b</span></li>
+                                                }
+                                            </ul>
+                                        </div>
+                                    }
 
-                                    <!-- เงื่อนไขระยะเวลา -->
                                     <div class="customer-promo-meta-box">
                                         <div>
                                             <i class="fa-regular fa-calendar-days text-info me-1"></i>
-                                            <strong>Valid:</strong> @DateOnly.Parse(p.ValidFromStr).ToString("dd MMM yyyy") – @DateOnly.Parse(p.ValidUntilStr).ToString("dd MMM yyyy")
+                                            <strong>ระยะเวลา:</strong> @p.PeriodText
                                         </div>
                                         <div>
                                             <i class="fa-solid fa-circle-exclamation text-warning me-1"></i>
-                                            <strong>เงื่อนไข:</strong> @p.RequiredGuests · พักขั้นต่ำ @p.MinNights คืน
+                                            <strong>เงื่อนไข:</strong> @p.Conditions
                                         </div>
                                     </div>
 
-                                    <!-- ปุ่มกดจัดการ -->
                                     <div class="customer-promo-card-footer">
                                         <button type="button" class="customer-promo-btn-detail" onclick="openPromoDetailModal(@p.PromoId)">
                                             <i class="fa-regular fa-file-lines"></i>
                                             <span>View Details</span>
                                         </button>
 
-                                        @if (canBook)
+                                        @if (p.CanBook)
                                         {
                                             <a asp-controller="Customer"
                                                asp-action="Checkout"
@@ -463,7 +510,7 @@ ValidUntilStrT235959 = p.ValidTo.HasValue
                                         else
                                         {
                                             <button type="button" class="customer-promo-btn-disabled" disabled>
-                                                <i class="fa-solid fa-ban me-1"></i> โปรโมชั่นหมดอายุ
+                                                <i class="fa-solid fa-ban me-1"></i> @(p.IsExpired ? "โปรโมชั่นหมดอายุ" : "ยังไม่เริ่ม")
                                             </button>
                                         }
                                     </div>
@@ -477,115 +524,71 @@ ValidUntilStrT235959 = p.ValidTo.HasValue
         </div>
     </section>
 
-    <!-- =========================================================
-         7. E-VOUCHER & FESTIVAL PASS SECTION
-         ========================================================= -->
-    <section class="customer-promo-privileges-section py-5" id="evoucherAndFestivalPass">
-        <div class="container">
-            <div class="text-center mb-4" data-aos="fade-up">
-                <span class="customer-promo-eyebrow">
-                    <i class="fa-solid fa-ticket me-1"></i> DIGITAL VOUCHER &amp; EXCLUSIVE PASS
-                </span>
-                <h2 class="customer-promo-sec-title">E-Voucher &amp; Digital Festival Pass</h2>
-                <p class="text-secondary mx-auto" style="max-width: 650px;">
-                    สิทธิพิเศษรูปแบบดิจิทัลสำหรับสมาชิก StayMate คัดลอกรหัส E-Voucher เพื่อใช้ลดเพิ่มในหน้าชำระเงิน หรือรับสิทธิ์ Digital Festival Pass เมื่อจองโปรโมชั่นพิเศษ
-                </p>
-            </div>
-
-            <div class="row g-4 align-items-stretch">
-                <!-- 7A. E-VOUCHER -->
-                <div class="col-12 col-lg-6" data-aos="fade-right">
-                    <div class="customer-promo-evoucher-card h-100">
-                        <div class="customer-promo-evoucher-left">
-                            <span class="customer-promo-evoucher-type">STAYMATE E-VOUCHER</span>
-                            <div class="customer-promo-evoucher-amount">฿500</div>
-                            <span class="customer-promo-evoucher-sub">CASH DISCOUNT VOUCHER</span>
-                        </div>
-
-                        <div class="customer-promo-evoucher-Perf"></div>
-
-                        <div class="customer-promo-evoucher-right">
-                            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
-                                <span class="badge bg-primary-subtle text-primary rounded-pill px-3">สำหรับสมาชิกที่เข้าสู่ระบบแล้ว</span>
-                                <small class="text-muted"><i class="fa-regular fa-clock me-1"></i> ใช้ได้ถึง 31 ธ.ค. 2026</small>
-                            </div>
-
-                            <h4 class="fw-bold text-dark mb-1">คูปองส่วนลดแทนเงินสด ฿500</h4>
-                            <p class="text-secondary small mb-3">
-                                ใช้เป็นส่วนลดออนท็อปค่าห้องพัก หรือแลกเป็นเครดิตห้องอาหารและสปา เมื่อมียอดจองห้องพักรวมตั้งแต่ ฿3,500 ขึ้นไป
-                            </p>
-
-                            <div class="customer-promo-evoucher-code-bar">
-                                <div>
-                                    <small class="text-muted d-block" style="font-size:0.7rem;">VOUCHER CODE</small>
-                                    <strong class="customer-promo-mono-code">SM-VIP500-2026</strong>
-                                </div>
-                                <button type="button" class="customer-promo-btn-copy-voucher js-copy-voucher" data-code="SM-VIP500-2026">
-                                    <i class="fa-regular fa-copy me-1"></i> <span>คัดลอกโค้ด</span>
-                                </button>
-                            </div>
-
-                            <small class="text-muted d-block mt-2" style="font-size: 0.75rem;">
-                                * เงื่อนไข: จำกัด 1 สิทธิ์ต่อ 1 การจอง สามารถใช้ร่วมกับห้อง Deluxe, Family และ Suite ได้
-                            </small>
-                        </div>
-                    </div>
+    @if (voucherItems.Count > 0)
+    {
+        <!-- =========================================================
+             E-VOUCHER (เฉพาะโปรโมชั่นที่มี E-Voucher ในฐานข้อมูล)
+             ========================================================= -->
+        <section class="customer-promo-privileges-section py-5" id="evoucherSection">
+            <div class="container">
+                <div class="text-center mb-4" data-aos="fade-up">
+                    <span class="customer-promo-eyebrow">
+                        <i class="fa-solid fa-ticket me-1"></i> E-VOUCHER
+                    </span>
+                    <h2 class="customer-promo-sec-title">โปรโมชั่นที่แถม E-Voucher</h2>
                 </div>
 
-                <!-- 7B. FESTIVAL PASS -->
-                <div class="col-12 col-lg-6" data-aos="fade-left">
-                    <div class="customer-promo-festival-pass h-100">
-                        <div class="customer-promo-pass-glow"></div>
-                        <div class="position-relative z-2 d-flex flex-column h-100">
-                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-                                <span class="customer-promo-pass-badge">
-                                    <i class="fa-solid fa-champagne-glasses me-1"></i> DIGITAL FESTIVAL PASS
-                                </span>
-                                <span class="customer-promo-pass-id">PASS ID: #SM-SKY-2026</span>
-                            </div>
+                <div class="row g-4 align-items-stretch">
+                    @foreach (var v in voucherItems)
+                    {
+                        <div class="col-12 col-lg-6" data-aos="fade-up">
+                            <div class="customer-promo-evoucher-card h-100">
+                                <div class="customer-promo-evoucher-left">
+                                    <span class="customer-promo-evoucher-type">STAYMATE E-VOUCHER</span>
+                                    <div class="customer-promo-evoucher-amount">฿@(v.VoucherMax?.ToString("N0", cult))</div>
+                                    <span class="customer-promo-evoucher-sub">สูงสุด</span>
+                                </div>
 
-                            <h3 class="text-white fw-bold mb-1">StayMate Neon Skyline Festival Pass</h3>
-                            <p class="text-info small fw-semibold mb-3">
-                                สิทธิพิเศษเมื่อจองโปรโมชั่น Festival &amp; Long Weekend (ลดค่าห้อง 10% + ฟรีบัตรผ่านดิจิทัล)
-                            </p>
+                                <div class="customer-promo-evoucher-Perf"></div>
 
-                            <div class="customer-promo-pass-perks mb-3">
-                                <div class="customer-promo-pass-perk-item">
-                                    <i class="fa-solid fa-martini-glass-citrus text-info"></i>
-                                    <div>
-                                        <strong>Free Rooftop Sky Pool &amp; Bar Access</strong>
-                                        <small>เข้าโซนปาร์ตี้สระว่ายน้ำชั้นดาดฟ้า พร้อมฟรี Signature Drink 2 แก้ว</small>
+                                <div class="customer-promo-evoucher-right">
+                                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+                                        <span class="badge bg-primary-subtle text-primary rounded-pill px-3">@v.PeriodText</span>
+                                        @if (!string.IsNullOrEmpty(v.ValidToText))
+                                        {
+                                            <small class="text-muted"><i class="fa-regular fa-clock me-1"></i> ใช้ได้ถึง @v.ValidToText</small>
+                                        }
                                     </div>
-                                </div>
-                                <div class="customer-promo-pass-perk-item">
-                                    <i class="fa-solid fa-spa text-warning"></i>
-                                    <div>
-                                        <strong>Holistic Spa &amp; Late Check-out</strong>
-                                        <small>รับส่วนลดสปา 25% และเช็คเอาท์ล่วงเวลาได้ถึง 14:00 น.</small>
-                                    </div>
-                                </div>
-                            </div>
 
-                            <div class="mt-auto pt-3 border-top border-light border-opacity-25 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                                <div class="small text-light opacity-75">
-                                    <i class="fa-regular fa-calendar-check text-info me-1"></i> ระยะเวลาใช้งาน: ตลอดช่วงเทศกาลปี 2026
+                                    <h4 class="fw-bold text-dark mb-1">@v.PromoName</h4>
+                                    <p class="text-secondary small mb-3">
+                                        รับ E-Voucher มูลค่า ฿@(v.VoucherMin?.ToString("N0", cult))–฿@(v.VoucherMax?.ToString("N0", cult)) เมื่อจองด้วยโปรโมชั่นนี้
+                                    </p>
+
+                                    <div class="customer-promo-evoucher-code-bar">
+                                        <div>
+                                            <small class="text-muted d-block" style="font-size:0.7rem;">PROMO CODE</small>
+                                            <strong class="customer-promo-mono-code">@v.PromoCode</strong>
+                                        </div>
+                                        <button type="button" class="customer-promo-btn-copy-voucher js-copy-voucher" data-code="@v.PromoCode">
+                                            <i class="fa-regular fa-copy me-1"></i> <span>คัดลอกโค้ด</span>
+                                        </button>
+                                    </div>
+
+                                    <small class="text-muted d-block mt-2" style="font-size: 0.75rem;">
+                                        * เงื่อนไข: @v.Conditions
+                                    </small>
                                 </div>
-                                <a asp-controller="Customer" asp-action="Checkout"
-                                   asp-route-promoId="5" asp-route-promoCode="FESTPASS10"
-                                   class="customer-promo-btn-cyan-sm">
-                                    <span>จองพร้อมรับ Festival Pass</span>
-                                    <i class="fa-solid fa-arrow-right ms-1"></i>
-                                </a>
                             </div>
                         </div>
-                    </div>
+                    }
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
+    }
 
     <!-- =========================================================
-         8. CALL TO ACTION SECTION
+         CALL TO ACTION
          ========================================================= -->
     <section class="customer-promo-cta-section pb-5" data-aos="zoom-in">
         <div class="container">
@@ -593,18 +596,14 @@ ValidUntilStrT235959 = p.ValidTo.HasValue
                 <div class="customer-promo-cta-orb"></div>
                 <div class="row align-items-center g-4 position-relative z-2">
                     <div class="col-lg-8">
-                        <span class="customer-promo-badge-cyan mb-2 d-inline-block">
-                            <i class="fa-solid fa-sparkles me-1"></i> STAYMATE SMART HOSPITALITY
-                        </span>
-                        <h2 class="customer-promo-cta-title">Your Perfect Stay Starts Here</h2>
+                        <h2 class="customer-promo-cta-title">พร้อมจองห้องพักแล้วหรือยัง</h2>
                         <p class="customer-promo-cta-desc mb-0">
-                            Explore our exclusive offers and enjoy more value with every stay.
-                            เลือกชมรายละเอียดห้องพักทั้ง 4 ประเภท หรือค้นหาห้องว่างเพื่อใช้สิทธิ์โปรโมชั่นที่คุณต้องการได้ทันที
+                            ดูรายละเอียดห้องพัก หรือตรวจสอบห้องว่างเพื่อเลือกใช้โปรโมชั่นที่ต้องการ
                         </p>
                     </div>
                     <div class="col-lg-4 text-lg-end">
                         <div class="d-flex flex-wrap justify-content-lg-end gap-3">
-                            <a asp-controller="Customer" asp-action="RoomDetails" asp-route-id="1" class="customer-promo-btn-glass">
+                            <a asp-controller="Customer" asp-action="Rooms" class="customer-promo-btn-glass">
                                 <i class="fa-solid fa-bed text-info"></i>
                                 <span>Explore Rooms</span>
                             </a>
@@ -620,15 +619,15 @@ ValidUntilStrT235959 = p.ValidTo.HasValue
     </section>
 
     <!-- =========================================================
-         6. PROMOTION DETAIL MODAL
+         PROMOTION DETAIL MODAL
          ========================================================= -->
     <div class="modal fade customer-promo-modal" id="promoDetailModal" tabindex="-1" aria-labelledby="promoModalTitle" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
             <div class="modal-content customer-promo-modal-content">
                 <div class="modal-header customer-promo-modal-header">
                     <div>
-                        <span class="customer-promo-badge-cyan mb-1 d-inline-block" id="mPromoCodeBadge">PROMO CODE</span>
-                        <h4 class="modal-title fw-bold text-white mb-0" id="promoModalTitle">ชื่อโปรโมชั่น</h4>
+                        <span class="customer-promo-badge-cyan mb-1 d-inline-block" id="mPromoCodeBadge"></span>
+                        <h4 class="modal-title fw-bold text-white mb-0" id="promoModalTitle"></h4>
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -636,36 +635,30 @@ ValidUntilStrT235959 = p.ValidTo.HasValue
                 <div class="modal-body p-4">
                     <div class="customer-promo-modal-img-wrap mb-4">
                         <img id="mPromoImage" src="" alt="Promotion Preview" />
-                        <span class="customer-promo-modal-discount" id="mPromoDiscount">SAVE</span>
+                        <span class="customer-promo-modal-discount" id="mPromoDiscount"></span>
                     </div>
 
-                    <div class="mb-4">
+                    <div class="mb-4" id="mPromoDescWrap">
                         <h6 class="fw-bold text-dark"><i class="fa-solid fa-circle-info text-primary me-2"></i>รายละเอียดโปรโมชั่น</h6>
                         <p id="mPromoDesc" class="text-secondary mb-0 lh-lg"></p>
                     </div>
 
                     <div class="row g-3 mb-4">
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <div class="customer-promo-modal-info-box">
                                 <small><i class="fa-regular fa-calendar-check text-primary me-1"></i> ระยะเวลาโปรโมชั่น</small>
                                 <strong id="mPromoPeriod">-</strong>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <div class="customer-promo-modal-info-box">
                                 <small><i class="fa-solid fa-bed text-primary me-1"></i> ประเภทห้องที่รองรับ</small>
                                 <strong id="mPromoRooms">-</strong>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="customer-promo-modal-info-box">
-                                <small><i class="fa-solid fa-user-group text-primary me-1"></i> เงื่อนไขผู้เข้าพัก</small>
-                                <strong id="mPromoGuests">-</strong>
-                            </div>
-                        </div>
                     </div>
 
-                    <div class="mb-4">
+                    <div class="mb-4" id="mPromoBenefitsWrap">
                         <h6 class="fw-bold text-dark"><i class="fa-solid fa-gift text-primary me-2"></i>ส่วนลดและสิทธิพิเศษที่ได้รับ</h6>
                         <ul class="customer-promo-modal-list" id="mPromoBenefits"></ul>
                     </div>
@@ -694,7 +687,7 @@ ValidUntilStrT235959 = p.ValidTo.HasValue
                     <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">ปิดหน้าต่าง</button>
                     <a href="#" id="mPromoBookBtn" class="customer-promo-btn-book px-4 py-2">
                         <i class="fa-solid fa-calendar-check me-1"></i>
-                        <span>Book Now · ใช้โปรโมชั่นนี้จองห้องพัก</span>
+                        <span>Book Now</span>
                     </a>
                 </div>
             </div>
@@ -709,7 +702,7 @@ ValidUntilStrT235959 = p.ValidTo.HasValue
     <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
 
     <script>
-        // ดึง Catalog ข้อมูลโปรโมชั่นจริงจาก EF Core โครงการ StayMate
+        // ข้อมูลโปรโมชั่นจากฐานข้อมูล
         const promoCatalog = @Html.Raw(JsonSerializer.Serialize(promoItemList));
 
         function openPromoDetailModal(promoId) {
@@ -720,24 +713,41 @@ ValidUntilStrT235959 = p.ValidTo.HasValue
             document.getElementById("promoModalTitle").textContent = item.PromoName;
             document.getElementById("mPromoImage").src = item.ImageUrl;
             document.getElementById("mPromoDiscount").textContent = item.DiscountBadge;
-            document.getElementById("mPromoDesc").textContent = item.Description;
-            
-            const startDate = new Date(item.ValidFromStr).toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" });
-            const endDate = new Date(item.ValidUntilStr).toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" });
-            document.getElementById("mPromoPeriod").textContent = `${startDate} – ${endDate}`;
-            
+
+            const hasDesc = item.Description && item.Description.trim() !== "";
+            document.getElementById("mPromoDesc").textContent = hasDesc ? item.Description : "";
+            document.getElementById("mPromoDescWrap").classList.toggle("d-none", !hasDesc);
+
+            document.getElementById("mPromoPeriod").textContent = item.PeriodText;
             document.getElementById("mPromoRooms").textContent = item.ApplicableRoomName;
-            document.getElementById("mPromoGuests").textContent = item.RequiredGuests;
             document.getElementById("mPromoConditions").textContent = item.Conditions;
             document.getElementById("mPromoHowTo").textContent = item.HowToUse;
 
             const benefitsUl = document.getElementById("mPromoBenefits");
-            benefitsUl.innerHTML = item.Benefits.map(b =>
-                `<li><i class="fa-solid fa-circle-check text-success me-2"></i><span>${b}</span></li>`
-            ).join("");
+            benefitsUl.innerHTML = "";
+            item.Benefits.forEach(b => {
+                const li = document.createElement("li");
+                const icon = document.createElement("i");
+                icon.className = "fa-solid fa-circle-check text-success me-2";
+                const span = document.createElement("span");
+                span.textContent = b;
+                li.append(icon, span);
+                benefitsUl.appendChild(li);
+            });
+            document.getElementById("mPromoBenefitsWrap").classList.toggle("d-none", item.Benefits.length === 0);
 
             const bookBtn = document.getElementById("mPromoBookBtn");
-            bookBtn.href = `/Customer/Checkout?promoId=${item.PromoId}&promoCode=${encodeURIComponent(item.PromoCode)}&roomTypeId=${item.ApplicableRoomId}`;
+            if (item.CanBook) {
+                const params = new URLSearchParams({ promoId: item.PromoId, promoCode: item.PromoCode });
+                if (item.ApplicableRoomId !== null && item.ApplicableRoomId !== undefined) {
+                    params.set("roomTypeId", item.ApplicableRoomId);
+                }
+                bookBtn.href = `/Customer/Checkout?${params.toString()}`;
+                bookBtn.classList.remove("d-none");
+            } else {
+                bookBtn.href = "#";
+                bookBtn.classList.add("d-none");
+            }
 
             const modalEl = document.getElementById("promoDetailModal");
             if (modalEl && typeof bootstrap !== "undefined") {
@@ -748,17 +758,12 @@ ValidUntilStrT235959 = p.ValidTo.HasValue
         document.addEventListener("DOMContentLoaded", function () {
             const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-            // 1. AOS Scroll Reveal
+            // 1. AOS
             if (typeof AOS !== "undefined") {
-                AOS.init({
-                    duration: 700,
-                    once: true,
-                    offset: 60,
-                    disable: prefersReducedMotion
-                });
+                AOS.init({ duration: 700, once: true, offset: 60, disable: prefersReducedMotion });
             }
 
-            // 2. GSAP Hero Effect
+            // 2. GSAP Hero
             if (typeof gsap !== "undefined" && !prefersReducedMotion) {
                 gsap.fromTo("#promoHeroBg", { scale: 1.14 }, { scale: 1, duration: 2.5, ease: "power2.out" });
                 gsap.fromTo(".gsap-promo-hero",
@@ -767,11 +772,12 @@ ValidUntilStrT235959 = p.ValidTo.HasValue
                 );
             }
 
-            // 3. Counter Animation
+            // 3. Counter
             document.querySelectorAll(".js-counter").forEach(counter => {
                 const target = parseInt(counter.dataset.target || "0", 10);
-                if (prefersReducedMotion) {
-                    counter.textContent = target;
+                const finalText = counter.dataset.final || String(target);
+                if (prefersReducedMotion || target <= 0) {
+                    counter.textContent = finalText;
                     return;
                 }
                 let current = 0;
@@ -779,7 +785,7 @@ ValidUntilStrT235959 = p.ValidTo.HasValue
                 const timer = setInterval(() => {
                     current += step;
                     if (current >= target) {
-                        counter.textContent = target;
+                        counter.textContent = finalText;
                         clearInterval(timer);
                     } else {
                         counter.textContent = current;
@@ -788,7 +794,7 @@ ValidUntilStrT235959 = p.ValidTo.HasValue
             });
 
             // 4. Swiper
-            if (typeof Swiper !== "undefined") {
+            if (typeof Swiper !== "undefined" && document.querySelector(".customer-promo-mini-swiper")) {
                 new Swiper(".customer-promo-mini-swiper", {
                     slidesPerView: 1.15,
                     spaceBetween: 16,
@@ -824,16 +830,12 @@ ValidUntilStrT235959 = p.ValidTo.HasValue
                 });
             });
 
-            // 6. Countdown Timer
+            // 6. Countdown (เฉพาะโปรโมชั่นที่ใช้งานได้และมีวันสิ้นสุด)
             const pad = n => String(n).padStart(2, "0");
             document.querySelectorAll(".customer-promo-countdown-pill[data-end]").forEach(pill => {
                 const textSpan = pill.querySelector(".countdown-text");
-                const endVal = pill.dataset.end;
-               if (!endVal) {
-    textSpan.textContent = "โปรโมชั่นจำกัดสิทธิ์พิเศษ";
-    return;
-}
-                const endTime = new Date(endVal).getTime();
+                const endTime = new Date(pill.dataset.end).getTime();
+                if (isNaN(endTime)) return;
 
                 function updateClock() {
                     const diff = endTime - Date.now();
@@ -856,17 +858,15 @@ ValidUntilStrT235959 = p.ValidTo.HasValue
                 }
             });
 
-            // 7. Code Copying
+            // 7. Copy code
             document.querySelectorAll(".customer-promo-copy-btn, .js-copy-voucher").forEach(btn => {
                 btn.addEventListener("click", function () {
                     const code = this.dataset.code;
-                    if (!code) return;
+                    if (!code || !navigator.clipboard) return;
                     navigator.clipboard.writeText(code).then(() => {
                         const originalHtml = this.innerHTML;
                         this.innerHTML = `<i class="fa-solid fa-check text-success"></i>`;
-                        setTimeout(() => {
-                            this.innerHTML = originalHtml;
-                        }, 1800);
+                        setTimeout(() => { this.innerHTML = originalHtml; }, 1800);
                     });
                 });
             });
