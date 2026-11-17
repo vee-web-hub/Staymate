@@ -12,8 +12,6 @@
 
     var roomTypes = ViewBag.RoomTypes as List<StayMate_Kavinvee_0576.Models.RoomType>
                     ?? new List<StayMate_Kavinvee_0576.Models.RoomType>();
-    var activePromos = ViewBag.ActivePromotions as List<StayMate_Kavinvee_0576.Models.Promotion>
-                       ?? new List<StayMate_Kavinvee_0576.Models.Promotion>();
     var userProfile = ViewBag.CurrentUser as StayMate_Kavinvee_0576.Models.User;
 
     var parsedInitId = byte.TryParse(qRoomTypeId, out var tempId) ? tempId : (byte)0;
@@ -46,19 +44,6 @@
         img = GetRoomImage(rt.TypeCode, rt.TypeName)
     }));
 
-    var promotionsJson = JsonSerializer.Serialize(activePromos.Select(p => new
-    {
-        promoId = p.PromotionId,
-        promoCode = p.PromoCode,
-        promoName = p.PromoName,
-        discountType = p.DiscountType,
-        discountPercent = p.DiscountPercent,
-        minGuests = p.MinGuests ?? 1,
-        minNights = p.MinNights ?? 1,
-        maxDiscountNights = p.MaxDiscountNights ?? 0,
-        requiresHoliday = p.RequiresHoliday,
-        applicableRoomTypeId = p.ApplicableRoomTypeId
-    }));
 }
 
 @section Styles {
@@ -415,7 +400,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
     <script>
         const dbRooms = @Html.Raw(roomTypesJson);
-        const dbPromotions = @Html.Raw(promotionsJson);
+        const quoteUrl = "@Url.Action("Quote", "Customer")";
 
         document.addEventListener("DOMContentLoaded", function () {
             const pageRoot = document.getElementById("checkoutPageRoot");
@@ -519,46 +504,22 @@
                 document.getElementById("lblBaseNights").textContent = nightsCount;
             }
 
-            // ---------- คำนวณราคา ----------
-            let activePromoId = null;
+            // ---------- คำนวณราคา (ขอจากเซิร์ฟเวอร์ เพื่อให้ตรงกับราคาจริงและห้องว่างตามวันที่) ----------
             let activeNetTotal = 0;
+            let quoteReady = false;
+            let quoteSeq = 0;
 
-            function pickPromotion(room, guests, basePrice) {
-                let best = null;
-                let bestScore = -1;
-
-                dbPromotions.forEach(p => {
-                    if (p.requiresHoliday) return; // เงื่อนไขช่วงวันหยุดให้ระบบหลังบ้านตรวจสอบ
-                    if (p.applicableRoomTypeId && p.applicableRoomTypeId !== room.id) return;
-                    if (guests < p.minGuests || nightsCount < p.minNights) return;
-
-                    const pct = p.discountPercent || 0;
-                    let amount = 0;
-
-                    if (p.discountType === "percent_room") {
-                        amount = basePrice * pct / 100;
-                    } else if (p.discountType === "percent_extra_nights") {
-                        let extra = Math.max(0, nightsCount - p.minNights);
-                        if (p.maxDiscountNights > 0) extra = Math.min(extra, p.maxDiscountNights);
-                        amount = room.price * extra * pct / 100;
-                    }
-
-                    // โปรโมชั่นที่ลูกค้าระบุรหัสมาให้ความสำคัญก่อน
-                    const preferred = initPromoCode && p.promoCode === initPromoCode ? 1e9 : 0;
-                    const score = amount + preferred;
-
-                    if (score > bestScore) {
-                        bestScore = score;
-                        best = { promo: p, amount: amount };
-                    }
-                });
-
-                return best;
+            function setPriceLabels(base, discount, total) {
+                document.getElementById("lblBasePrice").textContent = base === null ? "-" : baht(base);
+                document.getElementById("lblPromoDiscount").textContent = discount === null ? "-" : `-${baht(discount)}`;
+                document.getElementById("lblNetTotal").textContent = total === null ? "-" : baht(total);
+                document.getElementById("lblPayAmount").textContent = total === null ? "-" : baht(total);
             }
 
-            function calculatePrices() {
+            async function calculatePrices(keepError = false) {
                 const room = currentRoom();
                 if (!room) return;
+                if (!keepError) clearError();
 
                 const guests = parseInt(guestCapacityEl.value, 10) || 1;
                 document.getElementById("lblSummaryGuests").textContent = guests;
@@ -569,29 +530,61 @@
                 roomImgEl.src = room.img;
                 roomImgEl.alt = room.name;
 
-                const basePrice = room.price * nightsCount;
-                document.getElementById("lblBasePrice").textContent = baht(basePrice);
+                quoteReady = false;
+                confirmBtn.disabled = true;
+                setPriceLabels(null, null, null);
 
-                const applied = pickPromotion(room, guests, basePrice);
-                const promoDiscount = applied ? Math.min(applied.amount, basePrice) : 0;
-                activePromoId = applied ? applied.promo.promoId : null;
+                const seq = ++quoteSeq;
+                const params = new URLSearchParams({
+                    roomTypeId: room.id,
+                    checkIn: toInputDate(checkInDate),
+                    checkOut: toInputDate(checkOutDate),
+                    guests: guests,
+                    promoCode: initPromoCode
+                });
 
-                const labelEl = document.getElementById("lblPromoLabel");
-                const noteEl = document.getElementById("lblPromoNote");
-                labelEl.textContent = applied ? `ส่วนลด: ${applied.promo.promoName}` : "ส่วนลดโปรโมชั่น";
+                try {
+                    const res = await fetch(`${quoteUrl}?${params.toString()}`, { headers: { "Accept": "application/json" } });
+                    if (seq !== quoteSeq) return; // มีการเปลี่ยนเงื่อนไขใหม่แล้ว
 
-                if (applied && applied.promo.discountType === "free_extra_bed") {
-                    noteEl.textContent = "รับสิทธิ์ฟรีค่าเตียงเสริม";
-                    noteEl.classList.remove("d-none");
-                } else {
-                    noteEl.classList.add("d-none");
+                    if (!res.ok) {
+                        showError(`ไม่สามารถคำนวณราคาได้ (รหัสข้อผิดพลาด ${res.status}) กรุณาลองใหม่อีกครั้ง`);
+                        return;
+                    }
+
+                    const q = await res.json();
+                    if (seq !== quoteSeq) return;
+
+                    if (!q.success) {
+                        showError(q.message || "ไม่สามารถคำนวณราคาได้");
+                        return;
+                    }
+
+                    document.getElementById("lblBaseNights").textContent = q.nights;
+                    document.getElementById("lblPromoLabel").textContent =
+                        q.promoName ? `ส่วนลด: ${q.promoName}` : "ส่วนลดโปรโมชั่น";
+
+                    const noteEl = document.getElementById("lblPromoNote");
+                    if (q.promoType === "free_extra_bed") {
+                        noteEl.textContent = "รับสิทธิ์ฟรีค่าเตียงเสริม";
+                        noteEl.classList.remove("d-none");
+                    } else {
+                        noteEl.classList.add("d-none");
+                    }
+
+                    activeNetTotal = q.total;
+                    setPriceLabels(q.roomAmount, q.discount, q.total);
+
+                    if (q.available <= 0) {
+                        showError("ประเภทห้องนี้เต็มในช่วงวันที่เลือก กรุณาเลือกวันที่หรือประเภทห้องอื่น");
+                        return;
+                    }
+
+                    quoteReady = true;
+                    confirmBtn.disabled = false;
+                } catch (e) {
+                    if (seq === quoteSeq) showError("ไม่สามารถคำนวณราคาได้ กรุณาลองใหม่อีกครั้ง");
                 }
-
-                document.getElementById("lblPromoDiscount").textContent = `-${baht(promoDiscount)}`;
-
-                activeNetTotal = Math.max(0, Math.round(basePrice - promoDiscount));
-                document.getElementById("lblNetTotal").textContent = baht(activeNetTotal);
-                document.getElementById("lblPayAmount").textContent = baht(activeNetTotal);
             }
 
             updateDateSummary();
@@ -642,7 +635,7 @@
                 populateGuests(parseInt(guestCapacityEl.value, 10));
                 calculatePrices();
             });
-            guestCapacityEl.addEventListener("change", calculatePrices);
+            guestCapacityEl.addEventListener("change", () => calculatePrices());
 
             // ---------- ขั้นตอน ----------
             window.navigateToStep = function (stepNum) {
@@ -654,6 +647,10 @@
                 const panelPay = document.getElementById("panelPayment");
 
                 if (stepNum === 2) {
+                    if (!quoteReady) {
+                        showError("ยังไม่สามารถไปขั้นตอนชำระเงินได้ กรุณาตรวจสอบวันที่เข้าพักและห้องว่าง");
+                        return;
+                    }
                     const name = document.getElementById("guestFullName").value.trim();
                     const phone = document.getElementById("guestPhone").value.trim();
                     const emailEl = document.getElementById("guestEmail");
@@ -726,6 +723,11 @@
             window.submitBookingForm = function () {
                 clearError();
 
+                if (!quoteReady) {
+                    showError("ยังไม่สามารถยืนยันการจองได้ กรุณาตรวจสอบวันที่เข้าพักและห้องว่าง");
+                    return;
+                }
+
                 const slipInput = document.getElementById("slipUploadInput");
                 if (!slipInput.files || slipInput.files.length === 0) {
                     showError("กรุณาแนบสลิปการโอนเงินก่อนยืนยันการจอง");
@@ -752,7 +754,7 @@
                 formData.append("email", document.getElementById("guestEmail").value.trim());
                 formData.append("phone", document.getElementById("guestPhone").value.trim());
                 formData.append("specialRequest", document.getElementById("specialRequest").value.trim());
-                formData.append("promoId", activePromoId || "");
+                formData.append("promoCode", initPromoCode);
                 formData.append("netTotal", activeNetTotal);
                 formData.append("slipFile", slipInput.files[0]);
 
@@ -778,6 +780,7 @@
                         } else {
                             confirmBtn.disabled = false;
                             showError(data.message || "ไม่สามารถทำรายการจองได้ กรุณาลองใหม่อีกครั้ง");
+                            if (data.refreshQuote) calculatePrices(true);
                         }
                     })
                     .catch(() => {

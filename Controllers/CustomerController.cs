@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -360,6 +362,396 @@ namespace StayMate_Kavinvee_0576.Controllers
                 .FirstOrDefaultAsync(u => u.UserId == userId.Value);
 
             return View();
+        }
+
+        // ==========================================
+        // 5.1 BOOKING: คำนวณราคา (Quote) และบันทึกการจอง (SubmitBooking)
+        // ==========================================
+        private const int MaxStayNights = 30;
+        private const long MaxSlipBytes = 5 * 1024 * 1024;
+
+        // สถานะการจองที่ "กันห้อง" ไว้
+        // ไม่รวม pending_payment เพราะขั้นตอนจองนี้สร้างรายการพร้อมสลิป (pending_approval) เสมอ
+        // และระบบยังไม่มีเวลาหมดอายุของการรอชำระเงิน จึงไม่ควรกันห้องค้าง
+        private static readonly IReadOnlyList<string> HoldingStatuses =
+    new[] { "pending_approval", "confirmed", "checked_in" };
+
+        private static readonly Regex PhoneRegex = new(@"^[0-9+\-\s]{8,20}$");
+
+        // ==========================================
+        // ผลการคำนวณราคา
+        // ==========================================
+        private sealed class BookingQuote
+        {
+            public RoomType Room { get; init; } = null!;
+            public int Nights { get; init; }
+            public decimal RoomAmount { get; init; }
+            public decimal AvgPricePerNight { get; init; }
+            public Promotion? Promo { get; init; }
+            public decimal PromoPercent { get; init; }
+            public decimal Discount { get; init; }
+            public decimal DiscountPercent { get; init; }
+            public decimal Total { get; init; }
+            public int Available { get; init; }
+        }
+
+        /// <summary>จำนวนห้องที่ว่างจริงของประเภทห้องนั้นในช่วงวันที่เลือก (นับตามประเภทห้อง)</summary>
+        private async Task<int> CountAvailableRoomsAsync(byte roomTypeId, DateOnly checkIn, DateOnly checkOut)
+        {
+            var totalRooms = await _db.Rooms.CountAsync(r =>
+                r.RoomTypeId == roomTypeId && r.IsActive == true && r.Status != "maintenance");
+
+            var bookedRooms = await _db.BookingRooms.CountAsync(br =>
+                br.RoomTypeId == roomTypeId
+                && HoldingStatuses.Contains(br.Booking.Status)
+                && br.Booking.CheckInDate < checkOut
+                && br.Booking.CheckOutDate > checkIn);
+
+            return Math.Max(0, totalRooms - bookedRooms);
+        }
+
+        /// <summary>เลือกโปรโมชั่นที่ให้ส่วนลดสูงสุด (โปรที่ลูกค้าระบุรหัสมาได้สิทธิ์ก่อน)</summary>
+        private static (Promotion? Promo, decimal Discount, decimal Percent) PickPromotion(
+            List<Promotion> promos, RoomType room, int guests, List<decimal> nightly,
+            bool stayHasHoliday, string? preferredCode)
+        {
+            var nights = nightly.Count;
+            var roomAmount = nightly.Sum();
+
+            Promotion? best = null;
+            decimal bestDiscount = 0m, bestPercent = 0m, bestScore = -1m;
+
+            foreach (var p in promos)
+            {
+                if (p.ApplicableRoomTypeId.HasValue && p.ApplicableRoomTypeId.Value != room.RoomTypeId) continue;
+                if (guests < (p.MinGuests ?? 1) || nights < (p.MinNights ?? 1)) continue;
+                if (p.RequiresHoliday && !stayHasHoliday) continue;
+
+                var pct = p.DiscountPercent ?? 0m;
+                decimal discount = 0m;
+
+                switch (p.DiscountType)
+                {
+                    case "percent_room":
+                        discount = roomAmount * pct / 100m;
+                        break;
+
+                    case "percent_extra_nights":
+                        // ลดเฉพาะคืนที่เกินจำนวนคืนขั้นต่ำ (นับจากคืนท้าย ๆ) และไม่เกิน MaxDiscountNights
+                        var extra = Math.Max(0, nights - (p.MinNights ?? 1));
+                        if (p.MaxDiscountNights is > 0)
+                            extra = Math.Min(extra, p.MaxDiscountNights.Value);
+                        discount = nightly.Skip(nights - extra).Sum() * pct / 100m;
+                        break;
+
+                    case "free_extra_bed":
+                        // ระบบยังไม่คิดค่าเตียงเสริมในใบจอง จึงยังไม่มีมูลค่าส่วนลดเป็นเงิน
+                        break;
+                }
+
+                discount = Math.Round(Math.Min(discount, roomAmount), 2);
+
+                var preferred = !string.IsNullOrWhiteSpace(preferredCode)
+                                && string.Equals(p.PromoCode, preferredCode, StringComparison.OrdinalIgnoreCase);
+                var score = discount + (preferred ? 1_000_000m : 0m);
+
+                if (score > bestScore)
+                {
+                    bestScore = score;
+                    best = p;
+                    bestDiscount = discount;
+                    bestPercent = pct;
+                }
+            }
+
+            return (best, bestDiscount, bestPercent);
+        }
+
+        /// <summary>คำนวณราคาและตรวจห้องว่าง (ใช้ร่วมกันทั้งหน้า Checkout และตอนบันทึกจริง)</summary>
+        private async Task<(BookingQuote? Quote, string? Error)> BuildQuoteAsync(
+            byte roomTypeId, DateOnly checkIn, DateOnly checkOut, int guests, string? promoCode)
+        {
+            if (checkIn < Today)
+                return (null, "วันเช็คอินต้องเป็นวันนี้หรือหลังจากนี้");
+            if (checkOut <= checkIn)
+                return (null, "วันเช็คเอาท์ต้องอยู่หลังวันเช็คอินอย่างน้อย 1 วัน");
+
+            var nights = checkOut.DayNumber - checkIn.DayNumber;
+            if (nights > MaxStayNights)
+                return (null, $"เข้าพักได้ไม่เกิน {MaxStayNights} คืนต่อการจอง");
+
+            var room = await _db.RoomTypes.AsNoTracking().FirstOrDefaultAsync(rt => rt.RoomTypeId == roomTypeId);
+            if (room == null)
+                return (null, "ไม่พบประเภทห้องพักที่เลือก");
+
+            if (guests < room.MinGuests || guests > room.MaxGuests)
+                return (null, $"ห้อง {room.TypeName} รองรับผู้เข้าพัก {room.MinGuests}–{room.MaxGuests} ท่าน");
+
+            // ราคาต่อคืน: ใช้ราคาช่วงเวลาพิเศษ (room_rate_periods) ถ้ามี ไม่เช่นนั้นใช้ราคาปกติ
+            // (ถ้ามีหลายช่วงทับกัน ใช้รายการที่สร้างล่าสุด)
+            var lastNight = checkOut.AddDays(-1);
+            var periods = await _db.RoomRatePeriods
+                .AsNoTracking()
+                .Where(p => p.RoomTypeId == roomTypeId && p.StartDate <= lastNight && p.EndDate >= checkIn)
+                .ToListAsync();
+
+            var nightly = new List<decimal>();
+            for (var d = checkIn; d < checkOut; d = d.AddDays(1))
+            {
+                var period = periods
+                    .Where(p => p.StartDate <= d && p.EndDate >= d)
+                    .OrderByDescending(p => p.RateId)
+                    .FirstOrDefault();
+                nightly.Add(period?.PricePerNight ?? room.BasePrice);
+            }
+
+            var roomAmount = nightly.Sum();
+
+            var promos = await GetActivePromotionsAsync();
+            var stayHasHoliday = promos.Any(p => p.RequiresHoliday)
+                && await _db.Holidays.AnyAsync(h => h.StartDate <= lastNight && h.EndDate >= checkIn);
+
+            var (promo, discount, pct) = PickPromotion(promos, room, guests, nightly, stayHasHoliday, promoCode);
+
+            var effectivePercent = roomAmount > 0m ? Math.Round(discount / roomAmount * 100m, 2) : 0m;
+
+            var quote = new BookingQuote
+            {
+                Room = room,
+                Nights = nights,
+                RoomAmount = roomAmount,
+                AvgPricePerNight = Math.Round(roomAmount / nights, 2),
+                Promo = promo,
+                PromoPercent = pct,
+                Discount = discount,
+                DiscountPercent = effectivePercent,
+                Total = roomAmount - discount,
+                Available = await CountAvailableRoomsAsync(roomTypeId, checkIn, checkOut)
+            };
+
+            return (quote, null);
+        }
+
+        private static bool TryParseDate(string? text, out DateOnly date) =>
+            DateOnly.TryParseExact(text, "yyyy-MM-dd", out date);
+
+        private static string NewBookingCode()
+        {
+            const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            var suffix = new string(Enumerable.Range(0, 5)
+                .Select(_ => chars[RandomNumberGenerator.GetInt32(chars.Length)]).ToArray());
+            return $"BK{DateTime.Now:yyMMdd}{suffix}";
+        }
+
+        /// <summary>ตรวจชนิดไฟล์จากไบต์แรกของไฟล์จริง ไม่เชื่อแค่นามสกุลหรือ Content-Type</summary>
+        private static async Task<string?> DetectImageExtensionAsync(IFormFile file)
+        {
+            var header = new byte[8];
+            await using var stream = file.OpenReadStream();
+            var read = await stream.ReadAsync(header.AsMemory(0, header.Length));
+            if (read < 4) return null;
+
+            if (header[0] == 0xFF && header[1] == 0xD8 && header[2] == 0xFF) return ".jpg";
+            if (header[0] == 0x89 && header[1] == 0x50 && header[2] == 0x4E && header[3] == 0x47) return ".png";
+            return null;
+        }
+
+        // ==========================================
+        // QUOTE: คำนวณราคาให้หน้า Checkout
+        // ==========================================
+        [HttpGet]
+        public async Task<IActionResult> Quote(byte roomTypeId, string? checkIn, string? checkOut, int guests, string? promoCode)
+        {
+            if (await GetCurrentUserId() == null)
+                return Fail("กรุณาเข้าสู่ระบบใหม่อีกครั้ง");
+
+            if (!TryParseDate(checkIn, out var inDate) || !TryParseDate(checkOut, out var outDate))
+                return Fail("รูปแบบวันที่ไม่ถูกต้อง");
+
+            var (quote, error) = await BuildQuoteAsync(roomTypeId, inDate, outDate, guests, promoCode);
+            if (quote == null)
+                return Fail(error ?? "ไม่สามารถคำนวณราคาได้");
+
+            return Json(new
+            {
+                success = true,
+                nights = quote.Nights,
+                roomAmount = quote.RoomAmount,
+                discount = quote.Discount,
+                total = quote.Total,
+                promoName = quote.Promo?.PromoName,
+                promoType = quote.Promo?.DiscountType,
+                available = quote.Available
+            });
+        }
+
+        // ==========================================
+        // SUBMIT BOOKING
+        // ==========================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequestSizeLimit(6 * 1024 * 1024)]
+        public async Task<IActionResult> SubmitBooking(
+            byte roomTypeId, string? checkIn, string? checkOut, int guests,
+            string? fullName, string? email, string? phone, string? specialRequest,
+            string? promoCode, decimal netTotal, IFormFile? slipFile)
+        {
+            var userId = await GetCurrentUserId();
+            if (userId == null)
+                return Fail("กรุณาเข้าสู่ระบบใหม่อีกครั้ง");
+
+            // ---------- 1) ตรวจข้อมูลที่ส่งมา ----------
+            if (!TryParseDate(checkIn, out var inDate) || !TryParseDate(checkOut, out var outDate))
+                return Fail("รูปแบบวันที่ไม่ถูกต้อง");
+
+            var name = fullName?.Trim() ?? "";
+            var mail = email?.Trim() ?? "";
+            var tel = phone?.Trim() ?? "";
+            var request = string.IsNullOrWhiteSpace(specialRequest) ? null : specialRequest.Trim();
+
+            if (name.Length == 0 || mail.Length == 0 || tel.Length == 0)
+                return Fail("กรุณากรอกชื่อ อีเมล และเบอร์โทรศัพท์ให้ครบถ้วน");
+            if (name.Length > 150)
+                return Fail("ชื่อ-นามสกุลต้องไม่เกิน 150 ตัวอักษร");
+            if (mail.Length > 120 || !new EmailAddressAttribute().IsValid(mail))
+                return Fail("รูปแบบอีเมลไม่ถูกต้อง");
+            if (!PhoneRegex.IsMatch(tel))
+                return Fail("รูปแบบเบอร์โทรศัพท์ไม่ถูกต้อง");
+            if (request != null && request.Length > 500)
+                return Fail("คำขอเพิ่มเติมต้องไม่เกิน 500 ตัวอักษร");
+
+            if (slipFile == null || slipFile.Length == 0)
+                return Fail("กรุณาแนบสลิปการโอนเงิน");
+            if (slipFile.Length > MaxSlipBytes)
+                return Fail("ไฟล์สลิปต้องมีขนาดไม่เกิน 5MB");
+
+            var slipExt = await DetectImageExtensionAsync(slipFile);
+            if (slipExt == null)
+                return Fail("รองรับเฉพาะไฟล์รูปภาพ JPEG หรือ PNG");
+
+            // ---------- 2) ล็อกประเภทห้อง แล้วคำนวณราคา/ตรวจห้องว่างใหม่ในธุรกรรมเดียว ----------
+            // การล็อกแถว room_types ทำให้คำขอจองประเภทห้องเดียวกันเข้ามาทีละคำขอ ป้องกันการจองห้องเกินจำนวน
+            string? savedSlipFullPath = null;
+
+            await using var tx = await _db.Database.BeginTransactionAsync();
+            try
+            {
+                await _db.Database.ExecuteSqlInterpolatedAsync(
+                    $"SELECT room_type_id FROM room_types WHERE room_type_id = {roomTypeId} FOR UPDATE");
+
+                var (quote, error) = await BuildQuoteAsync(roomTypeId, inDate, outDate, guests, promoCode);
+                if (quote == null)
+                    return Fail(error ?? "ไม่สามารถทำรายการจองได้");
+
+                if (quote.Available <= 0)
+                    return Fail($"ขออภัย ห้อง {quote.Room.TypeName} เต็มในช่วงวันที่เลือก กรุณาเลือกวันที่หรือประเภทห้องอื่น");
+
+                // ยอดที่ลูกค้าเห็นต้องตรงกับที่เซิร์ฟเวอร์คำนวณ ไม่เช่นนั้นให้ลูกค้ายืนยันยอดใหม่
+                if (Math.Abs(netTotal - quote.Total) > 0.01m)
+                    return Json(new
+                    {
+                        success = false,
+                        refreshQuote = true,
+                        message = $"ราคามีการเปลี่ยนแปลง ยอดชำระล่าสุดคือ ฿{quote.Total:N0} กรุณาตรวจสอบยอดก่อนยืนยันอีกครั้ง"
+                    });
+
+                // ---------- 3) สร้างรหัสการจอง ----------
+                string bookingCode;
+                var attempts = 0;
+                do
+                {
+                    bookingCode = NewBookingCode();
+                    attempts++;
+                } while (await _db.Bookings.AnyAsync(b => b.BookingCode == bookingCode) && attempts < 5);
+
+                // ---------- 4) บันทึกไฟล์สลิป ----------
+                var env = HttpContext.RequestServices.GetRequiredService<IWebHostEnvironment>();
+                var slipDir = Path.Combine(env.WebRootPath, "uploads", "slips");
+                Directory.CreateDirectory(slipDir);
+
+                var slipFileName = $"{bookingCode}_{Guid.NewGuid():N}{slipExt}";
+                savedSlipFullPath = Path.Combine(slipDir, slipFileName);
+                await using (var fs = System.IO.File.Create(savedSlipFullPath))
+                {
+                    await slipFile.CopyToAsync(fs);
+                }
+
+                // ---------- 5) สร้างรายการจอง ----------
+                var now = DateTime.Now;
+
+                var booking = new Booking
+                {
+                    BookingCode = bookingCode,
+                    UserId = userId.Value,
+                    ContactName = name,
+                    ContactEmail = mail,
+                    ContactPhone = tel,
+                    CheckInDate = inDate,
+                    CheckOutDate = outDate,
+                    Nights = (ushort)quote.Nights,
+                    NumGuests = (byte)guests,
+                    RoomAmount = quote.RoomAmount,
+                    DiscountPercent = quote.DiscountPercent,
+                    DiscountAmount = quote.Discount,
+                    TaxAmount = 0m, // ราคาห้องที่แสดงเป็นราคาสุทธิ ไม่แยกภาษี
+                    TotalAmount = quote.Total,
+                    Status = "pending_approval", // แนบสลิปแล้ว รอเจ้าหน้าที่ตรวจสอบ
+                    SpecialRequest = request,
+                    CreatedAt = now
+                };
+
+                // ยังไม่กำหนดห้องจริง (RoomId) จะกำหนดตอนเช็คอิน
+                booking.BookingRooms.Add(new BookingRoom
+                {
+                    RoomTypeId = quote.Room.RoomTypeId,
+                    PricePerNight = quote.AvgPricePerNight,
+                    Nights = (ushort)quote.Nights,
+                    ExtraBedQty = 0,
+                    ExtraBedAmount = 0m,
+                    LineTotal = quote.RoomAmount
+                });
+
+                if (quote.Promo != null)
+                {
+                    booking.BookingPromotions.Add(new BookingPromotion
+                    {
+                        PromotionId = quote.Promo.PromotionId,
+                        StackRole = "base",
+                        AppliedPercent = quote.PromoPercent,
+                        AppliedAmount = quote.Discount,
+                        AppliedAt = now
+                    });
+                }
+
+                booking.Payments.Add(new Payment
+                {
+                    Amount = quote.Total,
+                    Method = "bank_transfer",
+                    SlipImagePath = $"/uploads/slips/{slipFileName}",
+                    Status = "pending",
+                    CreatedAt = now
+                });
+
+                _db.Bookings.Add(booking);
+                await _db.SaveChangesAsync();
+                await tx.CommitAsync();
+
+                return Json(new
+                {
+                    success = true,
+                    bookingId = booking.BookingId,
+                    bookingCode = booking.BookingCode,
+                    netTotal = booking.TotalAmount
+                });
+            }
+            catch (Exception)
+            {
+                // ยกเลิกธุรกรรม (ทำโดยอัตโนมัติเมื่อ dispose) และลบไฟล์สลิปที่เพิ่งบันทึก
+                if (savedSlipFullPath != null && System.IO.File.Exists(savedSlipFullPath))
+                    System.IO.File.Delete(savedSlipFullPath);
+
+                return Fail("ไม่สามารถบันทึกการจองได้ กรุณาลองใหม่อีกครั้ง");
+            }
         }
 
         // ==========================================
