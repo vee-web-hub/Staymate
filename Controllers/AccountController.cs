@@ -177,17 +177,17 @@ public class AccountController : Controller
     // LOGOUT
     // =========================================================
 
-   [HttpPost]
-[Authorize]
-[ValidateAntiForgeryToken]
-public async Task<IActionResult> Logout()
-{
-    await HttpContext.SignOutAsync(
-        CookieAuthenticationDefaults.AuthenticationScheme
-    );
+    [HttpPost]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Logout()
+    {
+        await HttpContext.SignOutAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme
+        );
 
-    return RedirectToAction("Index", "Home");
-}
+        return RedirectToAction("Index", "Home");
+    }
 
     // =========================================================
     // ACCESS DENIED
@@ -255,8 +255,8 @@ public async Task<IActionResult> Logout()
     // =========================================================
 
     [HttpGet]
-[Authorize]
-public async Task<IActionResult> UserList(string? q)
+    [Authorize]
+    public async Task<IActionResult> UserList(string? q)
     {
         var query = _db.Users
             .Include(u => u.UserRoles)
@@ -285,7 +285,6 @@ public async Task<IActionResult> UserList(string? q)
                 Email = u.Email,
                 Phone = u.Phone,
 
-                // แก้ CS8629 และ CS0266
                 IsActive = u.IsActive ?? false,
 
                 RoleCode = u.UserRoles
@@ -312,6 +311,7 @@ public async Task<IActionResult> UserList(string? q)
     {
         var roles = roleCodes.ToList();
 
+        // CUSTOMER
         if (roles.Contains("CUSTOMER"))
         {
             return RedirectToAction(
@@ -320,13 +320,49 @@ public async Task<IActionResult> UserList(string? q)
             );
         }
 
-        if (roles.Contains("MANAGER") ||
-            roles.Contains("OWNER") ||
-            roles.Contains("FRONT_ADMIN"))
+        // RECEPTION
+        // RECEPTION
+    if (roles.Contains("FRONT_ADMIN"))
+    {
+        return RedirectToAction(
+            "Index",
+            "Reception"
+        );
+    }
+
+        // FINANCE
+        if (roles.Contains("FINANCE"))
         {
             return RedirectToAction(
-                "UserList",
-                "Account"
+                "Index",
+                "Finance"
+            );
+        }
+
+        // HOUSEKEEPING
+        if (roles.Contains("HOUSEKEEPING"))
+        {
+            return RedirectToAction(
+                "Index",
+                "Housekeeping"
+            );
+        }
+
+        // MANAGER
+        if (roles.Contains("MANAGER"))
+        {
+            return RedirectToAction(
+                "Index",
+                "Manager"
+            );
+        }
+
+        // OWNER
+        if (roles.Contains("OWNER"))
+        {
+            return RedirectToAction(
+                "Index",
+                "Owner"
             );
         }
 

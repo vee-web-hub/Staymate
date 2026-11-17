@@ -1,0 +1,616 @@
+@model StayMate_Kavinvee_0576.ViewModels.ReceptionIndexViewModel
+@{
+    ViewData["Title"] = "Housekeeping Requests";
+    Layout = "~/Views/Shared/_ReceptionLayout.cshtml";
+
+    var thaiCulture = new System.Globalization.CultureInfo("th-TH");
+    var currentDateText = DateTime.Now.ToString("วันddddที่ d MMMM yyyy", thaiCulture);
+
+    var tasksList = Model?.HousekeepingRequests ?? new List<StayMate_Kavinvee_0576.ViewModels.ReceptionTaskViewModel>();
+    var roomsList = Model?.Rooms ?? new List<StayMate_Kavinvee_0576.ViewModels.ReceptionRoomViewModel>();
+
+    // คำนวณตัวเลข Summary Cards 4 ใบจากข้อมูลจริงใน Model.GuestServices
+    int totalTasksCount = tasksList.Count;
+    int pendingTasksCount = tasksList.Count(t => (t.Status ?? "").ToLowerInvariant() == "pending");
+    int inProgressTasksCount = tasksList.Count(t =>
+        (t.Status ?? "").ToLowerInvariant() == "in_progress" ||
+        (t.Status ?? "").ToLowerInvariant() == "inprogress" ||
+        (t.Status ?? "").ToLowerInvariant() == "working");
+    int completedTasksCount = tasksList.Count(t =>
+        (t.Status ?? "").ToLowerInvariant() == "completed" ||
+        (t.Status ?? "").ToLowerInvariant() == "done");
+
+    // แยกรายการสำหรับ Tab งานที่กำลังติดตาม และ Tab ประวัติงานที่เสร็จสิ้นแล้ว
+    var activeTasks = tasksList
+        .Where(t => (t.Status ?? "").ToLowerInvariant() != "completed" && (t.Status ?? "").ToLowerInvariant() != "done")
+        .OrderByDescending(t => t.CreatedAt)
+        .ToList();
+
+    var completedHistoryTasks = tasksList
+        .Where(t => (t.Status ?? "").ToLowerInvariant() == "completed" || (t.Status ?? "").ToLowerInvariant() == "done")
+        .OrderByDescending(t => t.CompletedAt ?? t.CreatedAt)
+        .ToList();
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/Reception.css" asp-append-version="true" />
+}
+
+<div class="reception-dashboard-wrapper reception-hk-page" id="receptionHousekeepingApp">
+
+    <!-- แจ้งเตือนผลลัพธ์จาก TempData (เมื่อแจ้งงานแม่บ้านสำเร็จ หรือเกิดข้อผิดพลาด) -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="reception-checkin-alert reception-alert-success reception-fade-in" role="alert">
+            <div class="reception-alert-icon"><i class="fa-solid fa-circle-check"></i></div>
+            <div class="reception-alert-content">
+                <strong>บันทึกใบแจ้งงานสำเร็จ!</strong>
+                <span>@TempData["SuccessMessage"]</span>
+            </div>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="reception-checkin-alert reception-alert-danger reception-fade-in" role="alert">
+            <div class="reception-alert-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="reception-alert-content">
+                <strong>ไม่สามารถดำเนินการได้!</strong>
+                <span>@TempData["ErrorMessage"]</span>
+            </div>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- ==========================================
+         1. ส่วนหัวหน้าเว็บ (PAGE HEADER)
+         ========================================== -->
+    <section class="reception-page-header reception-hk-header reception-fade-in">
+        <div class="reception-header-left">
+            <div class="reception-title-badge">
+                <span class="reception-live-dot"></span>
+                <span>HOUSEKEEPING TASK TRACKER · RECEPTION MONITOR VIEW</span>
+            </div>
+            <h1 class="reception-main-title">
+                <i class="fa-solid fa-broom reception-hk-title-icon"></i>
+                Housekeeping Requests
+            </h1>
+            <p class="reception-welcome-text">
+                จัดการและติดตามสถานะงานทำความสะอาดห้องพัก · ข้อมูลประจำ<span>@currentDateText</span>
+            </p>
+        </div>
+
+        <div class="reception-header-right">
+            <div class="reception-hk-total-pill">
+                <i class="fa-solid fa-clipboard-check"></i>
+                <span>งานทั้งหมดในระบบ: <strong>@totalTasksCount</strong> รายการ</span>
+            </div>
+
+            <button type="button" id="btnRefreshHkPage" class="reception-btn reception-btn-outline" title="รีเฟรชข้อมูลล่าสุด">
+                <i class="fa-solid fa-rotate"></i>
+                <span>Refresh</span>
+            </button>
+
+            <button type="button" id="btnOpenCreateTaskModal" class="reception-btn reception-btn-primary">
+                <i class="fa-solid fa-plus"></i>
+                <span>แจ้งงานแม่บ้านใหม่</span>
+            </button>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         2. SUMMARY CARDS (4 ใบจากข้อมูลจริง)
+         ========================================== -->
+    <section class="reception-kpi-grid reception-hk-kpi-grid reception-fade-in">
+        <!-- Card 1: งานทั้งหมด -->
+        <article class="reception-kpi-card reception-kpi-navy">
+            <div class="reception-kpi-top">
+                <div>
+                    <span class="reception-kpi-title">Total Tasks</span>
+                    <h2 class="reception-kpi-number">@totalTasksCount</h2>
+                </div>
+                <div class="reception-kpi-icon">
+                    <i class="fa-solid fa-list-check"></i>
+                </div>
+            </div>
+            <div class="reception-kpi-footer">
+                <span class="reception-kpi-desc">จำนวนรายการแจ้งงานแม่บ้านทั้งหมดที่บันทึกในระบบ</span>
+            </div>
+        </article>
+
+        <!-- Card 2: งานรอดำเนินการ (Pending) -->
+        <article class="reception-kpi-card reception-kpi-warning">
+            <div class="reception-kpi-top">
+                <div>
+                    <span class="reception-kpi-title">Pending Tasks</span>
+                    <h2 class="reception-kpi-number">@pendingTasksCount</h2>
+                </div>
+                <div class="reception-kpi-icon">
+                    <i class="fa-solid fa-hourglass-start"></i>
+                </div>
+            </div>
+            <div class="reception-kpi-footer">
+                <span class="reception-kpi-desc">งานรอดำเนินการ รอพนักงานแม่บ้านกดรับงาน</span>
+            </div>
+        </article>
+
+        <!-- Card 3: งานกำลังดำเนินการ (In Progress) -->
+        <article class="reception-kpi-card reception-kpi-cyan">
+            <div class="reception-kpi-top">
+                <div>
+                    <span class="reception-kpi-title">In Progress</span>
+                    <h2 class="reception-kpi-number">@inProgressTasksCount</h2>
+                </div>
+                <div class="reception-kpi-icon">
+                    <i class="fa-solid fa-soap"></i>
+                </div>
+            </div>
+            <div class="reception-kpi-footer">
+                <span class="reception-kpi-desc">งานที่แม่บ้านกำลังดำเนินการทำความสะอาดอยู่ในขณะนี้</span>
+            </div>
+        </article>
+
+        <!-- Card 4: งานเสร็จสิ้น (Completed) -->
+        <article class="reception-kpi-card reception-kpi-success">
+            <div class="reception-kpi-top">
+                <div>
+                    <span class="reception-kpi-title">Completed</span>
+                    <h2 class="reception-kpi-number">@completedTasksCount</h2>
+                </div>
+                <div class="reception-kpi-icon">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+            </div>
+            <div class="reception-kpi-footer">
+                <span class="reception-kpi-desc">ทำความสะอาดเสร็จสิ้นและพร้อมเปิดขายห้องพัก (Available)</span>
+            </div>
+        </article>
+    </section>
+
+    <!-- ==========================================
+         3. ส่วนค้นหาและตัวกรอง (SEARCH & FILTER BAR)
+         ========================================== -->
+    <section class="reception-hk-filter-card reception-fade-in">
+        <div class="reception-hk-filter-grid">
+            <div class="reception-checkout-field">
+                <label for="hkSearchRoom"><i class="fa-solid fa-door-closed"></i> ค้นหาหมายเลขห้อง</label>
+                <input type="text"
+                       id="hkSearchRoom"
+                       class="reception-filter-control"
+                       placeholder="เช่น 101, 204..."
+                       autocomplete="off" />
+            </div>
+
+            <div class="reception-checkout-field">
+                <label for="hkSearchBookingOrNote"><i class="fa-solid fa-magnifying-glass"></i> ค้นหา Booking Code / รายละเอียดงาน</label>
+                <input type="text"
+                       id="hkSearchBookingOrNote"
+                       class="reception-filter-control"
+                       placeholder="รหัสการจอง, ชื่อแม่บ้าน หรือรายละเอียด..."
+                       autocomplete="off" />
+            </div>
+
+            <div class="reception-checkout-field">
+                <label for="hkFilterStatus"><i class="fa-solid fa-filter"></i> สถานะงาน</label>
+                <select id="hkFilterStatus" class="reception-filter-control">
+                    <option value="all">ทุกสถานะงาน (All Statuses)</option>
+                    <option value="pending">Pending (รอดำเนินการ)</option>
+                    <option value="in_progress">In Progress (กำลังดำเนินการ)</option>
+                    <option value="completed">Completed (เสร็จสิ้นแล้ว)</option>
+                    <option value="cancelled">Cancelled (ยกเลิก)</option>
+                </select>
+            </div>
+
+            <div class="reception-checkout-field">
+                <label for="hkFilterDate"><i class="fa-regular fa-calendar"></i> วันที่แจ้งงาน</label>
+                <input type="date"
+                       id="hkFilterDate"
+                       class="reception-filter-control" />
+            </div>
+
+            <div class="reception-checkout-filter-actions">
+                <button type="button" id="btnApplyHkSearch" class="reception-btn reception-btn-primary">
+                    <i class="fa-solid fa-magnifying-glass"></i> ค้นหา
+                </button>
+                <button type="button" id="btnResetHkSearch" class="reception-btn reception-btn-ghost">
+                    <i class="fa-solid fa-rotate-left"></i> ล้างตัวกรอง
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         4, 6, 7. ตารางรายการแจ้งงานแม่บ้าน & ส่วนแสดงประวัติงานเสร็จสิ้น
+         ========================================== -->
+    <section class="reception-panel reception-hk-main-panel reception-fade-in">
+        <!-- แถบสลับมุมมอง: รายการงานทั้งหมด / งานกำลังติดตาม / ประวัติงานที่เสร็จสิ้นแล้ว -->
+        <div class="reception-checkout-tabs-header">
+            <div class="reception-checkout-tabs" role="tablist">
+                <button type="button"
+                        class="reception-checkout-tab-btn active"
+                        data-hk-tab="all"
+                        role="tab"
+                        aria-selected="true">
+                    <i class="fa-solid fa-table-list"></i>
+                    <span>รายการแจ้งงานทั้งหมด</span>
+                    <span class="reception-tab-counter">@totalTasksCount</span>
+                </button>
+
+                <button type="button"
+                        class="reception-checkout-tab-btn"
+                        data-hk-tab="active"
+                        role="tab"
+                        aria-selected="false">
+                    <i class="fa-solid fa-spinner"></i>
+                    <span>กำลังติดตาม (Pending / In Progress)</span>
+                    <span class="reception-tab-counter">@activeTasks.Count</span>
+                </button>
+
+                <button type="button"
+                        class="reception-checkout-tab-btn"
+                        data-hk-tab="history"
+                        role="tab"
+                        aria-selected="false">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span>ประวัติงานที่เสร็จสิ้น (Completed History)</span>
+                    <span class="reception-tab-counter">@completedHistoryTasks.Count</span>
+                </button>
+            </div>
+
+            <div class="reception-hk-sod-badge">
+                <i class="fa-solid fa-eye text-info"></i>
+                <span>โหมดติดตามสถานะ (Reception Tracking Mode · แม่บ้านเป็นผู้รับและปิดงาน)</span>
+            </div>
+        </div>
+
+        <!-- Loading Skeleton State (แสดงเมื่อกด Refresh) -->
+        <div id="hkLoadingState" class="reception-hk-loading d-none">
+            <div class="spinner-border text-info" role="status"></div>
+            <span>กำลังอัปเดตสถานะงานแม่บ้านจากฐานข้อมูล...</span>
+        </div>
+
+        @if (tasksList.Any())
+        {
+            <div class="reception-table-responsive" id="hkTableContainer">
+                <table class="reception-table reception-hk-table">
+                    <thead>
+                        <tr>
+                            <th>หมายเลขงาน (Task ID)</th>
+                            <th>หมายเลขห้องพัก</th>
+                            <th>Booking Code</th>
+                            <th>รายละเอียดงาน (Note)</th>
+                            <th>วันที่และเวลาที่แจ้งงาน</th>
+                            <th>พนักงานแม่บ้านที่รับผิดชอบ</th>
+                            <th>เวลาเริ่มดำเนินงาน</th>
+                            <th>เวลาที่ดำเนินการเสร็จ</th>
+                            <th>สถานะงาน</th>
+                            <th class="text-end">การดำเนินการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="hkTasksTableBody">
+                        @foreach (var task in tasksList)
+                        {
+                            var rawStatus = (task.Status ?? "pending").ToLowerInvariant();
+                            var normStatus = rawStatus switch
+                            {
+                                "in_progress" or "inprogress" or "working" => "in_progress",
+                                "completed" or "done" => "completed",
+                                "cancelled" or "canceled" => "cancelled",
+                                _ => "pending"
+                            };
+
+                            // สี Badge ตามข้อกำหนดข้อ 6: Pending = ส้ม, In Progress = ฟ้า, Completed = เขียว, Cancelled = แดง
+                            var badgeClass = normStatus switch
+                            {
+                                "in_progress" => "reception-hkbadge-inprogress",
+                                "completed" => "reception-hkbadge-completed",
+                                "cancelled" => "reception-hkbadge-cancelled",
+                                _ => "reception-hkbadge-pending"
+                            };
+
+                            var statusLabel = normStatus switch
+                            {
+                                "in_progress" => "In Progress · กำลังทำ",
+                                "completed" => "Completed · เสร็จสิ้น",
+                                "cancelled" => "Cancelled · ยกเลิก",
+                                _ => "Pending · รอดำเนินการ"
+                            };
+
+                            var statusIcon = normStatus switch
+                            {
+                                "in_progress" => "fa-spinner fa-spin",
+                                "completed" => "fa-circle-check",
+                                "cancelled" => "fa-ban",
+                                _ => "fa-hourglass-half"
+                            };
+
+                            string bookingDisplay = !string.IsNullOrWhiteSpace(task.BookingCode)
+                                ? task.BookingCode
+                                : (task.BookingId.HasValue ? $"#BK{task.BookingId}" : "แจ้งงานทั่วไป");
+
+                            string noteDisplay = !string.IsNullOrWhiteSpace(task.Note)
+                                ? task.Note
+                                : "ทำความสะอาดห้องพักตามมาตรฐานโรงแรม";
+
+                            string staffDisplay = !string.IsNullOrWhiteSpace(task.AssignedToName)
+                                ? task.AssignedToName
+                                : "รอแม่บ้านรับงาน";
+
+                            string createdText = task.CreatedAt.ToString("dd/MM/yyyy HH:mm น.");
+                            string createdIso = task.CreatedAt.ToString("yyyy-MM-dd");
+
+                            string startedText = task.StartedAt.HasValue
+                                ? task.StartedAt.Value.ToString("dd/MM/yyyy HH:mm น.")
+                                : "-";
+
+                            string completedText = task.CompletedAt.HasValue
+                                ? task.CompletedAt.Value.ToString("dd/MM/yyyy HH:mm น.")
+                                : "-";
+
+                            // คำนวณระยะเวลาที่ใช้ทำ (กรณีมีเวลาเริ่มและเวลาเสร็จ)
+                            string durationText = (task.StartedAt.HasValue && task.CompletedAt.HasValue)
+                                ? $"{Math.Max(1, (int)(task.CompletedAt.Value - task.StartedAt.Value).TotalMinutes)} นาที"
+                                : "-";
+
+                            <tr class="reception-hk-row"
+                                data-task-id="@task.TaskId"
+                                data-room="@task.RoomNumber.ToLowerInvariant()"
+                                data-search="@($"{task.TaskId} {task.BookingCode} {noteDisplay} {staffDisplay}".ToLowerInvariant())"
+                                data-status="@normStatus"
+                                data-date-iso="@createdIso"
+                                data-is-completed="@(normStatus == "completed" ? "true" : "false")">
+
+                                <td data-label="หมายเลขงาน (Task ID)">
+                                    <span class="reception-code-badge">#TK-@task.TaskId.ToString("D4")</span>
+                                </td>
+                                <td data-label="หมายเลขห้องพัก">
+                                    <span class="reception-room-chip">
+                                        <i class="fa-solid fa-door-closed me-1"></i>ห้อง @task.RoomNumber
+                                    </span>
+                                </td>
+                                <td data-label="Booking Code">
+                                    @if (!string.IsNullOrWhiteSpace(task.BookingCode))
+                                    {
+                                        <span class="reception-hk-booking-ref">@task.BookingCode</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">@bookingDisplay</span>
+                                    }
+                                </td>
+                                <td data-label="รายละเอียดงาน (Note)">
+                                    <div class="reception-hk-note-cell" title="@noteDisplay">
+                                        @noteDisplay
+                                    </div>
+                                </td>
+                                <td data-label="วันที่และเวลาที่แจ้งงาน">
+                                    <span class="reception-time-text">@createdText</span>
+                                </td>
+                                <td data-label="พนักงานแม่บ้านที่รับผิดชอบ">
+                                    @if (!string.IsNullOrWhiteSpace(task.AssignedToName))
+                                    {
+                                        <span class="reception-hk-staff-chip">
+                                            <i class="fa-solid fa-user-check text-success"></i> @task.AssignedToName
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="reception-hk-unassigned">
+                                            <i class="fa-regular fa-clock"></i> รอแม่บ้านรับงาน
+                                        </span>
+                                    }
+                                </td>
+                                <td data-label="เวลาเริ่มดำเนินงาน">
+                                    <span class="reception-time-text">@startedText</span>
+                                </td>
+                                <td data-label="เวลาที่ดำเนินการเสร็จ">
+                                    <span class="reception-time-text @(task.CompletedAt.HasValue ? "text-success fw-semibold" : "")">
+                                        @completedText
+                                    </span>
+                                </td>
+                                <td data-label="สถานะงาน">
+                                    <span class="reception-status-badge @badgeClass">
+                                        <i class="fa-solid @statusIcon"></i>
+                                        @statusLabel
+                                    </span>
+                                </td>
+                                <td data-label="การดำเนินการ" class="text-end">
+                                    <button type="button"
+                                            class="reception-btn-sm reception-btn-ghost js-open-hk-details"
+                                            data-task-id="#TK-@task.TaskId.ToString("D4")"
+                                            data-room-number="ห้อง @task.RoomNumber"
+                                            data-booking-code="@bookingDisplay"
+                                            data-note="@noteDisplay"
+                                            data-staff="@staffDisplay"
+                                            data-created="@createdText"
+                                            data-started="@startedText"
+                                            data-completed="@completedText"
+                                            data-duration="@durationText"
+                                            data-status-key="@normStatus"
+                                            data-status-label="@statusLabel">
+                                        <i class="fa-regular fa-eye"></i> ดูรายละเอียด
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <!-- Empty State เมื่อไม่มีรายการงานแม่บ้านในฐานข้อมูล -->
+            <div class="reception-checkin-empty-state">
+                <div class="reception-empty-key-icon">
+                    <i class="fa-solid fa-broom"></i>
+                </div>
+                <h4>ยังไม่มีรายการแจ้งงานแม่บ้านในขณะนี้</h4>
+                <p>เมื่อลูกค้า Check-out หรือเมื่อพนักงานต้อนรับกดปุ่ม "แจ้งงานแม่บ้านใหม่" รายการงานทำความสะอาดจะแสดงที่นี่</p>
+                <div class="reception-empty-actions">
+                    <button type="button" class="reception-btn reception-btn-primary" id="btnEmptyOpenCreateTask">
+                        <i class="fa-solid fa-plus"></i> สร้างใบแจ้งงานแม่บ้านใหม่
+                    </button>
+                </div>
+            </div>
+        }
+    </section>
+</div>
+
+<!-- ==========================================================================
+     5. MODAL ดูรายละเอียดงานและประวัติการดำเนินงาน (TASK DETAILS & TIMELINE MODAL)
+     (Read-Only สำหรับ Reception ตามหลัก Separation of Duties)
+     ========================================================================== -->
+<div class="reception-modal-overlay" id="hkTaskDetailsModal" aria-hidden="true">
+    <div class="reception-modal-dialog reception-checkin-modal-md" role="dialog" aria-labelledby="hkDetailsModalTitle">
+        <div class="reception-modal-header">
+            <div>
+                <span class="reception-modal-kicker">HOUSEKEEPING TASK INSPECTOR · READ-ONLY TRACKING</span>
+                <h3 class="reception-modal-title" id="hkDetailsModalTitle">
+                    <i class="fa-solid fa-clipboard-list text-info"></i> รายละเอียดงานแม่บ้าน: <span id="modalHkTaskId">-</span>
+                </h3>
+            </div>
+            <button type="button" class="reception-modal-close" id="btnCloseHkDetailsModal" aria-label="ปิดหน้าต่าง">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="reception-modal-body">
+            <!-- ข้อมูลหลักของใบงาน -->
+            <div class="reception-checkin-summary-box">
+                <div class="reception-checkin-summary-item">
+                    <span>หมายเลขงาน (Task ID)</span>
+                    <strong id="detHkTaskId" class="text-primary">-</strong>
+                </div>
+                <div class="reception-checkin-summary-item">
+                    <span>หมายเลขห้องพัก</span>
+                    <strong id="detHkRoomNumber">-</strong>
+                </div>
+                <div class="reception-checkin-summary-item">
+                    <span>รหัสการจองอ้างอิง (Booking Code)</span>
+                    <strong id="detHkBookingCode">-</strong>
+                </div>
+                <div class="reception-checkin-summary-item">
+                    <span>พนักงานแม่บ้านผู้รับผิดชอบ</span>
+                    <strong id="detHkStaffName">-</strong>
+                </div>
+                <div class="reception-checkin-summary-item">
+                    <span>สถานะงานปัจจุบัน</span>
+                    <span id="detHkStatusBadge"></span>
+                </div>
+                <div class="reception-checkin-summary-item">
+                    <span>ระยะเวลาปฏิบัติงานรวม</span>
+                    <strong id="detHkDuration">-</strong>
+                </div>
+                <div class="reception-checkin-summary-item reception-field-full">
+                    <span>รายละเอียดงาน / หมายเหตุถึงแม่บ้าน (Task Note)</span>
+                    <p id="detHkNote" class="reception-hk-detail-note-box mb-0 mt-1">-</p>
+                </div>
+            </div>
+
+            <!-- ประวัติการดำเนินงาน (Task Operation History Timeline) -->
+            <div class="reception-hk-timeline-box">
+                <h4 class="reception-checklist-title">
+                    <i class="fa-solid fa-clock-rotate-left text-primary"></i> ประวัติและลำดับเวลาการดำเนินงาน
+                </h4>
+                <div class="reception-hk-steps">
+                    <div class="reception-hk-step is-completed" id="hkStepCreated">
+                        <div class="reception-hk-step-icon"><i class="fa-solid fa-paper-plane"></i></div>
+                        <div class="reception-hk-step-body">
+                            <strong>1. แจ้งงานไปยังแผนกแม่บ้าน (Task Created)</strong>
+                            <small id="detHkCreatedTime">-</small>
+                        </div>
+                    </div>
+
+                    <div class="reception-hk-step" id="hkStepStarted">
+                        <div class="reception-hk-step-icon"><i class="fa-solid fa-broom"></i></div>
+                        <div class="reception-hk-step-body">
+                            <strong>2. แม่บ้านรับงานและเริ่มทำความสะอาด (Started)</strong>
+                            <small id="detHkStartedTime">รอดำเนินการ</small>
+                        </div>
+                    </div>
+
+                    <div class="reception-hk-step" id="hkStepCompleted">
+                        <div class="reception-hk-step-icon"><i class="fa-solid fa-circle-check"></i></div>
+                        <div class="reception-hk-step-body">
+                            <strong>3. ทำความสะอาดเสร็จสิ้น พร้อมตรวจรับห้อง (Completed)</strong>
+                            <small id="detHkCompletedTime">รอดำเนินการ</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="reception-modal-footer justify-content-between">
+            <span class="reception-sod-notice">
+                <i class="fa-solid fa-lock"></i> การรับงานและปิดงานดำเนินการโดยบัญชีแผนกแม่บ้าน (Housekeeping Role)
+            </span>
+            <button type="button" id="btnCloseHkDetailsFooter" class="reception-btn reception-btn-ghost">
+                ปิดหน้าต่าง
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================================================
+     MODAL สร้างใบแจ้งงานแม่บ้านใหม่ (เชื่อม Action CreateHousekeepingRequest ที่มีอยู่จริง)
+     ========================================================================== -->
+<div class="reception-modal-overlay" id="createHkTaskModal" aria-hidden="true">
+    <div class="reception-modal-dialog reception-checkin-modal-md" role="dialog" aria-labelledby="createHkModalTitle">
+        <div class="reception-modal-header">
+            <div>
+                <span class="reception-modal-kicker">DISPATCH NEW HOUSEKEEPING REQUEST</span>
+                <h3 class="reception-modal-title" id="createHkModalTitle">
+                    <i class="fa-solid fa-broom text-warning"></i> แจ้งงานแม่บ้านใหม่ (Create Task)
+                </h3>
+            </div>
+            <button type="button" class="reception-modal-close" id="btnCloseCreateHkModal" aria-label="ปิดหน้าต่าง">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <form asp-controller="Reception" asp-action="CreateHousekeepingRequest" method="post" class="m-0">
+            @Html.AntiForgeryToken()
+            <div class="reception-modal-body">
+                <div class="mb-3">
+                    <label for="selectHkRoomId" class="form-label fw-semibold">
+                        เลือกหมายเลขห้องพักที่ต้องการแจ้งงาน <span class="text-danger">*</span>
+                    </label>
+                    <select name="roomId" id="selectHkRoomId" class="form-select reception-filter-control" required>
+                        <option value="">-- กรุณาเลือกห้องพัก --</option>
+                        @foreach (var r in roomsList)
+                        {
+                            <option value="@r.RoomId">
+                                ห้อง @r.RoomNumber (ชั้น @r.FloorNo · @r.RoomTypeName · สถานะปัจจุบัน: @r.Status)
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-2">
+                    <label for="inputHkNote" class="form-label fw-semibold">
+                        รายละเอียดงาน / คำขอเพิ่มเติมจากลูกค้า (Note)
+                    </label>
+                    <textarea name="note"
+                              id="inputHkNote"
+                              rows="3"
+                              class="form-control reception-filter-control"
+                              placeholder="เช่น ขอผ้าเช็ดตัวเพิ่ม 2 ผืน, ทำความสะอาดด่วนก่อนลูกค้า VIP เข้าพัก, เติมน้ำดื่ม..."></textarea>
+                </div>
+            </div>
+
+            <div class="reception-modal-footer">
+                <button type="button" id="btnCancelCreateHkModal" class="reception-btn reception-btn-ghost">
+                    ยกเลิก
+                </button>
+                <button type="submit" class="reception-btn reception-btn-primary">
+                    <i class="fa-solid fa-paper-plane"></i> ส่งใบแจ้งงานไปยังแผนกแม่บ้าน
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/reception-housekeeping.js" asp-append-version="true"></script>
+}

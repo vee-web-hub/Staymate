@@ -1,0 +1,692 @@
+@model StayMate_Kavinvee_0576.ViewModels.ReceptionIndexViewModel
+@{
+    Layout = "~/Views/Shared/_ReceptionLayout.cshtml";
+    ViewData["Title"] = "Reception Dashboard";
+
+    var thaiCulture = new System.Globalization.CultureInfo("th-TH");
+    var currentDateText = DateTime.Now.ToString("วันddddที่ d MMMM yyyy", thaiCulture);
+
+    var bookingsList = Model?.Bookings ?? new List<StayMate_Kavinvee_0576.ViewModels.ReceptionBookingViewModel>();
+
+    // คำนวณสถิติจากรายการจริงในฐานข้อมูล (ไม่ Hardcode ตัวเลข)
+    int totalBookings = bookingsList.Count;
+    int pendingPaymentCount = bookingsList.Count(b =>
+        (b.PaymentStatus ?? "").ToLowerInvariant() == "pending" ||
+        (b.Status ?? "").ToLowerInvariant() == "pending_approval");
+    int confirmedCount = (Model?.ConfirmedBookings ?? 0) > 0
+        ? Model!.ConfirmedBookings
+        : bookingsList.Count(b => (b.Status ?? "").ToLowerInvariant() == "confirmed");
+    int checkedInCount = bookingsList.Count(b => (b.Status ?? "").ToLowerInvariant() == "checked_in");
+    int checkedOutCount = bookingsList.Count(b =>
+        (b.Status ?? "").ToLowerInvariant() == "checked_out" ||
+        (b.Status ?? "").ToLowerInvariant() == "completed");
+    int cancelledCount = bookingsList.Count(b => (b.Status ?? "").ToLowerInvariant() == "cancelled");
+
+    // ViewModel ยังไม่มีข้อมูลประเภทห้องรายใบจอง จึงใช้ตัวเลือกสำรอง
+    var availableRoomTypes = new List<string>();
+}
+
+<div class="reception-dashboard-wrapper reception-booking-page" id="receptionBookingApp">
+
+    <!-- Anti-Forgery Token สำหรับการเรียกตรวจสอบ QR Code และ Action ฝั่ง Server -->
+    @Html.AntiForgeryToken()
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="reception-booking-alert reception-alert-success reception-fade-in">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>@TempData["SuccessMessage"]</span>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="reception-booking-alert reception-alert-danger reception-fade-in">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span>@TempData["ErrorMessage"]</span>
+        </div>
+    }
+
+    <!-- PAGE HEADER -->
+    <section class="reception-page-header reception-fade-in">
+        <div class="reception-header-left">
+            <div class="reception-title-badge">
+                <span class="reception-live-dot"></span>
+                <span>SMART BOOKING & QR VERIFICATION · NON-FINANCIAL AUTHORITY</span>
+            </div>
+            <h1 class="reception-main-title">
+                <i class="fa-solid fa-clipboard-list reception-title-icon"></i>
+                Booking Management
+            </h1>
+            <p class="reception-welcome-text">
+                จัดการและตรวจสอบข้อมูลการจองห้องพัก · ข้อมูลประจำ<span>@currentDateText</span>
+            </p>
+        </div>
+
+        <div class="reception-header-right">
+            <button type="button" id="btnRefreshBookings" class="reception-btn reception-btn-outline">
+                <i class="fa-solid fa-rotate"></i>
+                <span>Refresh</span>
+            </button>
+
+            <button type="button" id="btnOpenQrScanner" class="reception-btn reception-qr-trigger-btn">
+                <i class="fa-solid fa-qrcode"></i>
+                <span>Scan QR Code</span>
+            </button>
+        </div>
+    </section>
+
+    <!-- BOOKING SUMMARY CARDS -->
+    <section class="reception-booking-summary-grid reception-fade-in">
+        <article class="reception-booking-stat-card is-total">
+            <div class="reception-booking-stat-icon"><i class="fa-solid fa-layer-group"></i></div>
+            <div class="reception-booking-stat-content">
+                <span>Total Bookings</span>
+                <strong>@totalBookings</strong>
+                <small>จำนวนการจองทั้งหมด</small>
+            </div>
+        </article>
+
+        <article class="reception-booking-stat-card is-pending">
+            <div class="reception-booking-stat-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+            <div class="reception-booking-stat-content">
+                <span>Pending Payment</span>
+                <strong>@pendingPaymentCount</strong>
+                <small>รอฝ่ายการเงินตรวจสอบ</small>
+            </div>
+        </article>
+
+        <article class="reception-booking-stat-card is-confirmed">
+            <div class="reception-booking-stat-icon"><i class="fa-solid fa-calendar-check"></i></div>
+            <div class="reception-booking-stat-content">
+                <span>Confirmed</span>
+                <strong>@confirmedCount</strong>
+                <small>ยืนยันการจองแล้ว</small>
+            </div>
+        </article>
+
+        <article class="reception-booking-stat-card is-checkedin">
+            <div class="reception-booking-stat-icon"><i class="fa-solid fa-key"></i></div>
+            <div class="reception-booking-stat-content">
+                <span>Checked-in</span>
+                <strong>@checkedInCount</strong>
+                <small>ลูกค้าเข้าพักแล้ว</small>
+            </div>
+        </article>
+
+        <article class="reception-booking-stat-card is-checkedout">
+            <div class="reception-booking-stat-icon"><i class="fa-solid fa-suitcase-rolling"></i></div>
+            <div class="reception-booking-stat-content">
+                <span>Checked-out</span>
+                <strong>@checkedOutCount</strong>
+                <small>ลูกค้าออกจากโรงแรมแล้ว</small>
+            </div>
+        </article>
+
+        <article class="reception-booking-stat-card is-cancelled">
+            <div class="reception-booking-stat-icon"><i class="fa-solid fa-ban"></i></div>
+            <div class="reception-booking-stat-content">
+                <span>Cancelled</span>
+                <strong>@cancelledCount</strong>
+                <small>ยกเลิกการจอง</small>
+            </div>
+        </article>
+    </section>
+
+    <!-- SEARCH & FILTER BAR -->
+    <section class="reception-booking-filter-panel reception-fade-in">
+        <form asp-controller="Reception" asp-action="Bookings" method="get" id="bookingSearchForm" class="reception-booking-filter-form">
+            <div class="reception-booking-search-row">
+                <div class="reception-booking-search-input-wrap">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text"
+                           name="search"
+                           id="bookingKeywordInput"
+                           value="@Model?.SearchTerm"
+                           placeholder="ค้นหาด้วย Booking ID, QR Reference, ชื่อผู้เข้าพัก, เบอร์โทรศัพท์ หรือหมายเลขห้อง..."
+                           autocomplete="off" />
+                </div>
+
+                <div class="reception-booking-search-actions">
+                    <button type="submit" class="reception-btn reception-btn-primary">
+                        <i class="fa-solid fa-magnifying-glass"></i> Search
+                    </button>
+                    <a asp-controller="Reception" asp-action="Bookings" id="btnResetFilters" class="reception-btn reception-btn-ghost">
+                        <i class="fa-solid fa-rotate-left"></i> Reset
+                    </a>
+                </div>
+            </div>
+
+            <div class="reception-booking-advanced-filters">
+                <div class="reception-filter-field">
+                    <label for="filterCreatedDate">วันที่จอง</label>
+                    <input type="date" id="filterCreatedDate" class="reception-filter-control" />
+                </div>
+
+                <div class="reception-filter-field">
+                    <label for="filterCheckInDate">วันที่ Check-in</label>
+                    <input type="date" id="filterCheckInDate" class="reception-filter-control" />
+                </div>
+
+                <div class="reception-filter-field">
+                    <label for="filterCheckOutDate">วันที่ Check-out</label>
+                    <input type="date" id="filterCheckOutDate" class="reception-filter-control" />
+                </div>
+
+                <div class="reception-filter-field">
+                    <label for="filterRoomType">ประเภทห้อง</label>
+                    <select id="filterRoomType" class="reception-filter-control">
+                        <option value="all">ทั้งหมด (All Room Types)</option>
+                        @if (availableRoomTypes.Any())
+                        {
+                            foreach (var rt in availableRoomTypes)
+                            {
+                                <option value="@rt.ToLowerInvariant()">@rt</option>
+                            }
+                        }
+                        else
+                        {
+                            <option value="standard">Standard Room</option>
+                            <option value="deluxe">Deluxe Room</option>
+                            <option value="family">Family Room</option>
+                            <option value="suite">Suite Room</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="reception-filter-field">
+                    <label for="filterBookingStatus">สถานะการจอง</label>
+                    <select id="filterBookingStatus" class="reception-filter-control">
+                        <option value="all">ทั้งหมด (All Booking Status)</option>
+                        <option value="pending">Pending (รอยืนยัน)</option>
+                        <option value="confirmed">Confirmed (ยืนยันแล้ว)</option>
+                        <option value="checked_in">Checked-in (เข้าพักแล้ว)</option>
+                        <option value="checked_out">Checked-out (คืนห้องแล้ว)</option>
+                        <option value="cancelled">Cancelled (ยกเลิก)</option>
+                    </select>
+                </div>
+
+                <div class="reception-filter-field">
+                    <label for="filterPaymentStatus">สถานะการชำระเงิน</label>
+                    <select id="filterPaymentStatus" class="reception-filter-control">
+                        <option value="all">ทั้งหมด (All Payment Status)</option>
+                        <option value="pending">Pending (รอตรวจสอบ)</option>
+                        <option value="approved">Approved (อนุมัติแล้ว)</option>
+                        <option value="rejected">Rejected (ปฏิเสธสลิป)</option>
+                    </select>
+                </div>
+            </div>
+        </form>
+    </section>
+
+    <!-- BOOKING TABLE -->
+    <section class="reception-panel reception-booking-table-panel reception-fade-in">
+        <div class="reception-panel-header">
+            <div>
+                <h3 class="reception-panel-title">
+                    <i class="fa-solid fa-table-list text-primary"></i>
+                    รายการจองห้องพัก (Booking Directory)
+                </h3>
+                <p class="reception-panel-subtitle">
+                    แสดงรายการจองจากฐานข้อมูล · พนักงานต้อนรับมีสิทธิ์ตรวจสอบสถานะการชำระเงินเท่านั้น (ไม่อนุญาตให้อนุมัติหรือแก้ไขยอดเงิน)
+                </p>
+            </div>
+            <div class="reception-booking-count-badge">
+                พบทั้งหมด <strong id="visibleBookingCount">@bookingsList.Count</strong> รายการ
+            </div>
+        </div>
+
+        <div class="reception-table-responsive">
+            <table class="reception-table reception-booking-table" id="bookingManagementTable">
+                <thead>
+                    <tr>
+                        <th>Booking ID</th>
+                        <th>Guest Name</th>
+                        <th>Room Number</th>
+                        <th>Room Type</th>
+                        <th>Check-in</th>
+                        <th>Check-out</th>
+                        <th>Guests</th>
+                        <th>Total Amount</th>
+                        <th>Payment Status</th>
+                        <th>Booking Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="bookingTableBody">
+                    @if (bookingsList.Any())
+                    {
+                        foreach (var item in bookingsList)
+                        {
+                            var rawPay = (item.PaymentStatus ?? "pending").ToLowerInvariant();
+                            var normPay = rawPay switch
+                            {
+                                "approved" or "paid" or "verified" => "approved",
+                                "rejected" or "failed" => "rejected",
+                                _ => "pending"
+                            };
+
+                            var payBadgeClass = normPay switch
+                            {
+                                "approved" => "reception-pay-badge-approved",
+                                "rejected" => "reception-pay-badge-rejected",
+                                _ => "reception-pay-badge-pending"
+                            };
+
+                            var payLabel = normPay switch
+                            {
+                                "approved" => "Approved",
+                                "rejected" => "Rejected",
+                                _ => "Pending"
+                            };
+
+                            var rawStatus = (item.Status ?? "pending").ToLowerInvariant();
+                            var normStatus = rawStatus switch
+                            {
+                                "confirmed" => "confirmed",
+                                "checked_in" => "checked_in",
+                                "checked_out" or "completed" => "checked_out",
+                                "cancelled" => "cancelled",
+                                _ => "pending"
+                            };
+
+                            var bookingBadgeClass = normStatus switch
+                            {
+                                "confirmed" => "reception-bstatus-confirmed",
+                                "checked_in" => "reception-bstatus-checkedin",
+                                "checked_out" => "reception-bstatus-checkedout",
+                                "cancelled" => "reception-bstatus-cancelled",
+                                _ => "reception-bstatus-pending"
+                            };
+
+                            var bookingStatusText = normStatus switch
+                            {
+                                "confirmed" => "Confirmed",
+                                "checked_in" => "Checked-in",
+                                "checked_out" => "Checked-out",
+                                "cancelled" => "Cancelled",
+                                _ => "Pending"
+                            };
+
+                            var roomsDisplay = (item.RoomNumbers != null && item.RoomNumbers.Any())
+                                ? string.Join(", ", item.RoomNumbers)
+                                : "รอกำหนดห้อง";
+                            var roomTypesDisplay = "-";
+                            var createdDateIso = "";
+
+                            var checkInIso = item.CheckInDate.ToString("yyyy-MM-dd");
+                            var checkOutIso = item.CheckOutDate.ToString("yyyy-MM-dd");
+
+                            // เงื่อนไขสิทธิ์การกดปุ่ม Check-in / Check-out ตาม Business Rules
+                            bool canCheckIn = normStatus == "confirmed" && normPay == "approved";
+                            bool canCheckOut = normStatus == "checked_in";
+
+                            <tr class="reception-booking-row"
+                                data-booking-id="@item.BookingId"
+                                data-booking-code="@item.BookingCode"
+                                data-guest-name="@item.ContactName"
+                                data-guest-phone="@item.ContactPhone"
+                                data-guest-email="@item.ContactEmail"
+                                data-room-numbers="@roomsDisplay"
+                                data-room-types="@roomTypesDisplay"
+                                data-checkin-iso="@checkInIso"
+                                data-checkout-iso="@checkOutIso"
+                                data-created-iso="@createdDateIso"
+                                data-checkin-display="@item.CheckInDate.ToString("dd/MM/yyyy")"
+                                data-checkout-display="@item.CheckOutDate.ToString("dd/MM/yyyy")"
+                                data-nights="@item.Nights"
+                                data-guests="@item.NumGuests"
+                                data-total-amount="@item.TotalAmount.ToString("N2")"
+                                data-discount-amount="0.00"
+                                data-tax-amount="0.00"
+                                data-payment-status="@normPay"
+                                data-payment-label="@payLabel"
+                                data-booking-status="@normStatus"
+                                data-booking-label="@bookingStatusText"
+                                data-created-at="-"
+                                data-payment-submitted-at="@(normPay != "pending" ? "ส่งหลักฐานแล้ว" : "Waiting")"
+                                data-payment-approved-at="@(normPay == "approved" ? "อนุมัติแล้ว" : "Waiting")"
+                                data-checked-in-at="@(normStatus == "checked_in" || normStatus == "checked_out" ? "ดำเนินการแล้ว" : "Waiting")"
+                                data-checked-out-at="@(normStatus == "checked_out" ? "ดำเนินการแล้ว" : "Waiting")"
+                                data-can-checkin="@(canCheckIn ? "true" : "false")"
+                                data-can-checkout="@(canCheckOut ? "true" : "false")"
+                                data-search-blob="@($"{item.BookingCode} {item.BookingId} {item.ContactName} {item.ContactPhone} {roomsDisplay} {roomTypesDisplay}".ToLowerInvariant())">
+
+                                <td data-label="Booking ID">
+                                    <span class="reception-code-badge">
+                                        @(string.IsNullOrWhiteSpace(item.BookingCode) ? $"#{item.BookingId}" : item.BookingCode)
+                                    </span>
+                                </td>
+                                <td data-label="Guest Name">
+                                    <div class="reception-guest-cell">
+                                        <strong>@item.ContactName</strong>
+                                        <small><i class="fa-solid fa-phone"></i> @item.ContactPhone</small>
+                                    </div>
+                                </td>
+                                <td data-label="Room Number">
+                                    <span class="reception-room-chip">@roomsDisplay</span>
+                                </td>
+                                <td data-label="Room Type">
+                                    <span class="reception-booking-roomtype">@roomTypesDisplay</span>
+                                </td>
+                                <td data-label="Check-in">
+                                    <span class="reception-time-text">@item.CheckInDate.ToString("dd/MM/yyyy")</span>
+                                </td>
+                                <td data-label="Check-out">
+                                    <span class="reception-time-text">@item.CheckOutDate.ToString("dd/MM/yyyy")</span>
+                                </td>
+                                <td data-label="Guests">
+                                    <span>@item.NumGuests ท่าน (@item.Nights คืน)</span>
+                                </td>
+                                <td data-label="Total Amount">
+                                    <strong class="reception-amount-text">฿@item.TotalAmount.ToString("N2")</strong>
+                                </td>
+                                <td data-label="Payment Status">
+                                    <span class="reception-status-badge @payBadgeClass">
+                                        @payLabel
+                                    </span>
+                                </td>
+                                <td data-label="Booking Status">
+                                    <span class="reception-status-badge @bookingBadgeClass">
+                                        @bookingStatusText
+                                    </span>
+                                </td>
+                                <td data-label="Actions" class="text-end">
+                                    <div class="reception-action-group">
+                                        <button type="button"
+                                                class="reception-btn-sm reception-btn-ghost js-open-booking-details"
+                                                title="ดูรายละเอียดการจองและ Timeline">
+                                            <i class="fa-regular fa-eye"></i> View Details
+                                        </button>
+
+                                        <button type="button"
+                                                class="reception-btn-sm reception-btn-qr-mini js-open-booking-qr"
+                                                title="แสดง QR Reference ของใบจองนี้">
+                                            <i class="fa-solid fa-qrcode"></i> QR
+                                        </button>
+
+                                        @if (canCheckIn)
+                                        {
+                                            <a asp-controller="Reception"
+                                               asp-action="CheckIn"
+                                               asp-route-bookingId="@item.BookingId"
+                                               class="reception-btn-sm reception-btn-success"
+                                               title="ดำเนินการ Check-in">
+                                                <i class="fa-solid fa-key"></i> Check-in
+                                            </a>
+                                        }
+
+                                        @if (canCheckOut)
+                                        {
+                                            <a asp-controller="Reception"
+                                               asp-action="CheckOut"
+                                               asp-route-bookingId="@item.BookingId"
+                                               class="reception-btn-sm reception-btn-danger"
+                                               title="ดำเนินการ Check-out">
+                                                <i class="fa-solid fa-arrow-right-from-bracket"></i> Check-out
+                                            </a>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="11" class="reception-empty-state">
+                                <i class="fa-regular fa-folder-open"></i>
+                                <p>ไม่พบข้อมูลการจองที่ตรงกับเงื่อนไขการค้นหา</p>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="reception-booking-pagination-bar" id="bookingPaginationBar">
+            <div class="reception-pagination-info" id="paginationSummaryText">
+                แสดงรายการจองจากฐานข้อมูล
+            </div>
+            <div class="reception-pagination-controls" id="paginationButtons"></div>
+        </div>
+    </section>
+</div>
+
+<!-- QR CODE SCANNER MODAL -->
+<div class="reception-modal-overlay" id="qrScannerModal" aria-hidden="true">
+    <div class="reception-modal-dialog reception-qr-modal-lg" role="dialog" aria-labelledby="qrScannerModalTitle">
+        <div class="reception-modal-header">
+            <div>
+                <span class="reception-modal-kicker">STAYMATE SMART QR VERIFIER</span>
+                <h3 class="reception-modal-title" id="qrScannerModalTitle">
+                    <i class="fa-solid fa-qrcode text-info"></i> Scan Booking QR Code
+                </h3>
+            </div>
+            <button type="button" class="reception-modal-close" id="btnCloseQrModal" aria-label="ปิดหน้าต่างสแกน QR">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="reception-modal-body">
+            <div class="reception-qr-layout">
+                <div class="reception-qr-camera-section">
+                    <div class="reception-qr-viewport-wrap">
+                        <div id="qrReaderViewport" class="reception-qr-viewport"></div>
+                        <div class="reception-qr-scan-frame" id="qrScanOverlayFrame">
+                            <span class="reception-qr-corner tl"></span>
+                            <span class="reception-qr-corner tr"></span>
+                            <span class="reception-qr-corner bl"></span>
+                            <span class="reception-qr-corner br"></span>
+                            <div class="reception-qr-laser"></div>
+                        </div>
+                        <div class="reception-qr-camera-placeholder" id="qrCameraPlaceholder">
+                            <i class="fa-solid fa-camera"></i>
+                            <p>กดปุ่ม <strong>Start Camera</strong> เพื่อขออนุญาตเปิดกล้องและสแกน QR Code จากใบจองของลูกค้า</p>
+                        </div>
+                    </div>
+
+                    <div class="reception-qr-camera-controls">
+                        <button type="button" id="btnStartCamera" class="reception-btn reception-btn-primary">
+                            <i class="fa-solid fa-video"></i> Start Camera
+                        </button>
+                        <button type="button" id="btnStopCamera" class="reception-btn reception-btn-outline-dark" disabled>
+                            <i class="fa-solid fa-video-slash"></i> Stop Camera
+                        </button>
+                        <select id="qrCameraFacingSelect" class="reception-filter-control reception-camera-select" aria-label="เลือกกล้อง">
+                            <option value="environment">กล้องหลัง (Back Camera)</option>
+                            <option value="user">กล้องหน้า (Front Camera)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="reception-qr-manual-section">
+                    <div class="reception-qr-security-note">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <div>
+                            <strong>ระบบความปลอดภัย Zero-Trust QR Verification</strong>
+                            <p>ระบบจะนำรหัสอ้างอิง (Booking Reference / Token) ไปตรวจสอบกับฐานข้อมูลฝั่ง Server ทุกครั้ง ไม่เชื่อถือชื่อหรือยอดเงินที่ฝังมาใน QR โดยตรง</p>
+                        </div>
+                    </div>
+
+                    <div class="reception-qr-manual-box">
+                        <label for="manualBookingCodeInput">กรอก Booking ID / QR Reference ด้วยตนเอง</label>
+                        <div class="reception-qr-manual-input-group">
+                            <input type="text"
+                                   id="manualBookingCodeInput"
+                                   placeholder="เช่น BK20260001 หรือรหัสจาก QR..."
+                                   autocomplete="off" />
+                            <button type="button" id="btnManualVerifyBooking" class="reception-btn reception-btn-primary">
+                                <i class="fa-solid fa-magnifying-glass"></i> Search Booking
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="qrVerifyStatusBox" class="reception-qr-status-box d-none"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="reception-modal-footer">
+            <button type="button" id="btnCloseQrModalFooter" class="reception-btn reception-btn-ghost">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- BOOKING DETAILS MODAL -->
+<div class="reception-modal-overlay" id="bookingDetailsModal" aria-hidden="true">
+    <div class="reception-modal-dialog reception-details-modal-xl" role="dialog" aria-labelledby="bookingDetailsModalTitle">
+        <div class="reception-modal-header">
+            <div>
+                <span class="reception-modal-kicker">VERIFIED DATABASE RECORD · READ-ONLY FINANCIALS</span>
+                <h3 class="reception-modal-title" id="bookingDetailsModalTitle">
+                    <i class="fa-solid fa-file-invoice text-info"></i> Booking Details: <span id="detailHeaderCode">-</span>
+                </h3>
+            </div>
+            <button type="button" class="reception-modal-close" id="btnCloseDetailsModal" aria-label="ปิดหน้าต่างรายละเอียด">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="reception-modal-body">
+            <div class="reception-details-grid">
+                <div class="reception-details-card">
+                    <h4 class="reception-details-card-title">
+                        <i class="fa-solid fa-user-check text-primary"></i> Guest Information
+                    </h4>
+                    <div class="reception-details-kv-list">
+                        <div class="reception-details-kv"><span>Booking ID:</span><strong id="detBookingCode">-</strong></div>
+                        <div class="reception-details-kv"><span>Guest Name:</span><strong id="detGuestName">-</strong></div>
+                        <div class="reception-details-kv"><span>Phone Number:</span><strong id="detGuestPhone">-</strong></div>
+                        <div class="reception-details-kv"><span>Email:</span><strong id="detGuestEmail">-</strong></div>
+                    </div>
+                </div>
+
+                <div class="reception-details-card">
+                    <h4 class="reception-details-card-title">
+                        <i class="fa-solid fa-bed text-info"></i> Booking Information
+                    </h4>
+                    <div class="reception-details-kv-list">
+                        <div class="reception-details-kv"><span>Room Number:</span><strong id="detRoomNumber">-</strong></div>
+                        <div class="reception-details-kv"><span>Room Type:</span><strong id="detRoomType">-</strong></div>
+                        <div class="reception-details-kv"><span>Check-in Date:</span><strong id="detCheckInDate">-</strong></div>
+                        <div class="reception-details-kv"><span>Check-out Date:</span><strong id="detCheckOutDate">-</strong></div>
+                        <div class="reception-details-kv"><span>Number of Guests:</span><strong id="detNumGuests">-</strong></div>
+                        <div class="reception-details-kv"><span>Number of Nights:</span><strong id="detNumNights">-</strong></div>
+                    </div>
+                </div>
+
+                <div class="reception-details-card">
+                    <h4 class="reception-details-card-title">
+                        <i class="fa-solid fa-receipt text-success"></i> Payment Information (ตรวจสอบเท่านั้น)
+                    </h4>
+                    <div class="reception-details-kv-list">
+                        <div class="reception-details-kv"><span>Room Price:</span><strong id="detRoomPrice">-</strong></div>
+                        <div class="reception-details-kv"><span>Promotion Discount:</span><strong id="detDiscount">฿0.00</strong></div>
+                        <div class="reception-details-kv"><span>Tax & Service:</span><strong id="detTax">฿0.00</strong></div>
+                        <div class="reception-details-kv is-highlight"><span>Final Amount:</span><strong id="detFinalAmount">-</strong></div>
+                        <div class="reception-details-kv"><span>Payment Status:</span><span id="detPaymentBadge"></span></div>
+                    </div>
+                </div>
+
+                <div class="reception-details-card">
+                    <h4 class="reception-details-card-title">
+                        <i class="fa-solid fa-qrcode text-warning"></i> Status & QR Reference
+                    </h4>
+                    <div class="reception-details-kv-list">
+                        <div class="reception-details-kv"><span>Current Status:</span><span id="detBookingBadge"></span></div>
+                        <div class="reception-details-kv"><span>Booking Created Date:</span><strong id="detCreatedDate">-</strong></div>
+                        <div class="reception-details-kv"><span>Payment Approved Date:</span><strong id="detApprovedDate">-</strong></div>
+                        <div class="reception-details-kv"><span>Booking Reference:</span><code id="detQrReference">-</code></div>
+                    </div>
+                    <div class="reception-details-qr-box">
+                        <img id="detQrImage" src="" alt="Booking QR Reference" class="reception-details-qr-img" />
+                        <small>ใช้รหัสอ้างอิงเฉพาะ (Token/Code) ไม่ฝังข้อมูลส่วนบุคคลลงใน QR</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="reception-details-timeline-section">
+                <h4 class="reception-details-card-title">
+                    <i class="fa-solid fa-timeline text-primary"></i> Booking Lifecycle Timeline
+                </h4>
+                <div class="reception-lifecycle-timeline" id="bookingLifecycleTimeline">
+                    <div class="reception-timeline-step" id="stepCreated">
+                        <div class="reception-step-dot"><i class="fa-solid fa-file-circle-plus"></i></div>
+                        <div class="reception-step-text">
+                            <strong>1. Booking Created</strong>
+                            <small id="timeCreated">Waiting</small>
+                        </div>
+                    </div>
+                    <div class="reception-timeline-step" id="stepPaySubmitted">
+                        <div class="reception-step-dot"><i class="fa-solid fa-file-arrow-up"></i></div>
+                        <div class="reception-step-text">
+                            <strong>2. Payment Submitted</strong>
+                            <small id="timePaySubmitted">Waiting</small>
+                        </div>
+                    </div>
+                    <div class="reception-timeline-step" id="stepPayApproved">
+                        <div class="reception-step-dot"><i class="fa-solid fa-shield-check"></i></div>
+                        <div class="reception-step-text">
+                            <strong>3. Payment Approved</strong>
+                            <small id="timePayApproved">Waiting</small>
+                        </div>
+                    </div>
+                    <div class="reception-timeline-step" id="stepConfirmed">
+                        <div class="reception-step-dot"><i class="fa-solid fa-calendar-check"></i></div>
+                        <div class="reception-step-text">
+                            <strong>4. Booking Confirmed</strong>
+                            <small id="timeConfirmed">Waiting</small>
+                        </div>
+                    </div>
+                    <div class="reception-timeline-step" id="stepCheckedIn">
+                        <div class="reception-step-dot"><i class="fa-solid fa-key"></i></div>
+                        <div class="reception-step-text">
+                            <strong>5. Guest Checked-in</strong>
+                            <small id="timeCheckedIn">Waiting</small>
+                        </div>
+                    </div>
+                    <div class="reception-timeline-step" id="stepCheckedOut">
+                        <div class="reception-step-dot"><i class="fa-solid fa-suitcase-rolling"></i></div>
+                        <div class="reception-step-text">
+                            <strong>6. Guest Checked-out</strong>
+                            <small id="timeCheckedOut">Waiting</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="reception-modal-footer reception-details-footer">
+            <div class="reception-sod-notice">
+                <i class="fa-solid fa-lock"></i> สิทธิ์พนักงานต้อนรับ: ไม่สามารถอนุมัติสลิปหรือแก้ไขยอดเงินได้
+            </div>
+
+            <div class="reception-details-footer-actions">
+                <form asp-controller="Reception" asp-action="ProcessCheckInFromBooking" method="post" id="formModalCheckIn" class="d-none m-0">
+                    <input type="hidden" name="bookingId" id="inputCheckInBookingId" />
+                    <button type="submit" class="reception-btn reception-btn-success">
+                        <i class="fa-solid fa-key"></i> ยืนยัน Check-in เข้าพัก
+                    </button>
+                </form>
+
+                <form asp-controller="Reception" asp-action="ProcessCheckOutFromBooking" method="post" id="formModalCheckOut" class="d-none m-0">
+                    <input type="hidden" name="bookingId" id="inputCheckOutBookingId" />
+                    <button type="submit" class="reception-btn reception-btn-danger">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i> ยืนยัน Check-out & แจ้งแม่บ้าน
+                    </button>
+                </form>
+
+                <button type="button" id="btnCloseDetailsFooter" class="reception-btn reception-btn-ghost">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="~/js/reception-bookings.js" asp-append-version="true"></script>
+}
