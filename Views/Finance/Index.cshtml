@@ -1,92 +1,623 @@
+@model StayMate_Kavinvee_0576.Models.ViewModels.FinanceDashboardViewModel
+@using System.Text.Json
+@using System.Globalization
 
 @{
-    ViewData["Title"] = "Finance Dashboard";
+    Layout = "~/Views/Shared/_FinanceLayout.cshtml";
+    ViewData["Title"] = "แดชบอร์ดการเงิน (Finance Dashboard)";
+
+    var thaiCulture = new CultureInfo("th-TH");
+    var currentDateStr = DateTime.Now.ToString("ddddที่ d MMMM yyyy", thaiCulture);
+    var totalTransactionsCount = Model.PendingCount + Model.ApprovedCount + Model.RejectedCount;
+
+    // เตรียมข้อมูลจริงจาก ViewModel แปลงเป็น JSON สำหรับส่งให้ Chart.js ใน finance.js
+    var chartPayload = new
+    {
+        last7Days = Model.Last7Days.Select(d => new
+        {
+            label = d.Date.ToString("dd MMM", thaiCulture),
+            income = d.Income,
+            refund = d.Refund,
+            expense = d.Expense,
+            net = d.Net
+        }),
+        last6Months = Model.Last6Months.Select(m => new
+        {
+            label = new DateTime(m.Year, m.Month, 1).ToString("MMM yyyy", thaiCulture),
+            income = m.Income,
+            refund = m.Refund,
+            expense = m.Expense,
+            net = m.Net
+        }),
+        monthIncome = Model.MonthIncome,
+        todayIncome = Model.TodayIncome,
+        totalIncome = Model.TotalIncome,
+        statusCounts = new
+        {
+            pending = Model.PendingCount,
+            approved = Model.ApprovedCount,
+            rejected = Model.RejectedCount
+        },
+        statusAmounts = new
+        {
+            pending = Model.PendingAmount,
+            approved = Model.ApprovedAmount,
+            rejected = Model.RejectedAmount
+        }
+    };
+
+    var serializedChartData = JsonSerializer.Serialize(chartPayload);
 }
 
-<div class="container-fluid py-3">
-    <h2 class="fw-bold">Finance Dashboard</h2>
-    <p class="text-secondary">
-        ตรวจสอบธุรกรรมและหลักฐานการชำระเงิน
-    </p>
+<link rel="stylesheet" href="~/css/finance.css" asp-append-version="true" />
 
-    <div class="row g-3 my-3">
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <p class="text-secondary">รายรับที่บันทึก</p>
-                    <h3>฿125,000.00</h3>
+<div class="finance-dashboard-wrapper">
+
+    <!-- ================================================================= -->
+    <!-- ส่วนที่ 1: Welcome Section                                         -->
+    <!-- ================================================================= -->
+    <section class="fin-welcome-banner mb-4">
+        <div class="fin-welcome-glow"></div>
+        <div class="row align-items-center position-relative z-1 g-3">
+            <div class="col-lg-7">
+                <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
+                    <span class="fin-chip-cyber">
+                        <i class="fa-solid fa-bolt"></i> STAYMATE FINTECH PORTAL
+                    </span>
+                    <span class="fin-date-badge">
+                        <i class="fa-regular fa-calendar-check me-1"></i> @currentDateStr
+                    </span>
+                </div>
+                <h1 class="fin-welcome-title mb-1">Welcome to Finance Portal</h1>
+                <p class="fin-welcome-subtitle mb-0">
+                    ยินดีต้อนรับคุณ <strong>@(User.Identity?.Name ?? "เจ้าหน้าที่ฝ่ายการเงิน")</strong> — Financial Overview &amp; Transaction Management
+                </p>
+            </div>
+            <div class="col-lg-5">
+                <div class="d-flex flex-wrap align-items-center justify-content-lg-end gap-3">
+                    <div class="fin-mini-stat-glass">
+                        <span class="fin-mini-label">รายรับสุทธิวันนี้</span>
+                        <span class="fin-mini-value text-cyber">฿@Model.TodayIncome.ToString("N2")</span>
+                    </div>
+                    <div class="fin-mini-stat-glass">
+                        <span class="fin-mini-label">รายรับสุทธิเดือนนี้</span>
+                        <span class="fin-mini-value text-white">฿@Model.MonthIncome.ToString("N2")</span>
+                    </div>
+                    <button type="button" id="btnRefreshDashboard" class="btn fin-btn-refresh">
+                        <i class="fa-solid fa-arrows-rotate me-2" id="refreshIcon"></i>Refresh Dashboard
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- ส่วนที่ 6: Pending Payment Alert (โดดเด่นแต่ไม่รบกวนสายตา)          -->
+    <!-- ================================================================= -->
+    @if (Model.PendingCount > 0)
+    {
+        <section class="fin-pending-alert mb-4" role="alert">
+            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                <div class="d-flex align-items-start align-items-md-center gap-3">
+                    <div class="fin-alert-icon-box">
+                        <i class="fa-solid fa-bell-concierge"></i>
+                        <span class="fin-alert-ping"></span>
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <h2 class="fin-alert-title mb-0">
+                                มีรายการชำระเงินรอตรวจสอบจำนวน <span class="fin-highlight-count">@Model.PendingCount รายการ</span>
+                            </h2>
+                            <span class="fin-badge-pending-sum">
+                                ยอดรวมรอตรวจสอบ ฿@Model.PendingAmount.ToString("N2")
+                            </span>
+                        </div>
+                        <p class="fin-alert-desc mb-0 mt-1">
+                            กรุณาตรวจสอบหลักฐานการโอนเงิน (Slip) และยอดชำระ เพื่อยืนยันสถานะการจองห้องพักให้ลูกค้าตามลำดับคิว (FIFO)
+                        </p>
+                    </div>
+                </div>
+                <div class="flex-shrink-0">
+                    <a asp-controller="Finance" asp-action="PaymentApproval" asp-route-status="pending" class="btn fin-btn-warning-action">
+                        <i class="fa-solid fa-magnifying-glass-dollar me-2"></i>ตรวจสอบการชำระเงิน
+                    </a>
+                </div>
+            </div>
+        </section>
+    }
+    else
+    {
+        <section class="fin-pending-clear mb-4">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="fin-clear-icon">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div>
+                        <h2 class="fin-clear-title mb-0">ไม่มีรายการสลิปค้างตรวจสอบในขณะนี้</h2>
+                        <p class="fin-clear-desc mb-0">รายการชำระเงินทั้งหมดได้รับการตรวจสอบเรียบร้อยแล้ว ระบบการเงินเป็นปัจจุบัน</p>
+                    </div>
+                </div>
+                <a asp-controller="Finance" asp-action="PaymentApproval" asp-route-status="all" class="btn fin-btn-outline-slate btn-sm">
+                    ดูรายการชำระเงินทั้งหมด <i class="fa-solid fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </section>
+    }
+
+    <!-- ================================================================= -->
+    <!-- ส่วนที่ 2: Financial KPI Cards (4 ใบเรียงแนวนอนบน Desktop)         -->
+    <!-- ================================================================= -->
+    <section class="row g-3 g-xl-4 mb-4">
+        <!-- Card 1: Total Revenue -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="fin-kpi-card kpi-revenue h-100">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <span class="fin-kpi-label">TOTAL REVENUE</span>
+                        <h3 class="fin-kpi-thai-title">รายรับรวมสุทธิ</h3>
+                    </div>
+                    <div class="fin-kpi-icon-wrap icon-revenue">
+                        <i class="fa-solid fa-wallet"></i>
+                    </div>
+                </div>
+                <div class="fin-kpi-amount">
+                    ฿@Model.TotalIncome.ToString("N2")
+                </div>
+                <div class="fin-kpi-footer mt-3 pt-2">
+                    <span class="fin-kpi-note">
+                        <i class="fa-solid fa-chart-line text-primary me-1"></i>
+                        ยอดอนุมัติสะสม: <strong>฿@Model.ApprovedAmount.ToString("N2")</strong>
+                    </span>
+                    <span class="fin-kpi-tag tag-blue">Net Revenue</span>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <p class="text-secondary">รอตรวจสอบ</p>
-                    <h3 class="text-warning">8 รายการ</h3>
+        <!-- Card 2: Pending Payments -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="fin-kpi-card kpi-pending h-100">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <span class="fin-kpi-label">PENDING PAYMENTS</span>
+                        <h3 class="fin-kpi-thai-title">รายการรอตรวจสอบ</h3>
+                    </div>
+                    <div class="fin-kpi-icon-wrap icon-pending">
+                        <i class="fa-solid fa-clock"></i>
+                    </div>
+                </div>
+                <div class="fin-kpi-amount text-warning-custom">
+                    @Model.PendingCount.ToString("N0") <small class="fin-kpi-unit">รายการ</small>
+                </div>
+                <div class="fin-kpi-footer mt-3 pt-2">
+                    <span class="fin-kpi-note">
+                        <i class="fa-solid fa-coins text-warning me-1"></i>
+                        ยอดรอตรวจสอบ: <strong>฿@Model.PendingAmount.ToString("N2")</strong>
+                    </span>
+                    <span class="fin-kpi-tag tag-orange">Action Needed</span>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <p class="text-secondary">รายจ่ายที่บันทึก</p>
-                    <h3>฿42,000.00</h3>
+        <!-- Card 3: Approved Payments -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="fin-kpi-card kpi-approved h-100">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <span class="fin-kpi-label">APPROVED PAYMENTS</span>
+                        <h3 class="fin-kpi-thai-title">อนุมัติแล้ว</h3>
+                    </div>
+                    <div class="fin-kpi-icon-wrap icon-approved">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                </div>
+                <div class="fin-kpi-amount text-success-custom">
+                    @Model.ApprovedCount.ToString("N0") <small class="fin-kpi-unit">รายการ</small>
+                </div>
+                <div class="fin-kpi-footer mt-3 pt-2">
+                    <span class="fin-kpi-note">
+                        <i class="fa-solid fa-check-double text-success me-1"></i>
+                        ยอดอนุมัติรวม: <strong>฿@Model.ApprovedAmount.ToString("N2")</strong>
+                    </span>
+                    <span class="fin-kpi-tag tag-green">Verified</span>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="card border-0 shadow-sm">
-        <div class="card-body">
-            <h5 class="fw-bold mb-3">Payment Review</h5>
+        <!-- Card 4: Rejected Payments -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="fin-kpi-card kpi-rejected h-100">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <span class="fin-kpi-label">REJECTED PAYMENTS</span>
+                        <h3 class="fin-kpi-thai-title">รายการที่ปฏิเสธ</h3>
+                    </div>
+                    <div class="fin-kpi-icon-wrap icon-rejected">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </div>
+                </div>
+                <div class="fin-kpi-amount text-danger-custom">
+                    @Model.RejectedCount.ToString("N0") <small class="fin-kpi-unit">รายการ</small>
+                </div>
+                <div class="fin-kpi-footer mt-3 pt-2">
+                    <span class="fin-kpi-note">
+                        <i class="fa-solid fa-ban text-danger me-1"></i>
+                        มูลค่าที่ปฏิเสธ: <strong>฿@Model.RejectedAmount.ToString("N2")</strong>
+                    </span>
+                    <span class="fin-kpi-tag tag-red">Declined</span>
+                </div>
+            </div>
+        </div>
+    </section>
 
+    <!-- ================================================================= -->
+    <!-- ส่วนที่ 7: Quick Actions (ปุ่มทางลัด 4 รายการ)                       -->
+    <!-- ================================================================= -->
+    <section class="mb-4">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+            <h2 class="fin-section-heading mb-0">
+                <i class="fa-solid fa-compass text-primary me-2"></i>Quick Actions · ทางลัดการปฏิบัติงาน
+            </h2>
+            <span class="fin-section-caption d-none d-sm-inline">
+                <i class="fa-solid fa-user-lock me-1"></i>Separation of Duties Active
+            </span>
+        </div>
+        <div class="row g-3">
+            <div class="col-12 col-sm-6 col-lg-3">
+                <a asp-controller="Finance" asp-action="PaymentApproval" class="fin-quick-action-card">
+                    <div class="fin-qa-icon qa-blue">
+                        <i class="fa-solid fa-file-invoice-dollar"></i>
+                    </div>
+                    <div class="fin-qa-content">
+                        <span class="fin-qa-title">ตรวจสอบสลิป</span>
+                        <span class="fin-qa-sub">อนุมัติ / ปฏิเสธการชำระเงิน</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-right fin-qa-arrow"></i>
+                </a>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+                <a asp-controller="Finance" asp-action="Transactions" class="fin-quick-action-card">
+                    <div class="fin-qa-icon qa-cyan">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    </div>
+                    <div class="fin-qa-content">
+                        <span class="fin-qa-title">ประวัติธุรกรรม</span>
+                        <span class="fin-qa-sub">รายรับ คืนเงิน และรายจ่าย</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-right fin-qa-arrow"></i>
+                </a>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+                <a asp-controller="Finance" asp-action="Receipts" class="fin-quick-action-card">
+                    <div class="fin-qa-icon qa-violet">
+                        <i class="fa-solid fa-receipt"></i>
+                    </div>
+                    <div class="fin-qa-content">
+                        <span class="fin-qa-title">จัดการใบเสร็จ</span>
+                        <span class="fin-qa-sub">ค้นหาและดาวน์โหลด PDF</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-right fin-qa-arrow"></i>
+                </a>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+                <a asp-controller="Finance" asp-action="Reports" class="fin-quick-action-card">
+                    <div class="fin-qa-icon qa-green">
+                        <i class="fa-solid fa-chart-pie"></i>
+                    </div>
+                    <div class="fin-qa-content">
+                        <span class="fin-qa-title">รายงานการเงิน</span>
+                        <span class="fin-qa-sub">สรุปงบและส่งออก Excel/PDF</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-right fin-qa-arrow"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- ส่วนที่ 3 & 4: Revenue Analytics & Payment Status Overview        -->
+    <!-- ================================================================= -->
+    <section class="row g-4 mb-4">
+        <!-- ส่วนที่ 3: Revenue Analytics -->
+        <div class="col-12 col-xl-8">
+            <div class="fin-panel-card h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-3 pb-3 border-bottom">
+                        <div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="fin-dot-indicator bg-electric"></span>
+                                <h2 class="fin-panel-title mb-0">Revenue Analytics · วิเคราะห์รายรับ</h2>
+                            </div>
+                            <p class="fin-panel-subtitle mb-0 mt-1">
+                                เปรียบเทียบรายรับรวม (Gross Income) และรายรับสุทธิ (Net Income) ตามช่วงเวลา
+                            </p>
+                        </div>
+
+                        <!-- ตัวเลือกดูข้อมูล 7 วัน / 30 วัน / 12 เดือน -->
+                        <div class="fin-period-switcher" role="group" aria-label="Revenue Timeframe">
+                            <button type="button" class="fin-period-btn" data-period="7d">7 วัน</button>
+                            <button type="button" class="fin-period-btn" data-period="30d">30 วัน</button>
+                            <button type="button" class="fin-period-btn active" data-period="12m">12 เดือน</button>
+                        </div>
+                    </div>
+
+                    <!-- แถบสรุปยอดรายรับรวม -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-sm-4">
+                            <div class="fin-analytic-stat-box">
+                                <span class="fin-stat-label" id="chartPeriodLabel">รายรับสุทธิ (ช่วงที่เลือก)</span>
+                                <span class="fin-stat-number text-electric" id="chartPeriodNetTotal">฿@Model.Last6Months.Sum(x => x.Net).ToString("N2")</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="fin-analytic-stat-box">
+                                <span class="fin-stat-label">รายรับสุทธิเดือนนี้</span>
+                                <span class="fin-stat-number text-dark">฿@Model.MonthIncome.ToString("N2")</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="fin-analytic-stat-box">
+                                <span class="fin-stat-label">รายรับรวมสุทธิทั้งหมด</span>
+                                <span class="fin-stat-number text-success-custom">฿@Model.TotalIncome.ToString("N2")</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- พื้นที่แสดงกราฟ Chart.js -->
+                <div class="fin-chart-container">
+                    <canvas id="revenueAnalyticsChart"></canvas>
+                </div>
+
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3 pt-2 border-top text-muted small">
+                    <span>
+                        <i class="fa-solid fa-circle-info text-primary me-1"></i>
+                        <span id="chartDataSourceNote">แสดงข้อมูลจริงจากฐานข้อมูลรายเดือน (6 เดือนล่าสุดจากระบบ)</span>
+                    </span>
+                    <a asp-controller="Finance" asp-action="Reports" class="fin-link-subtle">
+                        ดูข้อมูลรายวัน/รายเดือนแบบกำหนดช่วงวันที่เองในหน้ารายงาน <i class="fa-solid fa-arrow-up-right-from-square ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ส่วนที่ 4: Payment Status Overview -->
+        <div class="col-12 col-xl-4">
+            <div class="fin-panel-card h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex align-items-center justify-content-between mb-3 pb-3 border-bottom">
+                        <div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="fin-dot-indicator bg-violet"></span>
+                                <h2 class="fin-panel-title mb-0">Payment Status Overview</h2>
+                            </div>
+                            <p class="fin-panel-subtitle mb-0 mt-1">สัดส่วนสถานะการชำระเงินทั้งหมด</p>
+                        </div>
+                        <span class="fin-total-pill">@totalTransactionsCount รายการ</span>
+                    </div>
+
+                    <!-- Donut Chart Container -->
+                    <div class="fin-donut-wrapper position-relative my-3">
+                        <canvas id="paymentStatusDonutChart"></canvas>
+                        <div class="fin-donut-center">
+                            <span class="fin-donut-total-num">@totalTransactionsCount</span>
+                            <span class="fin-donut-total-txt">รายการทั้งหมด</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Legend แสดงจำนวนและยอดเงินของแต่ละสถานะ -->
+                <div class="fin-status-legend-list mt-3">
+                    <div class="fin-status-legend-item">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="fin-legend-dot dot-pending"></span>
+                            <span class="fin-legend-name">Pending (รอตรวจสอบ)</span>
+                        </div>
+                        <div class="text-end">
+                            <span class="fin-legend-count">@Model.PendingCount รายการ</span>
+                            <span class="fin-legend-amount d-block">฿@Model.PendingAmount.ToString("N2")</span>
+                        </div>
+                    </div>
+
+                    <div class="fin-status-legend-item">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="fin-legend-dot dot-approved"></span>
+                            <span class="fin-legend-name">Approved (อนุมัติแล้ว)</span>
+                        </div>
+                        <div class="text-end">
+                            <span class="fin-legend-count">@Model.ApprovedCount รายการ</span>
+                            <span class="fin-legend-amount d-block">฿@Model.ApprovedAmount.ToString("N2")</span>
+                        </div>
+                    </div>
+
+                    <div class="fin-status-legend-item">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="fin-legend-dot dot-rejected"></span>
+                            <span class="fin-legend-name">Rejected (ปฏิเสธ)</span>
+                        </div>
+                        <div class="text-end">
+                            <span class="fin-legend-count">@Model.RejectedCount รายการ</span>
+                            <span class="fin-legend-amount d-block">฿@Model.RejectedAmount.ToString("N2")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- ส่วนที่ 5: Recent Transactions (ตารางรายการธุรกรรม / รอตรวจสอบ)      -->
+    <!-- ================================================================= -->
+    <section class="fin-panel-card mb-2">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-3 pb-3 border-bottom">
+            <div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fin-dot-indicator bg-cyber"></span>
+                    <h2 class="fin-panel-title mb-0">Recent Transactions · รายการชำระเงินรอตรวจสอบล่าสุด (FIFO Queue)</h2>
+                </div>
+                <p class="fin-panel-subtitle mb-0 mt-1">
+                    แสดงรายการชำระเงินที่รอการตรวจสอบลำดับค้างนานที่สุด (สูงสุด 5 รายการตามคิว) เพื่อความรวดเร็วในการอนุมัติห้องพัก
+                </p>
+            </div>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <a asp-controller="Finance" asp-action="PaymentApproval" asp-route-status="all" class="btn fin-btn-primary-cyber btn-sm">
+                    <i class="fa-solid fa-list-check me-1"></i> ดูรายการชำระเงินทั้งหมด
+                </a>
+                <a asp-controller="Finance" asp-action="Transactions" class="btn fin-btn-outline-slate btn-sm">
+                    <i class="fa-solid fa-clock-rotate-left me-1"></i> ประวัติธุรกรรมทั้งหมด
+                </a>
+            </div>
+        </div>
+
+        @if (Model.OldestPending != null && Model.OldestPending.Any())
+        {
             <div class="table-responsive">
-                <table class="table align-middle">
+                <table class="table fin-table align-middle mb-0">
                     <thead>
                         <tr>
-                            <th>รหัสจอง</th>
-                            <th>ยอดที่ต้องชำระ</th>
-                            <th>สถานะ</th>
-                            <th>หลักฐาน</th>
-                            <th>การดำเนินการ</th>
+                            <th>Booking ID</th>
+                            <th>Customer Name</th>
+                            <th>Payment Date</th>
+                            <th class="text-end">Amount</th>
+                            <th>Payment Method</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-end">Action</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>BK-1003</td>
-                            <td>฿3,500.00</td>
-                            <td>
-                                <span class="badge bg-warning text-dark">
-                                    Pending
-                                </span>
-                            </td>
-                            <td>
-                                <span class="text-secondary">
-                                    ยังไม่ได้เชื่อมต่อ
-                                </span>
-                            </td>
-                            <td>
-                                <button class="btn btn-sm btn-success"
-                                        disabled>
-                                    Approve
-                                </button>
+                        @foreach (var item in Model.OldestPending)
+                        {
+                            var payDate = item.PaidAt ?? item.CreatedAt;
+                            var statusLower = (item.Status ?? "pending").ToLowerInvariant();
 
-                                <button class="btn btn-sm btn-danger"
-                                        disabled>
-                                    Reject
-                                </button>
-                            </td>
-                        </tr>
+                            string badgeClass = statusLower switch
+                            {
+                                "approved" => "fin-status-badge status-approved",
+                                "rejected" => "fin-status-badge status-rejected",
+                                _ => "fin-status-badge status-pending"
+                            };
+
+                            string statusIcon = statusLower switch
+                            {
+                                "approved" => "fa-solid fa-circle-check",
+                                "rejected" => "fa-solid fa-circle-xmark",
+                                _ => "fa-solid fa-clock"
+                            };
+
+                            string statusText = statusLower switch
+                            {
+                                "approved" => "Approved",
+                                "rejected" => "Rejected",
+                                _ => "Pending"
+                            };
+
+                            string methodLabel = item.Method?.ToLowerInvariant() switch
+                            {
+                                "promptpay" => "PromptPay QR",
+                                "bank_transfer" => "Bank Transfer",
+                                "credit_card" => "Credit Card",
+                                "cash" => "Cash",
+                                _ => string.IsNullOrWhiteSpace(item.Method) ? "N/A" : item.Method
+                            };
+
+                            string methodIcon = item.Method?.ToLowerInvariant() switch
+                            {
+                                "promptpay" => "fa-solid fa-qrcode text-primary",
+                                "bank_transfer" => "fa-solid fa-building-columns text-info",
+                                "credit_card" => "fa-regular fa-credit-card text-violet",
+                                _ => "fa-solid fa-money-bill-wave text-success"
+                            };
+
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="fin-booking-code">@item.BookingCode</span>
+                                        <span class="text-muted small">#@item.BookingId</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="fin-avatar-circle">
+                                            @(string.IsNullOrEmpty(item.ContactName) ? "G" : item.ContactName.Substring(0, 1).ToUpper())
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold text-dark">@item.ContactName</div>
+                                            <div class="text-muted extra-small">Payment ID: #@item.PaymentId</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="fin-date-cell">
+                                        <span class="d-block fw-medium text-dark">@payDate.ToString("dd/MM/yyyy")</span>
+                                        <span class="text-muted extra-small">
+                                            <i class="fa-regular fa-clock me-1"></i>@payDate.ToString("HH:mm") น.
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="text-end">
+                                    <span class="fin-amount-cell">฿@item.Amount.ToString("N2")</span>
+                                    @if (item.Amount != item.BookingTotal)
+                                    {
+                                        <span class="d-block extra-small text-warning-custom" title="ยอดโอนไม่ตรงกับยอดรวมการจอง">
+                                            <i class="fa-solid fa-triangle-exclamation"></i> ยอดจอง ฿@item.BookingTotal.ToString("N2")
+                                        </span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="fin-method-chip">
+                                        <i class="@methodIcon me-1"></i> @methodLabel
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="@badgeClass">
+                                        <i class="@statusIcon me-1"></i> @statusText
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <a asp-controller="Finance"
+                                       asp-action="PaymentDetail"
+                                       asp-route-id="@item.PaymentId"
+                                       class="btn fin-btn-view">
+                                        <i class="fa-regular fa-eye me-1"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                        }
                     </tbody>
                 </table>
             </div>
-
-            <div class="alert alert-info mb-0">
-                การอนุมัติจริงต้องตรวจสอบสลิป ยอดเงิน และสิทธิ์ผู้ใช้
-                ผ่าน Server ก่อนบันทึกผล
+        }
+        else
+        {
+            <!-- Empty State ที่สวยงามเมื่อไม่มีรายการค้าง -->
+            <div class="fin-empty-state text-center py-5 px-3">
+                <div class="fin-empty-icon-ring mx-auto mb-3">
+                    <i class="fa-solid fa-clipboard-check"></i>
+                </div>
+                <h3 class="fin-empty-title">ไม่มีรายการชำระเงินรอตรวจสอบในคิว</h3>
+                <p class="fin-empty-desc mx-auto mb-4">
+                    ขณะนี้ไม่มีสลิปโอนเงินที่ค้างอยู่ในสถานะ Pending คุณสามารถดูรายการชำระเงินที่อนุมัติแล้วหรือประวัติธุรกรรมทั้งหมดได้จากปุ่มด้านล่าง
+                </p>
+                <div class="d-flex justify-content-center gap-2 flex-wrap">
+                    <a asp-controller="Finance" asp-action="PaymentApproval" asp-route-status="all" class="btn fin-btn-primary-cyber">
+                        <i class="fa-solid fa-file-invoice-dollar me-2"></i>ดูรายการชำระเงินทั้งหมด
+                    </a>
+                    <a asp-controller="Finance" asp-action="Transactions" class="btn fin-btn-outline-slate">
+                        <i class="fa-solid fa-clock-rotate-left me-2"></i>เปิดหน้าประวัติธุรกรรม
+                    </a>
+                </div>
             </div>
-        </div>
-    </div>
+        }
+    </section>
+
 </div>
+
+<!-- ส่งข้อมูล JSON ให้ไฟล์ finance.js ใช้งานโดยตรง -->
+<script id="financeDashboardData" type="application/json">
+    @Html.Raw(serializedChartData)
+</script>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="~/js/finance/finance.js" asp-append-version="true"></script>
+}

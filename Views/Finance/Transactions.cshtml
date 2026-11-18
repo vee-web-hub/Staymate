@@ -1,0 +1,762 @@
+@model StayMate_Kavinvee_0576.Models.ViewModels.TransactionsViewModel
+@using System.Globalization
+@using System.Text.Json
+
+@{
+    Layout = "~/Views/Shared/_FinanceLayout.cshtml";
+    ViewData["Title"] = "ประวัติธุรกรรมทั้งหมด (Transactions History)";
+
+    var items = Model.Transactions?.Items ?? new List<StayMate_Kavinvee_0576.Models.ViewModels.TransactionRow>();
+    int totalCount = Model.Transactions?.TotalCount ?? 0;
+    int currentPage = Model.Transactions?.Page ?? 1;
+    int pageSize = Model.Transactions?.PageSize ?? 20;
+    int totalPages = Model.Transactions?.TotalPages ?? 1;
+
+    // นับจำนวนรายการที่สถานะการชำระเงินเป็น Pending จากรายการในหน้าหรือแสดงสรุปควบคู่กับยอดจริงจาก ViewModel
+    int pendingInPageCount = items.Count(x => string.Equals(x.PaymentStatus, "pending", StringComparison.OrdinalIgnoreCase));
+}
+
+<link rel="stylesheet" href="~/css/finance.css" asp-append-version="true" />
+
+<div class="finance-dashboard-wrapper ft-page-wrapper"
+     id="ftTransactionsApp"
+     data-action-url="@Url.Action("Transactions", "Finance")"
+     data-export-excel-url="@Url.Action("ExportReport", "Finance")"
+     data-payment-detail-api="@Url.Action("GetPaymentSlipDetailJson", "Finance")">
+
+    <!-- ================================================================= -->
+    <!-- 1. Page Header & Breadcrumb                                       -->
+    <!-- ================================================================= -->
+    <section class="fin-welcome-banner ft-header-banner mb-4">
+        <div class="fin-welcome-glow"></div>
+        <div class="row align-items-center position-relative z-1 g-3">
+            <div class="col-lg-8">
+                <!-- Breadcrumb -->
+                <nav aria-label="breadcrumb" class="mb-2">
+                    <ol class="breadcrumb ft-breadcrumb mb-0">
+                        <li class="breadcrumb-item">
+                            <a asp-controller="Finance" asp-action="Index">
+                                <i class="fa-solid fa-wallet me-1"></i>Finance Portal
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item active" aria-current="page">Transactions History</li>
+                    </ol>
+                </nav>
+
+                <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
+                    <h1 class="fin-welcome-title mb-0">ประวัติธุรกรรมทั้งหมด</h1>
+                    <span class="fin-chip-cyber">
+                        <i class="fa-solid fa-lock"></i> READ-ONLY AUDIT LOG
+                    </span>
+                </div>
+                <p class="fin-welcome-subtitle mb-0">
+                    ตรวจสอบและติดตามรายการธุรกรรมทางการเงินทั้งหมดของ StayMate (ข้อมูลเพื่อการตรวจสอบย้อนหลัง ไม่สามารถแก้ไขหรือลบรายการได้)
+                </p>
+            </div>
+
+            <div class="col-lg-4 text-lg-end">
+                <div class="d-inline-flex flex-wrap gap-2 justify-content-lg-end">
+                    <button type="button" id="ftBtnExportCsv" class="btn ft-btn-export-csv">
+                        <i class="fa-solid fa-file-csv me-2"></i>Export CSV
+                    </button>
+                    <a asp-controller="Finance"
+                       asp-action="ExportReport"
+                       asp-route-from="@(Model.From?.ToString("yyyy-MM-dd"))"
+                       asp-route-to="@(Model.To?.ToString("yyyy-MM-dd"))"
+                       asp-route-format="excel"
+                       id="ftBtnExportExcel"
+                       class="btn fin-btn-refresh">
+                        <i class="fa-solid fa-file-excel me-2"></i>Export Excel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- 2. Summary Cards (4 ใบ ดึงจาก TransactionsViewModel)              -->
+    <!-- ================================================================= -->
+    <section class="row g-3 g-xl-4 mb-4">
+        <!-- Card 1: Total Transactions -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="fin-kpi-card kpi-revenue ft-summary-card h-100">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <span class="fin-kpi-label">TOTAL TRANSACTIONS</span>
+                        <h3 class="fin-kpi-thai-title">จำนวนธุรกรรมทั้งหมด</h3>
+                    </div>
+                    <div class="fin-kpi-icon-wrap icon-revenue">
+                        <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                    </div>
+                </div>
+                <div class="fin-kpi-amount">
+                    <span id="ftCardTotalCount">@totalCount.ToString("N0")</span>
+                    <small class="fin-kpi-unit">รายการ</small>
+                </div>
+                <div class="fin-kpi-footer mt-3 pt-2">
+                    <span class="fin-kpi-note">
+                        รายรับสุทธิ: <strong class="text-primary">฿@Model.Net.ToString("N2")</strong>
+                    </span>
+                    <span class="fin-kpi-tag tag-blue">All Records</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 2: Total Income -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="fin-kpi-card kpi-approved ft-summary-card h-100">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <span class="fin-kpi-label">TOTAL INCOME</span>
+                        <h3 class="fin-kpi-thai-title">รายรับรวมทั้งหมด</h3>
+                    </div>
+                    <div class="fin-kpi-icon-wrap icon-approved">
+                        <i class="fa-solid fa-sack-dollar"></i>
+                    </div>
+                </div>
+                <div class="fin-kpi-amount text-success-custom">
+                    ฿<span id="ftCardTotalIncome">@Model.TotalIncome.ToString("N2")</span>
+                </div>
+                <div class="fin-kpi-footer mt-3 pt-2">
+                    <span class="fin-kpi-note">
+                        <i class="fa-solid fa-circle-check text-success me-1"></i>ธุรกรรมประเภทรายรับ (Income)
+                    </span>
+                    <span class="fin-kpi-tag tag-green">Verified Income</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 3: Total Refunded -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="fin-kpi-card kpi-rejected ft-summary-card h-100">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <span class="fin-kpi-label">TOTAL REFUNDED</span>
+                        <h3 class="fin-kpi-thai-title">ยอดเงินคืนรวม</h3>
+                    </div>
+                    <div class="fin-kpi-icon-wrap ft-icon-violet">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </div>
+                </div>
+                <div class="fin-kpi-amount text-violet">
+                    ฿<span id="ftCardTotalRefund">@Model.TotalRefund.ToString("N2")</span>
+                </div>
+                <div class="fin-kpi-footer mt-3 pt-2">
+                    <span class="fin-kpi-note">
+                        รายจ่ายอื่น: <strong>฿@Model.TotalExpense.ToString("N2")</strong>
+                    </span>
+                    <span class="fin-kpi-tag ft-tag-violet">Refunds</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 4: Pending Transactions -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="fin-kpi-card kpi-pending ft-summary-card h-100">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <span class="fin-kpi-label">PENDING TRANSACTIONS</span>
+                        <h3 class="fin-kpi-thai-title">รายการที่รอตรวจสอบ</h3>
+                    </div>
+                    <div class="fin-kpi-icon-wrap icon-pending">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    </div>
+                </div>
+                <div class="fin-kpi-amount text-warning-custom">
+                    <span id="ftCardPendingCount">@pendingInPageCount.ToString("N0")</span>
+                    <small class="fin-kpi-unit">รายการ</small>
+                </div>
+                <div class="fin-kpi-footer mt-3 pt-2">
+                    <a asp-controller="Finance" asp-action="PaymentApproval" class="fin-link-subtle extra-small">
+                        ไปหน้าอนุมัติสลิปโอนเงิน <i class="fa-solid fa-arrow-right ms-1"></i>
+                    </a>
+                    <span class="fin-kpi-tag tag-orange">Pending Audit</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- 3. Search & Filters Section                                       -->
+    <!-- ================================================================= -->
+    <section class="fin-panel-card ft-filter-panel mb-4">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3 pb-2 border-bottom">
+            <div class="d-flex align-items-center gap-2">
+                <span class="fin-dot-indicator bg-electric"></span>
+                <h2 class="fin-panel-title mb-0">ค้นหาและตัวกรองประวัติธุรกรรม (Search &amp; Audit Filters)</h2>
+            </div>
+            <span class="text-muted extra-small">
+                <i class="fa-solid fa-bolt text-warning me-1"></i>รองรับการกรองข้อมูลทั้งจากฐานข้อมูล (Server) และกรองละเอียดในหน้าตารางทันที
+            </span>
+        </div>
+
+        <!-- ฟอร์มเชื่อมกับ FinanceController.Transactions(keyword, from, to, txnType, page) -->
+        <form asp-controller="Finance" asp-action="Transactions" method="get" id="ftSearchForm">
+            <!-- Hidden input สำหรับส่งค่า keyword รวมไปยัง Controller -->
+            <input type="hidden" name="keyword" id="ftServerKeyword" value="@Model.Keyword" />
+            <input type="hidden" name="txnType" id="ftServerTxnType" value="@Model.TxnType" />
+            <input type="hidden" name="page" id="ftServerPage" value="1" />
+
+            <div class="row g-3">
+                <!-- ค้นหาด้วย Transaction ID -->
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <label for="ftInputTxnId" class="form-label ft-form-label">
+                        <i class="fa-solid fa-hashtag text-primary me-1"></i>Transaction ID
+                    </label>
+                    <input type="text"
+                           id="ftInputTxnId"
+                           class="form-control ft-form-control"
+                           placeholder="เช่น 1024 หรือ #1024" />
+                </div>
+
+                <!-- ค้นหาด้วย Booking ID -->
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <label for="ftInputBookingId" class="form-label ft-form-label">
+                        <i class="fa-solid fa-bookmark text-primary me-1"></i>Booking ID / Code
+                    </label>
+                    <input type="text"
+                           id="ftInputBookingId"
+                           class="form-control ft-form-control"
+                           value="@Model.Keyword"
+                           placeholder="เช่น BK2026... หรือรหัสการจอง" />
+                </div>
+
+                <!-- ค้นหาชื่อลูกค้า / หมวดหมู่ / รายละเอียด -->
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <label for="ftInputCustomer" class="form-label ft-form-label">
+                        <i class="fa-solid fa-user text-primary me-1"></i>ชื่อลูกค้า / ผู้บันทึก / คำอธิบาย
+                    </label>
+                    <input type="text"
+                           id="ftInputCustomer"
+                           class="form-control ft-form-control"
+                           placeholder="ค้นหาชื่อลูกค้า หรือรายละเอียดธุรกรรม..." />
+                </div>
+
+                <!-- ตัวกรองประเภทธุรกรรม (Payment / Refund / Receipt) -->
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <label for="ftSelectType" class="form-label ft-form-label">
+                        <i class="fa-solid fa-tags text-primary me-1"></i>ประเภทธุรกรรม (Transaction Type)
+                    </label>
+                    <select id="ftSelectType" class="form-select ft-form-control">
+                        <option value="" selected="@(string.IsNullOrEmpty(Model.TxnType))">ทุกประเภทธุรกรรม (All Types)</option>
+                        <option value="income" selected="@(Model.TxnType == "income")">Payment / Income (รับชำระเงิน)</option>
+                        <option value="refund" selected="@(Model.TxnType == "refund")">Refund (คืนเงินลูกค้า)</option>
+                        <option value="receipt" selected="@(Model.TxnType == "receipt")">Receipt (รายการออกใบเสร็จ)</option>
+                        <option value="expense" selected="@(Model.TxnType == "expense")">Expense (รายจ่ายอื่น ๆ)</option>
+                    </select>
+                </div>
+
+                <!-- ตัวกรองสถานะธุรกรรม (Approved / Pending / Rejected / Refunded) -->
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <label for="ftSelectStatus" class="form-label ft-form-label">
+                        <i class="fa-solid fa-circle-nodes text-primary me-1"></i>สถานะธุรกรรม (Status)
+                    </label>
+                    <select id="ftSelectStatus" class="form-select ft-form-control">
+                        <option value="all">ทุกสถานะ (All Statuses)</option>
+                        <option value="approved">Approved (อนุมัติแล้ว)</option>
+                        <option value="pending">Pending (รอตรวจสอบ)</option>
+                        <option value="rejected">Rejected (ปฏิเสธรายการ)</option>
+                        <option value="refunded">Refunded (คืนเงินแล้ว)</option>
+                    </select>
+                </div>
+
+                <!-- วันที่เริ่มต้น -->
+                <div class="col-6 col-sm-6 col-lg-2">
+                    <label for="ftInputFromDate" class="form-label ft-form-label">
+                        <i class="fa-regular fa-calendar me-1 text-primary"></i>วันที่เริ่มต้น
+                    </label>
+                    <input type="date"
+                           name="from"
+                           id="ftInputFromDate"
+                           class="form-control ft-form-control"
+                           value="@(Model.From?.ToString("yyyy-MM-dd"))" />
+                </div>
+
+                <!-- วันที่สิ้นสุด -->
+                <div class="col-6 col-sm-6 col-lg-2">
+                    <label for="ftInputToDate" class="form-label ft-form-label">
+                        <i class="fa-regular fa-calendar-check me-1 text-primary"></i>วันที่สิ้นสุด
+                    </label>
+                    <input type="date"
+                           name="to"
+                           id="ftInputToDate"
+                           class="form-control ft-form-control"
+                           value="@(Model.To?.ToString("yyyy-MM-dd"))" />
+                </div>
+
+                <!-- การเรียงลำดับ -->
+                <div class="col-12 col-sm-6 col-lg-2">
+                    <label for="ftSelectSort" class="form-label ft-form-label">
+                        <i class="fa-solid fa-sort text-primary me-1"></i>เรียงลำดับ
+                    </label>
+                    <select id="ftSelectSort" class="form-select ft-form-control">
+                        <option value="date_desc" selected>วันที่ล่าสุดไปเก่าสุด</option>
+                        <option value="date_asc">วันที่เก่าสุดไปล่าสุด</option>
+                        <option value="amount_desc">จำนวนเงิน: มากไปน้อย</option>
+                        <option value="amount_asc">จำนวนเงิน: น้อยไปมาก</option>
+                    </select>
+                </div>
+
+                <!-- ปุ่มค้นหา และ ปุ่ม Reset Filters -->
+                <div class="col-12 col-sm-6 col-lg-3 d-flex align-items-end gap-2">
+                    <button type="submit" id="ftBtnSearch" class="btn ft-btn-search flex-grow-1">
+                        <i class="fa-solid fa-magnifying-glass me-2"></i>ค้นหา
+                    </button>
+                    <button type="button" id="ftBtnReset" class="btn ft-btn-reset">
+                        <i class="fa-solid fa-rotate-left me-1"></i>Reset Filters
+                    </button>
+                </div>
+            </div>
+        </form>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- 4. Transaction Table Section                                      -->
+    <!-- ================================================================= -->
+    <section class="fin-panel-card ft-table-panel">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-3 pb-3 border-bottom">
+            <div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fin-dot-indicator bg-cyber"></span>
+                    <h2 class="fin-panel-title mb-0">ตารางประวัติธุรกรรมทางการเงิน (Financial Transactions Ledger)</h2>
+                </div>
+                <p class="fin-panel-subtitle mb-0 mt-1">
+                    แสดงรายการธุรกรรมตามเงื่อนไขที่เลือก คลิกปุ่ม <strong>View Details</strong> เพื่อตรวจสอบข้อมูลอ้างอิงและผู้บันทึก
+                </p>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <span class="ft-visible-counter">
+                    แสดง <strong id="ftVisibleCount">@items.Count</strong> จากทั้งหมด <strong>@totalCount</strong> รายการ
+                </span>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="ftLoadingState" class="ft-loading-box text-center py-5 d-none">
+            <div class="spinner-border text-primary mb-3" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <h3 class="h6 fw-bold text-dark mb-1">กำลังประมวลผลข้อมูลธุรกรรม...</h3>
+            <p class="text-muted small mb-0">กรุณารอสักครู่ ระบบกำลังดึงข้อมูลประวัติธุรกรรมของ StayMate</p>
+        </div>
+
+        <!-- Empty State (กรณีไม่มีข้อมูลจากฐานข้อมูล หรือกรองแล้วไม่พบ) -->
+        <div id="ftEmptyState" class="fin-empty-state text-center py-5 px-3 @(items.Any() ? "d-none" : "")">
+            <div class="fin-empty-icon-ring ft-empty-ring mx-auto mb-3">
+                <i class="fa-solid fa-file-circle-xmark"></i>
+            </div>
+            <h3 class="fin-empty-title">ไม่พบรายการประวัติธุรกรรมตามเงื่อนไขที่ระบุ</h3>
+            <p class="fin-empty-desc mx-auto mb-4">
+                ยังไม่มีธุรกรรมในช่วงเวลาหรือคำค้นหาที่คุณเลือก ลองกดปุ่ม Reset Filters เพื่อล้างตัวกรองและแสดงข้อมูลทั้งหมด
+            </p>
+            <button type="button" id="ftBtnEmptyReset" class="btn fin-btn-primary-cyber">
+                <i class="fa-solid fa-rotate-left me-2"></i>ล้างตัวกรองทั้งหมด (Reset Filters)
+            </button>
+        </div>
+
+        <!-- ตารางประวัติธุรกรรม -->
+        <div id="ftTableWrapper" class="table-responsive @(items.Any() ? "" : "d-none")">
+            <table class="table fin-table ft-ledger-table align-middle mb-0" id="ftTransactionsTable">
+                <thead>
+                    <tr>
+                        <th>Transaction ID</th>
+                        <th>Booking ID</th>
+                        <th>Customer / Details</th>
+                        <th>Transaction Type</th>
+                        <th>Payment Method</th>
+                        <th class="text-end">Amount</th>
+                        <th>Transaction Date</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="ftTableBody">
+                    @foreach (var row in items)
+                    {
+                        var rawType = (row.TxnType ?? "income").ToLowerInvariant();
+                        var rawPayStatus = (row.PaymentStatus ?? "").ToLowerInvariant();
+
+                        // กำหนดสถานะสำหรับแสดงผลตามหลักบัญชีของระบบ
+                        string displayStatusKey;
+                        string statusBadgeClass;
+                        string statusLabel;
+                        string statusIcon;
+
+                        if (rawType == "refund")
+                        {
+                            displayStatusKey = "refunded";
+                            statusBadgeClass = "ft-badge status-refunded";
+                            statusLabel = "Refunded";
+                            statusIcon = "fa-solid fa-rotate-left";
+                        }
+                        else if (rawPayStatus == "pending")
+                        {
+                            displayStatusKey = "pending";
+                            statusBadgeClass = "ft-badge status-pending";
+                            statusLabel = "Pending";
+                            statusIcon = "fa-solid fa-clock";
+                        }
+                        else if (rawPayStatus == "rejected")
+                        {
+                            displayStatusKey = "rejected";
+                            statusBadgeClass = "ft-badge status-rejected";
+                            statusLabel = "Rejected";
+                            statusIcon = "fa-solid fa-circle-xmark";
+                        }
+                        else
+                        {
+                            displayStatusKey = "approved";
+                            statusBadgeClass = "ft-badge status-approved";
+                            statusLabel = "Approved";
+                            statusIcon = "fa-solid fa-circle-check";
+                        }
+
+                        // กำหนดประเภทธุรกรรม (Payment / Refund / Receipt / Expense)
+                        string typeLabel;
+                        string typeBadgeClass;
+                        string typeIcon;
+                        string filterTypeKey;
+
+                        if (rawType == "refund")
+                        {
+                            typeLabel = "Refund";
+                            typeBadgeClass = "ft-type-chip type-refund";
+                            typeIcon = "fa-solid fa-arrow-rotate-left";
+                            filterTypeKey = "refund";
+                        }
+                        else if (rawType == "expense")
+                        {
+                            typeLabel = "Expense";
+                            typeBadgeClass = "ft-type-chip type-expense";
+                            typeIcon = "fa-solid fa-arrow-trend-down";
+                            filterTypeKey = "expense";
+                        }
+                        else if (row.PaymentId.HasValue && displayStatusKey == "approved")
+                        {
+                            typeLabel = "Payment / Receipt";
+                            typeBadgeClass = "ft-type-chip type-payment";
+                            typeIcon = "fa-solid fa-file-invoice-dollar";
+                            filterTypeKey = "income receipt";
+                        }
+                        else
+                        {
+                            typeLabel = "Payment";
+                            typeBadgeClass = "ft-type-chip type-payment";
+                            typeIcon = "fa-solid fa-credit-card";
+                            filterTypeKey = "income";
+                        }
+
+                        string formattedDate = row.TxnDate.ToString("dd/MM/yyyy");
+                        string formattedTime = row.CreatedAt.ToString("HH:mm");
+                        string sortableTimestamp = row.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss");
+                        string bookingDisplay = !string.IsNullOrWhiteSpace(row.BookingCode)
+                            ? row.BookingCode
+                            : (row.BookingId.HasValue ? $"#{row.BookingId}" : "-");
+
+                        string methodDisplay = row.PaymentId.HasValue
+                            ? $"Payment #{row.PaymentId}"
+                            : (string.IsNullOrWhiteSpace(row.Category) ? "System Ledger" : row.Category);
+
+                        string signPrefix = (rawType == "refund" || rawType == "expense") ? "-" : "+";
+                        string amountColorClass = rawType == "refund"
+                            ? "text-violet"
+                            : (rawType == "expense" ? "text-danger-custom" : "text-success-custom");
+
+                        <tr class="ft-txn-row"
+                            data-txn-id="@row.TxnId"
+                            data-booking-id="@(row.BookingId?.ToString() ?? "")"
+                            data-booking-code="@(row.BookingCode ?? "")"
+                            data-payment-id="@(row.PaymentId?.ToString() ?? "")"
+                            data-customer="@(row.Description ?? "") @(row.RecordedByName ?? "") @(row.Category ?? "")"
+                            data-type="@filterTypeKey"
+                            data-type-label="@typeLabel"
+                            data-category="@row.Category"
+                            data-method="@methodDisplay"
+                            data-amount="@row.Amount"
+                            data-date="@row.TxnDate.ToString("yyyy-MM-dd")"
+                            data-datetime-display="@formattedDate เวลา @formattedTime น."
+                            data-timestamp="@sortableTimestamp"
+                            data-status="@displayStatusKey"
+                            data-status-label="@statusLabel"
+                            data-recorded-by="@(row.RecordedByName ?? "ระบบอัตโนมัติ (System)")"
+                            data-description="@(row.Description ?? "-")">
+
+                            <!-- 1. Transaction ID -->
+                            <td>
+                                <span class="ft-txn-id-badge">#TXN-@row.TxnId.ToString("D5")</span>
+                            </td>
+
+                            <!-- 2. Booking ID -->
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(row.BookingCode))
+                                {
+                                    <span class="fin-booking-code">@row.BookingCode</span>
+                                    @if (row.BookingId.HasValue)
+                                    {
+                                        <span class="d-block text-muted extra-small mt-1">Booking #@row.BookingId</span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">-</span>
+                                }
+                            </td>
+
+                            <!-- 3. Customer / Details -->
+                            <td>
+                                <div class="fw-semibold text-dark ft-row-customer-name">
+                                    @(string.IsNullOrWhiteSpace(row.Description) ? row.Category : row.Description)
+                                </div>
+                                <div class="text-muted extra-small">
+                                    <i class="fa-solid fa-user-check me-1"></i>ผู้บันทึก: @(row.RecordedByName ?? "System")
+                                </div>
+                            </td>
+
+                            <!-- 4. Transaction Type -->
+                            <td>
+                                <span class="@typeBadgeClass">
+                                    <i class="@typeIcon me-1"></i>@typeLabel
+                                </span>
+                                <span class="d-block text-muted extra-small mt-1">หมวด: @row.Category</span>
+                            </td>
+
+                            <!-- 5. Payment Method -->
+                            <td>
+                                <span class="fin-method-chip ft-row-method">
+                                    @if (row.PaymentId.HasValue)
+                                    {
+                                        <i class="fa-solid fa-money-check-dollar text-primary me-1"></i>
+                                        <span>Ref Pay #@row.PaymentId</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="fa-solid fa-building-columns text-secondary me-1"></i>
+                                        <span>Direct Entry</span>
+                                    }
+                                </span>
+                            </td>
+
+                            <!-- 6. Amount -->
+                            <td class="text-end">
+                                <span class="fin-amount-cell @amountColorClass">
+                                    @signPrefix฿@row.Amount.ToString("N2")
+                                </span>
+                            </td>
+
+                            <!-- 7. Transaction Date -->
+                            <td>
+                                <span class="d-block fw-medium text-dark">@formattedDate</span>
+                                <span class="text-muted extra-small">
+                                    <i class="fa-regular fa-clock me-1"></i>@formattedTime น.
+                                </span>
+                            </td>
+
+                            <!-- 8. Status -->
+                            <td class="text-center">
+                                <span class="@statusBadgeClass">
+                                    <i class="@statusIcon me-1"></i>@statusLabel
+                                </span>
+                            </td>
+
+                            <!-- 9. Action (Read-Only View Details เท่านั้น ห้ามแก้ไข/ลบ) -->
+                            <td class="text-end">
+                                <button type="button"
+                                        class="btn fin-btn-view ft-btn-view-detail"
+                                        title="ดูรายละเอียดธุรกรรม #TXN-@row.TxnId.ToString("D5")">
+                                    <i class="fa-regular fa-eye me-1"></i>View Details
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Section -->
+        @if (totalPages > 0)
+        {
+            <div class="d-flex flex-column flex-md-row align-items-center justify-content-between gap-3 mt-4 pt-3 border-top" id="ftPaginationWrap">
+                <div class="text-muted small">
+                    หน้า <strong>@currentPage</strong> จาก <strong>@totalPages</strong> (รวมทั้งหมด <strong>@totalCount.ToString("N0")</strong> รายการ)
+                </div>
+
+                <nav aria-label="Transactions History Pagination">
+                    <ul class="pagination pagination-sm mb-0 payment-approval-pagination">
+                        <li class="page-item @(Model.Transactions!.HasPrevious ? "" : "disabled")">
+                            <a class="page-link ft-page-link"
+                               asp-controller="Finance"
+                               asp-action="Transactions"
+                               asp-route-keyword="@Model.Keyword"
+                               asp-route-from="@(Model.From?.ToString("yyyy-MM-dd"))"
+                               asp-route-to="@(Model.To?.ToString("yyyy-MM-dd"))"
+                               asp-route-txnType="@Model.TxnType"
+                               asp-route-page="@(currentPage - 1)">
+                                <i class="fa-solid fa-chevron-left"></i> ก่อนหน้า
+                            </a>
+                        </li>
+
+                        @{
+                            int startP = Math.Max(1, currentPage - 2);
+                            int endP = Math.Min(totalPages, currentPage + 2);
+                            for (int p = startP; p <= endP; p++)
+                            {
+                                <li class="page-item @(p == currentPage ? "active" : "")">
+                                    <a class="page-link ft-page-link"
+                                       asp-controller="Finance"
+                                       asp-action="Transactions"
+                                       asp-route-keyword="@Model.Keyword"
+                                       asp-route-from="@(Model.From?.ToString("yyyy-MM-dd"))"
+                                       asp-route-to="@(Model.To?.ToString("yyyy-MM-dd"))"
+                                       asp-route-txnType="@Model.TxnType"
+                                       asp-route-page="@p">@p</a>
+                                </li>
+                            }
+                        }
+
+                        <li class="page-item @(Model.Transactions!.HasNext ? "" : "disabled")">
+                            <a class="page-link ft-page-link"
+                               asp-controller="Finance"
+                               asp-action="Transactions"
+                               asp-route-keyword="@Model.Keyword"
+                               asp-route-from="@(Model.From?.ToString("yyyy-MM-dd"))"
+                               asp-route-to="@(Model.To?.ToString("yyyy-MM-dd"))"
+                               asp-route-txnType="@Model.TxnType"
+                               asp-route-page="@(currentPage + 1)">
+                                ถัดไป <i class="fa-solid fa-chevron-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        }
+    </section>
+
+</div>
+
+<!-- ===================================================================== -->
+<!-- Transaction Detail Modal (Read-Only สำหรับตรวจสอบย้อนหลัง)             -->
+<!-- ===================================================================== -->
+<div class="modal fade" id="ftDetailModal" tabindex="-1" aria-labelledby="ftDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content payment-approval-modal ft-modal-content">
+            <div class="modal-header payment-approval-modal-header">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fin-chip-cyber">
+                        <i class="fa-solid fa-file-shield"></i> TRANSACTION AUDIT RECORD
+                    </span>
+                    <h5 class="modal-title fw-bold text-white mb-0" id="ftDetailModalLabel">
+                        รายละเอียดธุรกรรม <span id="ftModalHeaderId" class="text-cyber">#TXN-00000</span>
+                    </h5>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body p-4">
+                <!-- แถบแสดงยอดเงินและสถานะเด่นชัดด้านบน -->
+                <div class="ft-modal-hero-banner p-3 rounded-3 mb-4 d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3">
+                    <div>
+                        <span class="text-muted extra-small text-uppercase fw-bold d-block">จำนวนเงินธุรกรรม (Transaction Amount)</span>
+                        <div class="fs-3 fw-bold text-dark" id="ftModalAmount">฿0.00</div>
+                        <span class="small text-muted" id="ftModalCategory">หมวดหมู่: -</span>
+                    </div>
+                    <div class="text-sm-end">
+                        <span class="text-muted extra-small d-block mb-1">สถานะธุรกรรม (Status)</span>
+                        <div id="ftModalStatusBadge"></div>
+                    </div>
+                </div>
+
+                <!-- ตารางรายละเอียดข้อมูลจริง -->
+                <div class="row g-3">
+                    <div class="col-12 col-sm-6">
+                        <div class="ft-detail-field">
+                            <span class="ft-field-label"><i class="fa-solid fa-hashtag me-1 text-primary"></i>Transaction ID</span>
+                            <span class="ft-field-value fw-bold" id="ftModalTxnId">-</span>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-sm-6">
+                        <div class="ft-detail-field">
+                            <span class="ft-field-label"><i class="fa-solid fa-bookmark me-1 text-primary"></i>Booking ID / รหัสการจอง</span>
+                            <span class="ft-field-value fw-bold text-electric" id="ftModalBookingCode">-</span>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-sm-6">
+                        <div class="ft-detail-field">
+                            <span class="ft-field-label"><i class="fa-solid fa-user me-1 text-primary"></i>ชื่อลูกค้า (Customer Name)</span>
+                            <span class="ft-field-value" id="ftModalCustomerName">-</span>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-sm-6">
+                        <div class="ft-detail-field">
+                            <span class="ft-field-label"><i class="fa-solid fa-tags me-1 text-primary"></i>ประเภทธุรกรรม (Transaction Type)</span>
+                            <span class="ft-field-value" id="ftModalType">-</span>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-sm-6">
+                        <div class="ft-detail-field">
+                            <span class="ft-field-label"><i class="fa-solid fa-credit-card me-1 text-primary"></i>ช่องทางชำระเงิน (Payment Method)</span>
+                            <span class="ft-field-value" id="ftModalMethod">-</span>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-sm-6">
+                        <div class="ft-detail-field">
+                            <span class="ft-field-label"><i class="fa-regular fa-calendar-check me-1 text-primary"></i>วันที่และเวลาทำรายการ</span>
+                            <span class="ft-field-value" id="ftModalDateTime">-</span>
+                        </div>
+                    </div>
+
+                    <!-- แสดงเฉพาะเมื่อมีข้อมูลผู้ตรวจสอบ -->
+                    <div class="col-12 col-sm-6" id="ftModalReviewerBox">
+                        <div class="ft-detail-field">
+                            <span class="ft-field-label"><i class="fa-solid fa-user-shield me-1 text-primary"></i>ผู้ตรวจสอบ / ผู้บันทึกรายการ</span>
+                            <span class="ft-field-value" id="ftModalReviewer">-</span>
+                        </div>
+                    </div>
+
+                    <!-- แสดงเฉพาะเมื่อมีรหัส Payment อ้างอิง -->
+                    <div class="col-12 col-sm-6" id="ftModalPaymentRefBox">
+                        <div class="ft-detail-field">
+                            <span class="ft-field-label"><i class="fa-solid fa-receipt me-1 text-primary"></i>รหัสการชำระเงินอ้างอิง (Payment ID)</span>
+                            <span class="ft-field-value" id="ftModalPaymentId">-</span>
+                        </div>
+                    </div>
+
+                    <!-- หมายเหตุ / คำอธิบายรายการ -->
+                    <div class="col-12" id="ftModalNoteBox">
+                        <div class="ft-detail-field">
+                            <span class="ft-field-label"><i class="fa-regular fa-comment-dots me-1 text-primary"></i>หมายเหตุ / คำอธิบายรายการ (Description &amp; Notes)</span>
+                            <span class="ft-field-value" id="ftModalNote">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- แถบแจ้งเตือนด้านความปลอดภัย (Read-Only Audit Notice) -->
+                <div class="ft-audit-security-note mt-4 d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-shield-halved text-primary"></i>
+                    <span>
+                        ข้อมูลธุรกรรมนี้ถูกบันทึกตามมาตรฐาน <strong>Separation of Duties</strong> ของฝ่ายการเงิน ไม่สามารถแก้ไขยอดเงินหรือลบประวัติย้อนหลังได้
+                    </span>
+                </div>
+            </div>
+
+            <div class="modal-footer payment-approval-modal-footer justify-content-between">
+                <div>
+                    <a href="#" id="ftModalPaymentLink" class="btn fin-btn-outline-slate btn-sm d-none">
+                        <i class="fa-solid fa-up-right-from-square me-1"></i>ดูข้อมูลการตรวจสอบสลิปต้นทาง
+                    </a>
+                </div>
+                <button type="button" class="btn fin-btn-primary-cyber px-4" data-bs-dismiss="modal">
+                    ปิดหน้าต่าง (Close)
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/finance/finance.js" asp-append-version="true"></script>
+}

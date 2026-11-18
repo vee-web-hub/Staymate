@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -8,27 +9,41 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="stylesheet" href="~/css/staymate-layout.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/Finance.css" asp-append-version="true" />
+
+    @await RenderSectionAsync("Styles", required: false)
 </head>
+
 <body class="staff-page">
+
+    @{
+        var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+    }
 
     <header class="staff-header">
         <div class="brand-group">
-            <a asp-controller="Finance" asp-action="Index" class="brand-group text-decoration-none">
-                <img src="~/images/Logo/LogoStayMate.jpg" 
-                     alt="StayMate Logo" 
-                     class="brand-logo-img" 
+            <a asp-controller="Finance" asp-action="Index"
+               class="brand-group text-decoration-none">
+
+                <img src="~/images/Logo/LogoStayMate.jpg"
+                     alt="StayMate Logo"
+                     class="brand-logo-img"
                      onerror="this.onerror=null; this.src='https://placehold.co/76x76/070D1E/00E5FF?text=SM';" />
+
                 <span class="brand-text">StayMate</span>
             </a>
+
             <span class="staff-portal-badge ms-2">
-                <i class="fa-solid fa-wallet text-success"></i> Finance Portal
+                <i class="fa-solid fa-wallet text-success"></i>
+                Finance Portal
             </span>
         </div>
 
         <div class="header-actions">
-            <!-- ปุ่มแจ้งเตือน (วงสีเหลือง) -->
             <div class="notification-btn-wrapper">
-                <button type="button" class="btn-header-notification" title="สลิปรอตรวจสอบใหม่">
+                <button type="button"
+                        class="btn-header-notification"
+                        title="สลิปรอตรวจสอบใหม่">
                     <i class="fa-regular fa-bell"></i>
                     <span class="notification-pulse-dot"></span>
                 </button>
@@ -39,42 +54,73 @@
                 <span>@(User.Identity?.Name ?? "Finance Officer")</span>
             </div>
 
-            <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline m-0">
+            <form asp-controller="Account"
+                  asp-action="Logout"
+                  method="post"
+                  class="d-inline m-0">
+
                 <button type="submit" class="btn-header-logout">
-                    <i class="fa-solid fa-arrow-right-from-bracket"></i> ออกจากระบบ
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    ออกจากระบบ
                 </button>
             </form>
         </div>
     </header>
 
     <div class="staff-container">
+
         <aside class="staff-sidebar">
             <div class="sidebar-category-title">FINANCIAL AUDIT</div>
+
             <nav>
-                <!-- ครบ 5 เมนูตาม SRS ข้อ 4 -->
-                <a asp-controller="Finance" asp-action="Index">
-                    <i class="fa-solid fa-gauge-high"></i> แดชบอร์ดการเงิน
+                <a asp-controller="Finance" asp-action="Index"
+                   class="@(currentAction == "Index" ? "active" : "")">
+                    <i class="fa-solid fa-gauge-high"></i>
+                    แดชบอร์ดการเงิน
                 </a>
-                <a asp-controller="Finance" asp-action="PaymentApproval">
-                    <i class="fa-solid fa-file-invoice-dollar text-primary"></i> อนุมัติสลิปโอนเงิน
+
+                <a asp-controller="Finance" asp-action="PaymentApproval"
+                   class="@(currentAction == "PaymentApproval" ? "active" : "")">
+                    <i class="fa-solid fa-file-invoice-dollar text-primary"></i>
+                    อนุมัติสลิปโอนเงิน
                 </a>
-                <a asp-controller="Finance" asp-action="Transactions">
-                    <i class="fa-solid fa-clock-rotate-left"></i> ประวัติธุรกรรมทั้งหมด
+
+                <a asp-controller="Finance" asp-action="Transactions"
+                   class="@(currentAction == "Transactions" ? "active" : "")">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    ประวัติธุรกรรมทั้งหมด
                 </a>
-                <a asp-controller="Finance" asp-action="Receipts">
-                    <i class="fa-solid fa-receipt text-warning"></i>  จัดการใบเสร็จรับเงิน
+
+                <a asp-controller="Finance" asp-action="Receipts"
+                   class="@(currentAction == "Receipts" ? "active" : "")">
+                    <i class="fa-solid fa-receipt text-warning"></i>
+                    จัดการใบเสร็จรับเงิน
                 </a>
-                <a asp-controller="Finance" asp-action="Reports">
-                    <i class="fa-solid fa-chart-pie text-success"></i> รายงานรายรับ-รายจ่าย
+
+                <a asp-controller="Finance" asp-action="Reports"
+                   class="@(currentAction == "Reports" ? "active" : "")">
+                    <i class="fa-solid fa-chart-pie text-success"></i>
+                    รายงานรายรับ-รายจ่าย
+                </a>
+
+                <div class="sidebar-category-title mt-4">
+                    ACCOUNT
+                </div>
+
+                <a asp-controller="Finance"
+                   asp-action="Profile"
+                   class="@(currentAction == "Profile" ? "active" : "")">
+
+                    <i class="fa-solid fa-user-circle text-info"></i>
+                    โปรไฟล์ของฉัน
                 </a>
             </nav>
-
-           
         </aside>
 
         <main class="staff-content">
             @RenderBody()
         </main>
+
     </div>
 
     <footer class="staff-footer">
@@ -84,5 +130,6 @@
 
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
+
 </body>
 </html>
