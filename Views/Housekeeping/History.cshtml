@@ -1,0 +1,527 @@
+@model StayMate_Kavinvee_0576.Models.ViewModels.HousekeepingViewModel
+@using System.Globalization
+@using System.Text.Json
+@{
+    ViewData["Title"] = "ประวัติงานทำความสะอาด - Cleaning History";
+    Layout = "~/Views/Shared/_HousekeepingLayout.cshtml";
+    var thaiCulture = new CultureInfo("th-TH");
+    var formattedDate = Model.CurrentDate.ToString("วันddddที่ d MMMM yyyy", thaiCulture);
+
+    var chartLabelsJson = JsonSerializer.Serialize(Model.DailyPerformanceStats.Select(x => x.DateLabel));
+    var chartCompletedJson = JsonSerializer.Serialize(Model.DailyPerformanceStats.Select(x => x.CompletedCount));
+    var chartIssuesJson = JsonSerializer.Serialize(Model.DailyPerformanceStats.Select(x => x.IssueCount));
+    var hasChartData = Model.DailyPerformanceStats.Any(x => x.CompletedCount > 0 || x.IssueCount > 0);
+}
+
+<div id="hkApp"
+     class="hk-dashboard-wrapper hk-history-page"
+     data-page="cleaning-history"
+     data-base-url="@Url.Content("~/Housekeeping")"
+     data-export-url="@Url.Action("ExportCleaningHistory", "Housekeeping")">
+
+    @Html.AntiForgeryToken()
+
+    <!-- =========================================================
+         2. PAGE HEADER
+         ========================================================= -->
+    <header class="hk-page-header hk-fade-in">
+        <div class="hk-page-header-left">
+            <nav aria-label="breadcrumb" class="hk-breadcrumb-nav">
+                <ol class="hk-breadcrumb">
+                    <li><a asp-controller="Housekeeping" asp-action="Index">Housekeeping</a></li>
+                    <li class="hk-breadcrumb-sep">/</li>
+                    <li class="active" aria-current="page">Cleaning History</li>
+                </ol>
+            </nav>
+            <h1 class="hk-page-main-title">ประวัติงานทำความสะอาด</h1>
+            <p class="hk-page-description">ตรวจสอบประวัติและติดตามการปฏิบัติงานทำความสะอาดห้องพัก</p>
+        </div>
+
+        <div class="hk-page-header-right hk-no-print">
+            <div class="hk-date-chip">
+                <i class="fa-regular fa-calendar"></i>
+                <span>@formattedDate</span>
+            </div>
+            <button type="button" id="btnRefreshHistory" class="hk-btn hk-btn-primary">
+                <i class="fa-solid fa-rotate"></i>
+                <span>Refresh</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- =========================================================
+         3. SUMMARY CARDS (4 ใบ ดึงและคำนวณจาก Database จริง)
+         ========================================================= -->
+    <section class="hk-kpi-grid hk-fade-in" aria-label="สรุปข้อมูลประวัติการทำความสะอาด">
+        <!-- 1. Total Completed -->
+        <article class="hk-kpi-card hk-kpi-success">
+            <div class="hk-kpi-icon-wrap hk-icon-success">
+                <i class="fa-solid fa-circle-check fs-4"></i>
+            </div>
+            <div class="hk-kpi-info">
+                <span class="hk-kpi-label">Total Completed</span>
+                <h2 class="hk-kpi-number" data-hk-counter="@Model.HistoryTotalCompleted">@Model.HistoryTotalCompleted</h2>
+                <span class="hk-kpi-sub">จำนวนงานที่ทำเสร็จทั้งหมด (สะสมในระบบ)</span>
+            </div>
+        </article>
+
+        <!-- 2. Completed Today -->
+        <article class="hk-kpi-card hk-kpi-info">
+            <div class="hk-kpi-icon-wrap hk-icon-info">
+                <i class="fa-solid fa-calendar-check fs-4"></i>
+            </div>
+            <div class="hk-kpi-info">
+                <span class="hk-kpi-label">Completed Today</span>
+                <h2 class="hk-kpi-number" data-hk-counter="@Model.HistoryCompletedToday">@Model.HistoryCompletedToday</h2>
+                <span class="hk-kpi-sub">จำนวนงานที่เสร็จในวันนี้ (@Model.CurrentDate.ToString("dd MMM yyyy", thaiCulture))</span>
+            </div>
+        </article>
+
+        <!-- 3. Average Cleaning Time -->
+        <article class="hk-kpi-card hk-kpi-navy">
+            <div class="hk-kpi-icon-wrap hk-icon-navy">
+                <i class="fa-solid fa-stopwatch fs-4"></i>
+            </div>
+            <div class="hk-kpi-info">
+                <span class="hk-kpi-label">Average Cleaning Time</span>
+                <h2 class="hk-kpi-number">
+                    @(Model.AverageCleaningMinutes > 0 ? $"{Model.AverageCleaningMinutes:0.#} นาที" : "0 นาที")
+                </h2>
+                <span class="hk-kpi-sub">เวลาเฉลี่ยในการทำความสะอาดต่อห้อง (จากบันทึกจริง)</span>
+            </div>
+        </article>
+
+        <!-- 4. Reported Issues -->
+        <article class="hk-kpi-card hk-kpi-danger">
+            <div class="hk-kpi-icon-wrap hk-icon-danger">
+                <i class="fa-solid fa-triangle-exclamation fs-4"></i>
+            </div>
+            <div class="hk-kpi-info">
+                <span class="hk-kpi-label">Reported Issues</span>
+                <h2 class="hk-kpi-number" data-hk-counter="@Model.ReportedIssuesCount">@Model.ReportedIssuesCount</h2>
+                <span class="hk-kpi-sub">จำนวนรายการแจ้งปัญหา / ซ่อมบำรุงสะสม</span>
+            </div>
+        </article>
+    </section>
+
+    <!-- =========================================================
+         4. SEARCH & FILTER + 9. EXPORT REPORT
+         ========================================================= -->
+    <section class="hk-section-card hk-fade-in hk-no-print" aria-label="ค้นหาและกรองประวัติงานทำความสะอาด">
+        <div class="hk-filter-top-bar">
+            <div class="hk-filter-title-group">
+                <h2 class="hk-section-title">
+                    <i class="fa-solid fa-filter me-2 text-primary"></i>ค้นหาและกรองประวัติ (Search & Filter)
+                </h2>
+                <button type="button" id="btnToggleHistoryFilterMobile" class="hk-btn hk-btn-outline hk-btn-sm hk-mobile-only">
+                    <i class="fa-solid fa-sliders"></i> พับ/เปิด ตัวกรอง
+                </button>
+            </div>
+
+            <!-- 9. Export Report Buttons -->
+            <div class="hk-export-btn-group">
+                <button type="button" id="btnExportHistoryExcel" class="hk-btn hk-btn-success hk-btn-sm" title="ส่งออกไฟล์ CSV/Excel ตามตัวกรองที่เลือก">
+                    <i class="fa-solid fa-file-excel"></i>
+                    <span>Export Excel (CSV)</span>
+                </button>
+                <button type="button" id="btnPrintHistoryReport" class="hk-btn hk-btn-outline hk-btn-sm" title="พิมพ์รายงานหรือบันทึกเป็น PDF">
+                    <i class="fa-solid fa-print"></i>
+                    <span>Print / Save PDF</span>
+                </button>
+            </div>
+        </div>
+
+        <form id="hkHistoryFilterForm" method="get" asp-controller="Housekeeping" asp-action="History" class="hk-history-filter-grid">
+            <!-- Search Room Number -->
+            <div class="hk-filter-group">
+                <label for="histSearchRoom" class="hk-label">Search Room Number</label>
+                <input type="search"
+                       id="histSearchRoom"
+                       name="search"
+                       value="@Model.SearchKeyword"
+                       class="hk-input"
+                       placeholder="เลขห้อง เช่น 101, 205 หรือ #ID..."
+                       autocomplete="off" />
+            </div>
+
+            <!-- Filter by Floor -->
+            <div class="hk-filter-group">
+                <label for="histFloorFilter" class="hk-label">Filter by Floor</label>
+                <select id="histFloorFilter" name="floor" class="hk-select">
+                    <option value="">ทุกชั้น (All Floors)</option>
+                    @foreach (var fl in Model.AvailableFloors)
+                    {
+                        <option value="@fl" selected="@(Model.FloorFilter == fl ? "selected" : null)">ชั้น @fl</option>
+                    }
+                </select>
+            </div>
+
+            <!-- Filter by Employee -->
+            <div class="hk-filter-group">
+                <label for="histEmployeeFilter" class="hk-label">Filter by Employee</label>
+                <select id="histEmployeeFilter" name="employeeId" class="hk-select">
+                    <option value="">พนักงานทั้งหมด (All Staff)</option>
+                    @foreach (var emp in Model.HousekeeperList)
+                    {
+                        <option value="@emp.UserId" selected="@(Model.EmployeeFilter == emp.UserId ? "selected" : null)">@emp.FullName</option>
+                    }
+                </select>
+            </div>
+
+            <!-- Filter by Cleaning Status -->
+            <div class="hk-filter-group">
+                <label for="histStatusFilter" class="hk-label">Filter by Cleaning Status</label>
+                <select id="histStatusFilter" name="status" class="hk-select">
+                    <option value="">ทุกสถานะ (All Status)</option>
+                    <option value="done" selected="@(Model.StatusFilter == "done" ? "selected" : null)">Completed (เสร็จสิ้น)</option>
+                    <option value="in_progress" selected="@(Model.StatusFilter == "in_progress" ? "selected" : null)">In Progress (กำลังทำ)</option>
+                    <option value="pending" selected="@(Model.StatusFilter == "pending" ? "selected" : null)">Pending (รอดำเนินการ)</option>
+                    <option value="maintenance" selected="@(Model.StatusFilter == "maintenance" ? "selected" : null)">Maintenance / Issue (ซ่อมบำรุง)</option>
+                </select>
+            </div>
+
+            <!-- Filter by Specific Date -->
+            <div class="hk-filter-group">
+                <label for="histSingleDate" class="hk-label">Filter by Date (เฉพาะวัน)</label>
+                <input type="date"
+                       id="histSingleDate"
+                       name="singleDate"
+                       value="@(Model.SingleDateFilter?.ToString("yyyy-MM-dd"))"
+                       class="hk-input" />
+            </div>
+
+            <!-- Date Range: Start Date -->
+            <div class="hk-filter-group">
+                <label for="histDateFrom" class="hk-label">Start Date (ตั้งแต่วันที่)</label>
+                <input type="date"
+                       id="histDateFrom"
+                       name="dateFrom"
+                       value="@(Model.DateFrom?.ToString("yyyy-MM-dd"))"
+                       class="hk-input" />
+            </div>
+
+            <!-- Date Range: End Date -->
+            <div class="hk-filter-group">
+                <label for="histDateTo" class="hk-label">End Date (ถึงวันที่)</label>
+                <input type="date"
+                       id="histDateTo"
+                       name="dateTo"
+                       value="@(Model.DateTo?.ToString("yyyy-MM-dd"))"
+                       class="hk-input" />
+            </div>
+
+            <!-- Filter by Issue Type -->
+            <div class="hk-filter-group">
+                <label for="histIssueFilter" class="hk-label">Filter by Issue Type</label>
+                <select id="histIssueFilter" name="issueType" class="hk-select">
+                    <option value="" selected="@(string.IsNullOrEmpty(Model.IssueTypeFilter) ? "selected" : null)">ทั้งหมด (All Records)</option>
+                    <option value="issue_only" selected="@(Model.IssueTypeFilter == "issue_only" ? "selected" : null)">เฉพาะงานที่พบปัญหา / แจ้งซ่อม</option>
+                    <option value="normal_only" selected="@(Model.IssueTypeFilter == "normal_only" ? "selected" : null)">เฉพาะงานปกติ (ไม่มีปัญหา)</option>
+                </select>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="hk-filter-group hk-history-filter-actions">
+                <button type="submit" class="hk-btn hk-btn-primary">
+                    <i class="fa-solid fa-magnifying-glass"></i> Search
+                </button>
+                <a asp-controller="Housekeeping" asp-action="History" id="btnResetHistoryFilter" class="hk-btn hk-btn-light">
+                    <i class="fa-solid fa-rotate-left"></i> Reset Filter
+                </a>
+            </div>
+        </form>
+    </section>
+
+    <!-- =========================================================
+         8. CLEANING PERFORMANCE & 7. ACTIVITY TIMELINE
+         ========================================================= -->
+    <div class="hk-history-analytics-grid hk-fade-in">
+        <!-- 8. Cleaning Performance Section -->
+        <section class="hk-section-card" aria-label="สรุปประสิทธิภาพการทำความสะอาด">
+            <div class="hk-section-header">
+                <div>
+                    <h2 class="hk-section-title">
+                        <i class="fa-solid fa-chart-column me-2 text-primary"></i>สรุปประสิทธิภาพการทำงาน (Cleaning Performance - 7 วันล่าสุด)
+                    </h2>
+                    <p class="hk-section-subtitle">คำนวณจากข้อมูลเวลาเริ่มและเวลาเสร็จสิ้นจริงในฐานข้อมูล</p>
+                </div>
+            </div>
+
+            <div class="hk-perf-metrics-row">
+                <div class="hk-perf-mini-card">
+                    <span class="hk-perf-mini-label">เฉลี่ยต่อวัน (7 วันล่าสุด)</span>
+                    <strong class="hk-perf-mini-val">@Model.RoomsCleanedPerDayAvg ห้อง/วัน</strong>
+                </div>
+                <div class="hk-perf-mini-card">
+                    <span class="hk-perf-mini-label">เสร็จตามเกณฑ์มาตรฐาน (&le; 45 นาที)</span>
+                    <strong class="hk-perf-mini-val text-success">@Model.OnTimeCompletedCount งาน</strong>
+                </div>
+                <div class="hk-perf-mini-card">
+                    <span class="hk-perf-mini-label">เวลาเฉลี่ยต่อห้อง</span>
+                    <strong class="hk-perf-mini-val text-primary">@(Model.AverageCleaningMinutes > 0 ? $"{Model.AverageCleaningMinutes:0.#} นาที" : "-")</strong>
+                </div>
+                <div class="hk-perf-mini-card">
+                    <span class="hk-perf-mini-label">งานที่พบปัญหา/ซ่อมบำรุง</span>
+                    <strong class="hk-perf-mini-val text-danger">@Model.ReportedIssuesCount รายการ</strong>
+                </div>
+            </div>
+
+            @if (hasChartData)
+            {
+                <div class="hk-chart-container">
+                    <canvas id="hkPerformanceChart"
+                            data-labels="@chartLabelsJson"
+                            data-completed="@chartCompletedJson"
+                            data-issues="@chartIssuesJson"
+                            height="110"></canvas>
+                </div>
+            }
+            else
+            {
+                <div class="hk-empty-state mt-3">
+                    <p>ยังไม่มีข้อมูลงานที่เสร็จสิ้นในช่วง 7 วันล่าสุดเพียงพอสำหรับสร้างกราฟ</p>
+                </div>
+            }
+        </section>
+
+        <!-- 7. Cleaning Activity Timeline -->
+        <aside class="hk-section-card" aria-label="ลำดับเหตุการณ์การปฏิบัติงานจริง">
+            <div class="hk-section-header">
+                <div>
+                    <h2 class="hk-section-title">
+                        <i class="fa-solid fa-timeline me-2 text-primary"></i>Activity Timeline ล่าสุด
+                    </h2>
+                    <p class="hk-section-subtitle">ข้อมูลจาก Activity Log จริงตามลำดับเวลา</p>
+                </div>
+            </div>
+
+            @if (Model.HistoryTimeline.Any())
+            {
+                <ul class="hk-activity-timeline hk-scrollable-timeline">
+                    @foreach (var ev in Model.HistoryTimeline)
+                    {
+                        var markerCls = ev.ActivityType switch
+                        {
+                            "complete" => "hk-act-success",
+                            "start" => "hk-act-info",
+                            "maintenance" => "hk-act-danger",
+                            _ => "hk-act-warning"
+                        };
+
+                        <li class="hk-activity-item">
+                            <div class="hk-activity-marker @markerCls"></div>
+                            <div class="hk-activity-body">
+                                <div class="hk-activity-top">
+                                    <strong class="hk-activity-title">@ev.Timestamp.ToString("HH:mm น.") — @ev.Title</strong>
+                                    <span class="hk-activity-time">@ev.Timestamp.ToString("dd MMM yyyy", thaiCulture)</span>
+                                </div>
+                                @if (!string.IsNullOrWhiteSpace(ev.DetailNote))
+                                {
+                                    <p class="hk-activity-note">@ev.DetailNote</p>
+                                }
+                                <span class="hk-activity-actor">ผู้ดำเนินการ: @(ev.ActorName ?? "ระบบ")</span>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <div class="hk-empty-state">
+                    <p>ยังไม่มีบันทึกเหตุการณ์ใน Activity Log</p>
+                </div>
+            }
+        </aside>
+    </div>
+
+    <!-- =========================================================
+         5. CLEANING HISTORY TABLE + PAGINATION
+         ========================================================= -->
+    <section class="hk-section-card hk-fade-in" aria-label="ตารางประวัติงานทำความสะอาด">
+        <div class="hk-list-meta-bar">
+            <div>
+                <h2 class="hk-section-title mb-1">ตารางประวัติงานทำความสะอาด (Cleaning History Table)</h2>
+                <div class="hk-list-count-text">
+                    แสดงรายการที่ <strong id="histShowingStart">0</strong> - <strong id="histShowingEnd">0</strong>
+                    จากทั้งหมด <strong id="histTotalCount">@Model.HistoryTasks.Count</strong> รายการ
+                </div>
+            </div>
+
+            <div class="hk-page-size-wrap hk-no-print">
+                <label for="histPageSize" class="hk-page-size-label">แสดงหน้าละ:</label>
+                <select id="histPageSize" class="hk-select hk-select-sm">
+                    <option value="10">10 รายการ</option>
+                    <option value="15" selected>15 รายการ</option>
+                    <option value="30">30 รายการ</option>
+                    <option value="50">50 รายการ</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="hk-table-responsive">
+            <table class="hk-table" id="hkHistoryTable">
+                <thead>
+                    <tr>
+                        <th>ลำดับ</th>
+                        <th>Room Number</th>
+                        <th>Floor</th>
+                        <th>Room Type</th>
+                        <th>Employee Name</th>
+                        <th>Started At</th>
+                        <th>Completed At</th>
+                        <th>Duration</th>
+                        <th>Cleaning Status</th>
+                        <th class="text-end hk-no-print">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="hkHistoryTableBody">
+                    @{
+                        int rowNo = 1;
+                    }
+                    @foreach (var item in Model.HistoryTasks)
+                    {
+                        var visualStatus = item.HasIssue && item.RoomStatus == "maintenance"
+                            ? "maintenance"
+                            : item.Status;
+
+                        var badgeClass = visualStatus switch
+                        {
+                            "maintenance" => "hk-badge-maintenance",
+                            HousekeepingViewModel.StatusDone => "hk-badge-completed",
+                            HousekeepingViewModel.StatusInProgress => "hk-badge-in_progress",
+                            _ => "hk-badge-pending"
+                        };
+
+                        var statusText = visualStatus switch
+                        {
+                            "maintenance" => "Maintenance / Issue (ซ่อมบำรุง)",
+                            HousekeepingViewModel.StatusDone => "Completed (เสร็จสิ้น)",
+                            HousekeepingViewModel.StatusInProgress => "In Progress (กำลังทำ)",
+                            _ => "Pending (รอดำเนินการ)"
+                        };
+
+                        var filterDateStr = (item.CompletedAt ?? item.CreatedAt).ToString("yyyy-MM-dd");
+
+                        <tr class="hk-history-row"
+                            data-task-id="@item.TaskId"
+                            data-room-number="@item.RoomNumber"
+                            data-floor="@item.FloorNo"
+                            data-employee-id="@item.AssignedTo"
+                            data-status="@visualStatus"
+                            data-raw-status="@item.Status"
+                            data-date="@filterDateStr"
+                            data-has-issue="@(item.HasIssue ? "true" : "false")">
+                            <td data-label="ลำดับ" class="hk-col-index">@rowNo</td>
+                            <td data-label="Room Number">
+                                <div class="hk-cell-room">
+                                    <span class="hk-room-pill">@item.RoomNumber</span>
+                                    <span class="hk-task-id-sub">#@item.TaskId</span>
+                                </div>
+                            </td>
+                            <td data-label="Floor">ชั้น @item.FloorNo</td>
+                            <td data-label="Room Type">@(item.RoomTypeName ?? "Standard")</td>
+                            <td data-label="Employee Name">
+                                <strong>@(string.IsNullOrWhiteSpace(item.AssignedToName) ? "ยังไม่ระบุผู้รับ" : item.AssignedToName)</strong>
+                            </td>
+                            <td data-label="Started At">
+                                @if (item.StartedAt.HasValue)
+                                {
+                                    <div class="hk-cell-date">
+                                        <span>@item.StartedAt.Value.ToString("dd MMM yyyy", thaiCulture)</span>
+                                        <small>@item.StartedAt.Value.ToString("HH:mm น.")</small>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td data-label="Completed At">
+                                @if (item.CompletedAt.HasValue)
+                                {
+                                    <div class="hk-cell-date">
+                                        <span>@item.CompletedAt.Value.ToString("dd MMM yyyy", thaiCulture)</span>
+                                        <small>@item.CompletedAt.Value.ToString("HH:mm น.")</small>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td data-label="Duration">
+                                @if (item.DurationMinutes.HasValue)
+                                {
+                                    <span class="hk-duration-chip">@item.DurationMinutes.Value นาที</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td data-label="Cleaning Status">
+                                <span class="hk-status-badge @badgeClass">@statusText</span>
+                                @if (item.HasIssue && visualStatus != "maintenance")
+                                {
+                                    <span class="hk-priority-badge hk-priority-high ms-1">พบปัญหา</span>
+                                }
+                            </td>
+                            <td data-label="Action" class="hk-cell-actions hk-no-print">
+                                <button type="button"
+                                        class="hk-btn hk-btn-outline hk-btn-sm"
+                                        data-hist-details="@item.TaskId">
+                                    <i class="fa-regular fa-eye"></i> View Details
+                                </button>
+                            </td>
+                        </tr>
+                        rowNo++;
+                    }
+                </tbody>
+            </table>
+
+            <!-- Empty State -->
+            <div id="hkHistoryEmptyState" class="hk-empty-modern" @(Model.HistoryTasks.Any() ? "hidden" : "")>
+                <div class="hk-empty-icon-circle">
+                    <i class="fa-solid fa-clock-rotate-left fs-2"></i>
+                </div>
+                <h3 class="hk-empty-title">ไม่พบประวัติงานทำความสะอาดที่ตรงกับเงื่อนไข</h3>
+                <p class="hk-empty-subtitle">ลองปรับช่วงวันที่หรือกดปุ่ม Reset Filter เพื่อดูประวัติทั้งหมด</p>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <nav id="histPaginationBar" class="hk-pagination-bar hk-no-print" aria-label="การแบ่งหน้าตารางประวัติ" @(Model.HistoryTasks.Any() ? "" : "hidden")>
+            <button type="button" id="histPrevBtn" class="hk-btn hk-btn-outline hk-btn-sm">&laquo; Previous</button>
+            <div id="histPageNumbers" class="hk-page-numbers"></div>
+            <button type="button" id="histNextBtn" class="hk-btn hk-btn-outline hk-btn-sm">Next &raquo;</button>
+        </nav>
+    </section>
+
+    <!-- =========================================================
+         6. CLEANING HISTORY DETAILS MODAL (พร้อม Checklist & Timeline รายงาน)
+         ========================================================= -->
+    <div id="histDetailModal" class="hk-modal" hidden>
+        <div class="hk-modal-dialog hk-hist-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="histModalTitle">
+            <button type="button" class="hk-modal-close hk-hist-modal-close" aria-label="ปิดหน้าต่าง">&times;</button>
+
+            <div class="hk-modal-header-block">
+                <span id="histModalSub" class="hk-rs-floor-tag">รายละเอียดประวัติการปฏิบัติงาน (Audit Trail)</span>
+                <h3 id="histModalTitle" class="hk-modal-title">งานทำความสะอาด #-</h3>
+            </div>
+
+            <div id="histModalBodyContent">
+                <!-- สร้างด้วย JavaScript แบบปลอดภัย (textContent) -->
+            </div>
+
+            <div class="hk-modal-actions">
+                <button type="button" class="hk-btn hk-btn-light hk-hist-modal-close">ปิดหน้าต่าง</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Chart.js สำหรับแสดงกราฟประสิทธิภาพ (จะสร้างกราฟเฉพาะเมื่อมีข้อมูลจริง) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="~/js/Housekeeping.js" asp-append-version="true"></script>
+}

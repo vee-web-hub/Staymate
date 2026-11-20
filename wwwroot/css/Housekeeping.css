@@ -1,0 +1,2832 @@
+/* =====================================================================
+ * StayMate Housekeeping Portal Stylesheet (wwwroot/css/Housekeeping.css)
+ * Design Concept: Simple Smart Operations
+ * ===================================================================== */
+
+:root {
+    --hk-navy: #070D1E;
+    --hk-navy-soft: #111C38;
+    --hk-blue: #2563EB;
+    --hk-blue-hover: #1D4ED8;
+    --hk-cyan: #00E5FF;
+    --hk-bg: #F5F7FB;
+    --hk-white: #FFFFFF;
+    --hk-success: #16A34A;
+    --hk-success-bg: #DCFCE7;
+    --hk-warning: #F59E0B;
+    --hk-warning-bg: #FEF3C7;
+    --hk-danger: #DC2626;
+    --hk-danger-bg: #FEE2E2;
+    --hk-info-bg: #DBEAFE;
+    --hk-text-main: #0F172A;
+    --hk-text-muted: #475569;
+    --hk-border: #E2E8F0;
+    --hk-radius-lg: 18px;
+    --hk-radius-md: 12px;
+    --hk-radius-sm: 8px;
+    --hk-shadow-sm: 0 4px 14px rgba(7, 13, 30, 0.05);
+    --hk-shadow-md: 0 10px 25px rgba(7, 13, 30, 0.08);
+}
+
+.hk-dashboard-wrapper {
+    font-family: 'Prompt', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--hk-bg);
+    color: var(--hk-text-main);
+    padding: 1.5rem;
+    min-height: calc(100vh - 70px);
+}
+
+/* ---------- Animations ---------- */
+@keyframes hkFadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.hk-fade-in {
+    animation: hkFadeInUp 0.4s ease-out forwards;
+}
+
+/* ---------- Alerts ---------- */
+.hk-alert {
+    padding: 1rem 1.25rem;
+    border-radius: var(--hk-radius-md);
+    margin-bottom: 1.25rem;
+    font-weight: 500;
+}
+
+.hk-alert-success {
+    background: var(--hk-success-bg);
+    color: #14532D;
+    border: 1px solid #86EFAC;
+}
+
+.hk-alert-danger {
+    background: var(--hk-danger-bg);
+    color: #7F1D1D;
+    border: 1px solid #FCA5A5;
+}
+
+/* ---------- A. Welcome Banner ---------- */
+.hk-welcome-banner {
+    background: linear-gradient(135deg, var(--hk-navy) 0%, var(--hk-navy-soft) 65%, #1E3A8A 100%);
+    color: var(--hk-white);
+    border-radius: var(--hk-radius-lg);
+    padding: 1.75rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    box-shadow: var(--hk-shadow-md);
+    margin-bottom: 1.5rem;
+}
+
+.hk-welcome-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(0, 229, 255, 0.3);
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    color: var(--hk-cyan);
+    margin-bottom: 0.75rem;
+}
+
+.hk-pulse-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--hk-cyan);
+}
+
+.hk-welcome-title {
+    font-size: 1.65rem;
+    font-weight: 700;
+    margin: 0 0 0.4rem;
+    color: var(--hk-white);
+}
+
+.hk-welcome-user {
+    font-size: 1rem;
+    color: #CBD5E1;
+    margin: 0 0 0.45rem;
+}
+
+.hk-divider {
+    margin: 0 0.5rem;
+    opacity: 0.5;
+}
+
+.hk-welcome-summary {
+    margin: 0;
+    font-size: 0.96rem;
+    color: #E2E8F0;
+    background: rgba(255, 255, 255, 0.08);
+    display: inline-block;
+    padding: 0.4rem 0.9rem;
+    border-radius: var(--hk-radius-sm);
+}
+
+.hk-welcome-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    flex-shrink: 0;
+}
+
+/* ---------- B. KPI Summary Cards ---------- */
+.hk-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.hk-kpi-card {
+    background: var(--hk-white);
+    border-radius: var(--hk-radius-lg);
+    padding: 1.35rem 1.5rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1.1rem;
+    box-shadow: var(--hk-shadow-sm);
+    border: 1px solid var(--hk-border);
+    border-left-width: 5px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hk-kpi-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--hk-shadow-md);
+}
+
+.hk-kpi-navy { border-left-color: var(--hk-navy); }
+.hk-kpi-warning { border-left-color: var(--hk-warning); }
+.hk-kpi-info { border-left-color: var(--hk-blue); }
+.hk-kpi-success { border-left-color: var(--hk-success); }
+
+.hk-kpi-icon-wrap {
+    width: 54px;
+    height: 54px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.hk-icon-navy { background: #E2E8F0; color: var(--hk-navy); }
+.hk-icon-warning { background: var(--hk-warning-bg); color: #B45309; }
+.hk-icon-info { background: var(--hk-info-bg); color: var(--hk-blue); }
+.hk-icon-success { background: var(--hk-success-bg); color: var(--hk-success); }
+
+.hk-kpi-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.hk-kpi-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--hk-text-muted);
+}
+
+.hk-kpi-number {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin: 0.2rem 0;
+    color: var(--hk-navy);
+}
+
+.hk-kpi-sub {
+    font-size: 0.82rem;
+    color: var(--hk-text-muted);
+}
+
+/* ---------- Section Card Wrapper ---------- */
+.hk-section-card {
+    background: var(--hk-white);
+    border-radius: var(--hk-radius-lg);
+    padding: 1.5rem;
+    box-shadow: var(--hk-shadow-sm);
+    border: 1px solid var(--hk-border);
+    margin-bottom: 1.5rem;
+}
+
+.hk-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.hk-section-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--hk-navy);
+    margin: 0 0 0.25rem;
+}
+
+.hk-section-subtitle {
+    font-size: 0.9rem;
+    color: var(--hk-text-muted);
+    margin: 0;
+}
+
+/* ---------- C. Cleaning Progress ---------- */
+.hk-progress-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.hk-progress-badge {
+    text-align: right;
+}
+
+.hk-progress-pct {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--hk-blue);
+    display: block;
+    line-height: 1;
+}
+
+.hk-progress-pct-label {
+    font-size: 0.82rem;
+    color: var(--hk-text-muted);
+}
+
+.hk-progress-track {
+    width: 100%;
+    height: 16px;
+    background: #E2E8F0;
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.hk-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--hk-blue) 0%, var(--hk-success) 100%);
+    border-radius: 999px;
+    transition: width 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hk-progress-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+}
+
+.hk-stat-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    background: var(--hk-bg);
+    padding: 0.5rem 1rem;
+    border-radius: var(--hk-radius-sm);
+}
+
+.hk-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.hk-dot-success { background: var(--hk-success); }
+.hk-dot-warning { background: var(--hk-warning); }
+.hk-dot-blue { background: var(--hk-blue); }
+
+/* ---------- D. Room Cleaning Status Cards ---------- */
+.hk-pill-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.hk-filter-Chip {
+    border: 1px solid var(--hk-border);
+    background: var(--hk-bg);
+    color: var(--hk-text-main);
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    font-size: 0.88rem;
+    font-weight: 500;
+    cursor: pointer;
+    min-height: 40px;
+    transition: all 0.2s ease;
+}
+
+.hk-filter-Chip.is-active {
+    background: var(--hk-navy);
+    color: var(--hk-white);
+    border-color: var(--hk-navy);
+}
+
+.hk-room-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 1.15rem;
+}
+
+.hk-room-card {
+    background: var(--hk-white);
+    border-radius: var(--hk-radius-md);
+    border: 1px solid var(--hk-border);
+    border-top-width: 5px;
+    padding: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 1rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hk-room-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--hk-shadow-md);
+}
+
+/* สีสถานะตามข้อกำหนด: Pending = Orange, In Progress = Blue, Completed = Green, Maintenance = Red */
+.hk-room-pending { border-top-color: var(--hk-warning); }
+.hk-room-inprogress { border-top-color: var(--hk-blue); }
+.hk-room-completed { border-top-color: var(--hk-success); }
+.hk-room-maintenance { border-top-color: var(--hk-danger); }
+
+.hk-room-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.hk-room-floor {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--hk-text-muted);
+    text-transform: uppercase;
+}
+
+.hk-room-number {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--hk-navy);
+    margin: 0.1rem 0 0;
+}
+
+.hk-room-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    font-size: 0.92rem;
+}
+
+.hk-room-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.hk-meta-label {
+    color: var(--hk-text-muted);
+}
+
+.hk-meta-val {
+    font-weight: 600;
+    text-align: right;
+}
+
+.hk-room-card-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--hk-border);
+}
+
+/* ---------- Badges ---------- */
+.hk-status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+.hk-badge-pending {
+    background: var(--hk-warning-bg);
+    color: #B45309;
+}
+
+.hk-badge-in_progress {
+    background: var(--hk-info-bg);
+    color: var(--hk-blue);
+}
+
+.hk-badge-completed {
+    background: var(--hk-success-bg);
+    color: var(--hk-success);
+}
+
+.hk-badge-maintenance {
+    background: var(--hk-danger-bg);
+    color: var(--hk-danger);
+}
+
+.hk-priority-badge {
+    display: inline-block;
+    padding: 0.25rem 0.65rem;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.hk-priority-high {
+    background: var(--hk-danger-bg);
+    color: var(--hk-danger);
+}
+
+.hk-priority-medium {
+    background: var(--hk-warning-bg);
+    color: #B45309;
+}
+
+.hk-priority-normal {
+    background: #F1F5F9;
+    color: #475569;
+}
+
+/* ---------- E & F. Main Grid (Tasks Table + Recent Activities) ---------- */
+.hk-main-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.hk-filter-bar {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr 1fr auto;
+    gap: 0.85rem;
+    align-items: end;
+    background: var(--hk-bg);
+    padding: 1rem;
+    border-radius: var(--hk-radius-md);
+    margin-bottom: 1.25rem;
+}
+
+.hk-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+    color: var(--hk-navy);
+}
+
+.hk-input,
+.hk-select,
+.hk-textarea {
+    width: 100%;
+    padding: 0.6rem 0.85rem;
+    border-radius: var(--hk-radius-sm);
+    border: 1px solid #CBD5E1;
+    background: var(--hk-white);
+    font-size: 0.95rem;
+    min-height: 42px;
+    color: var(--hk-text-main);
+}
+
+.hk-input:focus,
+.hk-select:focus,
+.hk-textarea:focus {
+    outline: none;
+    border-color: var(--hk-blue);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* ---------- Table ---------- */
+.hk-table-responsive {
+    overflow-x: auto;
+}
+
+.hk-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+.hk-table thead th {
+    background: #F8FAFC;
+    color: var(--hk-navy);
+    font-weight: 600;
+    padding: 0.9rem 1rem;
+    border-bottom: 2px solid var(--hk-border);
+    text-align: left;
+    white-space: nowrap;
+}
+
+.hk-table tbody td {
+    padding: 0.95rem 1rem;
+    border-bottom: 1px solid var(--hk-border);
+    vertical-align: middle;
+}
+
+.hk-table tbody tr:hover {
+    background-color: #F8FAFC;
+}
+
+.hk-cell-room {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.hk-room-pill {
+    background: var(--hk-navy);
+    color: var(--hk-white);
+    font-weight: 700;
+    padding: 0.25rem 0.65rem;
+    border-radius: 6px;
+}
+
+.hk-task-id-sub {
+    color: var(--hk-text-muted);
+    font-size: 0.85rem;
+}
+
+.hk-cell-date {
+    display: flex;
+    flex-direction: column;
+}
+
+.hk-cell-date small {
+    color: var(--hk-text-muted);
+}
+
+.hk-action-btn-group {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+}
+
+/* ---------- F. Recent Activities Timeline ---------- */
+.hk-activity-timeline {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.hk-activity-item {
+    display: flex;
+    gap: 0.9rem;
+    align-items: flex-start;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--hk-border);
+}
+
+.hk-activity-item:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+}
+
+.hk-activity-marker {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-top: 0.35rem;
+    flex-shrink: 0;
+}
+
+.hk-act-success { background: var(--hk-success); box-shadow: 0 0 0 4px var(--hk-success-bg); }
+.hk-act-info { background: var(--hk-blue); box-shadow: 0 0 0 4px var(--hk-info-bg); }
+.hk-act-danger { background: var(--hk-danger); box-shadow: 0 0 0 4px var(--hk-danger-bg); }
+.hk-act-warning { background: var(--hk-warning); box-shadow: 0 0 0 4px var(--hk-warning-bg); }
+
+.hk-activity-body {
+    flex: 1;
+}
+
+.hk-activity-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.hk-activity-title {
+    font-size: 0.95rem;
+    color: var(--hk-navy);
+}
+
+.hk-activity-time {
+    font-size: 0.8rem;
+    color: var(--hk-text-muted);
+}
+
+.hk-activity-note {
+    font-size: 0.86rem;
+    color: var(--hk-text-muted);
+    margin: 0.25rem 0;
+}
+
+.hk-activity-actor {
+    font-size: 0.8rem;
+    color: #64748B;
+}
+
+/* ---------- Buttons (Large Touch-Friendly) ---------- */
+.hk-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    min-height: 42px;
+    padding: 0.55rem 1.1rem;
+    border-radius: var(--hk-radius-sm);
+    font-weight: 600;
+    font-size: 0.92rem;
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.18s ease;
+}
+
+.hk-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.hk-btn-sm {
+    min-height: 38px;
+    padding: 0.4rem 0.85rem;
+    font-size: 0.86rem;
+}
+
+.hk-btn-primary,
+.hk-btn-accept {
+    background: var(--hk-blue);
+    color: var(--hk-white);
+}
+
+.hk-btn-primary:hover {
+    background: var(--hk-blue-hover);
+    color: var(--hk-white);
+}
+
+.hk-btn-info,
+.hk-btn-start {
+    background: #0284C7;
+    color: var(--hk-white);
+}
+
+.hk-btn-success,
+.hk-btn-complete {
+    background: var(--hk-success);
+    color: var(--hk-white);
+}
+
+.hk-btn-danger {
+    background: var(--hk-danger);
+    color: var(--hk-white);
+}
+
+.hk-btn-danger-outline,
+.hk-btn-danger-ghost {
+    background: transparent;
+    border-color: #FCA5A5;
+    color: var(--hk-danger);
+}
+
+.hk-btn-danger-ghost:hover {
+    background: var(--hk-danger-bg);
+}
+
+.hk-btn-cyan {
+    background: var(--hk-cyan);
+    color: var(--hk-navy);
+}
+
+.hk-btn-glass {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: var(--hk-white);
+}
+
+.hk-btn-glass:hover {
+    background: rgba(255, 255, 255, 0.24);
+}
+
+.hk-btn-outline {
+    background: var(--hk-white);
+    border-color: #CBD5E1;
+    color: var(--hk-navy);
+}
+
+.hk-btn-outline:hover {
+    background: #F1F5F9;
+}
+
+.hk-btn-light {
+    background: #E2E8F0;
+    color: var(--hk-navy);
+}
+
+/* ---------- Modal, Loading & Toast ---------- */
+.hk-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(7, 13, 30, 0.6);
+    padding: 1rem;
+}
+
+.hk-modal.is-open {
+    display: flex;
+}
+
+.hk-modal-dialog {
+    background: var(--hk-white);
+    color: var(--hk-text-main);
+    border-radius: var(--hk-radius-lg);
+    width: min(580px, 100%);
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 1.75rem;
+    position: relative;
+    box-shadow: var(--hk-shadow-md);
+}
+
+.hk-modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1.2rem;
+    border: 0;
+    background: #F1F5F9;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    font-size: 1.4rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.hk-modal-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--hk-navy);
+    margin: 0 0 0.25rem;
+}
+
+.hk-modal-subtitle {
+    font-size: 0.9rem;
+    color: var(--hk-text-muted);
+    margin: 0 0 1.25rem;
+}
+
+.hk-detail-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.65rem 0;
+    border-bottom: 1px solid var(--hk-border);
+    font-size: 0.95rem;
+}
+
+.hk-detail-label {
+    font-weight: 600;
+    color: var(--hk-text-muted);
+}
+
+.hk-detail-value {
+    font-weight: 600;
+    color: var(--hk-navy);
+    text-align: right;
+}
+
+.hk-modal-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.65rem;
+    margin-top: 1.5rem;
+}
+
+.hk-loading-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10001;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(7, 13, 30, 0.55);
+}
+
+.hk-loading-overlay.is-open {
+    display: flex;
+}
+
+.hk-loading-box {
+    background: var(--hk-navy);
+    color: var(--hk-white);
+    padding: 1.25rem 1.75rem;
+    border-radius: var(--hk-radius-md);
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    box-shadow: var(--hk-shadow-md);
+}
+
+.hk-spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(255, 255, 255, 0.25);
+    border-top-color: var(--hk-cyan);
+    border-radius: 50%;
+    animation: hkSpin 0.8s linear infinite;
+}
+
+@keyframes hkSpin {
+    to { transform: rotate(360deg); }
+}
+
+.hk-toast-host {
+    position: fixed;
+    top: 1.25rem;
+    right: 1.25rem;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    max-width: min(92vw, 380px);
+}
+
+.hk-toast {
+    padding: 0.9rem 1.2rem;
+    border-radius: var(--hk-radius-sm);
+    color: var(--hk-white);
+    font-weight: 500;
+    box-shadow: var(--hk-shadow-md);
+    background: var(--hk-blue);
+}
+
+.hk-toast-success { background: var(--hk-success); }
+.hk-toast-error { background: var(--hk-danger); }
+
+.hk-empty-state {
+    text-align: center;
+    padding: 2.25rem 1rem;
+    color: var(--hk-text-muted);
+    background: #F8FAFC;
+    border-radius: var(--hk-radius-md);
+    border: 1px dashed #CBD5E1;
+}
+
+/* ---------- 7. Responsive Design (Desktop / Tablet / Smartphone) ---------- */
+@media (max-width: 1199px) {
+    .hk-kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .hk-main-grid {
+        grid-template-columns: 1fr;
+    }
+    .hk-filter-bar {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .hk-dashboard-wrapper {
+        padding: 1rem;
+    }
+    .hk-welcome-banner {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1.35rem;
+    }
+    .hk-filter-bar {
+        grid-template-columns: 1fr;
+    }
+    /* แปลงตารางเป็นรูปแบบ Card บนมือถืออัตโนมัติ */
+    .hk-table thead {
+        display: none;
+    }
+    .hk-table,
+    .hk-table tbody,
+    .hk-table tr,
+    .hk-table td {
+        display: block;
+        width: 100%;
+    }
+    .hk-table tbody tr {
+        background: var(--hk-white);
+        border: 1px solid var(--hk-border);
+        border-radius: var(--hk-radius-md);
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+        box-shadow: var(--hk-shadow-sm);
+    }
+    .hk-table tbody td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.55rem 0.5rem;
+        border-bottom: 1px solid #F1F5F9;
+        text-align: right;
+    }
+    .hk-table tbody td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: var(--hk-text-muted);
+        text-align: left;
+    }
+    .hk-table tbody td:last-child {
+        border-bottom: 0;
+        padding-top: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .hk-kpi-grid {
+        grid-template-columns: 1fr;
+    }
+}
+/* =====================================================================
+ * CLEANING TASKS PAGE ADDITIONS (ต่อท้ายไฟล์ wwwroot/css/Housekeeping.css)
+ * ===================================================================== */
+
+/* ---------- 2. Page Header & Breadcrumb ---------- */
+.hk-page-header {
+    background: linear-gradient(135deg, var(--hk-navy) 0%, var(--hk-navy-soft) 70%, #1E3A8A 100%);
+    color: var(--hk-white);
+    border-radius: var(--hk-radius-lg);
+    padding: 1.6rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--hk-shadow-md);
+}
+
+.hk-breadcrumb {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 0.45rem;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.85rem;
+    color: #94A3B8;
+}
+
+.hk-breadcrumb a {
+    color: var(--hk-cyan);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.hk-breadcrumb .active {
+    color: #E2E8F0;
+}
+
+.hk-page-main-title {
+    font-size: 1.65rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem;
+    color: var(--hk-white);
+}
+
+.hk-page-description {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #CBD5E1;
+}
+
+.hk-page-header-right {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.hk-date-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0.55rem 1rem;
+    border-radius: var(--hk-radius-sm);
+    font-size: 0.9rem;
+    color: var(--hk-white);
+}
+
+/* ---------- 4. Search & Filter Grid + 6. View Switcher ---------- */
+.hk-filter-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.15rem;
+}
+
+.hk-filter-title-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.hk-view-switcher {
+    display: inline-flex;
+    background: var(--hk-bg);
+    padding: 0.28rem;
+    border-radius: var(--hk-radius-sm);
+    border: 1px solid var(--hk-border);
+}
+
+.hk-view-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    border: 0;
+    background: transparent;
+    color: var(--hk-text-muted);
+    padding: 0.45rem 0.95rem;
+    border-radius: 6px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.hk-view-btn.is-active {
+    background: var(--hk-navy);
+    color: var(--hk-white);
+    box-shadow: var(--hk-shadow-sm);
+}
+
+.hk-tasks-filter-grid {
+    display: grid;
+    grid-template-columns: 1.3fr 0.9fr 1.1fr 1fr 1fr auto;
+    gap: 0.85rem;
+    align-items: end;
+    background: var(--hk-bg);
+    padding: 1.1rem;
+    border-radius: var(--hk-radius-md);
+}
+
+.hk-mobile-only {
+    display: none;
+}
+
+/* ---------- 5. Modern Room Task Cards Grid (Desktop 3-4, Tablet 2, Mobile 1) ---------- */
+.hk-list-meta-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid var(--hk-border);
+}
+
+.hk-page-size-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.hk-select-sm {
+    width: auto;
+    min-height: 36px;
+    padding: 0.35rem 0.75rem;
+}
+
+.hk-task-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.2rem;
+}
+
+.hk-modern-task-card {
+    background: var(--hk-white);
+    border-radius: var(--hk-radius-md);
+    border: 1px solid var(--hk-border);
+    border-top-width: 6px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 1rem;
+    box-shadow: var(--hk-shadow-sm);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hk-modern-task-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--hk-shadow-md);
+}
+
+/* สีแถบสถานะบนการ์ด: Pending = ส้ม, In Progress = น้ำเงิน, Completed = เขียว, Maintenance = แดง */
+.hk-task-card-pending { border-top-color: var(--hk-warning); }
+.hk-task-card-inprogress { border-top-color: var(--hk-blue); }
+.hk-task-card-completed { border-top-color: var(--hk-success); }
+.hk-task-card-maintenance { border-top-color: var(--hk-danger); }
+
+.hk-mtc-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.hk-mtc-room-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--hk-text-muted);
+    display: block;
+}
+
+.hk-mtc-room-number {
+    font-size: 1.85rem;
+    font-weight: 700;
+    color: var(--hk-navy);
+    line-height: 1.1;
+    margin: 0.1rem 0 0.3rem;
+}
+
+.hk-mtc-floor-badge {
+    display: inline-block;
+    background: #F1F5F9;
+    color: var(--hk-navy);
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+}
+
+.hk-mtc-badges {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.4rem;
+}
+
+.hk-mtc-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding: 0.75rem 0;
+    border-top: 1px dashed var(--hk-border);
+    border-bottom: 1px dashed var(--hk-border);
+    font-size: 0.9rem;
+}
+
+.hk-mtc-info-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.hk-mtc-label {
+    color: var(--hk-text-muted);
+}
+
+.hk-mtc-value {
+    color: var(--hk-navy);
+    text-align: right;
+    font-weight: 500;
+}
+
+.hk-mtc-note-box {
+    margin-top: 0.35rem;
+    background: #FFFBEB;
+    border: 1px solid #FDE68A;
+    color: #92400E;
+    padding: 0.45rem 0.65rem;
+    border-radius: 6px;
+    font-size: 0.82rem;
+}
+
+.hk-mtc-footer {
+    display: flex;
+    gap: 0.55rem;
+    flex-wrap: wrap;
+}
+
+.hk-btn-flex {
+    flex: 1;
+}
+
+.hk-btn-block {
+    width: 100%;
+}
+
+.hk-btn-warning-solid {
+    background: var(--hk-warning);
+    color: #FFFFFF;
+}
+
+.hk-btn-warning-solid:hover {
+    background: #D97706;
+    color: #FFFFFF;
+}
+
+/* ---------- 8. Empty State ---------- */
+.hk-empty-modern {
+    text-align: center;
+    padding: 3.5rem 1.5rem;
+    background: #F8FAFC;
+    border-radius: var(--hk-radius-lg);
+    border: 1px dashed #CBD5E1;
+}
+
+.hk-empty-icon-circle {
+    width: 84px;
+    height: 84px;
+    margin: 0 auto 1.15rem;
+    border-radius: 50%;
+    background: #E0E7FF;
+    color: var(--hk-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hk-empty-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--hk-navy);
+    margin: 0 0 0.35rem;
+}
+
+.hk-empty-subtitle {
+    font-size: 0.98rem;
+    color: var(--hk-text-muted);
+    margin: 0;
+}
+
+/* ---------- 9. Pagination ---------- */
+.hk-pagination-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1.75rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--hk-border);
+}
+
+.hk-page-numbers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.hk-page-num-btn {
+    min-width: 38px;
+    height: 38px;
+    border-radius: var(--hk-radius-sm);
+    border: 1px solid var(--hk-border);
+    background: var(--hk-white);
+    color: var(--hk-navy);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.hk-page-num-btn.is-active {
+    background: var(--hk-blue);
+    border-color: var(--hk-blue);
+    color: var(--hk-white);
+}
+
+/* ---------- 12. Responsive Breakpoints ---------- */
+@media (max-width: 1399px) {
+    .hk-task-cards-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .hk-tasks-filter-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 991px) {
+    /* Tablet: 2 ใบต่อแถว */
+    .hk-task-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .hk-tasks-filter-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 767px) {
+    /* Mobile: 1 ใบต่อแถว + Filter พับเก็บได้ + ปุ่มขนาดใหญ่ */
+    .hk-task-cards-grid {
+        grid-template-columns: 1fr;
+    }
+    .hk-tasks-filter-grid {
+        grid-template-columns: 1fr;
+    }
+    .hk-tasks-filter-grid.is-collapsed-mobile {
+        display: none;
+    }
+    .hk-mobile-only {
+        display: inline-flex;
+    }
+    .hk-mtc-footer .hk-btn {
+        width: 100%;
+        min-height: 46px;
+        font-size: 1rem;
+    }
+}
+/* =====================================================================
+ * ROOM STATUS MANAGEMENT ADDITIONS (ต่อท้ายไฟล์ wwwroot/css/Housekeeping.css)
+ * Color Palette: Available=Green, Occupied=Blue, Pending=Orange, InProgress=Purple, Maintenance=Red
+ * ===================================================================== */
+
+:root {
+    --hk-purple: #7C3AED;
+    --hk-purple-bg: #EDE9FE;
+}
+
+/* ---------- 3. 5 Summary Cards Grid ---------- */
+.hk-status-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1.1rem;
+    margin-bottom: 1.5rem;
+}
+
+.hk-summary-available { border-left-color: var(--hk-success); }
+.hk-summary-occupied { border-left-color: var(--hk-blue); }
+.hk-summary-pending { border-left-color: var(--hk-warning); }
+.hk-summary-inprogress { border-left-color: var(--hk-purple); }
+.hk-summary-maintenance { border-left-color: var(--hk-danger); }
+
+.hk-icon-purple {
+    background: var(--hk-purple-bg);
+    color: var(--hk-purple);
+}
+
+.hk-icon-danger {
+    background: var(--hk-danger-bg);
+    color: var(--hk-danger);
+}
+
+/* ---------- 4. Legend & Filter Grid ---------- */
+.hk-legend-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.hk-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.hk-dot-available { background: var(--hk-success); }
+.hk-dot-occupied { background: var(--hk-blue); }
+.hk-dot-pending { background: var(--hk-warning); }
+.hk-dot-purple { background: var(--hk-purple); }
+.hk-dot-maintenance { background: var(--hk-danger); }
+
+.hk-room-filter-grid {
+    display: grid;
+    grid-template-columns: 1.3fr 0.9fr 1fr 1.1fr 1.1fr auto;
+    gap: 0.85rem;
+    align-items: end;
+    background: var(--hk-bg);
+    padding: 1.1rem;
+    border-radius: var(--hk-radius-md);
+}
+
+/* ---------- 5. Floor Section & Room Cards (4 per row on Desktop) ---------- */
+.hk-floor-section {
+    background: var(--hk-white);
+    border-radius: var(--hk-radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--hk-border);
+    box-shadow: var(--hk-shadow-sm);
+}
+
+.hk-floor-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 1rem;
+    margin-bottom: 1.25rem;
+    border-bottom: 2px solid var(--hk-bg);
+}
+
+.hk-floor-badge-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.hk-floor-number-pill {
+    background: var(--hk-navy);
+    color: var(--hk-cyan);
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 8px;
+}
+
+.hk-floor-heading {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--hk-navy);
+    margin: 0;
+}
+
+.hk-floor-count-text {
+    font-size: 0.9rem;
+    color: var(--hk-text-muted);
+    font-weight: 500;
+}
+
+.hk-rs-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.15rem;
+}
+
+.hk-rs-room-card {
+    background: var(--hk-white);
+    border-radius: var(--hk-radius-md);
+    border: 1px solid var(--hk-border);
+    border-top-width: 6px;
+    padding: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 1rem;
+    box-shadow: var(--hk-shadow-sm);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hk-rs-room-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--hk-shadow-md);
+}
+
+/* 5 สีสถานะห้องพักตามโจทย์ */
+.hk-rs-card-available { border-top-color: var(--hk-success); }
+.hk-rs-card-occupied { border-top-color: var(--hk-blue); }
+.hk-rs-card-pending { border-top-color: var(--hk-warning); }
+.hk-rs-card-inprogress { border-top-color: var(--hk-purple); }
+.hk-rs-card-maintenance { border-top-color: var(--hk-danger); }
+
+.hk-rs-status-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.hk-rs-badge-available { background: var(--hk-success-bg); color: var(--hk-success); }
+.hk-rs-badge-occupied { background: var(--hk-info-bg); color: var(--hk-blue); }
+.hk-rs-badge-pending { background: var(--hk-warning-bg); color: #B45309; }
+.hk-rs-badge-inprogress { background: var(--hk-purple-bg); color: var(--hk-purple); }
+.hk-rs-badge-maintenance { background: var(--hk-danger-bg); color: var(--hk-danger); }
+
+.hk-rs-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.hk-rs-floor-tag {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--hk-text-muted);
+    display: block;
+}
+
+.hk-rs-room-no {
+    font-size: 1.85rem;
+    font-weight: 700;
+    color: var(--hk-navy);
+    margin: 0.1rem 0 0;
+    line-height: 1.1;
+}
+
+.hk-rs-status-split {
+    background: #F8FAFC;
+    border: 1px solid var(--hk-border);
+    border-radius: var(--hk-radius-sm);
+    padding: 0.65rem 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    margin-bottom: 0.65rem;
+}
+
+.hk-rs-split-item {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.82rem;
+}
+
+.hk-rs-split-label {
+    color: var(--hk-text-muted);
+    font-size: 0.75rem;
+}
+
+.hk-rs-split-val {
+    color: var(--hk-navy);
+}
+
+.hk-rs-meta-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    font-size: 0.84rem;
+    color: var(--hk-text-muted);
+}
+
+.hk-rs-meta-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+/* ---------- 7 & 8. Update Status Modal & Checklist ---------- */
+.hk-rs-modal-dialog {
+    width: min(620px, 100%);
+}
+
+.hk-rs-current-status-box {
+    background: var(--hk-bg);
+    border-radius: var(--hk-radius-sm);
+    padding: 0.9rem 1.1rem;
+    margin: 1rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    font-size: 0.92rem;
+}
+
+.hk-rs-cs-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.hk-rs-action-radios {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+}
+
+.hk-rs-radio-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    padding: 0.95rem 1.1rem;
+    border: 2px solid var(--hk-border);
+    border-radius: var(--hk-radius-md);
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.hk-rs-radio-card.is-selected {
+    border-color: var(--hk-blue);
+    background: #EFF6FF;
+}
+
+.hk-rs-radio-card input[type="radio"] {
+    margin-top: 0.3rem;
+    transform: scale(1.25);
+}
+
+.hk-rs-radio-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.hk-rs-radio-title {
+    color: var(--hk-navy);
+    font-size: 0.96rem;
+}
+
+.hk-rs-radio-desc {
+    color: var(--hk-text-muted);
+    font-size: 0.84rem;
+}
+
+.hk-rs-checklist-box {
+    background: #F0FDF4;
+    border: 1px solid #86EFAC;
+    border-radius: var(--hk-radius-md);
+    padding: 1.1rem;
+    margin-top: 1rem;
+}
+
+.hk-rs-checklist-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #14532D;
+    margin: 0 0 0.2rem;
+}
+
+.hk-rs-checklist-sub {
+    font-size: 0.82rem;
+    color: #166534;
+    margin: 0 0 0.85rem;
+}
+
+.hk-check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    padding: 0.45rem 0;
+    font-size: 0.9rem;
+    color: var(--hk-navy);
+    cursor: pointer;
+}
+
+.hk-check-item input[type="checkbox"] {
+    margin-top: 0.25rem;
+    transform: scale(1.25);
+}
+
+/* ---------- 11. Responsive Design ---------- */
+@media (max-width: 1399px) {
+    .hk-status-summary-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .hk-rs-cards-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .hk-room-filter-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 991px) {
+    /* Tablet: 2 ใบต่อแถว */
+    .hk-status-summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .hk-rs-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .hk-room-filter-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 767px) {
+    /* Mobile: 1 ใบต่อแถว + Filter พับเก็บได้ */
+    .hk-status-summary-grid {
+        grid-template-columns: 1fr;
+    }
+    .hk-rs-cards-grid {
+        grid-template-columns: 1fr;
+    }
+    .hk-room-filter-grid {
+        grid-template-columns: 1fr;
+    }
+    .hk-room-filter-grid.is-collapsed-mobile {
+        display: none;
+    }
+}
+/* =====================================================================
+ * CLEANING HISTORY MANAGEMENT ADDITIONS (ต่อท้ายไฟล์ wwwroot/css/Housekeeping.css)
+ * ===================================================================== */
+
+.hk-kpi-danger {
+    border-left-color: var(--hk-danger);
+}
+
+.hk-export-btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.hk-history-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.9rem;
+    align-items: end;
+    background: var(--hk-bg);
+    padding: 1.15rem;
+    border-radius: var(--hk-radius-md);
+}
+
+.hk-history-filter-actions {
+    grid-column: span 4;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.65rem;
+    padding-top: 0.35rem;
+}
+
+/* ---------- 7 & 8. Performance Analytics & Timeline Grid ---------- */
+.hk-history-analytics-grid {
+    display: grid;
+    grid-template-columns: 1.55fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    align-items: start;
+}
+
+.hk-perf-metrics-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.85rem;
+    margin-bottom: 1.15rem;
+}
+
+.hk-perf-mini-card {
+    background: var(--hk-bg);
+    border: 1px solid var(--hk-border);
+    border-radius: var(--hk-radius-sm);
+    padding: 0.85rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.hk-perf-mini-label {
+    font-size: 0.8rem;
+    color: var(--hk-text-muted);
+}
+
+.hk-perf-mini-val {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--hk-navy);
+}
+
+.hk-scrollable-timeline {
+    max-height: 360px;
+    overflow-y: auto;
+    padding-right: 0.4rem;
+}
+
+.hk-duration-chip {
+    display: inline-block;
+    background: #F1F5F9;
+    color: var(--hk-navy);
+    font-weight: 600;
+    font-size: 0.84rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 6px;
+}
+
+/* ---------- 6. History Details Modal ---------- */
+.hk-hist-modal-dialog {
+    width: min(650px, 100%);
+}
+
+.hk-hist-checklist-summary {
+    background: #F0FDF4;
+    border: 1px solid #86EFAC;
+    border-radius: var(--hk-radius-md);
+    padding: 1rem 1.15rem;
+}
+
+.hk-hist-check-line {
+    font-size: 0.88rem;
+    color: #14532D;
+    padding: 0.25rem 0;
+    font-weight: 500;
+}
+
+.hk-hist-modal-timeline {
+    background: var(--hk-bg);
+    border-radius: var(--hk-radius-md);
+    padding: 1rem 1.15rem;
+}
+
+/* ---------- 13. Responsive & Print Report Styles ---------- */
+@media (max-width: 1199px) {
+    .hk-history-analytics-grid {
+        grid-template-columns: 1fr;
+    }
+    .hk-perf-metrics-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .hk-history-filter-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .hk-history-filter-actions {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 767px) {
+    .hk-perf-metrics-row {
+        grid-template-columns: 1fr;
+    }
+    .hk-history-filter-grid {
+        grid-template-columns: 1fr;
+    }
+    .hk-history-filter-actions {
+        grid-column: span 1;
+        flex-direction: column;
+    }
+    .hk-history-filter-grid.is-collapsed-mobile {
+        display: none;
+    }
+}
+
+@media print {
+    .staff-header,
+    .staff-sidebar,
+    .staff-footer,
+    .hk-no-print {
+        display: none !important;
+    }
+    .hk-dashboard-wrapper {
+        background: #FFFFFF !important;
+        padding: 0 !important;
+    }
+    .hk-section-card,
+    .hk-kpi-card {
+        box-shadow: none !important;
+        border: 1px solid #CBD5E1 !important;
+    }
+}
+/* =====================================================================
+ * TASK DETAILS FULL-PAGE ADDITIONS (ต่อท้ายไฟล์ wwwroot/css/Housekeeping.css)
+ * ===================================================================== */
+
+/* ---------- 4-Step Workflow Stepper ---------- */
+.hk-stepper-card {
+    padding: 1.35rem 1.75rem;
+}
+
+.hk-workflow-stepper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.hk-step-item {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    flex-shrink: 0;
+}
+
+.hk-step-circle {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: #F1F5F9;
+    color: #64748B;
+    border: 2px solid #CBD5E1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    transition: all 0.25s ease;
+}
+
+.hk-step-item.is-done .hk-step-circle {
+    background: var(--hk-success-bg);
+    color: var(--hk-success);
+    border-color: var(--hk-success);
+}
+
+.hk-step-item.is-current .hk-step-circle {
+    background: var(--hk-info-bg);
+    color: var(--hk-blue);
+    border-color: var(--hk-blue);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+}
+
+.hk-step-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.hk-step-text strong {
+    font-size: 0.92rem;
+    color: var(--hk-navy);
+}
+
+.hk-step-text span {
+    font-size: 0.8rem;
+    color: var(--hk-text-muted);
+}
+
+.hk-step-line {
+    flex: 1;
+    height: 3px;
+    background: #E2E8F0;
+    border-radius: 999px;
+}
+
+.hk-step-line.is-done {
+    background: var(--hk-success);
+}
+
+/* ---------- Main Grid & Spec Cards ---------- */
+.hk-td-main-grid {
+    display: grid;
+    grid-template-columns: 1.55fr 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.hk-td-spec-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.95rem;
+}
+
+.hk-td-spec-box {
+    background: var(--hk-bg);
+    border: 1px solid var(--hk-border);
+    border-radius: var(--hk-radius-sm);
+    padding: 0.85rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.hk-td-spec-label {
+    font-size: 0.78rem;
+    color: var(--hk-text-muted);
+    font-weight: 500;
+}
+
+.hk-td-spec-val {
+    font-size: 0.96rem;
+    color: var(--hk-navy);
+}
+
+.hk-td-note-banner {
+    background: #FFFBEB;
+    border: 1px solid #FDE68A;
+    border-radius: var(--hk-radius-md);
+    padding: 1rem 1.2rem;
+    color: #92400E;
+}
+
+.hk-td-note-title {
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 0.3rem;
+}
+
+.hk-td-note-body {
+    font-size: 0.92rem;
+}
+
+.hk-td-maint-box {
+    background: #FEF2F2;
+    border: 1px solid #FCA5A5;
+    border-radius: var(--hk-radius-md);
+    padding: 1rem 1.15rem;
+}
+
+.hk-td-maint-heading {
+    font-size: 0.98rem;
+    font-weight: 700;
+    color: var(--hk-danger);
+    margin: 0 0 0.25rem;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1199px) {
+    .hk-td-main-grid {
+        grid-template-columns: 1fr;
+    }
+    .hk-td-spec-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .hk-workflow-stepper {
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 767px) {
+    .hk-td-spec-grid {
+        grid-template-columns: 1fr;
+    }
+    .hk-step-line {
+        display: none;
+    }
+    .hk-workflow-stepper {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+}
+
+/* ==========================================================================
+   HOUSEKEEPING PROFILE PAGE STYLES (Views/Housekeeping/Profile.cshtml)
+   ต่อท้ายไฟล์ wwwroot/css/Housekeeping.css
+   - ใช้ prefix hk-pf- ทั้งหมด ไม่ชนกับ class เดิม
+   - สีทั้งหมดอ่านจากตัวแปร --hk-pf-* ที่ผูกกับตัวแปรเดิมของโปรเจกต์ (ถ้ามี)
+     ถ้าไม่มีจะใช้ค่า fallback ด้านขวา ปรับสีได้ที่บล็อก .hk-pf-page ที่เดียว
+   ========================================================================== */
+
+.hk-pf-page {
+    --hk-pf-navy: var(--housekeeping-midnight-navy, #0B1B3A);
+    --hk-pf-cyan: var(--housekeeping-cyber-cyan, #00E5FF);
+    --hk-pf-blue: var(--housekeeping-electric-blue, #2563EB);
+    --hk-pf-text: var(--housekeeping-text-main, #0F172A);
+    --hk-pf-muted: var(--housekeeping-text-muted, #64748B);
+    --hk-pf-border: var(--housekeeping-border, #E2E8F0);
+    --hk-pf-white: #FFFFFF;
+    --hk-pf-success: var(--housekeeping-success, #16A34A);
+    --hk-pf-warning: var(--housekeeping-warning, #F59E0B);
+    --hk-pf-danger: var(--housekeeping-danger, #DC2626);
+    --hk-pf-radius: 14px;
+    --hk-pf-radius-sm: 10px;
+
+    font-family: 'Prompt', sans-serif;
+    color: var(--hk-pf-text);
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    animation: hkPfFadeIn 0.35s ease both;
+}
+
+@keyframes hkPfFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Alerts */
+.hk-pf-alert {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.85rem 1.1rem;
+    border-radius: var(--hk-pf-radius-sm);
+    font-size: 0.9rem;
+    font-weight: 500;
+    border: 1px solid transparent;
+}
+
+.hk-pf-alert-success {
+    background: rgba(22, 163, 74, 0.1);
+    color: #15803D;
+    border-color: rgba(22, 163, 74, 0.25);
+}
+
+.hk-pf-alert-danger {
+    background: rgba(220, 38, 38, 0.08);
+    color: #B91C1C;
+    border-color: rgba(220, 38, 38, 0.25);
+}
+
+/* Hero */
+.hk-pf-hero {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1.6rem 1.8rem;
+    border-radius: var(--hk-pf-radius);
+    color: var(--hk-pf-white);
+    background: linear-gradient(135deg, var(--hk-pf-navy) 0%, #12306B 100%);
+    box-shadow: 0 10px 30px rgba(11, 27, 58, 0.22);
+}
+
+.hk-pf-hero::after {
+    content: "";
+    position: absolute;
+    right: -70px;
+    top: -90px;
+    width: 260px;
+    height: 260px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0, 229, 255, 0.22) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.hk-pf-hero-left {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    position: relative;
+    z-index: 1;
+}
+
+.hk-pf-hero-right {
+    position: relative;
+    z-index: 1;
+}
+
+.hk-pf-avatar {
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--hk-pf-navy);
+    background: linear-gradient(135deg, var(--hk-pf-cyan) 0%, var(--hk-pf-blue) 100%);
+    box-shadow: 0 0 0 4px rgba(0, 229, 255, 0.2), 0 8px 24px rgba(0, 229, 255, 0.28);
+}
+
+.hk-pf-badge-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.45rem;
+}
+
+.hk-pf-title-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    padding: 0.28rem 0.75rem;
+    border-radius: 999px;
+    color: var(--hk-pf-cyan);
+    background: rgba(0, 229, 255, 0.1);
+    border: 1px solid rgba(0, 229, 255, 0.3);
+}
+
+.hk-pf-live-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--hk-pf-cyan);
+    box-shadow: 0 0 0 0 rgba(0, 229, 255, 0.6);
+    animation: hkPfPulse 1.8s infinite;
+}
+
+@keyframes hkPfPulse {
+    0%   { box-shadow: 0 0 0 0 rgba(0, 229, 255, 0.55); }
+    70%  { box-shadow: 0 0 0 8px rgba(0, 229, 255, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(0, 229, 255, 0); }
+}
+
+.hk-pf-since-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    padding: 0.28rem 0.75rem;
+    border-radius: 999px;
+}
+
+.hk-pf-since-pill i {
+    color: var(--hk-pf-cyan);
+}
+
+.hk-pf-main-title {
+    font-size: 1.7rem;
+    font-weight: 700;
+    margin: 0 0 0.35rem 0;
+    color: var(--hk-pf-white);
+}
+
+.hk-pf-contact-strip {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    font-size: 0.88rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.hk-pf-contact-strip i {
+    color: var(--hk-pf-cyan);
+    margin-right: 0.25rem;
+}
+
+.hk-pf-dot {
+    opacity: 0.6;
+}
+
+/* Quick stats */
+.hk-pf-stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.hk-pf-stat {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    background: var(--hk-pf-white);
+    border: 1px solid var(--hk-pf-border);
+    border-radius: var(--hk-pf-radius);
+    padding: 1rem 1.2rem;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+}
+
+.hk-pf-stat-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+}
+
+.hk-pf-stat-icon.is-success {
+    background: rgba(22, 163, 74, 0.12);
+    color: var(--hk-pf-success);
+}
+
+.hk-pf-stat-icon.is-warning {
+    background: rgba(245, 158, 11, 0.14);
+    color: var(--hk-pf-warning);
+}
+
+.hk-pf-stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--hk-pf-navy);
+}
+
+.hk-pf-stat-label {
+    font-size: 0.78rem;
+    color: var(--hk-pf-muted);
+}
+
+/* Layout */
+.hk-pf-grid {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    gap: 1.25rem;
+    align-items: start;
+}
+
+.hk-pf-side {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+/* Panel */
+.hk-pf-panel {
+    background: var(--hk-pf-white);
+    border: 1px solid var(--hk-pf-border);
+    border-radius: var(--hk-pf-radius);
+    padding: 1.4rem 1.5rem;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+}
+
+.hk-pf-panel-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.2rem;
+}
+
+.hk-pf-panel-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--hk-pf-navy);
+}
+
+.hk-pf-panel-subtitle {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--hk-pf-muted);
+}
+
+.hk-pf-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--hk-pf-blue);
+    margin-bottom: 0.25rem;
+}
+
+.hk-pf-mode-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+    background: #F1F5F9;
+    color: var(--hk-pf-muted);
+    transition: all 0.2s ease;
+}
+
+.hk-pf-mode-badge.is-editing {
+    background: rgba(37, 99, 235, 0.12);
+    color: var(--hk-pf-blue);
+}
+
+/* Form */
+.hk-pf-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.hk-pf-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.hk-pf-modal-body .hk-pf-field {
+    margin-bottom: 1rem;
+}
+
+.hk-pf-field label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--hk-pf-muted);
+    margin: 0;
+}
+
+.hk-pf-req {
+    color: var(--hk-pf-danger);
+}
+
+.hk-pf-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: var(--hk-pf-white);
+    border: 1px solid var(--hk-pf-border);
+    border-radius: var(--hk-pf-radius-sm);
+    padding: 0.2rem 0.85rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.hk-pf-input-wrap:focus-within {
+    border-color: var(--hk-pf-blue);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.hk-pf-input-wrap > i {
+    color: var(--hk-pf-blue);
+    font-size: 0.9rem;
+    width: 16px;
+    text-align: center;
+}
+
+.hk-pf-input-wrap input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    outline: none;
+    padding: 0.5rem 0;
+    font-family: 'Prompt', sans-serif;
+    font-size: 0.9rem;
+    color: var(--hk-pf-text);
+}
+
+.hk-pf-input-wrap input:disabled {
+    color: var(--hk-pf-text);
+    -webkit-text-fill-color: var(--hk-pf-text);
+    cursor: default;
+}
+
+.hk-pf-input-wrap:has(input:disabled) {
+    background: #F8FAFC;
+}
+
+.hk-pf-input-wrap.is-readonly {
+    background: #F1F5F9;
+}
+
+.hk-pf-input-wrap.is-readonly > i {
+    color: var(--hk-pf-muted);
+}
+
+.hk-pf-eye {
+    border: none;
+    background: transparent;
+    color: var(--hk-pf-muted);
+    cursor: pointer;
+    padding: 0.25rem;
+}
+
+.hk-pf-eye:hover {
+    color: var(--hk-pf-navy);
+}
+
+.hk-pf-field-error {
+    color: var(--hk-pf-danger);
+    font-size: 0.78rem;
+    font-weight: 500;
+}
+
+.hk-pf-field-error[hidden] {
+    display: none;
+}
+
+.hk-pf-actions {
+    margin-top: 1.4rem;
+    padding-top: 1.1rem;
+    border-top: 1px solid var(--hk-pf-border);
+}
+
+.hk-pf-actions-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.hk-pf-actions-row[hidden] {
+    display: none;
+}
+
+.hk-pf-actions-row.is-end {
+    justify-content: flex-end;
+}
+
+.hk-pf-hint {
+    margin: 0.9rem 0 0 0;
+    font-size: 0.78rem;
+    color: var(--hk-pf-muted);
+    display: flex;
+    align-items: flex-start;
+    gap: 0.45rem;
+}
+
+.hk-pf-hint i {
+    color: var(--hk-pf-blue);
+    margin-top: 0.15rem;
+}
+
+/* Buttons */
+.hk-pf-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1.15rem;
+    border-radius: var(--hk-pf-radius-sm);
+    border: 1px solid transparent;
+    font-family: 'Prompt', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.15s ease, background-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+}
+
+.hk-pf-btn:hover {
+    transform: translateY(-1px);
+}
+
+.hk-pf-btn-primary {
+    background: var(--hk-pf-blue);
+    color: var(--hk-pf-white);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.hk-pf-btn-primary:hover {
+    background: #1D4ED8;
+    color: var(--hk-pf-white);
+}
+
+.hk-pf-btn-outline {
+    background: var(--hk-pf-white);
+    color: var(--hk-pf-navy);
+    border-color: var(--hk-pf-border);
+}
+
+.hk-pf-btn-outline:hover {
+    background: #F1F5F9;
+    color: var(--hk-pf-navy);
+}
+
+.hk-pf-btn-success {
+    background: var(--hk-pf-success);
+    color: var(--hk-pf-white);
+}
+
+.hk-pf-btn-success:hover {
+    background: #15803D;
+    color: var(--hk-pf-white);
+}
+
+.hk-pf-btn-danger {
+    background: rgba(220, 38, 38, 0.1);
+    color: var(--hk-pf-danger);
+    border-color: rgba(220, 38, 38, 0.25);
+}
+
+.hk-pf-btn-danger:hover {
+    background: var(--hk-pf-danger);
+    color: var(--hk-pf-white);
+}
+
+.hk-pf-btn-glass {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--hk-pf-white);
+    border-color: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(4px);
+}
+
+.hk-pf-btn-glass:hover {
+    background: rgba(0, 229, 255, 0.18);
+    border-color: var(--hk-pf-cyan);
+    color: var(--hk-pf-white);
+}
+
+/* Account info list */
+.hk-pf-info-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.hk-pf-info-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.8rem 0;
+    border-bottom: 1px dashed var(--hk-pf-border);
+    font-size: 0.86rem;
+}
+
+.hk-pf-info-item:first-child {
+    padding-top: 0;
+}
+
+.hk-pf-info-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.hk-pf-info-item > span:first-child {
+    color: var(--hk-pf-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.hk-pf-info-item > span:first-child i {
+    color: var(--hk-pf-blue);
+    width: 16px;
+    text-align: center;
+}
+
+.hk-pf-info-item strong {
+    color: var(--hk-pf-navy);
+    text-align: right;
+}
+
+.hk-pf-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.25rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.hk-pf-status-badge.is-success {
+    background: rgba(22, 163, 74, 0.12);
+    color: #15803D;
+}
+
+.hk-pf-status-badge.is-danger {
+    background: rgba(220, 38, 38, 0.1);
+    color: #B91C1C;
+}
+
+/* Logout card */
+.hk-pf-logout-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.hk-pf-logout-title {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0 0 0.2rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--hk-pf-navy);
+}
+
+.hk-pf-logout-title i {
+    color: var(--hk-pf-blue);
+}
+
+/* Password modal */
+.hk-pf-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(11, 27, 58, 0.55);
+    backdrop-filter: blur(3px);
+}
+
+.hk-pf-modal-overlay.is-open {
+    display: flex;
+}
+
+.hk-pf-modal {
+    width: 100%;
+    max-width: 480px;
+    background: var(--hk-pf-white, #fff);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(11, 27, 58, 0.35);
+    animation: hkPfModalIn 0.22s ease both;
+    font-family: 'Prompt', sans-serif;
+    color: #0F172A;
+}
+
+@keyframes hkPfModalIn {
+    from { opacity: 0; transform: translateY(14px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.hk-pf-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.1rem 1.4rem;
+    color: #fff;
+    background: linear-gradient(135deg, #0B1B3A 0%, #12306B 100%);
+}
+
+.hk-pf-modal-kicker {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: #00E5FF;
+}
+
+.hk-pf-modal-title {
+    margin: 0.15rem 0 0 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.hk-pf-modal-title i {
+    color: #00E5FF;
+    margin-right: 0.35rem;
+}
+
+.hk-pf-modal-close {
+    border: none;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.hk-pf-modal-close:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.hk-pf-modal-body {
+    padding: 1.3rem 1.4rem 0.4rem 1.4rem;
+}
+
+.hk-pf-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+    padding: 1rem 1.4rem 1.3rem 1.4rem;
+}
+
+/* Responsive */
+@media (max-width: 1199.98px) {
+    .hk-pf-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .hk-pf-hero {
+        padding: 1.3rem 1.1rem;
+    }
+
+    .hk-pf-hero-left {
+        flex-direction: column;
+        text-align: center;
+        width: 100%;
+    }
+
+    .hk-pf-badge-row,
+    .hk-pf-contact-strip {
+        justify-content: center;
+    }
+
+    .hk-pf-hero-right,
+    .hk-pf-hero-right .hk-pf-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .hk-pf-main-title {
+        font-size: 1.4rem;
+    }
+
+    .hk-pf-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .hk-pf-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .hk-pf-panel-header {
+        flex-direction: column;
+    }
+
+    .hk-pf-actions-row .hk-pf-btn,
+    .hk-pf-logout-card form,
+    .hk-pf-logout-card .hk-pf-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .hk-pf-info-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.3rem;
+    }
+
+    .hk-pf-info-item strong {
+        text-align: left;
+    }
+}

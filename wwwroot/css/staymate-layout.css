@@ -593,3 +593,62 @@ a:hover {
     margin-top: 24px; padding-top: 20px;
     border-top: 1px solid rgba(255,255,255,.08);
 }
+/* ==========================================================
+   COMPACT OVERRIDE - ลดขนาดปุ่ม/เมนูให้กระชับ (วางไว้ท้ายสุดของไฟล์)
+   ========================================================== */
+:root {
+    --sm-header-h: 60px;      /* เดิม 68px */
+    --sm-sidebar-w: 232px;    /* เดิม 260px */
+}
+
+/* ---------- Header ---------- */
+.customer-header,
+.staff-header { padding: 8px 20px; }
+
+.brand-logo-img { width: 34px; height: 34px; }
+.brand-text { font-size: 1.15rem; }
+
+.staff-portal-badge { padding: 4px 12px; font-size: .78rem; }
+.btn-header-notification { width: 36px; height: 36px; font-size: .95rem; }
+.user-badge-chip { padding: 4px 12px; font-size: .82rem; }
+.btn-header-logout { padding: 5px 12px; font-size: .78rem; }
+
+/* ---------- Sidebar ---------- */
+.staff-sidebar { padding: 14px 10px; }
+
+.sidebar-category-title { padding: 0 10px 6px; font-size: .68rem; }
+
+.staff-sidebar nav { gap: 2px; }
+
+.staff-sidebar nav a {
+    gap: 10px;
+    padding: 7px 12px;          /* เดิม 10px 14px */
+    font-size: .86rem;          /* เดิม .92rem */
+    border-radius: 9px;
+    border-left-width: 3px;
+}
+
+.staff-sidebar nav a i { width: 18px; font-size: .9rem; }
+
+/* ลดระยะห่างระหว่างกลุ่มเมนู (CLEANING MANAGEMENT / ACCOUNT) */
+.staff-sidebar .sidebar-category-title:not(:first-child) { margin-top: 14px; }
+
+/* ---------- พื้นที่เนื้อหา ---------- */
+.staff-content { padding: 20px 24px 36px; }
+
+/* ---------- ปุ่มในหน้าเนื้อหา (Bootstrap .btn) ---------- */
+.staff-content .btn {
+    padding: .36rem .85rem;
+    font-size: .85rem;
+    border-radius: 9px;
+    line-height: 1.4;
+}
+.staff-content .btn-sm { padding: .22rem .6rem; font-size: .78rem; }
+.staff-content .btn-lg { padding: .45rem 1rem; font-size: .92rem; }
+.staff-content .btn i { font-size: .85em; }
+
+/* ---------- มือถือ ---------- */
+@media (max-width: 575.98px) {
+    .staff-content { padding: 14px 12px 28px; }
+    .staff-sidebar nav a { padding: 8px 12px; }
+}

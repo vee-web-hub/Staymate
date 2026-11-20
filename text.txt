@@ -4,15 +4,21 @@ C:.
 |   .gitignore
 |   appsettings.Development.json
 |   appsettings.json
-|   FILES.txt
 |   Program.cs
 |   StayMate_Kavinvee_0576.csproj
+|   text.txt
 |   
 +---bin
 |   \---Debug
 |       \---net10.0
 |           |   appsettings.Development.json
 |           |   appsettings.json
+|           |   BCrypt-Net-Next.dll
+|           |   ClosedXML.dll
+|           |   ClosedXML.Parser.dll
+|           |   DocumentFormat.OpenXml.dll
+|           |   DocumentFormat.OpenXml.Framework.dll
+|           |   ExcelNumberFormat.dll
 |           |   Humanizer.dll
 |           |   Microsoft.Bcl.AsyncInterfaces.dll
 |           |   Microsoft.Build.Locator.dll
@@ -30,6 +36,10 @@ C:.
 |           |   Mono.TextTemplating.dll
 |           |   MySqlConnector.dll
 |           |   Pomelo.EntityFrameworkCore.MySql.dll
+|           |   QuestPDF.dll
+|           |   questpdf_fonts_lato.br
+|           |   RBush.dll
+|           |   SixLabors.Fonts.dll
 |           |   StayMate_Kavinvee_0576.deps.json
 |           |   StayMate_Kavinvee_0576.dll
 |           |   StayMate_Kavinvee_0576.exe
@@ -43,6 +53,7 @@ C:.
 |           |   System.Composition.Hosting.dll
 |           |   System.Composition.Runtime.dll
 |           |   System.Composition.TypedParts.dll
+|           |   System.IO.Packaging.dll
 |           |   
 |           +---cs
 |           |       Microsoft.CodeAnalysis.CSharp.resources.dll
@@ -114,6 +125,47 @@ C:.
 |           |       Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
 |           |       Microsoft.CodeAnalysis.Workspaces.resources.dll
 |           |       
+|           +---runtimes
+|           |   +---linux-arm64
+|           |   |   \---native
+|           |   |           libquestpdf_qpdf.so
+|           |   |           libquestpdf_skia.so
+|           |   |           
+|           |   +---linux-musl-x64
+|           |   |   \---native
+|           |   |           libquestpdf_qpdf.so
+|           |   |           libquestpdf_skia.so
+|           |   |           
+|           |   +---linux-x64
+|           |   |   \---native
+|           |   |           libquestpdf_qpdf.so
+|           |   |           libquestpdf_skia.so
+|           |   |           
+|           |   +---osx-arm64
+|           |   |   \---native
+|           |   |           libquestpdf_qpdf.dylib
+|           |   |           libquestpdf_skia.dylib
+|           |   |           
+|           |   +---osx-x64
+|           |   |   \---native
+|           |   |           libquestpdf_qpdf.dylib
+|           |   |           libquestpdf_skia.dylib
+|           |   |           
+|           |   +---win-arm64
+|           |   |   \---native
+|           |   |           questpdf_qpdf.dll
+|           |   |           questpdf_skia.dll
+|           |   |           
+|           |   +---win-x64
+|           |   |   \---native
+|           |   |           questpdf_qpdf.dll
+|           |   |           questpdf_skia.dll
+|           |   |           
+|           |   \---win-x86
+|           |       \---native
+|           |               questpdf_qpdf.dll
+|           |               questpdf_skia.dll
+|           |               
 |           +---tr
 |           |       Microsoft.CodeAnalysis.CSharp.resources.dll
 |           |       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
@@ -173,8 +225,10 @@ C:.
 |   |   
 |   \---ViewModels
 |           CustomerViewModel.cs
+|           FinanceProfileViewModel.cs
 |           FinanceViewModel.cs
 |           HomeIndexViewModel.cs
+|           HousekeepingViewModel.cs
 |           LoginViewModel.cs
 |           ReceptionIndexViewModel.cs
 |           RegisterViewModel.cs
@@ -235,6 +289,8 @@ C:.
 |           |       4ly27mpcpd-{0}-6pdc2jztkx-6pdc2jztkx.gz
 |           |       4vr19yay4y-{0}-v8cbagddvq-v8cbagddvq.gz
 |           |       51av17qs08-{0}-493y06b0oq-493y06b0oq.gz
+|           |       5h3h5u7dcc-{0}-v67td4yotg-v67td4yotg.gz
+|           |       635qjmfxaa-{0}-t1ybdnj9u3-t1ybdnj9u3.gz
 |           |       66wet7egkx-{0}-2z0ns9nrw6-2z0ns9nrw6.gz
 |           |       6oi3yrxg6t-{0}-xtxxf3hu2r-xtxxf3hu2r.gz
 |           |       71ueavpycn-{0}-o1o13a6vjx-o1o13a6vjx.gz
@@ -257,8 +313,9 @@ C:.
 |           |       fb9wif4nsc-{0}-356vix0kms-356vix0kms.gz
 |           |       fho7g43ely-{0}-2tz4jy55bf-2tz4jy55bf.gz
 |           |       h1lyw2vlih-{0}-tdbxkamptv-tdbxkamptv.gz
+|           |       i1x1kz1fsl-{0}-drruijrp25-drruijrp25.gz
 |           |       i23z9ljo7z-{0}-4v8eqarkd7-4v8eqarkd7.gz
-|           |       ib2j1mn2cb-{0}-wxgo9wxi7w-wxgo9wxi7w.gz
+|           |       ib2j1mn2cb-{0}-7yozye0un0-7yozye0un0.gz
 |           |       iplg6kj7pp-{0}-k8d9w2qqmf-k8d9w2qqmf.gz
 |           |       iwxz5ht8fm-{0}-s35ty4nyc5-s35ty4nyc5.gz
 |           |       j6kvfp56yr-{0}-hrwsygsryq-hrwsygsryq.gz
@@ -274,6 +331,7 @@ C:.
 |           |       o8nkortlbl-{0}-37tfw0ft22-37tfw0ft22.gz
 |           |       p4ugsuiwru-{0}-muycvpuwrr-muycvpuwrr.gz
 |           |       pezw8s05uq-{0}-c2jlpeoesf-c2jlpeoesf.gz
+|           |       pt1k9kq9eu-{0}-8jb9wpmxmv-8jb9wpmxmv.gz
 |           |       pzv0fe9zp4-{0}-7uwepcaqx8-7uwepcaqx8.gz
 |           |       q1qwgno2ax-{0}-0i3buxo5is-0i3buxo5is.gz
 |           |       ru5wq50895-{0}-mbxehriccz-mbxehriccz.gz
@@ -347,6 +405,13 @@ C:.
 |   |       
 |   +---Finance
 |   |       Index.cshtml
+|   |       PaymentApproval.cshtml
+|   |       PaymentDetail.cshtml
+|   |       Profile.cshtml
+|   |       ReceiptDetail.cshtml
+|   |       Receipts.cshtml
+|   |       Reports.cshtml
+|   |       Transactions.cshtml
 |   |       
 |   +---Home
 |   |       About.cshtml
@@ -360,7 +425,12 @@ C:.
 |   |       Rooms.cshtml
 |   |       
 |   +---Housekeeping
+|   |       CleaningTasks.cshtml
+|   |       History.cshtml
 |   |       Index.cshtml
+|   |       Profile.cshtml
+|   |       RoomStatus.cshtml
+|   |       TaskDetails.cshtml
 |   |       
 |   +---Manager
 |   |       Index.cshtml
@@ -397,6 +467,7 @@ C:.
     |       Customer.css
     |       finance.css
     |       Home.css
+    |       Housekeeping.css
     |       Reception.css
     |       site.css
     |       staymate-layout.css
@@ -407,6 +478,7 @@ C:.
     |           LogoStayMate.jpg
     |           
     +---js
+    |   |   Housekeeping.js
     |   |   reception-bookings.js
     |   |   reception-calendar.js
     |   |   reception-checkin.js

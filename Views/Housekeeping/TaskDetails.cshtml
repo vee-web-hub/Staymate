@@ -1,0 +1,542 @@
+@model StayMate_Kavinvee_0576.Models.ViewModels.HousekeepingViewModel
+@using System.Globalization
+@{
+    ViewData["Title"] = Model?.Detail != null
+        ? $"รายละเอียดงาน #{Model.Detail.TaskId} (ห้อง {Model.Detail.RoomNumber})"
+        : "รายละเอียดงานทำความสะอาด - Task Details";
+    Layout = "~/Views/Shared/_HousekeepingLayout.cshtml";
+    var thaiCulture = new CultureInfo("th-TH");
+    var d = Model?.Detail;
+}
+
+<div id="hkApp"
+     class="hk-dashboard-wrapper hk-task-details-page"
+     data-page="task-details"
+     data-base-url="@Url.Content("~/Housekeeping")"
+     data-update-room-url="@Url.Action("UpdateRoomStatusWorkflow", "Housekeeping")"
+     data-maintenance-url="@Url.Action("ReportMaintenance", "Housekeeping")">
+
+    @Html.AntiForgeryToken()
+
+    @if (d == null)
+    {
+        <!-- กรณีไม่พบข้อมูลใบงาน -->
+        <section class="hk-section-card hk-empty-modern hk-fade-in">
+            <div class="hk-empty-icon-circle">
+                <i class="fa-solid fa-file-circle-question fs-2"></i>
+            </div>
+            <h2 class="hk-empty-title">ไม่พบข้อมูลใบงานทำความสะอาดที่ระบุ</h2>
+            <p class="hk-empty-subtitle mb-4">กรุณาเลือกห้องพักจากหน้ารายการห้องที่ได้รับมอบหมาย หรือหน้ากระดานรวม</p>
+            <div class="d-flex justify-content-center gap-2 flex-wrap">
+                <a asp-controller="Housekeeping" asp-action="CleaningTasks" class="hk-btn hk-btn-primary">
+                    <i class="fa-solid fa-list-check"></i> ไปยังรายการห้องที่ได้รับมอบหมาย
+                </a>
+                <a asp-controller="Housekeeping" asp-action="Index" class="hk-btn hk-btn-outline">
+                    <i class="fa-solid fa-arrow-left"></i> กลับหน้า Dashboard
+                </a>
+            </div>
+        </section>
+    }
+    else
+    {
+        var isMaintenance = d.RoomStatus == "maintenance";
+        var visualState = isMaintenance ? "maintenance" : d.Status;
+
+        var taskBadgeClass = visualState switch
+        {
+            "maintenance" => "hk-badge-maintenance",
+            HousekeepingViewModel.StatusInProgress => "hk-badge-in_progress",
+            HousekeepingViewModel.StatusDone => "hk-badge-completed",
+            _ => "hk-badge-pending"
+        };
+
+        var roomBadgeClass = d.RoomStatus switch
+        {
+            "available" => "hk-rs-badge-available",
+            "occupied" => "hk-rs-badge-occupied",
+            "needs_cleaning" => "hk-rs-badge-pending",
+            "maintenance" => "hk-rs-badge-maintenance",
+            _ => "hk-badge-pending"
+        };
+
+        var prioClass = d.Priority switch
+        {
+            "High" => "hk-priority-high",
+            "Medium" => "hk-priority-medium",
+            _ => "hk-priority-normal"
+        };
+
+        // คำนวณลำดับ Step ปัจจุบัน (1=Created, 2=Accepted, 3=InProgress, 4=Completed)
+        int currentStep = 1;
+        if (d.AssignedTo != null) currentStep = 2;
+        if (d.Status == HousekeepingViewModel.StatusInProgress) currentStep = 3;
+        if (d.Status == HousekeepingViewModel.StatusDone) currentStep = 4;
+
+        <!-- =========================================================
+             1. PAGE HEADER & NAVIGATION
+             ========================================================= -->
+        <header class="hk-page-header hk-fade-in">
+            <div class="hk-page-header-left">
+                <nav aria-label="breadcrumb" class="hk-breadcrumb-nav">
+                    <ol class="hk-breadcrumb">
+                        <li><a asp-controller="Housekeeping" asp-action="Index">Housekeeping</a></li>
+                        <li class="hk-breadcrumb-sep">/</li>
+                        <li><a asp-controller="Housekeeping" asp-action="CleaningTasks">Cleaning Tasks</a></li>
+                        <li class="hk-breadcrumb-sep">/</li>
+                        <li class="active" aria-current="page">Task #@d.TaskId (ห้อง @d.RoomNumber)</li>
+                    </ol>
+                </nav>
+                <div class="d-flex align-items-center gap-3 flex-wrap">
+                    <h1 class="hk-page-main-title mb-0">ใบงานทำความสะอาด #@d.TaskId — ห้อง @d.RoomNumber</h1>
+                    <span class="hk-priority-badge @prioClass">ความเร่งด่วน: @d.PriorityLabel</span>
+                </div>
+                <p class="hk-page-description mt-1">
+                    ชั้น @d.FloorNo • ประเภทห้อง @(d.RoomTypeName ?? "Standard Room")
+                    @if (!string.IsNullOrWhiteSpace(d.BookingCode))
+                    {
+                        <span> • อ้างอิงรหัสการจอง: <strong>@d.BookingCode</strong></span>
+                    }
+                </p>
+            </div>
+
+            <div class="hk-page-header-right hk-no-print">
+                <a asp-controller="Housekeeping" asp-action="CleaningTasks" class="hk-btn hk-btn-glass">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>กลับหน้ารายการงาน</span>
+                </a>
+                <button type="button" onclick="window.print()" class="hk-btn hk-btn-glass" title="พิมพ์ใบงาน">
+                    <i class="fa-solid fa-print"></i>
+                    <span>พิมพ์ใบงาน</span>
+                </button>
+                <button type="button" onclick="window.location.reload()" class="hk-btn hk-btn-cyan">
+                    <i class="fa-solid fa-rotate"></i>
+                    <span>Refresh</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- =========================================================
+             2. WORKFLOW STEPPER BAR (4 ขั้นตอน)
+             ========================================================= -->
+        <section class="hk-section-card hk-stepper-card hk-fade-in" aria-label="ขั้นตอนการดำเนินงานทำความสะอาด">
+            <div class="hk-workflow-stepper">
+                <!-- Step 1: เปิดใบงาน -->
+                <div class="hk-step-item @(currentStep >= 1 ? "is-done" : "")">
+                    <div class="hk-step-circle">
+                        <i class="fa-solid fa-file-signature"></i>
+                    </div>
+                    <div class="hk-step-text">
+                        <strong>1. เปิดใบงาน</strong>
+                        <span>@d.CreatedAt.ToString("dd MMM HH:mm น.", thaiCulture)</span>
+                    </div>
+                </div>
+
+                <div class="hk-step-line @(currentStep >= 2 ? "is-done" : "")"></div>
+
+                <!-- Step 2: รับมอบหมายงาน -->
+                <div class="hk-step-item @(currentStep >= 2 ? "is-done" : "")">
+                    <div class="hk-step-circle">
+                        <i class="fa-solid fa-user-check"></i>
+                    </div>
+                    <div class="hk-step-text">
+                        <strong>2. ผู้รับผิดชอบ</strong>
+                        <span>@(string.IsNullOrWhiteSpace(d.AssignedToName) ? "รอรับงาน" : d.AssignedToName)</span>
+                    </div>
+                </div>
+
+                <div class="hk-step-line @(currentStep >= 3 ? "is-done" : "")"></div>
+
+                <!-- Step 3: กำลังทำความสะอาด -->
+                <div class="hk-step-item @(currentStep == 3 ? "is-current" : (currentStep > 3 ? "is-done" : ""))">
+                    <div class="hk-step-circle">
+                        <i class="fa-solid fa-broom"></i>
+                    </div>
+                    <div class="hk-step-text">
+                        <strong>3. เริ่มทำความสะอาด</strong>
+                        <span>@(d.StartedAt.HasValue ? d.StartedAt.Value.ToString("dd MMM HH:mm น.", thaiCulture) : "ยังไม่เริ่ม")</span>
+                    </div>
+                </div>
+
+                <div class="hk-step-line @(currentStep >= 4 ? "is-done" : "")"></div>
+
+                <!-- Step 4: เสร็จสิ้น & ตรวจความพร้อม -->
+                <div class="hk-step-item @(currentStep >= 4 ? "is-done" : "")">
+                    <div class="hk-step-circle">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div class="hk-step-text">
+                        <strong>4. เสร็จสิ้นสมบูรณ์</strong>
+                        <span>@(d.CompletedAt.HasValue ? d.CompletedAt.Value.ToString("dd MMM HH:mm น.", thaiCulture) : "รอดำเนินการ")</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =========================================================
+             3. SUMMARY OVERVIEW CARDS (4 ใบสำหรับงานนี้)
+             ========================================================= -->
+        <section class="hk-kpi-grid hk-fade-in" aria-label="ข้อมูลสรุปของห้องและงาน">
+            <!-- Card 1: Room Info -->
+            <article class="hk-kpi-card hk-kpi-navy">
+                <div class="hk-kpi-icon-wrap hk-icon-navy">
+                    <i class="fa-solid fa-door-closed fs-4"></i>
+                </div>
+                <div class="hk-kpi-info">
+                    <span class="hk-kpi-label">หมายเลขห้องพัก (Room)</span>
+                    <h2 class="hk-kpi-number">ห้อง @d.RoomNumber</h2>
+                    <span class="hk-kpi-sub">ชั้น @d.FloorNo • @(d.RoomTypeName ?? "Standard Room")</span>
+                </div>
+            </article>
+
+            <!-- Card 2: Cleaning Task Status -->
+            <article class="hk-kpi-card hk-kpi-warning">
+                <div class="hk-kpi-icon-wrap hk-icon-warning">
+                    <i class="fa-solid fa-list-check fs-4"></i>
+                </div>
+                <div class="hk-kpi-info">
+                    <span class="hk-kpi-label">สถานะงานแม่บ้าน (Task Status)</span>
+                    <div class="my-1">
+                        <span class="hk-status-badge @taskBadgeClass fs-6">@d.StatusLabel (@d.StatusThaiLabel)</span>
+                    </div>
+                    <span class="hk-kpi-sub">ผู้รับผิดชอบ: @(d.AssignedToName ?? "ยังไม่มีผู้รับงาน")</span>
+                </div>
+            </article>
+
+            <!-- Card 3: Room Availability Status -->
+            <article class="hk-kpi-card hk-kpi-info">
+                <div class="hk-kpi-icon-wrap hk-icon-info">
+                    <i class="fa-solid fa-bed fs-4"></i>
+                </div>
+                <div class="hk-kpi-info">
+                    <span class="hk-kpi-label">สถานะห้องพัก (Room Status)</span>
+                    <div class="my-1">
+                        <span class="hk-rs-status-pill @roomBadgeClass fs-6">@d.RoomStatusLabel</span>
+                    </div>
+                    <span class="hk-kpi-sub">แยกจากสถานะงานทำความสะอาดชัดเจน</span>
+                </div>
+            </article>
+
+            <!-- Card 4: Duration / Time -->
+            <article class="hk-kpi-card hk-kpi-success">
+                <div class="hk-kpi-icon-wrap hk-icon-success">
+                    <i class="fa-solid fa-stopwatch fs-4"></i>
+                </div>
+                <div class="hk-kpi-info">
+                    <span class="hk-kpi-label">ระยะเวลาที่ใช้ (Duration)</span>
+                    <h2 class="hk-kpi-number">
+                        @(d.DurationMinutes.HasValue ? $"{d.DurationMinutes.Value} นาที" : (d.StartedAt.HasValue ? "กำลังดำเนินการ" : "รอเริ่มงาน"))
+                    </h2>
+                    <span class="hk-kpi-sub">เปิดงานเมื่อ @d.CreatedAt.ToString("dd MMM yyyy HH:mm", thaiCulture)</span>
+                </div>
+            </article>
+        </section>
+
+        <!-- =========================================================
+             4. MAIN CONTENT GRID (LEFT: DETAILS & CHECKLIST | RIGHT: ACTIONS & TIMELINE)
+             ========================================================= -->
+        <div class="hk-td-main-grid">
+            <!-- คอลัมน์ซ้าย: รายละเอียดเชิงลึก + Checklist ตรวจสอบห้องพัก -->
+            <div class="hk-td-left-col">
+                <!-- ข้อมูลใบงานฉบับเต็ม -->
+                <section class="hk-section-card hk-fade-in">
+                    <div class="hk-section-header">
+                        <div>
+                            <h2 class="hk-section-title">
+                                <i class="fa-solid fa-clipboard-list me-2 text-primary"></i>ข้อมูลรายละเอียดใบงาน (Task Specification)
+                            </h2>
+                            <p class="hk-section-subtitle">ข้อมูลอ้างอิงจากฐานข้อมูลจริง (ไม่เปิดเผยข้อมูลส่วนตัวของลูกค้า)</p>
+                        </div>
+                    </div>
+
+                    <div class="hk-td-spec-grid">
+                        <div class="hk-td-spec-box">
+                            <span class="hk-td-spec-label">รหัสใบงาน (Task ID)</span>
+                            <strong class="hk-td-spec-val">#@d.TaskId</strong>
+                        </div>
+                        <div class="hk-td-spec-box">
+                            <span class="hk-td-spec-label">หมายเลขห้องพัก</span>
+                            <strong class="hk-td-spec-val">ห้อง @d.RoomNumber (ชั้น @d.FloorNo)</strong>
+                        </div>
+                        <div class="hk-td-spec-box">
+                            <span class="hk-td-spec-label">ประเภทห้องพัก</span>
+                            <strong class="hk-td-spec-val">@(d.RoomTypeName ?? "Standard Room")</strong>
+                        </div>
+                        <div class="hk-td-spec-box">
+                            <span class="hk-td-spec-label">รหัสการจอง (Booking Reference)</span>
+                            <strong class="hk-td-spec-val">@(string.IsNullOrWhiteSpace(d.BookingCode) ? "-" : d.BookingCode)</strong>
+                        </div>
+                        <div class="hk-td-spec-box">
+                            <span class="hk-td-spec-label">ผู้ปฏิบัติงานที่รับผิดชอบ</span>
+                            <strong class="hk-td-spec-val">
+                                @(string.IsNullOrWhiteSpace(d.AssignedToName) ? "ยังไม่มีผู้รับงาน" : d.AssignedToName)
+                                @if (d.IsMine)
+                                {
+                                    <span class="badge bg-primary ms-1">งานของฉัน</span>
+                                }
+                            </strong>
+                        </div>
+                        <div class="hk-td-spec-box">
+                            <span class="hk-td-spec-label">ระดับความเร่งด่วน</span>
+                            <strong class="hk-td-spec-val">@d.PriorityLabel (@d.Priority)</strong>
+                        </div>
+                        <div class="hk-td-spec-box">
+                            <span class="hk-td-spec-label">เวลาที่ได้รับมอบหมาย (Created At)</span>
+                            <strong class="hk-td-spec-val">@d.CreatedAt.ToString("dd MMM yyyy • HH:mm น.", thaiCulture)</strong>
+                        </div>
+                        <div class="hk-td-spec-box">
+                            <span class="hk-td-spec-label">เวลาเริ่มทำความสะอาด (Started At)</span>
+                            <strong class="hk-td-spec-val">@(d.StartedAt.HasValue ? d.StartedAt.Value.ToString("dd MMM yyyy • HH:mm น.", thaiCulture) : "-")</strong>
+                        </div>
+                        <div class="hk-td-spec-box">
+                            <span class="hk-td-spec-label">เวลาทำความสะอาดเสร็จ (Completed At)</span>
+                            <strong class="hk-td-spec-val">@(d.CompletedAt.HasValue ? d.CompletedAt.Value.ToString("dd MMM yyyy • HH:mm น.", thaiCulture) : "-")</strong>
+                        </div>
+                    </div>
+
+                    <div class="hk-td-note-banner mt-3">
+                        <div class="hk-td-note-title">
+                            <i class="fa-solid fa-comment-dots me-1"></i> หมายเหตุใบงาน / รายละเอียดเพิ่มเติม:
+                        </div>
+                        <p class="hk-td-note-body mb-0">
+                            @(string.IsNullOrWhiteSpace(d.Note) ? "ไม่มีหมายเหตุพิเศษสำหรับงานนี้" : d.Note)
+                        </p>
+                    </div>
+                </section>
+
+                <!-- ส่วน Checklist มาตรฐานการทำความสะอาดและตรวจสอบความพร้อม -->
+                <section class="hk-section-card hk-fade-in">
+                    <div class="hk-section-header">
+                        <div>
+                            <h2 class="hk-section-title">
+                                <i class="fa-solid fa-square-check me-2 text-success"></i>มาตรฐานการตรวจสอบห้องพัก (Room Readiness Checklist)
+                            </h2>
+                            <p class="hk-section-subtitle">
+                                @if (d.Status == HousekeepingViewModel.StatusDone)
+                                {
+                                    <span>งานนี้ทำความสะอาดเสร็จและบันทึกผลการตรวจสอบเรียบร้อยแล้ว</span>
+                                }
+                                else
+                                {
+                                    <span>ตรวจสอบความเรียบร้อยให้ครบทั้ง 4 หมวดก่อนกดปิดงานและปล่อยห้องเป็น Available</span>
+                                }
+                            </p>
+                        </div>
+                    </div>
+
+                    @if (d.Status == HousekeepingViewModel.StatusInProgress && d.IsMine && !isMaintenance)
+                    {
+                        <!-- ฟอร์ม Checklist สำหรับกดปิดงานจากหน้า TaskDetails ได้ทันที -->
+                        <form id="tdCompleteChecklistForm"
+                              data-room-id="@d.RoomId"
+                              data-task-id="@d.TaskId"
+                              data-room-number="@d.RoomNumber">
+                            <div class="hk-rs-checklist-box mt-0 mb-3">
+                                <label class="hk-check-item">
+                                    <input type="checkbox" id="tdChkBed" checked />
+                                    <span><strong>1. เตียงนอนและชุดผ้า (Bed & Linens):</strong> เปลี่ยนผ้าปูที่นอน ปลอกหมอน ผ้านวม และจัดวางผ้าเช็ดตัวสะอาดครบตามมาตรฐานห้อง</span>
+                                </label>
+                                <label class="hk-check-item">
+                                    <input type="checkbox" id="tdChkBath" checked />
+                                    <span><strong>2. ห้องน้ำและสุขภัณฑ์ (Bathroom & Hygiene):</strong> ล้างทำความสะอาดสุขภัณฑ์ กระจก พื้นห้องน้ำ และเติมสบู่ แชมพู กระดาษชำระครบถ้วน</span>
+                                </label>
+                                <label class="hk-check-item">
+                                    <input type="checkbox" id="tdChkAmenity" checked />
+                                    <span><strong>3. ความสะอาดทั่วไปและของใช้ (Floor & Amenities):</strong> ดูดฝุ่น ถูพื้น เช็ดกระจก เติมน้ำดื่ม กาแฟ และตรวจสอบถังขยะเรียบร้อย</span>
+                                </label>
+                                <label class="hk-check-item">
+                                    <input type="checkbox" id="tdChkAppliance" checked />
+                                    <span><strong>4. อุปกรณ์ไฟฟ้าและสิ่งอำนวยความสะดวก (Appliances):</strong> ทดสอบแอร์ ทีวี ตู้เย็น โคมไฟ และก๊อกน้ำว่าทำงานได้ปกติ ไม่ชำรุด</span>
+                                </label>
+                            </div>
+
+                            <div class="hk-form-group mb-3">
+                                <label for="tdCompleteNote" class="hk-label">บันทึกหมายเหตุการตรวจสอบห้อง (ถ้ามี)</label>
+                                <textarea id="tdCompleteNote"
+                                          rows="2"
+                                          class="hk-textarea"
+                                          placeholder="ระบุบันทึกเพิ่มเติม เช่น เติมน้ำดื่มครบ 2 ขวด ห้องพร้อมขาย..."
+                                          maxlength="200"></textarea>
+                            </div>
+
+                            <button type="submit" id="btnTdCompleteSubmit" class="hk-btn hk-btn-success hk-btn-block">
+                                <i class="fa-solid fa-circle-check"></i> ยืนยันผ่านการตรวจสอบ & ทำความสะอาดเสร็จสิ้น (เปลี่ยนห้องเป็น Available)
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <!-- โหมดแสดงสถานะ Checklist (Read-only เมื่อยังไม่เริ่มงาน หรือเมื่องานเสร็จแล้ว) -->
+                        var isDone = d.Status == HousekeepingViewModel.StatusDone;
+                        <div class="hk-hist-checklist-summary">
+                            <div class="hk-hist-check-line">
+                                @(isDone ? "✓ ผ่านการตรวจสอบแล้ว:" : "• รอการตรวจสอบ:") 1. เตียงนอน ผ้าปูที่นอน ปลอกหมอน และผ้าเช็ดตัวสะอาดครบถ้วน
+                            </div>
+                            <div class="hk-hist-check-line">
+                                @(isDone ? "✓ ผ่านการตรวจสอบแล้ว:" : "• รอการตรวจสอบ:") 2. ความสะอาดห้องน้ำ สุขภัณฑ์ และของใช้ในห้องน้ำ
+                            </div>
+                            <div class="hk-hist-check-line">
+                                @(isDone ? "✓ ผ่านการตรวจสอบแล้ว:" : "• รอการตรวจสอบ:") 3. การเติมน้ำดื่ม ของใช้ภายในห้อง และความสะอาดพื้น/กระจก
+                            </div>
+                            <div class="hk-hist-check-line">
+                                @(isDone ? "✓ ผ่านการตรวจสอบแล้ว:" : "• รอการตรวจสอบ:") 4. ความพร้อมของเครื่องปรับอากาศ หลอดไฟ ทีวี และอุปกรณ์ไฟฟ้า
+                            </div>
+                        </div>
+                    }
+                </section>
+            </div>
+
+            <!-- คอลัมน์ขวา: แผงควบคุมการปฏิบัติงาน (Action Panel) + Activity Timeline -->
+            <div class="hk-td-right-col">
+                <!-- แผงปุ่มดำเนินการ (Task Action Control Panel) -->
+                <section class="hk-section-card hk-fade-in hk-no-print">
+                    <div class="hk-section-header mb-3">
+                        <div>
+                            <h2 class="hk-section-title">
+                                <i class="fa-solid fa-bolt me-2 text-warning"></i>การดำเนินการ (Task Actions)
+                            </h2>
+                            <p class="hk-section-subtitle">อัปเดตสถานะงานตามขั้นตอนของโรงแรม</p>
+                        </div>
+                    </div>
+
+                    @if (isMaintenance)
+                    {
+                        <div class="hk-alert hk-alert-danger mb-3">
+                            <i class="fa-solid fa-screwdriver-wrench me-1"></i>
+                            <strong>ห้องนี้อยู่ในสถานะซ่อมบำรุง (Maintenance)</strong><br />
+                            ระงับการขายชั่วคราว สามารถจัดการสถานะหลังซ่อมเสร็จได้ที่หน้า Room Status
+                        </div>
+                    }
+
+                    <div class="d-flex flex-column gap-2">
+                        @if (d.CanAccept)
+                        {
+                            <button type="button"
+                                    class="hk-btn hk-btn-primary hk-btn-block"
+                                    data-hk-action="accept"
+                                    data-task-id="@d.TaskId">
+                                <i class="fa-solid fa-hand-point-up"></i> กดรับงานทำความสะอาดห้อง @d.RoomNumber
+                            </button>
+                        }
+
+                        @if (d.Status == HousekeepingViewModel.StatusPending && (d.IsMine || d.AssignedTo == null))
+                        {
+                            <button type="button"
+                                    class="hk-btn hk-btn-warning-solid hk-btn-block"
+                                    data-hk-action="start"
+                                    data-task-id="@d.TaskId">
+                                <i class="fa-solid fa-play"></i> เริ่มทำความสะอาดทันที (Start Cleaning)
+                            </button>
+                        }
+
+                        @if (d.CanComplete)
+                        {
+                            <button type="button"
+                                    class="hk-btn hk-btn-success hk-btn-block"
+                                    data-hk-action="complete"
+                                    data-task-id="@d.TaskId">
+                                <i class="fa-solid fa-check-double"></i> ทำความสะอาดเสร็จแล้ว (Quick Complete)
+                            </button>
+                        }
+
+                        @if (d.CanReportMaintenance)
+                        {
+                            <button type="button"
+                                    id="btnToggleTdMaintForm"
+                                    class="hk-btn hk-btn-danger-outline hk-btn-block mt-1">
+                                <i class="fa-solid fa-triangle-exclamation"></i> แจ้งปัญหาอุปกรณ์ชำรุด / ซ่อมบำรุง
+                            </button>
+                        }
+
+                        <a asp-controller="Housekeeping"
+                           asp-action="RoomStatus"
+                           class="hk-btn hk-btn-outline hk-btn-block mt-1">
+                            <i class="fa-solid fa-door-open"></i> ไปที่หน้าอัปเดตสถานะห้องพัก (Room Status)
+                        </a>
+                    </div>
+
+                    <!-- ฟอร์มแจ้งอุปกรณ์ชำรุดแบบ Inline บนหน้า TaskDetails -->
+                    @if (d.CanReportMaintenance)
+                    {
+                        <form id="tdInlineMaintenanceForm"
+                              class="hk-td-maint-box mt-3"
+                              data-room-id="@d.RoomId"
+                              data-task-id="@d.TaskId"
+                              hidden>
+                            <h4 class="hk-td-maint-heading">
+                                <i class="fa-solid fa-screwdriver-wrench me-1"></i> แจ้งซ่อมบำรุงห้อง @d.RoomNumber
+                            </h4>
+                            <p class="small text-muted mb-2">
+                                ระบบจะเปลี่ยนสถานะห้องเป็น Maintenance และบันทึกเข้าสู่ประวัติสถานะห้องทันที
+                            </p>
+                            <textarea id="tdMaintIssueNote"
+                                      rows="3"
+                                      class="hk-textarea mb-2"
+                                      placeholder="ระบุอาการเสีย เช่น แอร์ไม่เย็น, ท่อน้ำรั่ว, หลอดไฟขาด..."
+                                      required
+                                      maxlength="240"></textarea>
+                            <div class="d-flex justify-content-end gap-2">
+                                <button type="button" id="btnCancelTdMaint" class="hk-btn hk-btn-light hk-btn-sm">ยกเลิก</button>
+                                <button type="submit" id="btnSubmitTdMaint" class="hk-btn hk-btn-danger hk-btn-sm">
+                                    ยืนยันแจ้งซ่อมบำรุง
+                                </button>
+                            </div>
+                        </form>
+                    }
+                </section>
+
+                <!-- Activity Timeline ของใบงานนี้ (ดึงจากฐานข้อมูลจริง) -->
+                <section class="hk-section-card hk-fade-in">
+                    <div class="hk-section-header">
+                        <div>
+                            <h2 class="hk-section-title">
+                                <i class="fa-solid fa-clock-rotate-left me-2 text-primary"></i>ลำดับเหตุการณ์ (Activity Timeline)
+                            </h2>
+                            <p class="hk-section-subtitle">ประวัติเวลาปฏิบัติงานจริงของห้อง @d.RoomNumber</p>
+                        </div>
+                    </div>
+
+                    @if (d.TimelineEvents != null && d.TimelineEvents.Any())
+                    {
+                        <ul class="hk-activity-timeline">
+                            @foreach (var ev in d.TimelineEvents)
+                            {
+                                var markerCls = ev.EventType switch
+                                {
+                                    "completed" => "hk-act-success",
+                                    "started" => "hk-act-info",
+                                    "maintenance" => "hk-act-danger",
+                                    _ => "hk-act-warning"
+                                };
+
+                                <li class="hk-activity-item">
+                                    <div class="hk-activity-marker @markerCls"></div>
+                                    <div class="hk-activity-body">
+                                        <div class="hk-activity-top">
+                                            <strong class="hk-activity-title">@ev.Title</strong>
+                                            <span class="hk-activity-time">@ev.Timestamp.ToString("dd MMM yyyy • HH:mm น.", thaiCulture)</span>
+                                        </div>
+                                        @if (!string.IsNullOrWhiteSpace(ev.Description))
+                                        {
+                                            <p class="hk-activity-note">@ev.Description</p>
+                                        }
+                                        <span class="hk-activity-actor">ผู้ดำเนินการ: @(ev.ActorName ?? "ระบบ")</span>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <div class="hk-empty-state">
+                            <p>ยังไม่มีประวัติเหตุการณ์เพิ่มเติม</p>
+                        </div>
+                    }
+                </section>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script src="~/js/Housekeeping.js" asp-append-version="true"></script>
+}

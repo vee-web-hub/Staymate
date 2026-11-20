@@ -1,0 +1,410 @@
+@model StayMate_Kavinvee_0576.Models.ViewModels.HousekeepingViewModel
+@{
+    // *** ถ้าชื่อไฟล์ Layout ของแม่บ้านไม่ตรง ให้แก้บรรทัดนี้ ***
+    Layout = "~/Views/Shared/_HousekeepingLayout.cshtml";
+    ViewData["Title"] = "โปรไฟล์ของฉัน";
+
+    var successMessage = TempData["SuccessMessage"] as string;
+    var errorMessage = TempData["ErrorMessage"] as string;
+    var openPasswordModal = TempData["OpenPasswordModal"] != null;
+
+    var emp = Model?.Employee;
+
+    var fullName = !string.IsNullOrWhiteSpace(emp?.FullName)
+        ? emp!.FullName
+        : (!string.IsNullOrWhiteSpace(Model?.CurrentUserName)
+            ? Model!.CurrentUserName
+            : (User.Identity?.Name ?? "Housekeeper"));
+
+    var nameParts = fullName.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
+    var firstName = nameParts.Length > 0 ? nameParts[0] : fullName;
+    var lastName = nameParts.Length > 1 ? nameParts[1] : "";
+    var avatarInitial = fullName.Trim().Length > 0 ? fullName.Trim().Substring(0, 1).ToUpperInvariant() : "H";
+
+    var email = !string.IsNullOrWhiteSpace(emp?.Email) ? emp!.Email : "-";
+    var phone = !string.IsNullOrWhiteSpace(emp?.Phone) ? emp!.Phone : "-";
+    var username = !string.IsNullOrWhiteSpace(emp?.Username) ? emp!.Username : "-";
+    var isActive = emp?.IsActive ?? false;
+
+    var roleRaw = emp?.RoleName ?? "";
+    var roleLabel = roleRaw.ToUpperInvariant() switch
+    {
+        "HOUSEKEEPING" => "Housekeeping Staff (แผนกแม่บ้าน)",
+        "" => "Housekeeping Staff (แผนกแม่บ้าน)",
+        _ => roleRaw
+    };
+
+    var memberSince = emp != null && emp.CreatedAt != default
+        ? emp.CreatedAt.ToString("d MMMM yyyy", new System.Globalization.CultureInfo("th-TH"))
+        : "-";
+
+    var completedCount = emp?.CompletedTaskCount ?? 0;
+    var activeCount = emp?.ActiveTaskCount ?? 0;
+}
+
+<div class="hk-pf-page">
+
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="hk-pf-alert hk-pf-alert-success" role="alert">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>@successMessage</span>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="hk-pf-alert hk-pf-alert-danger" role="alert">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span>@errorMessage</span>
+        </div>
+    }
+
+    <!-- PROFILE HERO -->
+    <header class="hk-pf-hero">
+        <div class="hk-pf-hero-left">
+            <div class="hk-pf-avatar" aria-hidden="true">@avatarInitial</div>
+            <div>
+                <div class="hk-pf-badge-row">
+                    <span class="hk-pf-title-badge">
+                        <span class="hk-pf-live-dot"></span> STAYMATE HOUSEKEEPING
+                    </span>
+                    <span class="hk-pf-since-pill">
+                        <i class="fa-regular fa-calendar-check"></i> เข้าร่วมเมื่อ: @memberSince
+                    </span>
+                </div>
+                <h1 class="hk-pf-main-title" id="pfHeaderName">@fullName</h1>
+                <div class="hk-pf-contact-strip">
+                    <span><i class="fa-regular fa-envelope"></i> @email</span>
+                    <span class="hk-pf-dot">·</span>
+                    <span><i class="fa-solid fa-phone"></i> <span id="pfHeaderPhone">@phone</span></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="hk-pf-hero-right">
+            <button type="button" class="hk-pf-btn hk-pf-btn-glass" onclick="pfToggleEdit(true)">
+                <i class="fa-solid fa-user-pen"></i> Edit Profile
+            </button>
+        </div>
+    </header>
+
+    <!-- QUICK STATS -->
+    <div class="hk-pf-stats">
+        <div class="hk-pf-stat">
+            <div class="hk-pf-stat-icon is-success"><i class="fa-solid fa-circle-check"></i></div>
+            <div>
+                <div class="hk-pf-stat-value">@completedCount.ToString("N0")</div>
+                <div class="hk-pf-stat-label">งานที่ทำเสร็จทั้งหมด</div>
+            </div>
+        </div>
+        <div class="hk-pf-stat">
+            <div class="hk-pf-stat-icon is-warning"><i class="fa-solid fa-broom"></i></div>
+            <div>
+                <div class="hk-pf-stat-value">@activeCount.ToString("N0")</div>
+                <div class="hk-pf-stat-label">งานที่กำลังรับผิดชอบ</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN GRID -->
+    <div class="hk-pf-grid">
+
+        <!-- LEFT: PERSONAL INFORMATION -->
+        <section class="hk-pf-panel">
+            <div class="hk-pf-panel-header">
+                <div>
+                    <span class="hk-pf-eyebrow"><i class="fa-regular fa-id-card"></i> PERSONAL INFORMATION</span>
+                    <h2 class="hk-pf-panel-title">ข้อมูลส่วนตัวและตั้งค่าบัญชี</h2>
+                </div>
+                <span class="hk-pf-mode-badge" id="pfModeBadge">
+                    <i class="fa-solid fa-lock"></i> โหมดแสดงผล
+                </span>
+            </div>
+
+            <form id="pfForm" asp-controller="Housekeeping" asp-action="UpdateProfile" method="post" novalidate>
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="fullName" id="pfFullName" value="@fullName" />
+
+                <div class="hk-pf-form-grid">
+                    <div class="hk-pf-field">
+                        <label for="pfFirstName">ชื่อ (First Name) <span class="hk-pf-req">*</span></label>
+                        <div class="hk-pf-input-wrap">
+                            <i class="fa-regular fa-user"></i>
+                            <input type="text" id="pfFirstName" value="@firstName" maxlength="60" disabled required />
+                        </div>
+                    </div>
+
+                    <div class="hk-pf-field">
+                        <label for="pfLastName">นามสกุล (Last Name)</label>
+                        <div class="hk-pf-input-wrap">
+                            <i class="fa-regular fa-user"></i>
+                            <input type="text" id="pfLastName" value="@lastName" maxlength="60" disabled />
+                        </div>
+                    </div>
+
+                    <div class="hk-pf-field">
+                        <label for="pfPhone">เบอร์โทรศัพท์ (Phone Number)</label>
+                        <div class="hk-pf-input-wrap">
+                            <i class="fa-solid fa-phone"></i>
+                            <input type="tel" id="pfPhone" name="phone" value="@(emp?.Phone ?? "")" placeholder="กรอกเบอร์โทรศัพท์" maxlength="20" disabled />
+                        </div>
+                    </div>
+
+                    <div class="hk-pf-field">
+                        <label for="pfEmail">อีเมล (Email Address)</label>
+                        <div class="hk-pf-input-wrap is-readonly">
+                            <i class="fa-regular fa-envelope"></i>
+                            <input type="email" id="pfEmail" value="@(emp?.Email ?? "")" disabled readonly />
+                        </div>
+                    </div>
+
+                    <div class="hk-pf-field">
+                        <label for="pfUsername">ชื่อบัญชีผู้ใช้ (Username)</label>
+                        <div class="hk-pf-input-wrap is-readonly">
+                            <i class="fa-solid fa-at"></i>
+                            <input type="text" id="pfUsername" value="@username" disabled readonly />
+                        </div>
+                    </div>
+
+                    <div class="hk-pf-field">
+                        <label for="pfRole">ตำแหน่งงาน (Position)</label>
+                        <div class="hk-pf-input-wrap is-readonly">
+                            <i class="fa-solid fa-user-tie"></i>
+                            <input type="text" id="pfRole" value="@roleLabel" disabled readonly />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hk-pf-actions">
+                    <div id="pfDefaultActions" class="hk-pf-actions-row">
+                        <button type="button" class="hk-pf-btn hk-pf-btn-primary" onclick="pfToggleEdit(true)">
+                            <i class="fa-solid fa-pen-to-square"></i> Edit Profile
+                        </button>
+                        <button type="button" class="hk-pf-btn hk-pf-btn-outline" onclick="pfOpenPassword()">
+                            <i class="fa-solid fa-key"></i> Change Password
+                        </button>
+                    </div>
+
+                    <div id="pfEditingActions" class="hk-pf-actions-row is-end" hidden>
+                        <button type="button" class="hk-pf-btn hk-pf-btn-outline" onclick="pfCancelEdit()">
+                            <i class="fa-solid fa-xmark"></i> ยกเลิก
+                        </button>
+                        <button type="submit" class="hk-pf-btn hk-pf-btn-success">
+                            <i class="fa-solid fa-floppy-disk"></i> Save Changes
+                        </button>
+                    </div>
+                </div>
+
+                <p class="hk-pf-hint">
+                    <i class="fa-solid fa-circle-info"></i>
+                    แก้ไขได้เฉพาะชื่อและเบอร์โทรศัพท์ ส่วน Username, อีเมล และตำแหน่งงานกำหนดโดยผู้ดูแลระบบ
+                </p>
+            </form>
+        </section>
+
+        <!-- RIGHT: ACCOUNT INFO + ACTIONS -->
+        <div class="hk-pf-side">
+
+            <section class="hk-pf-panel">
+                <div class="hk-pf-panel-header">
+                    <div>
+                        <span class="hk-pf-eyebrow"><i class="fa-solid fa-shield-halved"></i> ACCOUNT STATUS</span>
+                        <h3 class="hk-pf-panel-title">ข้อมูลบัญชีผู้ใช้</h3>
+                    </div>
+                </div>
+
+                <div class="hk-pf-info-list">
+                    <div class="hk-pf-info-item">
+                        <span><i class="fa-solid fa-user-tie"></i> ตำแหน่งงาน</span>
+                        <strong>@roleLabel</strong>
+                    </div>
+                    <div class="hk-pf-info-item">
+                        <span><i class="fa-solid fa-toggle-on"></i> สถานะบัญชี</span>
+                        @if (isActive)
+                        {
+                            <span class="hk-pf-status-badge is-success"><i class="fa-solid fa-circle-check"></i> ใช้งานอยู่ (Active)</span>
+                        }
+                        else
+                        {
+                            <span class="hk-pf-status-badge is-danger"><i class="fa-solid fa-circle-xmark"></i> ปิดใช้งาน (Inactive)</span>
+                        }
+                    </div>
+                    <div class="hk-pf-info-item">
+                        <span><i class="fa-solid fa-at"></i> Username</span>
+                        <strong>@username</strong>
+                    </div>
+                    <div class="hk-pf-info-item">
+                        <span><i class="fa-regular fa-calendar"></i> สร้างบัญชีเมื่อ</span>
+                        <strong>@memberSince</strong>
+                    </div>
+                </div>
+            </section>
+
+            <section class="hk-pf-panel hk-pf-logout-card">
+                <div>
+                    <h4 class="hk-pf-logout-title"><i class="fa-solid fa-shield-halved"></i> Account Actions</h4>
+                    <p class="hk-pf-panel-subtitle">ออกจากระบบเมื่อใช้งานเสร็จ</p>
+                </div>
+                <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="hk-pf-btn hk-pf-btn-danger">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout (ออกจากระบบ)
+                    </button>
+                </form>
+            </section>
+
+        </div>
+    </div>
+</div>
+
+<!-- CHANGE PASSWORD MODAL -->
+<div class="hk-pf-modal-overlay" id="pfPasswordModal" aria-hidden="true">
+    <div class="hk-pf-modal" role="dialog" aria-modal="true" aria-labelledby="pfPasswordTitle">
+        <div class="hk-pf-modal-header">
+            <div>
+                <div class="hk-pf-modal-kicker">SECURITY</div>
+                <h5 class="hk-pf-modal-title" id="pfPasswordTitle"><i class="fa-solid fa-key"></i> เปลี่ยนรหัสผ่าน</h5>
+            </div>
+            <button type="button" class="hk-pf-modal-close" onclick="pfClosePassword()" aria-label="ปิด">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <form id="pfPasswordForm" asp-controller="Housekeeping" asp-action="ChangePassword" method="post" novalidate>
+            @Html.AntiForgeryToken()
+            <div class="hk-pf-modal-body">
+                <div class="hk-pf-field">
+                    <label for="oldPassword">รหัสผ่านเดิม <span class="hk-pf-req">*</span></label>
+                    <div class="hk-pf-input-wrap">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" id="oldPassword" name="oldPassword" autocomplete="current-password" placeholder="กรอกรหัสผ่านเดิม" required />
+                        <button type="button" class="hk-pf-eye" onclick="pfTogglePw('oldPassword', this)" aria-label="แสดงหรือซ่อนรหัสผ่าน"><i class="fa-regular fa-eye"></i></button>
+                    </div>
+                </div>
+
+                <div class="hk-pf-field">
+                    <label for="newPassword">รหัสผ่านใหม่ <span class="hk-pf-req">*</span></label>
+                    <div class="hk-pf-input-wrap">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" id="newPassword" name="newPassword" autocomplete="new-password" minlength="6" placeholder="อย่างน้อย 6 ตัวอักษร" required />
+                        <button type="button" class="hk-pf-eye" onclick="pfTogglePw('newPassword', this)" aria-label="แสดงหรือซ่อนรหัสผ่าน"><i class="fa-regular fa-eye"></i></button>
+                    </div>
+                </div>
+
+                <div class="hk-pf-field">
+                    <label for="confirmPassword">ยืนยันรหัสผ่านใหม่ <span class="hk-pf-req">*</span></label>
+                    <div class="hk-pf-input-wrap">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" id="confirmPassword" name="confirmPassword" autocomplete="new-password" minlength="6" placeholder="กรอกรหัสผ่านใหม่อีกครั้ง" required />
+                        <button type="button" class="hk-pf-eye" onclick="pfTogglePw('confirmPassword', this)" aria-label="แสดงหรือซ่อนรหัสผ่าน"><i class="fa-regular fa-eye"></i></button>
+                    </div>
+                    <small class="hk-pf-field-error" id="pfPwError" hidden></small>
+                </div>
+            </div>
+
+            <div class="hk-pf-modal-footer">
+                <button type="button" class="hk-pf-btn hk-pf-btn-outline" onclick="pfClosePassword()">ยกเลิก</button>
+                <button type="submit" class="hk-pf-btn hk-pf-btn-success">
+                    <i class="fa-solid fa-check"></i> บันทึกรหัสผ่านใหม่
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const editableIds = ["pfFirstName", "pfLastName", "pfPhone"];
+            let initial = {};
+
+            function capture() {
+                editableIds.forEach(id => initial[id] = document.getElementById(id).value);
+            }
+
+            window.pfToggleEdit = function (editing) {
+                editableIds.forEach(id => document.getElementById(id).disabled = !editing);
+                document.getElementById("pfDefaultActions").hidden = editing;
+                document.getElementById("pfEditingActions").hidden = !editing;
+
+                const badge = document.getElementById("pfModeBadge");
+                badge.classList.toggle("is-editing", editing);
+                badge.innerHTML = editing
+                    ? '<i class="fa-solid fa-pen"></i> โหมดกำลังแก้ไข'
+                    : '<i class="fa-solid fa-lock"></i> โหมดแสดงผล';
+
+                if (editing) {
+                    document.getElementById("pfFirstName").focus();
+                    document.getElementById("pfForm").scrollIntoView({ behavior: "smooth", block: "center" });
+                }
+            };
+
+            window.pfCancelEdit = function () {
+                editableIds.forEach(id => document.getElementById(id).value = initial[id]);
+                pfToggleEdit(false);
+            };
+
+            document.getElementById("pfForm").addEventListener("submit", function (e) {
+                const first = document.getElementById("pfFirstName").value.trim();
+                const last = document.getElementById("pfLastName").value.trim();
+                if (!first) {
+                    e.preventDefault();
+                    document.getElementById("pfFirstName").focus();
+                    return;
+                }
+                document.getElementById("pfFullName").value = (first + " " + last).trim();
+            });
+
+            // Password modal
+            const modal = document.getElementById("pfPasswordModal");
+
+            window.pfOpenPassword = function () {
+                modal.classList.add("is-open");
+                modal.setAttribute("aria-hidden", "false");
+                setTimeout(() => document.getElementById("oldPassword").focus(), 150);
+            };
+
+            window.pfClosePassword = function () {
+                modal.classList.remove("is-open");
+                modal.setAttribute("aria-hidden", "true");
+                document.getElementById("pfPasswordForm").reset();
+                document.getElementById("pfPwError").hidden = true;
+            };
+
+            modal.addEventListener("click", e => { if (e.target === modal) pfClosePassword(); });
+            document.addEventListener("keydown", e => { if (e.key === "Escape") pfClosePassword(); });
+
+            window.pfTogglePw = function (id, btn) {
+                const input = document.getElementById(id);
+                const icon = btn.querySelector("i");
+                const show = input.type === "password";
+                input.type = show ? "text" : "password";
+                icon.className = show ? "fa-regular fa-eye-slash" : "fa-regular fa-eye";
+            };
+
+            document.getElementById("pfPasswordForm").addEventListener("submit", function (e) {
+                const nw = document.getElementById("newPassword").value;
+                const cf = document.getElementById("confirmPassword").value;
+                const err = document.getElementById("pfPwError");
+
+                if (nw.length < 6) {
+                    e.preventDefault();
+                    err.textContent = "รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร";
+                    err.hidden = false;
+                } else if (nw !== cf) {
+                    e.preventDefault();
+                    err.textContent = "รหัสผ่านใหม่และการยืนยันรหัสผ่านไม่ตรงกัน";
+                    err.hidden = false;
+                } else {
+                    err.hidden = true;
+                }
+            });
+
+            capture();
+
+            if (@(openPasswordModal ? "true" : "false")) {
+                pfOpenPassword();
+            }
+        })();
+    </script>
+}

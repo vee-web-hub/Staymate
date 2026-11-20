@@ -1,85 +1,184 @@
+@{
+    var currentController = ViewContext.RouteData.Values["Controller"]?.ToString() ?? "";
+    var currentAction = ViewContext.RouteData.Values["Action"]?.ToString() ?? "";
+}
 <!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <title>@ViewData["Title"] - StayMate Housekeeping</title>
 
+    <!-- Google Fonts: Prompt -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Core Styles -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="stylesheet" href="~/css/staymate-layout.css" asp-append-version="true" />
-</head>
-<body class="staff-page">
+    <link rel="stylesheet" href="~/css/Housekeeping.css" asp-append-version="true" />
 
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+
+<body class="staff-page" style="font-family: 'Prompt', sans-serif;">
+
+    <!-- HEADER -->
     <header class="staff-header">
         <div class="brand-group">
-            <a asp-controller="Housekeeping" asp-action="Index" class="brand-group text-decoration-none">
-                <img src="~/images/Logo/LogoStayMate.jpg" 
-                     alt="StayMate Logo" 
-                     class="brand-logo-img" 
-                     onerror="this.onerror=null; this.src='https://placehold.co/76x76/070D1E/00E5FF?text=SM';" />
+            <!-- Mobile Sidebar Toggle Button -->
+            <button type="button"
+                    id="btnStaffSidebarToggle"
+                    class="btn btn-sm text-light d-lg-none me-2"
+                    aria-label="เปิด/ปิดเมนู">
+                <i class="fa-solid fa-bars fs-5"></i>
+            </button>
+
+            <a asp-controller="Housekeeping"
+               asp-action="Index"
+               class="brand-group text-decoration-none">
+                <img src="~/images/Logo/LogoStayMate.jpg"
+                     alt="StayMate Logo"
+                     class="brand-logo-img" />
                 <span class="brand-text">StayMate</span>
             </a>
-            <span class="staff-portal-badge ms-2">
-                <i class="fa-solid fa-broom text-info"></i> Housekeeping Portal
+
+            <span class="staff-portal-badge ms-2 d-none d-sm-inline-flex align-items-center gap-2">
+                <i class="fa-solid fa-broom text-info"></i>
+                <span>Housekeeping Portal</span>
             </span>
         </div>
 
         <div class="header-actions">
-            <!-- ปุ่มแจ้งเตือน (วงสีเหลือง) -->
+            <!-- Notification (ลิงก์ไปหน้ารายการงานที่มอบหมาย) -->
             <div class="notification-btn-wrapper">
-                <button type="button" class="btn-header-notification" title="งานทำความสะอาดด่วนใหม่">
+                <a asp-controller="Housekeeping"
+                   asp-action="CleaningTasks"
+                   class="btn-header-notification text-decoration-none d-inline-flex align-items-center justify-content-center"
+                   title="ดูงานทำความสะอาดล่าสุด">
                     <i class="fa-regular fa-bell"></i>
                     <span class="notification-pulse-dot"></span>
-                </button>
+                </a>
             </div>
 
-            <div class="user-badge-chip">
-                <i class="fa-solid fa-hands-bubbles text-warning"></i>
-                <span>@(User.Identity?.Name ?? "Housekeeper")</span>
-            </div>
+            <!-- Profile Link -->
+            <a asp-controller="Housekeeping"
+               asp-action="Profile"
+               class="user-badge-chip text-decoration-none">
+                <i class="fa-solid fa-circle-user text-info"></i>
+                <span>
+                    @(User.Identity?.Name ?? "Housekeeper")
+                </span>
+            </a>
 
-            <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline m-0">
+            <!-- Logout -->
+            <form asp-controller="Account"
+                  asp-action="Logout"
+                  method="post"
+                  class="d-inline m-0">
+                @Html.AntiForgeryToken()
                 <button type="submit" class="btn-header-logout">
-                    <i class="fa-solid fa-arrow-right-from-bracket"></i> ออกจากระบบ
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    <span class="d-none d-md-inline">ออกจากระบบ</span>
                 </button>
             </form>
         </div>
     </header>
 
+    <!-- MAIN CONTAINER -->
     <div class="staff-container">
-        <aside class="staff-sidebar">
-            <div class="sidebar-category-title">CLEANING MANAGEMENT</div>
+
+        <!-- SIDEBAR -->
+        <aside id="staffSidebar" class="staff-sidebar">
+            <div class="sidebar-category-title">
+                CLEANING MANAGEMENT
+            </div>
+
             <nav>
-                <!-- ครบ 4 เมนูตาม SRS ข้อ 5 -->
-                <a asp-controller="Housekeeping" asp-action="Index">
-                    <i class="fa-solid fa-table-cells-large"></i> กระดานรวม (Board)
+                <!-- 1. Dashboard -->
+                <a asp-controller="Housekeeping"
+                   asp-action="Index"
+                   class="@(currentAction == "Index" ? "active" : "")">
+                    <i class="fa-solid fa-table-cells-large"></i>
+                    <span>กระดานรวม (Dashboard)</span>
                 </a>
-                <a asp-controller="Housekeeping" asp-action="Tasks">
-                    <i class="fa-solid fa-list-check text-warning"></i> รายการห้องที่มอบหมาย
+
+                <!-- 2. Cleaning Tasks (แก้ไขจาก Tasks -> CleaningTasks ให้ตรงกับ Controller) -->
+                <a asp-controller="Housekeeping"
+                   asp-action="CleaningTasks"
+                   class="@(currentAction == "CleaningTasks" || currentAction == "Tasks" || currentAction == "TaskDetails" ? "active" : "")">
+                    <i class="fa-solid fa-list-check text-warning"></i>
+                    <span>รายการห้องที่มอบหมาย</span>
                 </a>
-                <a asp-controller="Housekeeping" asp-action="TaskDetails">
-                    <i class="fa-solid fa-clipboard-question text-info"></i> รายละเอียดงานรายห้อง
+
+                <!-- 3. Room Status -->
+                <a asp-controller="Housekeeping"
+                   asp-action="RoomStatus"
+                   class="@(currentAction == "RoomStatus" ? "active" : "")">
+                    <i class="fa-solid fa-circle-check text-success"></i>
+                    <span>อัปเดตสถานะห้องพัก</span>
                 </a>
-                <a asp-controller="Housekeeping" asp-action="RoomStatus">
-                    <i class="fa-solid fa-circle-check text-success"></i>  อัปเดตสถานะห้องพัก
+
+                <!-- 4. History (ประวัติงานของฉันที่มีอยู่ใน HousekeepingController) -->
+                <a asp-controller="Housekeeping"
+                   asp-action="History"
+                   class="@(currentAction == "History" ? "active" : "")">
+                    <i class="fa-solid fa-clock-rotate-left text-info"></i>
+                    <span>ประวัติงานทำความสะอาด</span>
                 </a>
             </nav>
 
-           
+            <div class="sidebar-category-title mt-4">
+                ACCOUNT
+            </div>
+
+            <nav>
+                <a asp-controller="Housekeeping"
+                   asp-action="Profile"
+                   class="@(currentAction == "Profile" ? "active" : "")">
+                    <i class="fa-solid fa-user-circle"></i>
+                    <span>ข้อมูลส่วนตัว (My Profile)</span>
+                </a>
+            </nav>
         </aside>
 
+        <!-- PAGE CONTENT -->
         <main class="staff-content">
             @RenderBody()
         </main>
+
     </div>
 
+    <!-- FOOTER -->
     <footer class="staff-footer">
         <span>© 2026 StayMate Housekeeping Board</span>
-        <span>Fast Touch Friendly PMS</span>
+        <span>Simple Smart Operations • Fast Touch Friendly PMS</span>
     </footer>
 
+    <!-- Scripts -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- SweetAlert2 (สำหรับ Confirmation Dialog และ Toast Notification ที่สวยงาม) -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        // สคริปต์เปิด-ปิด Sidebar บนหน้าจอมือถือ/แท็บเล็ต
+        (function () {
+            var toggleBtn = document.getElementById('btnStaffSidebarToggle');
+            var sidebar = document.getElementById('staffSidebar');
+            if (toggleBtn && sidebar) {
+                toggleBtn.addEventListener('click', function () {
+                    sidebar.classList.toggle('is-open-mobile');
+                });
+            }
+        })();
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
+
 </body>
 </html>

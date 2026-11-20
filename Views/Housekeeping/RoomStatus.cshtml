@@ -1,0 +1,498 @@
+@model StayMate_Kavinvee_0576.Models.ViewModels.HousekeepingViewModel
+@using System.Globalization
+@{
+    ViewData["Title"] = "อัปเดตสถานะห้องพัก - Room Status Management";
+    Layout = "~/Views/Shared/_HousekeepingLayout.cshtml";
+    var thaiCulture = new CultureInfo("th-TH");
+    var formattedDate = Model.CurrentDate.ToString("วันddddที่ d MMMM yyyy", thaiCulture);
+    var roomsByFloor = Model.Rooms
+        .GroupBy(r => r.FloorNo)
+        .OrderBy(g => g.Key)
+        .ToList();
+}
+
+<div id="hkApp"
+     class="hk-dashboard-wrapper hk-room-status-page"
+     data-page="room-status"
+     data-base-url="@Url.Content("~/Housekeeping")"
+     data-update-room-url="@Url.Action("UpdateRoomStatusWorkflow", "Housekeeping")">
+
+    @Html.AntiForgeryToken()
+
+    <!-- =========================================================
+         2. PAGE HEADER
+         ========================================================= -->
+    <header class="hk-page-header hk-fade-in">
+        <div class="hk-page-header-left">
+            <nav aria-label="breadcrumb" class="hk-breadcrumb-nav">
+                <ol class="hk-breadcrumb">
+                    <li><a asp-controller="Housekeeping" asp-action="Index">Housekeeping</a></li>
+                    <li class="hk-breadcrumb-sep">/</li>
+                    <li class="active" aria-current="page">Room Status</li>
+                </ol>
+            </nav>
+            <h1 class="hk-page-main-title">อัปเดตสถานะห้องพัก</h1>
+            <p class="hk-page-description">ตรวจสอบและจัดการสถานะห้องพัก</p>
+        </div>
+
+        <div class="hk-page-header-right">
+            <div class="hk-date-chip">
+                <i class="fa-regular fa-calendar"></i>
+                <span>@formattedDate</span>
+            </div>
+            <button type="button" id="btnRefreshRoomStatus" class="hk-btn hk-btn-primary">
+                <i class="fa-solid fa-rotate"></i>
+                <span>Refresh</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- =========================================================
+         3. ROOM STATUS SUMMARY (5 ใบ ดึงข้อมูลจริงจาก Database)
+         ========================================================= -->
+    <section class="hk-status-summary-grid hk-fade-in" aria-label="สรุปสถานะห้องพักทั้ง 5 สถานะ">
+        <!-- 1. Available Rooms (Green) -->
+        <article class="hk-kpi-card hk-summary-available">
+            <div class="hk-kpi-icon-wrap hk-icon-success">
+                <i class="fa-solid fa-door-open fs-4"></i>
+            </div>
+            <div class="hk-kpi-info">
+                <span class="hk-kpi-label">Available Rooms</span>
+                <h2 id="sumAvailableRooms" class="hk-kpi-number" data-hk-counter="@Model.AvailableRooms">@Model.AvailableRooms</h2>
+                <span class="hk-kpi-sub">ห้องพร้อมให้บริการ</span>
+            </div>
+        </article>
+
+        <!-- 2. Occupied Rooms (Blue) -->
+        <article class="hk-kpi-card hk-summary-occupied">
+            <div class="hk-kpi-icon-wrap hk-icon-info">
+                <i class="fa-solid fa-bed fs-4"></i>
+            </div>
+            <div class="hk-kpi-info">
+                <span class="hk-kpi-label">Occupied Rooms</span>
+                <h2 id="sumOccupiedRooms" class="hk-kpi-number" data-hk-counter="@Model.OccupiedRooms">@Model.OccupiedRooms</h2>
+                <span class="hk-kpi-sub">ห้องที่มีลูกค้าเข้าพัก</span>
+            </div>
+        </article>
+
+        <!-- 3. Pending Cleaning (Orange) -->
+        <article class="hk-kpi-card hk-summary-pending">
+            <div class="hk-kpi-icon-wrap hk-icon-warning">
+                <i class="fa-solid fa-clock fs-4"></i>
+            </div>
+            <div class="hk-kpi-info">
+                <span class="hk-kpi-label">Pending Cleaning</span>
+                <h2 id="sumPendingCleaning" class="hk-kpi-number" data-hk-counter="@Model.PendingCleaningRooms">@Model.PendingCleaningRooms</h2>
+                <span class="hk-kpi-sub">ห้องรอทำความสะอาด</span>
+            </div>
+        </article>
+
+        <!-- 4. In Progress (Purple) -->
+        <article class="hk-kpi-card hk-summary-inprogress">
+            <div class="hk-kpi-icon-wrap hk-icon-purple">
+                <i class="fa-solid fa-broom fs-4"></i>
+            </div>
+            <div class="hk-kpi-info">
+                <span class="hk-kpi-label">In Progress</span>
+                <h2 id="sumInProgressCleaning" class="hk-kpi-number" data-hk-counter="@Model.InProgressCleaningRooms">@Model.InProgressCleaningRooms</h2>
+                <span class="hk-kpi-sub">ห้องกำลังทำความสะอาด</span>
+            </div>
+        </article>
+
+        <!-- 5. Maintenance (Red) -->
+        <article class="hk-kpi-card hk-summary-maintenance">
+            <div class="hk-kpi-icon-wrap hk-icon-danger">
+                <i class="fa-solid fa-screwdriver-wrench fs-4"></i>
+            </div>
+            <div class="hk-kpi-info">
+                <span class="hk-kpi-label">Maintenance</span>
+                <h2 id="sumMaintenanceRooms" class="hk-kpi-number" data-hk-counter="@Model.MaintenanceRooms">@Model.MaintenanceRooms</h2>
+                <span class="hk-kpi-sub">ห้องที่ต้องซ่อมบำรุง</span>
+            </div>
+        </article>
+    </section>
+
+    <!-- =========================================================
+         4. ROOM SEARCH & FILTER
+         ========================================================= -->
+    <section class="hk-section-card hk-fade-in" aria-label="ค้นหาและกรองห้องพัก">
+        <div class="hk-filter-top-bar">
+            <div class="hk-filter-title-group">
+                <h2 class="hk-section-title"><i class="fa-solid fa-sliders me-2 text-primary"></i>ค้นหาและตัวกรองห้องพัก (Room Search & Filter)</h2>
+                <button type="button" id="btnToggleRoomFilterMobile" class="hk-btn hk-btn-outline hk-btn-sm hk-mobile-only">
+                    <i class="fa-solid fa-filter"></i> พับ/เปิด ตัวกรอง
+                </button>
+            </div>
+            <div class="hk-legend-pills">
+                <span class="hk-legend-item"><i class="hk-dot hk-dot-available"></i> Available</span>
+                <span class="hk-legend-item"><i class="hk-dot hk-dot-occupied"></i> Occupied</span>
+                <span class="hk-legend-item"><i class="hk-dot hk-dot-pending"></i> Pending Cleaning</span>
+                <span class="hk-legend-item"><i class="hk-dot hk-dot-purple"></i> In Progress</span>
+                <span class="hk-legend-item"><i class="hk-dot hk-dot-maintenance"></i> Maintenance</span>
+            </div>
+        </div>
+
+        <div id="hkRoomFilterPanel" class="hk-room-filter-grid">
+            <!-- Search Room Number -->
+            <div class="hk-filter-group">
+                <label for="rsSearchRoom" class="hk-label">Search Room Number</label>
+                <input type="search" id="rsSearchRoom" class="hk-input" placeholder="ค้นหาหมายเลขห้อง เช่น 101, 302..." autocomplete="off" />
+            </div>
+
+            <!-- Filter by Floor -->
+            <div class="hk-filter-group">
+                <label for="rsFloorFilter" class="hk-label">Filter by Floor</label>
+                <select id="rsFloorFilter" class="hk-select">
+                    <option value="">ทุกชั้น (All Floors)</option>
+                    @foreach (var floor in Model.AvailableFloors)
+                    {
+                        <option value="@floor">ชั้น @floor</option>
+                    }
+                </select>
+            </div>
+
+            <!-- Filter by Room Type -->
+            <div class="hk-filter-group">
+                <label for="rsTypeFilter" class="hk-label">Filter by Room Type</label>
+                <select id="rsTypeFilter" class="hk-select">
+                    <option value="">ทุกประเภทห้อง (All Types)</option>
+                    @foreach (var rt in Model.AvailableRoomTypes)
+                    {
+                        <option value="@rt">@rt</option>
+                    }
+                </select>
+            </div>
+
+            <!-- Filter by Room Status -->
+            <div class="hk-filter-group">
+                <label for="rsStatusFilter" class="hk-label">Filter by Room Status</label>
+                <select id="rsStatusFilter" class="hk-select">
+                    <option value="">ทุกสถานะ (All Status)</option>
+                    <option value="available">Available (พร้อมให้บริการ)</option>
+                    <option value="occupied">Occupied (มีลูกค้าเข้าพัก)</option>
+                    <option value="pending_cleaning">Pending Cleaning (รอทำความสะอาด)</option>
+                    <option value="in_progress">In Progress (กำลังทำความสะอาด)</option>
+                    <option value="maintenance">Maintenance (ซ่อมบำรุง)</option>
+                </select>
+            </div>
+
+            <!-- Sort by Room Number / Status -->
+            <div class="hk-filter-group">
+                <label for="rsSortBy" class="hk-label">Sort By</label>
+                <select id="rsSortBy" class="hk-select">
+                    <option value="room_asc">หมายเลขห้อง (น้อยไปมาก)</option>
+                    <option value="room_desc">หมายเลขห้อง (มากไปน้อย)</option>
+                    <option value="status_priority">สถานะที่ต้องดูแลก่อน (Status Priority)</option>
+                </select>
+            </div>
+
+            <!-- Reset Filter -->
+            <div class="hk-filter-group hk-filter-reset">
+                <button type="button" id="btnResetRoomFilters" class="hk-btn hk-btn-light w-100">
+                    <i class="fa-solid fa-rotate-left"></i> Reset Filter
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         5. ROOM STATUS DISPLAY (แสดงห้องพักเป็น Room Cards แยกตามชั้น)
+         ========================================================= -->
+    <div id="hkFloorsContainer">
+        @if (roomsByFloor.Any())
+        {
+            @foreach (var floorGroup in roomsByFloor)
+            {
+                <section class="hk-floor-section hk-fade-in" data-floor-section="@floorGroup.Key">
+                    <div class="hk-floor-header">
+                        <div class="hk-floor-badge-title">
+                            <span class="hk-floor-number-pill">FL @floorGroup.Key</span>
+                            <h3 class="hk-floor-heading">ชั้นที่ @floorGroup.Key (Floor @floorGroup.Key)</h3>
+                        </div>
+                        <span class="hk-floor-count-text">ทั้งหมด @floorGroup.Count() ห้อง</span>
+                    </div>
+
+                    <div class="hk-rs-cards-grid" data-floor-grid="@floorGroup.Key">
+                        @foreach (var room in floorGroup)
+                        {
+                            var mState = room.ManagementState;
+                            var cardStateClass = mState switch
+                            {
+                                "available" => "hk-rs-card-available",
+                                "occupied" => "hk-rs-card-occupied",
+                                "pending_cleaning" => "hk-rs-card-pending",
+                                "in_progress" => "hk-rs-card-inprogress",
+                                "maintenance" => "hk-rs-card-maintenance",
+                                _ => "hk-rs-card-available"
+                            };
+
+                            var badgeStateClass = mState switch
+                            {
+                                "available" => "hk-rs-badge-available",
+                                "occupied" => "hk-rs-badge-occupied",
+                                "pending_cleaning" => "hk-rs-badge-pending",
+                                "in_progress" => "hk-rs-badge-inprogress",
+                                "maintenance" => "hk-rs-badge-maintenance",
+                                _ => "hk-rs-badge-available"
+                            };
+
+                            var updatedTimeStr = room.LastUpdatedAt.HasValue
+                                ? room.LastUpdatedAt.Value.ToString("dd MMM yyyy HH:mm น.", thaiCulture)
+                                : "ยังไม่มีประวัติอัปเดต";
+
+                            var responsiblePerson = !string.IsNullOrWhiteSpace(room.OpenTaskAssignedToName)
+                                ? room.OpenTaskAssignedToName
+                                : (!string.IsNullOrWhiteSpace(room.LastUpdatedBy) ? room.LastUpdatedBy : "-");
+
+                            <article class="hk-rs-room-card @cardStateClass"
+                                     data-room-id="@room.RoomId"
+                                     data-room-number="@room.RoomNumber"
+                                     data-floor="@room.FloorNo"
+                                     data-room-type="@(room.RoomTypeName ?? "Standard")"
+                                     data-management-state="@mState"
+                                     data-raw-room-status="@room.Status"
+                                     data-task-id="@room.OpenTaskId"
+                                     data-task-status="@room.OpenTaskStatus"
+                                     data-sort-order="@room.ManagementSortOrder"
+                                     data-state-label="@room.ManagementStateLabel"
+                                     data-cleaning-label="@room.CleaningTaskBadgeText"
+                                     data-note="@(room.OpenTaskNote ?? room.LastStatusNote ?? "")">
+
+                                <div class="hk-rs-card-top">
+                                    <div>
+                                        <span class="hk-rs-floor-tag">ชั้น @room.FloorNo • @(room.RoomTypeName ?? "Standard")</span>
+                                        <h4 class="hk-rs-room-no">@room.RoomNumber</h4>
+                                    </div>
+                                    <span class="hk-rs-status-pill @badgeStateClass">
+                                        @room.ManagementStateLabel
+                                    </span>
+                                </div>
+
+                                <div class="hk-rs-card-body">
+                                    <!-- แยกสถานะ Room Status และ Cleaning Task Status อย่างชัดเจน -->
+                                    <div class="hk-rs-status-split">
+                                        <div class="hk-rs-split-item">
+                                            <span class="hk-rs-split-label">Room Status (สถานะห้อง)</span>
+                                            <strong class="hk-rs-split-val">@room.StatusLabel</strong>
+                                        </div>
+                                        <div class="hk-rs-split-item">
+                                            <span class="hk-rs-split-label">Cleaning Task (งานแม่บ้าน)</span>
+                                            <strong class="hk-rs-split-val">@room.CleaningTaskBadgeText</strong>
+                                        </div>
+                                    </div>
+
+                                    <div class="hk-rs-meta-list">
+                                        <div class="hk-rs-meta-row">
+                                            <span><i class="fa-regular fa-user me-1"></i>ผู้รับผิดชอบ:</span>
+                                            <strong>@responsiblePerson</strong>
+                                        </div>
+                                        <div class="hk-rs-meta-row">
+                                            <span><i class="fa-regular fa-clock me-1"></i>อัปเดตล่าสุด:</span>
+                                            <span>@updatedTimeStr</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="hk-rs-card-footer">
+                                    @if (mState == "occupied")
+                                    {
+                                        <button type="button"
+                                                class="hk-btn hk-btn-outline hk-btn-block"
+                                                data-rs-open-modal="true">
+                                            <i class="fa-solid fa-lock me-1"></i> มีลูกค้าเข้าพัก (ดูข้อมูล)
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button type="button"
+                                                class="hk-btn hk-btn-primary hk-btn-block"
+                                                data-rs-open-modal="true">
+                                            <i class="fa-solid fa-pen-to-square me-1"></i> จัดการสถานะห้องพัก
+                                        </button>
+                                    }
+                                </div>
+                            </article>
+                        }
+                    </div>
+                </section>
+            }
+        }
+
+        <div id="hkRoomStatusEmpty" class="hk-empty-modern" @(Model.Rooms.Any() ? "hidden" : "")>
+            <div class="hk-empty-icon-circle">
+                <i class="fa-solid fa-Magnifying-glass fs-2"></i>
+            </div>
+            <h3 class="hk-empty-title">ไม่พบห้องพักที่ตรงกับเงื่อนไข</h3>
+            <p class="hk-empty-subtitle">ลองเปลี่ยนตัวกรองหรือกดปุ่ม Reset Filter เพื่อดูห้องพักทั้งหมด</p>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         9. ROOM STATUS HISTORY (ดึงจากตารางจริง room_status_history)
+         ========================================================= -->
+    <section class="hk-section-card hk-fade-in mt-4" aria-label="ประวัติการเปลี่ยนสถานะห้องพัก">
+        <div class="hk-section-header">
+            <div>
+                <h2 class="hk-section-title"><i class="fa-solid fa-clock-rotate-left me-2 text-primary"></i>ประวัติการเปลี่ยนสถานะของห้อง (Room Status History)</h2>
+                <p class="hk-section-subtitle">แสดงรายการเปลี่ยนสถานะห้องพักล่าสุดจากฐานข้อมูลจริง เรียงจากล่าสุดไปเก่าสุด</p>
+            </div>
+        </div>
+
+        @if (Model.RoomStatusHistories.Any())
+        {
+            <div class="hk-table-responsive">
+                <table class="hk-table">
+                    <thead>
+                        <tr>
+                            <th>Room Number</th>
+                            <th>Previous Status</th>
+                            <th>New Status</th>
+                            <th>Changed By</th>
+                            <th>Changed Date</th>
+                            <th>Note</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var h in Model.RoomStatusHistories)
+                        {
+                            var oldBadge = h.OldStatus switch
+                            {
+                                "available" => "hk-rs-badge-available",
+                                "occupied" => "hk-rs-badge-occupied",
+                                "needs_cleaning" => "hk-rs-badge-pending",
+                                "maintenance" => "hk-rs-badge-maintenance",
+                                _ => "hk-badge-pending"
+                            };
+
+                            var newBadge = h.NewStatus switch
+                            {
+                                "available" => "hk-rs-badge-available",
+                                "occupied" => "hk-rs-badge-occupied",
+                                "needs_cleaning" => "hk-rs-badge-pending",
+                                "maintenance" => "hk-rs-badge-maintenance",
+                                _ => "hk-badge-pending"
+                            };
+
+                            <tr>
+                                <td data-label="Room Number">
+                                    <span class="hk-room-pill">ห้อง @h.RoomNumber</span>
+                                    <span class="hk-task-id-sub">ชั้น @h.FloorNo</span>
+                                </td>
+                                <td data-label="Previous Status">
+                                    <span class="hk-rs-status-pill @oldBadge">@h.OldStatusLabel</span>
+                                </td>
+                                <td data-label="New Status">
+                                    <span class="hk-rs-status-pill @newBadge">@h.NewStatusLabel</span>
+                                </td>
+                                <td data-label="Changed By">
+                                    <strong>@h.ChangedByName</strong>
+                                </td>
+                                <td data-label="Changed Date">
+                                    @h.ChangedAt.ToString("dd MMM yyyy • HH:mm น.", thaiCulture)
+                                </td>
+                                <td data-label="Note">
+                                    @(string.IsNullOrWhiteSpace(h.Note) ? "-" : h.Note)
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="hk-empty-state">
+                <p>ยังไม่มีประวัติการเปลี่ยนสถานะห้องพักในระบบ</p>
+            </div>
+        }
+    </section>
+
+    <!-- =========================================================
+         7 & 8. UPDATE STATUS MODAL + CLEANING COMPLETION CHECKLIST
+         ========================================================= -->
+    <div id="rsUpdateModal" class="hk-modal" hidden>
+        <div class="hk-modal-dialog hk-rs-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="rsModalTitle">
+            <button type="button" class="hk-modal-close hk-rs-modal-close" aria-label="ปิดหน้าต่าง">&times;</button>
+
+            <div class="hk-modal-header-block">
+                <span id="rsModalFloorType" class="hk-rs-floor-tag">ชั้น -</span>
+                <h3 id="rsModalTitle" class="hk-modal-title">จัดการสถานะห้องพัก <span id="rsModalRoomNumber">-</span></h3>
+            </div>
+
+            <div class="hk-rs-current-status-box">
+                <div class="hk-rs-cs-row">
+                    <span>สถานะปัจจุบัน (Current Status):</span>
+                    <strong id="rsModalCurrentStateLabel">-</strong>
+                </div>
+                <div class="hk-rs-cs-row">
+                    <span>สถานะงานทำความสะอาด:</span>
+                    <span id="rsModalCleaningLabel">-</span>
+                </div>
+            </div>
+
+            <!-- แจ้งเตือนกรณีห้อง Occupied -->
+            <div id="rsOccupiedAlert" class="hk-alert hk-alert-danger" hidden>
+                <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                <strong>ไม่สามารถเปลี่ยนสถานะได้:</strong> ห้องนี้มีลูกค้าเข้าพักอยู่ (Occupied) ตามกฎความปลอดภัยของโรงแรม ฝ่ายแม่บ้านไม่สามารถเปลี่ยนเป็น Available หรือ Pending Cleaning ได้โดยตรง
+            </div>
+
+            <form id="rsUpdateForm" novalidate>
+                <input type="hidden" id="rsFormRoomId" name="roomId" />
+
+                <div id="rsActionOptionsWrap" class="hk-form-group mb-3">
+                    <label class="hk-label">เลือกสถานะ / การดำเนินการที่ต้องการเปลี่ยน <span class="text-danger">*</span></label>
+                    <div id="rsRadioOptionsList" class="hk-rs-action-radios">
+                        <!-- สร้างตัวเลือกตามสถานะจริงของห้องด้วย JS -->
+                    </div>
+                </div>
+
+                <!-- 8. Cleaning Completion Checklist (แสดงเมื่อเลือก "ทำความสะอาดเสร็จสิ้น -> Available") -->
+                <div id="rsChecklistBox" class="hk-rs-checklist-box" hidden>
+                    <h4 class="hk-rs-checklist-title">
+                        <i class="fa-solid fa-clipboard-check text-success me-1"></i>
+                        Checklist ตรวจสอบความพร้อมก่อนเปิดขายห้อง (Available)
+                    </h4>
+                    <p class="hk-rs-checklist-sub">ต้องตรวจสอบและติ๊กครบทุกข้อก่อนยืนยันเปลี่ยนห้องเป็น Available</p>
+
+                    <label class="hk-check-item">
+                        <input type="checkbox" id="chkBedLinens" name="checkBedLinens" value="true" />
+                        <span>1. จัดเตียง เปลี่ยนผ้าปูที่นอน ปลอกหมอน และผ้าเช็ดตัวสะอาดครบถ้วน</span>
+                    </label>
+                    <label class="hk-check-item">
+                        <input type="checkbox" id="chkBathroom" name="checkBathroom" value="true" />
+                        <span>2. ทำความสะอาดห้องน้ำ สุขภัณฑ์ และเติมสบู่/แชมพู/กระดาษชำระเรียบร้อย</span>
+                    </label>
+                    <label class="hk-check-item">
+                        <input type="checkbox" id="chkAmenities" name="checkAmenities" value="true" />
+                        <span>3. เติมน้ำดื่ม ของใช้ภายในห้อง และตรวจสอบความสะอาดพื้น/กระจก</span>
+                    </label>
+                    <label class="hk-check-item">
+                        <input type="checkbox" id="chkAppliances" name="checkAppliances" value="true" />
+                        <span>4. ตรวจสอบเครื่องปรับอากาศ หลอดไฟ ทีวี และอุปกรณ์ไฟฟ้าทำงานปกติ</span>
+                    </label>
+                </div>
+
+                <div id="rsNoteGroup" class="hk-form-group mt-3">
+                    <label for="rsFormNote" id="rsFormNoteLabel" class="hk-label">หมายเหตุ / รายละเอียดเพิ่มเติม</label>
+                    <textarea id="rsFormNote"
+                              name="note"
+                              rows="3"
+                              class="hk-textarea"
+                              placeholder="ระบุหมายเหตุการตรวจสอบห้อง หรือระบุอาการชำรุดกรณีแจ้ง Maintenance..."
+                              maxlength="240"></textarea>
+                </div>
+
+                <div class="hk-modal-actions">
+                    <button type="button" class="hk-btn hk-btn-light hk-rs-modal-close">ยกเลิก</button>
+                    <button type="submit" id="rsSubmitBtn" class="hk-btn hk-btn-primary">
+                        <i class="fa-solid fa-check me-1"></i> ยืนยันการเปลี่ยนสถานะ
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/Housekeeping.js" asp-append-version="true"></script>
+}
