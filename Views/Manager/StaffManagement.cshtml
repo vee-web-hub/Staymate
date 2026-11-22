@@ -1,0 +1,1104 @@
+@model StayMate_Kavinvee_0576.Models.ViewModels.ManagerStaffManagementViewModel
+@using System.Globalization
+@using System.Security.Claims
+@using System.Text.Json
+@{
+    ViewData["Title"] = "จัดการบัญชีพนักงาน (Staff Management)";
+    Layout = "~/Views/Shared/_ManagerLayout.cshtml";
+
+    var staffList = Model.Staff ?? new List<StayMate_Kavinvee_0576.Models.ViewModels.ManagerStaffRow>();
+    var totalStaff = Model.TotalStaff;
+    var activeStaff = Model.ActiveStaff;
+    var suspendedStaff = Model.InactiveStaff;
+
+    // ฟังก์ชันตรวจสอบบทบาทจากข้อมูลจริงใน Model.Staff (รองรับรหัส Role มาตรฐานของระบบ)
+    bool HasOperationalRole(StayMate_Kavinvee_0576.Models.ViewModels.ManagerStaffRow s, string keyword1, string keyword2)
+    {
+        if (s.Roles == null) return false;
+        return s.Roles.Any(r =>
+            r.RoleCode.Contains(keyword1, StringComparison.OrdinalIgnoreCase) ||
+            r.RoleName.Contains(keyword1, StringComparison.OrdinalIgnoreCase) ||
+            r.RoleCode.Contains(keyword2, StringComparison.OrdinalIgnoreCase) ||
+            r.RoleName.Contains(keyword2, StringComparison.OrdinalIgnoreCase));
+    }
+
+    bool IsOwnerAccount(StayMate_Kavinvee_0576.Models.ViewModels.ManagerStaffRow s)
+    {
+        return s.Roles != null && s.Roles.Any(r => r.RoleCode.Equals("OWNER", StringComparison.OrdinalIgnoreCase));
+    }
+
+    var currentUserIdRaw = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    uint.TryParse(currentUserIdRaw, out var currentUserId);
+
+    // คำนวณจำนวนพนักงานตามสายงานจริงจาก Model.Staff
+    var frontAdminList = staffList.Where(s => HasOperationalRole(s, "FRONT", "RECEPTION")).ToList();
+    var financeList = staffList.Where(s => HasOperationalRole(s, "FINANCE", "ACCOUNT")).ToList();
+    var housekeepingList = staffList.Where(s => HasOperationalRole(s, "HOUSEKEEPING", "MAID")).ToList();
+
+    var frontCount = frontAdminList.Count;
+    var frontActive = frontAdminList.Count(s => s.IsActive);
+    var frontSuspended = frontCount - frontActive;
+
+    var financeCount = financeList.Count;
+    var financeActive = financeList.Count(s => s.IsActive);
+    var financeSuspended = financeCount - financeActive;
+
+    var hkCount = housekeepingList.Count;
+    var hkActive = housekeepingList.Count(s => s.IsActive);
+    var hkSuspended = hkCount - hkActive;
+
+    decimal CalcPercent(int count, int total) => total > 0 ? Math.Round((decimal)count * 100m / total, 1) : 0m;
+
+    var activePercent = CalcPercent(activeStaff, totalStaff);
+    var suspendedPercent = CalcPercent(suspendedStaff, totalStaff);
+
+    var frontPercent = CalcPercent(frontCount, totalStaff);
+    var financePercent = CalcPercent(financeCount, totalStaff);
+    var hkPercent = CalcPercent(hkCount, totalStaff);
+
+    // กรอง RoleOptions สำหรับแสดงในข้อกำหนดการเพิ่มพนักงาน (ตัด OWNER และ MANAGER ออกตามกฎ RBAC)
+    var allowedOperationalRoles = (Model.RoleOptions ?? new List<StayMate_Kavinvee_0576.Models.ViewModels.ManagerOption>())
+        .Where(ro => !ro.Value.Equals("OWNER", StringComparison.OrdinalIgnoreCase) &&
+                     !ro.Value.Equals("MANAGER", StringComparison.OrdinalIgnoreCase))
+        .ToList();
+}
+
+<div class="manager-portal-wrapper manager-staff-page">
+
+    <!-- ═══════════════════════ Alerts (TempData & Validation) ═══════════════════════ -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="manager-alert manager-alert-success" role="alert">
+            <div class="manager-alert-content">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>@TempData["SuccessMessage"]</span>
+            </div>
+            <button type="button" class="manager-alert-close" data-bs-dismiss="alert" aria-label="Close">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="manager-alert manager-alert-danger" role="alert">
+            <div class="manager-alert-content">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span>@TempData["ErrorMessage"]</span>
+            </div>
+            <button type="button" class="manager-alert-close" data-bs-dismiss="alert" aria-label="Close">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+    }
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="manager-alert manager-alert-danger" role="alert">
+            <div class="manager-alert-content">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <div asp-validation-summary="All"></div>
+            </div>
+        </div>
+    }
+
+    <!-- ═══════════════════════ Page Header ═══════════════════════ -->
+    <section class="manager-staff-header">
+        <div class="manager-staff-header-top">
+            <div class="manager-staff-title-wrap">
+                <nav class="manager-staff-breadcrumb" aria-label="Breadcrumb">
+                    <a asp-controller="Manager" asp-action="Index" class="manager-staff-breadcrumb-link">
+                        <i class="fa-solid fa-chart-pie"></i> Manager
+                    </a>
+                    <span class="manager-staff-breadcrumb-sep">/</span>
+                    <span class="manager-staff-breadcrumb-current">Staff Management</span>
+                </nav>
+                <h1 class="manager-staff-title">Staff Management</h1>
+                <p class="manager-staff-subtitle">
+                    Manage staff accounts, roles and access permissions — ตรวจสอบรายชื่อพนักงาน บทบาทหน้าที่ สถานะบัญชี และกรอบสิทธิ์ความปลอดภัย RBAC
+                </p>
+            </div>
+
+            <div class="manager-staff-header-meta">
+                <div class="manager-staff-meta-pill">
+                    <i class="fa-solid fa-users"></i>
+                    <span>บัญชีพนักงานที่พบ: <strong>@totalStaff.ToString("N0") บัญชี</strong> (Active @activeStaff / Suspended @suspendedStaff)</span>
+                </div>
+                <div class="manager-staff-header-btns">
+                    <button type="button"
+                            class="manager-btn manager-btn-outline manager-staff-btn-header"
+                            data-bs-toggle="modal"
+                            data-bs-target="#managerAddStaffModal">
+                        <i class="fa-solid fa-user-plus"></i>
+                        <span>ข้อกำหนดการเพิ่มบัญชีพนักงาน (Read-only)</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Section Jump Links -->
+        <nav class="manager-staff-jumpnav" aria-label="Staff Management Sections">
+            <a href="#section-staff-summary" class="manager-staff-jump-link">
+                <i class="fa-solid fa-id-card-clip"></i>
+                <span>1. Operational Summary</span>
+            </a>
+            <a href="#section-role-distribution" class="manager-staff-jump-link">
+                <i class="fa-solid fa-chart-bar"></i>
+                <span>2. Role Distribution</span>
+            </a>
+            <a href="#section-account-status" class="manager-staff-jump-link">
+                <i class="fa-solid fa-user-check"></i>
+                <span>3. Account Status</span>
+            </a>
+            <a href="#section-staff-table" class="manager-staff-jump-link">
+                <i class="fa-solid fa-table-list"></i>
+                <span>4. Staff Table</span>
+            </a>
+            <a href="#section-add-staff" class="manager-staff-jump-link">
+                <i class="fa-solid fa-user-plus"></i>
+                <span>5. Add Staff Spec</span>
+            </a>
+            <a href="#section-security-restrictions" class="manager-staff-jump-link">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>6. Security &amp; Restrictions</span>
+            </a>
+            <a href="#section-status-confirmation" class="manager-staff-jump-link">
+                <i class="fa-solid fa-user-lock"></i>
+                <span>7. Status Confirmation</span>
+            </a>
+        </nav>
+    </section>
+
+    <!-- ═══════════════════════ SECTION 1: OPERATIONAL STAFFING SUMMARY (4 Summary Cards) ═══════════════════════ -->
+    <section id="section-staff-summary" class="manager-staff-section">
+        <div class="manager-staff-section-head">
+            <div>
+                <h2 class="manager-staff-section-title">
+                    <i class="fa-solid fa-users-gear text-primary"></i>
+                    1. Operational Staffing Summary (สรุปจำนวนบุคลากรตามสายงานปฏิบัติการ)
+                </h2>
+                <p class="manager-staff-section-desc">
+                    คำนวณจากข้อมูลพนักงานจริงใน `Model.Staff` แยกตามบทบาทและสถานะบัญชี Active / Suspended
+                </p>
+            </div>
+        </div>
+        <div class="manager-staff-summary">
+            <!-- Card 1: Total Staff -->
+            <article class="manager-staff-stat-card manager-staff-stat-navy">
+                <div class="manager-staff-stat-top">
+                    <div>
+                        <span class="manager-staff-stat-label">Total Staff</span>
+                        <h3 class="manager-staff-stat-role">พนักงานทั้งหมดในระบบ</h3>
+                    </div>
+                    <div class="manager-staff-stat-icon">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                </div>
+                <div class="manager-staff-stat-value">@totalStaff.ToString("N0")</div>
+                <p class="manager-staff-stat-desc">ผู้ใช้ที่มีบทบาทปฏิบัติการในโรงแรม (ไม่รวม Customer / Guest)</p>
+                <div class="manager-staff-stat-footer">
+                    <span class="manager-staff-badge manager-staff-badge-active">
+                        <i class="fa-solid fa-circle-check"></i> Active: @activeStaff
+                    </span>
+                    <span class="manager-staff-badge manager-staff-badge-suspended">
+                        <i class="fa-solid fa-ban"></i> Suspended: @suspendedStaff
+                    </span>
+                </div>
+            </article>
+
+            <!-- Card 2: Front Admin -->
+            <article class="manager-staff-stat-card manager-staff-stat-blue">
+                <div class="manager-staff-stat-top">
+                    <div>
+                        <span class="manager-staff-stat-label">Operational Role</span>
+                        <h3 class="manager-staff-stat-role">Front Admin</h3>
+                    </div>
+                    <div class="manager-staff-stat-icon">
+                        <i class="fa-solid fa-concierge-bell"></i>
+                    </div>
+                </div>
+                <div class="manager-staff-stat-value">@frontCount.ToString("N0")</div>
+                <p class="manager-staff-stat-desc">ฝ่ายต้อนรับส่วนหน้า เช็คอิน-เช็คเอาท์ และดูแลการเข้าพักลูกค้า</p>
+                <div class="manager-staff-stat-footer">
+                    <span class="manager-staff-badge manager-staff-badge-active">Active: @frontActive</span>
+                    <span class="manager-staff-badge manager-staff-badge-suspended">Suspended: @frontSuspended</span>
+                </div>
+            </article>
+
+            <!-- Card 3: Finance -->
+            <article class="manager-staff-stat-card manager-staff-stat-cyan">
+                <div class="manager-staff-stat-top">
+                    <div>
+                        <span class="manager-staff-stat-label">Operational Role</span>
+                        <h3 class="manager-staff-stat-role">Finance</h3>
+                    </div>
+                    <div class="manager-staff-stat-icon">
+                        <i class="fa-solid fa-file-invoice-dollar"></i>
+                    </div>
+                </div>
+                <div class="manager-staff-stat-value">@financeCount.ToString("N0")</div>
+                <p class="manager-staff-stat-desc">ฝ่ายการเงิน ตรวจสอบหลักฐานการชำระเงิน (สลิป) และอนุมัติยอดเงิน</p>
+                <div class="manager-staff-stat-footer">
+                    <span class="manager-staff-badge manager-staff-badge-active">Active: @financeActive</span>
+                    <span class="manager-staff-badge manager-staff-badge-suspended">Suspended: @financeSuspended</span>
+                </div>
+            </article>
+
+            <!-- Card 4: Housekeeping -->
+            <article class="manager-staff-stat-card manager-staff-stat-violet">
+                <div class="manager-staff-stat-top">
+                    <div>
+                        <span class="manager-staff-stat-label">Operational Role</span>
+                        <h3 class="manager-staff-stat-role">Housekeeping</h3>
+                    </div>
+                    <div class="manager-staff-stat-icon">
+                        <i class="fa-solid fa-broom"></i>
+                    </div>
+                </div>
+                <div class="manager-staff-stat-value">@hkCount.ToString("N0")</div>
+                <p class="manager-staff-stat-desc">ฝ่ายแม่บ้าน ดูแลความสะอาดห้องพักและอัปเดตสถานะความพร้อมของห้อง</p>
+                <div class="manager-staff-stat-footer">
+                    <span class="manager-staff-badge manager-staff-badge-active">Active: @hkActive</span>
+                    <span class="manager-staff-badge manager-staff-badge-suspended">Suspended: @hkSuspended</span>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════ SECTION 2 & SECTION 3: ROLE DISTRIBUTION & ACCOUNT STATUS ═══════════════════════ -->
+    <div class="manager-staff-analytics-grid">
+        <!-- SECTION 2: Staff Role Distribution -->
+        <section id="section-role-distribution" class="manager-card manager-staff-distribution">
+            <div class="manager-card-header">
+                <div>
+                    <h2 class="manager-card-title">
+                        <i class="fa-solid fa-chart-bar text-primary"></i>
+                        2. Staff Role Distribution (สัดส่วนพนักงานตามสายงาน)
+                    </h2>
+                    <p class="manager-card-subtitle">
+                        แสดงจำนวนและเปอร์เซ็นต์ของพนักงานสายปฏิบัติการเทียบกับจำนวนพนักงานทั้งหมด (@totalStaff ท่าน)
+                    </p>
+                </div>
+            </div>
+            @if (totalStaff > 0)
+            {
+                <div class="manager-staff-dist-list">
+                    <!-- Front Admin Bar -->
+                    <div class="manager-staff-dist-item">
+                        <div class="manager-staff-dist-head">
+                            <span class="manager-staff-role manager-staff-role-front">
+                                <i class="fa-solid fa-concierge-bell"></i> Front Admin (ฝ่ายต้อนรับ)
+                            </span>
+                            <div class="manager-staff-dist-numbers">
+                                <strong>@frontCount ท่าน</strong>
+                                <span>(@frontPercent.ToString("0.0")%)</span>
+                            </div>
+                        </div>
+                        <div class="manager-staff-progress-track" role="progressbar" aria-valuenow="@frontPercent.ToString("0.0", CultureInfo.InvariantCulture)" aria-valuemin="0" aria-valuemax="100">
+                            <div class="manager-staff-progress-fill manager-staff-fill-blue"
+                                 data-staff-progress="@frontPercent.ToString("0.0", CultureInfo.InvariantCulture)"></div>
+                        </div>
+                    </div>
+                    <!-- Finance Bar -->
+                    <div class="manager-staff-dist-item">
+                        <div class="manager-staff-dist-head">
+                            <span class="manager-staff-role manager-staff-role-finance">
+                                <i class="fa-solid fa-file-invoice-dollar"></i> Finance (ฝ่ายการเงิน)
+                            </span>
+                            <div class="manager-staff-dist-numbers">
+                                <strong>@financeCount ท่าน</strong>
+                                <span>(@financePercent.ToString("0.0")%)</span>
+                            </div>
+                        </div>
+                        <div class="manager-staff-progress-track" role="progressbar" aria-valuenow="@financePercent.ToString("0.0", CultureInfo.InvariantCulture)" aria-valuemin="0" aria-valuemax="100">
+                            <div class="manager-staff-progress-fill manager-staff-fill-cyan"
+                                 data-staff-progress="@financePercent.ToString("0.0", CultureInfo.InvariantCulture)"></div>
+                        </div>
+                    </div>
+                    <!-- Housekeeping Bar -->
+                    <div class="manager-staff-dist-item">
+                        <div class="manager-staff-dist-head">
+                            <span class="manager-staff-role manager-staff-role-hk">
+                                <i class="fa-solid fa-broom"></i> Housekeeping (ฝ่ายแม่บ้าน)
+                            </span>
+                            <div class="manager-staff-dist-numbers">
+                                <strong>@hkCount ท่าน</strong>
+                                <span>(@hkPercent.ToString("0.0")%)</span>
+                            </div>
+                        </div>
+                        <div class="manager-staff-progress-track" role="progressbar" aria-valuenow="@hkPercent.ToString("0.0", CultureInfo.InvariantCulture)" aria-valuemin="0" aria-valuemax="100">
+                            <div class="manager-staff-progress-fill manager-staff-fill-violet"
+                                 data-staff-progress="@hkPercent.ToString("0.0", CultureInfo.InvariantCulture)"></div>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="manager-empty-state">
+                    <i class="fa-solid fa-users-slash"></i>
+                    <p>ไม่มีข้อมูลพนักงานในระบบสำหรับคำนวณสัดส่วนตามตำแหน่ง</p>
+                </div>
+            }
+        </section>
+
+        <!-- SECTION 3: Staff Account Status -->
+        <section id="section-account-status" class="manager-card manager-staff-status">
+            <div class="manager-card-header">
+                <div>
+                    <h2 class="manager-card-title">
+                        <i class="fa-solid fa-user-check text-success"></i>
+                        3. Staff Account Status (ภาพรวมสถานะบัญชีพนักงาน)
+                    </h2>
+                    <p class="manager-card-subtitle">
+                        สัดส่วนบัญชีที่เปิดใช้งานปกติ (Active) และบัญชีที่ถูกระงับสิทธิ์ (Suspended)
+                    </p>
+                </div>
+            </div>
+            @if (totalStaff > 0)
+            {
+                <div class="manager-staff-status-body">
+                    <div class="manager-staff-status-hero">
+                        <div class="manager-staff-status-circle">
+                            <span class="manager-staff-status-pct">@activePercent.ToString("0.0")%</span>
+                            <span class="manager-staff-status-caption">Active Rate</span>
+                        </div>
+                        <div class="manager-staff-status-boxes">
+                            <div class="manager-staff-status-metric">
+                                <span class="manager-staff-badge manager-staff-badge-active">
+                                    <i class="fa-solid fa-circle-check"></i> Active Accounts
+                                </span>
+                                <strong class="manager-staff-metric-num text-success">@activeStaff.ToString("N0") บัญชี</strong>
+                                <small class="manager-text-muted">คิดเป็น @activePercent.ToString("0.0")% ของพนักงานทั้งหมด</small>
+                            </div>
+                            <div class="manager-staff-status-metric">
+                                <span class="manager-staff-badge manager-staff-badge-suspended">
+                                    <i class="fa-solid fa-ban"></i> Suspended Accounts
+                                </span>
+                                <strong class="manager-staff-metric-num text-danger">@suspendedStaff.ToString("N0") บัญชี</strong>
+                                <small class="manager-text-muted">คิดเป็น @suspendedPercent.ToString("0.0")% ของพนักงานทั้งหมด</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="manager-staff-status-bar-wrap">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>อัตราส่วนบัญชีที่พร้อมปฏิบัติงาน (Active vs Suspended)</span>
+                            <strong>@activeStaff / @totalStaff บัญชี</strong>
+                        </div>
+                        <div class="manager-staff-progress-track">
+                            <div class="manager-staff-progress-fill manager-staff-fill-emerald"
+                                 data-staff-progress="@activePercent.ToString("0.0", CultureInfo.InvariantCulture)"></div>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="manager-empty-state">
+                    <i class="fa-regular fa-id-badge"></i>
+                    <p>ไม่มีข้อมูลสถานะบัญชีพนักงานในระบบ</p>
+                </div>
+            }
+        </section>
+    </div>
+
+    <!-- ═══════════════════════ SECTION 4: STAFF MANAGEMENT TABLE & FILTERS ═══════════════════════ -->
+    <section id="section-staff-table" class="manager-staff-section">
+        <div class="manager-card">
+            <div class="manager-card-header manager-card-header-responsive">
+                <div>
+                    <h2 class="manager-card-title">
+                        <i class="fa-solid fa-table-list text-primary"></i>
+                        4. Staff Management Table (ตารางรายชื่อบัญชีพนักงานและสถานะสิทธิ์)
+                    </h2>
+                    <p class="manager-card-subtitle">
+                        ดึงข้อมูลจริงจาก `Model.Staff` โดยไม่แสดงรหัสผ่านหรือข้อมูลความลับ (`PasswordHash` ถูกคัดกรองออกที่ระดับ Controller)
+                    </p>
+                </div>
+                <span class="manager-badge manager-badge-info">
+                    พบข้อมูลพนักงาน @staffList.Count.ToString("N0") รายการ
+                </span>
+            </div>
+            <!-- Filter Bar (Server GET + Client Instant Filter & Sort) -->
+            <form method="get"
+                  asp-controller="Manager"
+                  asp-action="StaffManagement"
+                  class="manager-staff-filter mb-3">
+                <div class="manager-staff-filter-grid">
+                    <!-- Search Staff -->
+                    <div class="manager-form-group">
+                        <label for="staffSearchInput" class="manager-label">ค้นหาพนักงาน (ชื่อ-นามสกุล / Username / Email)</label>
+                        <div class="manager-search-box">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="search"
+                                   id="staffSearchInput"
+                                   name="q"
+                                   value="@Model.Search"
+                                   class="manager-input"
+                                   placeholder="พิมพ์ชื่อ, Username หรืออีเมล..."
+                                   data-manager-search="#managerStaffTable" />
+                        </div>
+                    </div>
+                    <!-- Filter by Role (Server GET & Client Filter) -->
+                    <div class="manager-form-group">
+                        <label for="staffRoleFilterSelect" class="manager-label">กรองตามบทบาทหน้าที่ (Filter by Role)</label>
+                        <select id="staffRoleFilterSelect"
+                                name="roleCode"
+                                class="manager-select"
+                                data-manager-filter="#managerStaffTable"
+                                data-filter-key="role">
+                            <option value="">ทุกตำแหน่ง (All Roles)</option>
+                            @if (Model.RoleOptions != null)
+                            {
+                                foreach (var ro in Model.RoleOptions)
+                                {
+                                    <option value="@ro.Value" selected="@(Model.RoleCode == ro.Value ? "selected" : null)">
+                                        @ro.Label (@ro.Value)
+                                    </option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <!-- Filter by Account Status (Client Filter) -->
+                    <div class="manager-form-group">
+                        <label for="staffStatusFilterSelect" class="manager-label">กรองตามสถานะบัญชี (Account Status)</label>
+                        <select id="staffStatusFilterSelect"
+                                class="manager-select"
+                                data-manager-filter="#managerStaffTable"
+                                data-filter-key="status">
+                            <option value="">ทุกสถานะ (All Statuses)</option>
+                            <option value="active">Active (ใช้งานปกติ)</option>
+                            <option value="suspended">Suspended (ระงับการใช้งาน)</option>
+                        </select>
+                    </div>
+                    <!-- Sort by Name -->
+                    <div class="manager-form-group">
+                        <label for="staffSortSelect" class="manager-label">เรียงลำดับรายชื่อ (Sort by Name)</label>
+                        <select id="staffSortSelect" class="manager-select">
+                            <option value="asc">ชื่อ ก–ฮ / A–Z (Ascending)</option>
+                            <option value="desc">ชื่อ ฮ–ก / Z–A (Descending)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="manager-staff-filter-actions">
+                    <a asp-controller="Manager" asp-action="StaffManagement" class="manager-btn manager-btn-ghost">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span>ล้างตัวกรอง (Reset)</span>
+                    </a>
+                    <button type="submit" class="manager-btn manager-btn-primary">
+                        <i class="fa-solid fa-filter"></i>
+                        <span>ค้นหาจากฐานข้อมูล</span>
+                    </button>
+                </div>
+            </form>
+            <!-- Staff Table -->
+            <div class="manager-table-responsive">
+                <table class="manager-table manager-staff-table" id="managerStaffTable">
+                    <thead>
+                        <tr>
+                            <th>Staff Name</th>
+                            <th>Email &amp; Phone</th>
+                            <th>Role</th>
+                            <th class="text-center">Account Status</th>
+                            <th>Created Date</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (staffList.Any())
+                        {
+                            foreach (var st in staffList)
+                            {
+                                var initial = string.IsNullOrWhiteSpace(st.FullName)
+                                    ? "S"
+                                    : st.FullName.Trim().Substring(0, 1).ToUpperInvariant();
+                                var primaryRoleCode = st.Roles?.FirstOrDefault()?.RoleCode ?? "";
+                                var statusKey = st.IsActive ? "active" : "suspended";
+                                var isOwner = IsOwnerAccount(st);
+                                var isSelf = currentUserId > 0 && st.UserId == currentUserId;
+                                var staffDetailJson = JsonSerializer.Serialize(new
+                                {
+                                    UserId = st.UserId,
+                                    Username = st.Username,
+                                    FullName = st.FullName,
+                                    Email = st.Email,
+                                    Phone = string.IsNullOrWhiteSpace(st.Phone) ? "--" : st.Phone,
+                                    IsActive = st.IsActive,
+                                    StatusLabel = st.IsActive ? "Active (เปิดใช้งาน)" : "Suspended (ระงับบัญชี)",
+                                    CreatedAt = st.CreatedAt.ToString("dd/MM/yyyy HH:mm"),
+                                    RolesText = st.Roles != null && st.Roles.Any()
+                                        ? string.Join(", ", st.Roles.Select(r => $"{r.RoleName} ({r.RoleCode})"))
+                                        : "--",
+                                    IsOwner = isOwner,
+                                    IsSelf = isSelf
+                                });
+
+                                <tr data-role="@primaryRoleCode"
+                                    data-status="@statusKey"
+                                    data-fullname="@st.FullName">
+                                    <td>
+                                        <div class="manager-user-cell">
+                                            <span class="manager-avatar-sm">@initial</span>
+                                            <div>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <strong>@st.FullName</strong>
+                                                    @if (isSelf)
+                                                    {
+                                                        <span class="manager-staff-self-chip">บัญชีของคุณ</span>
+                                                    }
+                                                </div>
+                                                <div class="manager-staff-subtext">&#64;@st.Username | ID: #@st.UserId</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>@st.Email</div>
+                                        <div class="manager-staff-subtext">
+                                            <i class="fa-solid fa-phone"></i> @(string.IsNullOrWhiteSpace(st.Phone) ? "--" : st.Phone)
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @if (st.Roles != null && st.Roles.Any())
+                                        {
+                                            <div class="manager-tag-group">
+                                                @foreach (var r in st.Roles)
+                                                {
+                                                    var roleClass = r.RoleCode.Contains("OWNER", StringComparison.OrdinalIgnoreCase)
+                                                        ? "manager-staff-role-owner"
+                                                        : r.RoleCode.Contains("MANAGER", StringComparison.OrdinalIgnoreCase)
+                                                            ? "manager-staff-role-manager"
+                                                            : r.RoleCode.Contains("FINANCE", StringComparison.OrdinalIgnoreCase)
+                                                                ? "manager-staff-role-finance"
+                                                                : r.RoleCode.Contains("HOUSEKEEPING", StringComparison.OrdinalIgnoreCase)
+                                                                    ? "manager-staff-role-hk"
+                                                                    : "manager-staff-role-front";
+                                                    <span class="manager-staff-role @roleClass">
+                                                        @r.RoleName <small>(@r.RoleCode)</small>
+                                                    </span>
+                                                }
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="manager-text-muted">--</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        @if (st.IsActive)
+                                        {
+                                            <span class="manager-staff-badge manager-staff-badge-active">
+                                                <i class="fa-solid fa-circle-check"></i> Active
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="manager-staff-badge manager-staff-badge-suspended">
+                                                <i class="fa-solid fa-ban"></i> Suspended
+                                            </span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="manager-staff-date">
+                                            <strong>@st.CreatedAt.ToString("dd/MM/yyyy")</strong>
+                                            <span class="manager-staff-subtext">@st.CreatedAt.ToString("HH:mm น.")</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="manager-staff-actions justify-content-end">
+                                            <button type="button"
+                                                    class="manager-btn manager-btn-outline manager-btn-sm js-view-staff-btn"
+                                                    data-staff-detail='@Html.Raw(staffDetailJson)'>
+                                                <i class="fa-solid fa-eye"></i>
+                                                <span>View Details</span>
+                                            </button>
+                                            @if (isOwner)
+                                            {
+                                                <span class="manager-staff-protected-pill" title="บัญชี Owner ได้รับการปกป้อง ห้ามแก้ไขหรือระงับสิทธิ์">
+                                                    <i class="fa-solid fa-shield-halved"></i> Protected Owner
+                                                </span>
+                                            }
+                                            else if (isSelf)
+                                            {
+                                                <span class="manager-staff-protected-pill" title="ห้ามยกระดับสิทธิ์หรือระงับบัญชีของตนเอง">
+                                                    <i class="fa-solid fa-user-lock"></i> Self Account
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <button type="button"
+                                                        class="manager-btn manager-btn-ghost manager-btn-sm js-status-policy-btn"
+                                                        data-staff-detail='@Html.Raw(staffDetailJson)'
+                                                        title="ตรวจสอบสถานะการ Suspend / Activate บัญชี">
+                                                    <i class="fa-solid @(st.IsActive ? "fa-user-slash text-danger" : "fa-user-check text-success")"></i>
+                                                    <span>@(st.IsActive ? "Suspend Policy" : "Activate Policy")</span>
+                                                </button>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr data-manager-empty-row>
+                                <td colspan="6" class="manager-empty-state">
+                                    <i class="fa-solid fa-users-slash"></i>
+                                    <p>ไม่พบข้อมูลบัญชีพนักงานที่ตรงกับเงื่อนไขการค้นหา</p>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                <div class="manager-empty-state d-none" data-manager-empty-for="#managerStaffTable">
+                    <i class="fa-solid fa-filter-circle-xmark"></i>
+                    <p>ไม่พบรายชื่อพนักงานที่ตรงกับตัวกรองปัจจุบัน</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════ SECTION 5 & SECTION 7: ADD STAFF & STATUS CONFIRMATION OVERVIEW ═══════════════════════ -->
+    <div class="manager-staff-analytics-grid">
+        <!-- SECTION 5: Add Staff Account Specification (Read-Only Backend Transparency) -->
+        <section id="section-add-staff" class="manager-card">
+            <div class="manager-card-header">
+                <div>
+                    <h2 class="manager-card-title">
+                        <i class="fa-solid fa-user-plus text-primary"></i>
+                        5. Add Staff Account Specification (การเพิ่มบัญชีพนักงาน)
+                    </h2>
+                    <p class="manager-card-subtitle">
+                        โครงสร้างการกำหนดบทบาทพนักงานสายปฏิบัติการ 3 ตำแหน่ง (ไม่มีตัวเลือก Owner)
+                    </p>
+                </div>
+                <button type="button"
+                        class="manager-btn manager-btn-outline manager-btn-sm"
+                        data-bs-toggle="modal"
+                        data-bs-target="#managerAddStaffModal">
+                    <i class="fa-solid fa-up-right-from-square"></i>
+                    <span>เปิดหน้าต่างโครงสร้างฟอร์ม</span>
+                </button>
+            </div>
+            <div class="manager-alert manager-alert-warning mb-3">
+                <div class="manager-alert-content">
+                    <i class="fa-solid fa-database"></i>
+                    <div>
+                        <strong>สถานะ Backend ปัจจุบัน (`ManagerController.cs`):</strong>
+                        <div>
+                            ตามที่ระบุใน `BuildStaffManagementAsync`:
+                            <em>"ไม่แสดงรหัสผ่านหรือข้อมูลลับของผู้ใช้ และหน้านี้เป็นการดูข้อมูลอย่างเดียว"</em>
+                            เนื่องจากไม่มี POST Action สำหรับเพิ่มพนักงานใน `ManagerController` ระบบจึงแสดงโครงสร้างฟอร์มแบบ Read-only โดยไม่จำลองว่าบันทึกสำเร็จ
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="manager-staff-spec-list">
+                <div class="manager-staff-spec-row">
+                    <span><i class="fa-solid fa-check-circle text-success"></i> <strong>Roles ที่อนุญาตให้เลือกได้:</strong></span>
+                    <div class="manager-tag-group">
+                        <span class="manager-staff-role manager-staff-role-front">1. Front Admin</span>
+                        <span class="manager-staff-role manager-staff-role-finance">2. Finance</span>
+                        <span class="manager-staff-role manager-staff-role-hk">3. Housekeeping</span>
+                    </div>
+                </div>
+                <div class="manager-staff-spec-row">
+                    <span><i class="fa-solid fa-ban text-danger"></i> <strong>Roles ที่ห้ามปรากฏในตัวเลือกเด็ดขาด:</strong></span>
+                    <span class="manager-staff-badge manager-staff-badge-suspended">OWNER (ห้ามสร้างบัญชีเจ้าของระบบ)</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 7: Account Status Confirmation Policy (Suspend / Activate) -->
+        <section id="section-status-confirmation" class="manager-card">
+            <div class="manager-card-header">
+                <div>
+                    <h2 class="manager-card-title">
+                        <i class="fa-solid fa-user-lock text-warning"></i>
+                        7. Account Status Confirmation Policy (การยืนยันระงับ / เปิดใช้งานบัญชี)
+                    </h2>
+                    <p class="manager-card-subtitle">
+                        มาตรฐานความปลอดภัยในการเปลี่ยนสถานะบัญชีพนักงาน (Suspend / Activate)
+                    </p>
+                </div>
+            </div>
+            <div class="manager-staff-spec-list">
+                <div class="manager-staff-spec-row">
+                    <span><i class="fa-solid fa-shield-halved text-primary"></i> <strong>ห้ามดำเนินการผ่าน GET Request:</strong></span>
+                    <span>การเปลี่ยนสถานะบัญชีต้องส่งผ่าน POST พร้อม Anti-forgery Token เท่านั้น</span>
+                </div>
+                <div class="manager-staff-spec-row">
+                    <span><i class="fa-solid fa-triangle-exclamation text-warning"></i> <strong>การตรวจสอบสิทธิ์ซ้ำที่ Backend:</strong></span>
+                    <span>ใน `ManagerController.cs` ปัจจุบันยังไม่มี POST Action สำหรับ Suspend / Activate บัญชีพนักงาน หน้าต่างยืนยันจึงแสดงรายละเอียดผลกระทบตามสถานะจริงแบบ Read-only</span>
+                </div>
+            </div>
+            <div class="mt-3 d-flex justify-content-end">
+                <button type="button"
+                        class="manager-btn manager-btn-outline manager-btn-sm"
+                        data-bs-toggle="modal"
+                        data-bs-target="#managerStatusConfirmModal">
+                    <i class="fa-solid fa-shield-cat"></i>
+                    <span>ตรวจสอบหน้าต่างยืนยันสถานะบัญชี (Confirmation Modal)</span>
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <!-- ═══════════════════════ SECTION 6: SECURITY & PERMISSION RESTRICTIONS ═══════════════════════ -->
+    <section id="section-security-restrictions" class="manager-staff-section">
+        <div class="manager-staff-security">
+            <div class="manager-staff-security-top">
+                <div class="manager-staff-security-title-wrap">
+                    <div class="manager-staff-security-shield">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <div>
+                        <span class="manager-staff-security-eyebrow">ROLE-BASED ACCESS CONTROL (RBAC) &amp; SECURITY GOVERNANCE</span>
+                        <h2 class="manager-staff-security-heading">6. Security &amp; Permission Restrictions (ข้อจำกัดสิทธิ์และมาตรการความปลอดภัยของ Manager)</h2>
+                    </div>
+                </div>
+                <span class="manager-staff-security-badge">
+                    <i class="fa-solid fa-lock"></i> Enforced by Server Authorization (`[Authorize(Roles = "MANAGER")]`)
+                </span>
+            </div>
+            <!-- Allowed vs Restricted Matrix -->
+            <div class="manager-staff-permissions-grid">
+                <!-- Allowed Capabilities -->
+                <div class="manager-staff-perm-card manager-staff-perm-allowed">
+                    <h3 class="manager-staff-perm-title">
+                        <i class="fa-solid fa-circle-check text-info"></i>
+                        ขอบเขตสิทธิ์ของ Manager (Manager Access Capabilities)
+                    </h3>
+                    <ul class="manager-staff-perm-list">
+                        <li><i class="fa-solid fa-check"></i> <span><strong>ดูรายชื่อพนักงาน:</strong> ตรวจสอบข้อมูลพนักงานสายงานปฏิบัติการและสถานะบัญชี</span></li>
+                        <li><i class="fa-solid fa-check"></i> <span><strong>ขอบเขตสายงานที่ดูแล:</strong> ครอบคลุมเฉพาะตำแหน่ง <code>Front Admin</code>, <code>Finance</code> และ <code>Housekeeping</code></span></li>
+                        <li><i class="fa-solid fa-check"></i> <span><strong>การปกป้องข้อมูลความลับ:</strong> ระบบไม่ดึง <code>PasswordHash</code> ออกมาแสดงใน ViewModel ในทุกกรณี</span></li>
+                        <li><i class="fa-solid fa-check"></i> <span><strong>การจัดการข้อมูลส่วนตัว:</strong> แก้ไขชื่อ-เบอร์โทร และรหัสผ่านของตนเองได้ที่หน้า <code>Profile</code></span></li>
+                    </ul>
+                </div>
+                <!-- Strictly Prohibited Actions -->
+                <div class="manager-staff-perm-card manager-staff-perm-denied">
+                    <h3 class="manager-staff-perm-title">
+                        <i class="fa-solid fa-ban text-danger"></i>
+                        ข้อห้ามเด็ดขาด of Manager (Strict Access Restrictions)
+                    </h3>
+                    <ul class="manager-staff-perm-list">
+                        <li><i class="fa-solid fa-xmark"></i> <span><strong>ห้ามแก้ไขบัญชี Owner:</strong> ไม่สามารถแก้ไขข้อมูลส่วนตัวหรือสิทธิ์ของบัญชีระดับ <code>OWNER</code></span></li>
+                        <li><i class="fa-solid fa-xmark"></i> <span><strong>ห้าม Suspend Owner Account:</strong> ไม่สามารถระงับการใช้งานบัญชีของเจ้าของโรงแรมได้</span></li>
+                        <li><i class="fa-solid fa-xmark"></i> <span><strong>ห้ามสร้าง Owner Account:</strong> ไม่มีสิทธิ์สร้างบัญชีใหม่ที่มีบทบาทเป็น <code>OWNER</code></span></li>
+                        <li><i class="fa-solid fa-xmark"></i> <span><strong>ห้ามยกระดับสิทธิ์ตัวเอง (No Self-Privilege Escalation):</strong> ห้ามเปลี่ยน Role ตัวเองเป็น Owner หรือกำหนด Role ที่สูงกว่า Manager</span></li>
+                    </ul>
+                </div>
+            </div>
+            <!-- 4 Core Security Pillars -->
+            <div class="manager-staff-pillars-grid">
+                <article class="manager-staff-pillar-item">
+                    <div class="manager-staff-pillar-icon"><i class="fa-solid fa-sitemap"></i></div>
+                    <div>
+                        <h4>Role-based Access Control (RBAC)</h4>
+                        <p>แบ่งแยกสิทธิ์ตามบทบาทอย่างชัดเจนระหว่าง Owner, Manager และพนักงานฝ่ายปฏิบัติการ 3 แผนก</p>
+                    </div>
+                </article>
+                <article class="manager-staff-pillar-item">
+                    <div class="manager-staff-pillar-icon"><i class="fa-solid fa-user-shield"></i></div>
+                    <div>
+                        <h4>Owner Account Protection</h4>
+                        <p>ปกป้องบัญชีระดับ Owner ไม่ให้ถูกแก้ไข ลดสิทธิ์ หรือถูกระงับการใช้งานโดยผู้ใช้งานระดับ Manager</p>
+                    </div>
+                </article>
+                <article class="manager-staff-pillar-item">
+                    <div class="manager-staff-pillar-icon"><i class="fa-solid fa-hand-sparkles"></i></div>
+                    <div>
+                        <h4>Self-Privilege Escalation Prevention</h4>
+                        <p>ป้องกันไม่ให้ Manager ยกระดับสิทธิ์บัญชีตนเอง หรือมอบสิทธิ์ที่สูงกว่าระดับสิทธิ์ของตน</p>
+                    </div>
+                </article>
+                <article class="manager-staff-pillar-item">
+                    <div class="manager-staff-pillar-icon"><i class="fa-solid fa-server"></i></div>
+                    <div>
+                        <h4>Backend Authorization Enforcement</h4>
+                        <p>การซ่อนปุ่มในหน้า View เป็นเพียงส่วนติดต่อผู้ใช้ ระบบจริงบังคับใช้การตรวจสอบสิทธิ์จากฐานข้อมูลที่ฝั่ง Controller เสมอ</p>
+                    </div>
+                </article>
+            </div>
+        </div>
+        @if (Model.DataNotes != null && Model.DataNotes.Any())
+        {
+            <div class="manager-notes-box">
+                <div class="manager-notes-title">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span>หมายเหตุระบบจัดการบัญชีพนักงานจาก Controller (System Data Notes)</span>
+                </div>
+                <ul class="manager-notes-list">
+                    @foreach (var note in Model.DataNotes)
+                    {
+                        <li>@note</li>
+                    }
+                </ul>
+            </div>
+        }
+    </section>
+</div>
+
+<!-- ═════════════════════════════════════════════════════════════════════════════
+     MODALS (View Details, Add Staff Spec Read-Only, Status Confirmation Read-Only)
+     ═════════════════════════════════════════════════════════════════════════════ -->
+
+<!-- Modal 1: View Staff Details Modal -->
+<div class="modal fade manager-modal manager-staff-modal" id="managerViewStaffModal" tabindex="-1" aria-labelledby="managerViewStaffModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content manager-modal-content">
+            <div class="modal-header manager-modal-header">
+                <h5 class="modal-title" id="managerViewStaffModalLabel">
+                    <i class="fa-solid fa-id-card text-info"></i>
+                    รายละเอียดบัญชีพนักงาน (Staff Account Details)
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body manager-modal-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <span class="manager-code-badge" id="detailStaffUserId">User ID</span>
+                        <h4 class="manager-staff-modal-name mt-2 mb-0" id="detailStaffFullName">Full Name</h4>
+                        <div class="manager-staff-subtext" id="detailStaffUsername">username</div>
+                    </div>
+                    <span class="manager-staff-badge manager-staff-badge-active" id="detailStaffStatusBadge">Active</span>
+                </div>
+                <div class="manager-staff-detail-list">
+                    <div class="manager-staff-detail-row">
+                        <span class="manager-staff-detail-label"><i class="fa-solid fa-envelope"></i> Email</span>
+                        <strong id="detailStaffEmail">--</strong>
+                    </div>
+                    <div class="manager-staff-detail-row">
+                        <span class="manager-staff-detail-label"><i class="fa-solid fa-phone"></i> เบอร์โทรศัพท์</span>
+                        <strong id="detailStaffPhone">--</strong>
+                    </div>
+                    <div class="manager-staff-detail-row">
+                        <span class="manager-staff-detail-label"><i class="fa-solid fa-user-tag"></i> บทบาทหน้าที่ (Roles)</span>
+                        <strong id="detailStaffRoles">--</strong>
+                    </div>
+                    <div class="manager-staff-detail-row">
+                        <span class="manager-staff-detail-label"><i class="fa-solid fa-calendar-check"></i> วันที่สร้างบัญชี</span>
+                        <strong id="detailStaffCreated">--</strong>
+                    </div>
+                </div>
+                <div class="manager-alert manager-alert-info mt-3 mb-0">
+                    <div class="manager-alert-content">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>ระบบไม่แสดงรหัสผ่านของผู้ใช้ และหน้านี้เป็นการดูข้อมูลอย่างเดียวตามนโยบายความปลอดภัยของ <code>ManagerController</code></span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer manager-modal-footer">
+                <button type="button" class="manager-btn manager-btn-primary" data-bs-dismiss="modal">ปิดหน้าต่าง</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal 2: Section 5 Add Staff Account Modal (Read-only Reference without Owner Role) -->
+<div class="modal fade manager-modal manager-staff-modal" id="managerAddStaffModal" tabindex="-1" aria-labelledby="managerAddStaffModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content manager-modal-content">
+            <div class="modal-header manager-modal-header">
+                <h5 class="modal-title" id="managerAddStaffModalLabel">
+                    <i class="fa-solid fa-user-plus text-info"></i>
+                    แบบฟอร์มเพิ่มบัญชีพนักงาน (Add Staff Account — Read-only Mode)
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body manager-modal-body">
+                <div class="manager-alert manager-alert-warning mb-3">
+                    <div class="manager-alert-content">
+                        <i class="fa-solid fa-lock"></i>
+                        <div>
+                            <strong>แจ้งสถานะ Backend (`ManagerController`):</strong>
+                            <div>
+                                ใน <code>ManagerController.cs</code> กำหนดให้หน้าจัดการพนักงานเป็นแบบ <strong>Read-only (ดูข้อมูลอย่างเดียว)</strong> และไม่มี POST Action สำหรับสร้างพนักงานใหม่ ฟอร์มด้านล่างจึงปิดการส่งข้อมูลเพื่อไม่ให้เกิดการเข้าใจผิดว่าบันทึกสำเร็จ
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="manager-form-group mb-3">
+                    <label class="manager-label">ชื่อ-นามสกุลพนักงาน (Full Name)</label>
+                    <input type="text" class="manager-input manager-staff-input-disabled" disabled readonly placeholder="ระบุชื่อ-นามสกุล (สูงสุด 150 ตัวอักษร)" />
+                </div>
+                <div class="manager-form-group mb-3">
+                    <label class="manager-label">อีเมลพนักงาน (Email)</label>
+                    <input type="email" class="manager-input manager-staff-input-disabled" disabled readonly placeholder="staff@staymate.com" />
+                </div>
+                <div class="manager-form-row mb-3">
+                    <div class="manager-form-group">
+                        <label class="manager-label">รหัสผ่านเริ่มต้น (Password)</label>
+                        <input type="password" class="manager-input manager-staff-input-disabled" disabled readonly placeholder="อย่างน้อย 6 ตัวอักษร" />
+                    </div>
+                    <div class="manager-form-group">
+                        <label class="manager-label">ยืนยันรหัสผ่าน (Confirm Password)</label>
+                        <input type="password" class="manager-input manager-staff-input-disabled" disabled readonly placeholder="ยืนยันรหัสผ่านอีกครั้ง" />
+                    </div>
+                </div>
+                <div class="manager-form-group mb-2">
+                    <label class="manager-label">ตำแหน่งสายงานปฏิบัติการ (Role — ไม่มีตัวเลือก Owner)</label>
+                    <select class="manager-select" disabled>
+                        <option value="FRONT_ADMIN">Front Admin (ฝ่ายต้อนรับ)</option>
+                        <option value="FINANCE">Finance (ฝ่ายการเงิน)</option>
+                        <option value="HOUSEKEEPING">Housekeeping (ฝ่ายแม่บ้าน)</option>
+                        @foreach (var ro in allowedOperationalRoles)
+                        {
+                            <option value="@ro.Value">@ro.Label (@ro.Value)</option>
+                        }
+                    </select>
+                </div>
+                <small class="manager-text-muted">
+                    <i class="fa-solid fa-ban text-danger"></i> ห้ามมี Role <code>OWNER</code> ใน Dropdown และห้ามสร้างบัญชีที่มีสิทธิ์สูงกว่า Manager
+                </small>
+            </div>
+            <div class="modal-footer manager-modal-footer">
+                <button type="button" class="manager-btn manager-btn-ghost" data-bs-dismiss="modal">ปิดหน้าต่าง</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal 3: Section 7 Account Status Confirmation Modal (Suspend / Activate Policy Notice) -->
+<div class="modal fade manager-modal manager-staff-modal" id="managerStatusConfirmModal" tabindex="-1" aria-labelledby="managerStatusConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content manager-modal-content">
+            <div class="modal-header manager-modal-header">
+                <h5 class="modal-title" id="managerStatusConfirmModalLabel">
+                    <i class="fa-solid fa-user-lock text-warning"></i>
+                    ยืนยันการเปลี่ยนสถานะบัญชีพนักงาน (Account Status Confirmation)
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body manager-modal-body">
+                <div class="manager-staff-confirm-box mb-3">
+                    <div class="manager-staff-detail-row">
+                        <span>ชื่อพนักงานที่เลือก:</span>
+                        <strong id="confirmStaffName">กรุณาเลือกพนักงานจากตาราง</strong>
+                    </div>
+                    <div class="manager-staff-detail-row">
+                        <span>สถานะปัจจุบันในฐานข้อมูล:</span>
+                        <strong id="confirmStaffCurrentStatus">--</strong>
+                    </div>
+                    <div class="manager-staff-detail-row">
+                        <span>ผลกระทบของการเปลี่ยนสถานะ:</span>
+                        <span id="confirmStaffImpact">การระงับบัญชี (Suspend) จะทำให้พนักงานไม่สามารถเข้าสู่ระบบปฏิบัติงานได้ทันที ส่วนการเปิดใช้งาน (Activate) จะคืนสิทธิ์เข้าใช้งานตาม Role เดิม</span>
+                    </div>
+                </div>
+                <div class="manager-alert manager-alert-warning mb-0">
+                    <div class="manager-alert-content">
+                        <i class="fa-solid fa-database"></i>
+                        <div>
+                            <strong>สถานะการเชื่อมต่อ Backend (`ManagerController.cs`):</strong>
+                            <div>
+                                ปัจจุบัน <code>ManagerController</code> เปิดให้ตรวจสอบสถานะบัญชีพนักงานแบบ <strong>Read-only</strong> เท่านั้น (ยังไม่มี POST Action สำหรับ Suspend หรือ Activate บัญชีใน Controller นี้) ระบบจึงไม่แสดงปุ่มกดยืนยันหลอกเพื่อความถูกต้องตามสถานะจริงของฐานข้อมูล
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer manager-modal-footer">
+                <button type="button" class="manager-btn manager-btn-ghost" data-bs-dismiss="modal">Cancel (ปิดหน้าต่าง)</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            'use strict';
+
+            // 1. ตั้งค่าความกว้าง Progress Bar ของ Role Distribution และ Account Status
+            document.querySelectorAll('[data-staff-progress]').forEach(function (bar) {
+                var pct = parseFloat(bar.getAttribute('data-staff-progress')) || 0;
+                bar.style.width = Math.min(100, Math.max(0, pct)) + '%';
+            });
+
+            // 2. เรียงลำดับรายชื่อพนักงานในตาราง (Sort by Name ก-ฮ / A-Z)
+            var sortSelect = document.getElementById('staffSortSelect');
+            var staffTable = document.getElementById('managerStaffTable');
+
+            if (sortSelect && staffTable) {
+                sortSelect.addEventListener('change', function () {
+                    var tbody = staffTable.querySelector('tbody');
+                    if (!tbody) return;
+
+                    var rows = Array.prototype.slice.call(tbody.querySelectorAll('tr[data-fullname]'));
+                    if (!rows.length) return;
+
+                    var dir = sortSelect.value === 'desc' ? -1 : 1;
+                    rows.sort(function (a, b) {
+                        var na = (a.getAttribute('data-fullname') || '').trim();
+                        var nb = (b.getAttribute('data-fullname') || '').trim();
+                        return na.localeCompare(nb, 'th') * dir;
+                    });
+
+                    rows.forEach(function (r) {
+                        tbody.appendChild(r);
+                    });
+                });
+            }
+
+            // 3. เปิด Modal ดูรายละเอียดพนักงาน (View Staff Details) และ Modal ตรวจสอบสถานะ (Status Policy)
+            document.addEventListener('click', function (e) {
+                var viewBtn = e.target && e.target.closest ? e.target.closest('.js-view-staff-btn') : null;
+                if (viewBtn) {
+                    var data = null;
+                    try {
+                        data = JSON.parse(viewBtn.getAttribute('data-staff-detail') || '{}');
+                    } catch (err) {
+                        return;
+                    }
+                    if (!data) return;
+
+                    var setText = function (id, val) {
+                        var el = document.getElementById(id);
+                        if (el) el.textContent = val;
+                    };
+
+                    setText('detailStaffUserId', 'User ID: #' + (data.UserId || '--'));
+                    setText('detailStaffFullName', data.FullName || '--');
+                    setText('detailStaffUsername', '@@' + (data.Username || '--'));
+                    setText('detailStaffEmail', data.Email || '--');
+                    setText('detailStaffPhone', data.Phone || '--');
+                    setText('detailStaffRoles', data.RolesText || '--');
+                    setText('detailStaffCreated', data.CreatedAt || '--');
+
+                    var badge = document.getElementById('detailStaffStatusBadge');
+                    if (badge) {
+                        badge.textContent = data.StatusLabel || '--';
+                        badge.className = 'manager-staff-badge ' + (data.IsActive ? 'manager-staff-badge-active' : 'manager-staff-badge-suspended');
+                    }
+
+                    var modalEl = document.getElementById('managerViewStaffModal');
+                    if (modalEl && window.bootstrap && window.bootstrap.Modal) {
+                        window.bootstrap.Modal.getOrCreateInstance(modalEl).show();
+                    }
+                    return;
+                }
+
+                var statusBtn = e.target && e.target.closest ? e.target.closest('.js-status-policy-btn') : null;
+                if (statusBtn) {
+                    var sData = null;
+                    try {
+                        sData = JSON.parse(statusBtn.getAttribute('data-staff-detail') || '{}');
+                    } catch (err) {
+                        return;
+                    }
+                    if (!sData) return;
+
+                    var nameEl = document.getElementById('confirmStaffName');
+                    var currEl = document.getElementById('confirmStaffCurrentStatus');
+                    if (nameEl) nameEl.textContent = (sData.FullName || '--') + ' (@@' + (sData.Username || '--') + ')';
+                    if (currEl) currEl.textContent = sData.StatusLabel || '--';
+
+                    var confirmModal = document.getElementById('managerStatusConfirmModal');
+                    if (confirmModal && window.bootstrap && window.bootstrap.Modal) {
+                        window.bootstrap.Modal.getOrCreateInstance(confirmModal).show();
+                    }
+                }
+            });
+        })();
+    </script>
+}

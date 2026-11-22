@@ -1,0 +1,954 @@
+@model StayMate_Kavinvee_0576.Models.ViewModels.ManagerReviewManagementViewModel
+@using System.Globalization
+@using System.Text.Json
+@{
+    ViewData["Title"] = "จัดการรีวิว Feedback (Review Management)";
+    Layout = "~/Views/Shared/_ManagerLayout.cshtml";
+
+    // คำนวณสถิติจากข้อมูลจริงใน Model.RatingDistribution และ Model.TotalCount (ไม่ Hardcode)
+    var totalReviews = Model.TotalCount;
+    var distList = Model.RatingDistribution ?? new List<StayMate_Kavinvee_0576.Models.ViewModels.ManagerCountPoint>();
+
+    int GetStarCount(string key) => distList.Where(x => x.Key == key).Sum(x => x.Count);
+
+    var count5Star = GetStarCount("5");
+    var count4Star = GetStarCount("4");
+    var count3Star = GetStarCount("3");
+    var count2Star = GetStarCount("2");
+    var count1Star = GetStarCount("1");
+
+    var positiveReviews = count5Star + count4Star;
+    var neutralReviews = count3Star;
+    var negativeReviews = count2Star + count1Star;
+
+    decimal? positivePercent = totalReviews > 0
+        ? Math.Round((decimal)positiveReviews * 100m / totalReviews, 1)
+        : null;
+
+    decimal? negativePercent = totalReviews > 0
+        ? Math.Round((decimal)negativeReviews * 100m / totalReviews, 1)
+        : null;
+
+    decimal? satisfactionPercent = (totalReviews > 0 && Model.AverageRating.HasValue)
+        ? Math.Round((Model.AverageRating.Value / 5m) * 100m, 1)
+        : null;
+}
+
+<div class="manager-portal-wrapper manager-review-page">
+
+    <!-- ═══════════════════════ Alerts (TempData & Validation) ═══════════════════════ -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="manager-alert manager-alert-success" role="alert">
+            <div class="manager-alert-content">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>@TempData["SuccessMessage"]</span>
+            </div>
+            <button type="button" class="manager-alert-close" data-bs-dismiss="alert" aria-label="Close">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="manager-alert manager-alert-danger" role="alert">
+            <div class="manager-alert-content">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span>@TempData["ErrorMessage"]</span>
+            </div>
+            <button type="button" class="manager-alert-close" data-bs-dismiss="alert" aria-label="Close">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+    }
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="manager-alert manager-alert-danger" role="alert">
+            <div class="manager-alert-content">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <div asp-validation-summary="All"></div>
+            </div>
+        </div>
+    }
+
+    <!-- ═══════════════════════ Page Header ═══════════════════════ -->
+    <section class="manager-review-header">
+        <div class="manager-review-header-top">
+            <div class="manager-review-title-wrap">
+                <nav class="manager-review-breadcrumb" aria-label="Breadcrumb">
+                    <a asp-controller="Manager" asp-action="Index" class="manager-review-breadcrumb-link">
+                        <i class="fa-solid fa-chart-pie"></i> Manager
+                    </a>
+                    <span class="manager-review-breadcrumb-sep">/</span>
+                    <span class="manager-review-breadcrumb-current">Review Management</span>
+                </nav>
+                <h1 class="manager-review-title">Review Management</h1>
+                <p class="manager-review-subtitle">
+                    Monitor guest satisfaction and manage customer feedback — ติดตามความพึงพอใจของผู้เข้าพักและตรวจสอบความคิดเห็นจากลูกค้าจริง
+                </p>
+            </div>
+
+            <div class="manager-review-header-meta">
+                <div class="manager-review-meta-pill">
+                    <i class="fa-solid fa-comments"></i>
+                    <span>รีวิวที่พบ: <strong>@totalReviews.ToString("N0") รายการ</strong> (หน้า @Model.Page / @Model.TotalPages)</span>
+                </div>
+                <div class="manager-review-meta-pill manager-review-pill-cyan">
+                    <i class="fa-solid fa-star"></i>
+                    <span>
+                        คะแนนเฉลี่ย:
+                        <strong>@(Model.AverageRating.HasValue ? $"{Model.AverageRating.Value:0.00} / 5.00" : "--")</strong>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Section Jump Links -->
+        <nav class="manager-review-jumpnav" aria-label="Review Management Sections">
+            <a href="#section-review-overview" class="manager-review-jump-link">
+                <i class="fa-solid fa-chart-simple"></i>
+                <span>1. Review Overview</span>
+            </a>
+            <a href="#section-rating-distribution" class="manager-review-jump-link">
+                <i class="fa-solid fa-bars-progress"></i>
+                <span>2. Rating Distribution</span>
+            </a>
+            <a href="#section-customer-satisfaction" class="manager-review-jump-link">
+                <i class="fa-solid fa-award"></i>
+                <span>3. Customer Satisfaction</span>
+            </a>
+            <a href="#section-guest-reviews" class="manager-review-jump-link">
+                <i class="fa-solid fa-table-list"></i>
+                <span>4. Guest Reviews Summary</span>
+            </a>
+            <a href="#section-review-details" class="manager-review-jump-link">
+                <i class="fa-solid fa-envelope-open-text"></i>
+                <span>5. Review Details &amp; Reply</span>
+            </a>
+            <a href="#section-review-filters" class="manager-review-jump-link">
+                <i class="fa-solid fa-filter"></i>
+                <span>6. Review Filters</span>
+            </a>
+        </nav>
+    </section>
+
+    <!-- ═══════════════════════ SECTION 1: REVIEW OVERVIEW (4 Summary Cards) ═══════════════════════ -->
+    <section id="section-review-overview" class="manager-review-section">
+        <div class="manager-review-section-head">
+            <div>
+                <h2 class="manager-review-section-title">
+                    <i class="fa-solid fa-chart-pie text-primary"></i>
+                    1. Review Overview (สรุปภาพรวมสถิติรีวิวผู้เข้าพัก)
+                </h2>
+                <p class="manager-review-section-desc">
+                    คำนวณจากข้อมูลรีวิวจริงในฐานข้อมูลที่ผ่านตัวกรองปัจจุบัน
+                </p>
+            </div>
+        </div>
+
+        <div class="manager-review-summary">
+            <!-- 1. Total Reviews -->
+            <article class="manager-review-stat-card manager-review-stat-blue">
+                <div class="manager-review-stat-top">
+                    <span class="manager-review-stat-label">Total Reviews (รีวิวทั้งหมด)</span>
+                    <div class="manager-review-stat-icon">
+                        <i class="fa-solid fa-comments"></i>
+                    </div>
+                </div>
+                <div class="manager-review-stat-value">@totalReviews.ToString("N0")</div>
+                <div class="manager-review-stat-footer">
+                    <span>แสดงหน้าละ @Model.PageSize รายการ</span>
+                    <span class="manager-badge manager-badge-info">ปานกลาง (3 ดาว): @neutralReviews.ToString("N0")</span>
+                </div>
+            </article>
+
+            <!-- 2. Average Rating -->
+            <article class="manager-review-stat-card manager-review-stat-violet">
+                <div class="manager-review-stat-top">
+                    <span class="manager-review-stat-label">Average Rating (คะแนนเฉลี่ย)</span>
+                    <div class="manager-review-stat-icon">
+                        <i class="fa-solid fa-star"></i>
+                    </div>
+                </div>
+                <div class="manager-review-stat-value">
+                    @if (Model.AverageRating.HasValue)
+                    {
+                        @Model.AverageRating.Value.ToString("0.00") <small class="manager-review-stat-unit">/ 5.00</small>
+                    }
+                    else
+                    {
+                        <span>--</span>
+                    }
+                </div>
+                <div class="manager-review-stat-footer">
+                    <div class="manager-review-stars" aria-label="Average Star Rating">
+                        @{
+                            var avgVal = Model.AverageRating ?? 0m;
+                            for (int s = 1; s <= 5; s++)
+                            {
+                                if (avgVal >= s)
+                                {
+                                    <i class="fa-solid fa-star"></i>
+                                }
+                                else if (avgVal >= s - 0.5m)
+                                {
+                                    <i class="fa-solid fa-star-half-stroke"></i>
+                                }
+                                else
+                                {
+                                    <i class="fa-regular fa-star"></i>
+                                }
+                            }
+                        }
+                    </div>
+                    <span class="manager-badge manager-badge-violet">เต็ม 5.00 ดาว</span>
+                </div>
+            </article>
+
+            <!-- 3. Positive Reviews (4-5 Stars) -->
+            <article class="manager-review-stat-card manager-review-stat-emerald">
+                <div class="manager-review-stat-top">
+                    <span class="manager-review-stat-label">Positive Reviews (คะแนน 4–5 ดาว)</span>
+                    <div class="manager-review-stat-icon">
+                        <i class="fa-solid fa-face-smile-beam"></i>
+                    </div>
+                </div>
+                <div class="manager-review-stat-value">@positiveReviews.ToString("N0")</div>
+                <div class="manager-review-stat-footer">
+                    <span>5 ดาว (@count5Star) | 4 ดาว (@count4Star)</span>
+                    <span class="manager-badge manager-badge-success">
+                        @(positivePercent.HasValue ? $"{positivePercent.Value:0.0}% ของทั้งหมด" : "--")
+                    </span>
+                </div>
+            </article>
+
+            <!-- 4. Negative Reviews (1-2 Stars) -->
+            <article class="manager-review-stat-card manager-review-stat-danger">
+                <div class="manager-review-stat-top">
+                    <span class="manager-review-stat-label">Negative Reviews (คะแนน 1–2 ดาว)</span>
+                    <div class="manager-review-stat-icon">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                </div>
+                <div class="manager-review-stat-value">@negativeReviews.ToString("N0")</div>
+                <div class="manager-review-stat-footer">
+                    <span>2 ดาว (@count2Star) | 1 ดาว (@count1Star)</span>
+                    <span class="manager-badge manager-badge-danger">
+                        @(negativePercent.HasValue ? $"{negativePercent.Value:0.0}% ของทั้งหมด" : "--")
+                    </span>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════ SECTION 2 & SECTION 3: RATING DISTRIBUTION & CUSTOMER SATISFACTION ═══════════════════════ -->
+    <div class="manager-review-analytics-grid">
+
+        <!-- SECTION 2: Rating Distribution -->
+        <section id="section-rating-distribution" class="manager-card manager-review-distribution">
+            <div class="manager-card-header">
+                <div>
+                    <h2 class="manager-card-title">
+                        <i class="fa-solid fa-bars-progress text-primary"></i>
+                        2. Rating Distribution (การกระจายคะแนนรีวิว 1–5 ดาว)
+                    </h2>
+                    <p class="manager-card-subtitle">
+                        สัดส่วนจำนวนรีวิวและเปอร์เซ็นต์ของรีวิวทั้งหมดแยกตามระดับคะแนนดาวจริง
+                    </p>
+                </div>
+                <span class="manager-badge manager-badge-info">รวม @totalReviews.ToString("N0") รีวิว</span>
+            </div>
+
+            @if (totalReviews > 0 && distList.Any())
+            {
+                <div class="manager-review-dist-list">
+                    @foreach (var item in distList)
+                    {
+                        var starNum = int.TryParse(item.Key, out var sn) ? sn : 0;
+                        var starLabel = starNum == 1 ? "1 Star" : $"{starNum} Stars";
+                        var pct = totalReviews > 0 ? Math.Round((decimal)item.Count * 100m / totalReviews, 1) : 0m;
+                        var pctAttr = pct.ToString("0.0", CultureInfo.InvariantCulture);
+
+                        <div class="manager-review-dist-row">
+                            <div class="manager-review-dist-label">
+                                <span class="manager-review-star-tag">@starLabel</span>
+                                <span class="manager-review-stars manager-review-stars-sm" aria-hidden="true">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        if (i <= starNum)
+                                        {
+                                            <i class="fa-solid fa-star"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="fa-regular fa-star"></i>
+                                        }
+                                    }
+                                </span>
+                            </div>
+
+                            <div class="manager-review-progress" role="progressbar" aria-valuenow="@pctAttr" aria-valuemin="0" aria-valuemax="100">
+                                <div class="manager-review-progress-bar manager-review-bar-star-@starNum"
+                                     data-review-progress="@pctAttr"></div>
+                            </div>
+
+                            <div class="manager-review-dist-stats">
+                                <strong class="manager-review-dist-pct">@pct.ToString("0.0")%</strong>
+                                <span class="manager-review-dist-count">(@item.Count.ToString("N0") รีวิว)</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="manager-empty-state">
+                    <i class="fa-regular fa-star"></i>
+                    <p>ยังไม่มีข้อมูลรีวิวสำหรับคำนวณการกระจายคะแนนดาว</p>
+                </div>
+            }
+        </section>
+
+        <!-- SECTION 3: Customer Satisfaction -->
+        <section id="section-customer-satisfaction" class="manager-card manager-review-satisfaction">
+            <div class="manager-card-header">
+                <div>
+                    <h2 class="manager-card-title">
+                        <i class="fa-solid fa-award text-warning"></i>
+                        3. Customer Satisfaction (ภาพรวมความพึงพอใจลูกค้า)
+                    </h2>
+                    <p class="manager-card-subtitle">ดัชนีความพึงพอใจคำนวณจากคะแนนเฉลี่ยและจำนวนรีวิวจริง</p>
+                </div>
+            </div>
+
+            @if (totalReviews > 0 && Model.AverageRating.HasValue && satisfactionPercent.HasValue)
+            {
+                <div class="manager-review-sat-body">
+                    <div class="manager-review-sat-hero">
+                        <div class="manager-review-sat-score-circle">
+                            <span class="manager-review-sat-big">@Model.AverageRating.Value.ToString("0.00")</span>
+                            <span class="manager-review-sat-outof">คะแนนเต็ม 5 ดาว</span>
+                        </div>
+
+                        <div class="manager-review-sat-info">
+                            <div class="manager-review-stars manager-review-stars-lg">
+                                @{
+                                    var satAvg = Model.AverageRating.Value;
+                                    for (int s = 1; s <= 5; s++)
+                                    {
+                                        if (satAvg >= s)
+                                        {
+                                            <i class="fa-solid fa-star"></i>
+                                        }
+                                        else if (satAvg >= s - 0.5m)
+                                        {
+                                            <i class="fa-solid fa-star-half-stroke"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="fa-regular fa-star"></i>
+                                        }
+                                    }
+                                }
+                            </div>
+                            <div class="manager-review-sat-pct-title">
+                                Satisfaction Rate: <strong>@satisfactionPercent.Value.ToString("0.0")%</strong>
+                            </div>
+                            <p class="manager-review-sat-caption">
+                                คำนวณจากจำนวนรีวิวทั้งหมด <strong>@totalReviews.ToString("N0") รีวิว</strong>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="manager-review-sat-meters">
+                        <div class="manager-review-sat-meter-item">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>ดัชนีคะแนนเฉลี่ยเทียบ 5 ดาว (Satisfaction Percentage)</span>
+                                <strong>@satisfactionPercent.Value.ToString("0.0")%</strong>
+                            </div>
+                            <div class="manager-review-progress">
+                                <div class="manager-review-progress-bar manager-review-bar-cyan"
+                                     data-review-progress="@satisfactionPercent.Value.ToString("0.0", CultureInfo.InvariantCulture)"></div>
+                            </div>
+                        </div>
+
+                        <div class="manager-review-sat-meter-item">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>อัตราส่วนรีวิวเชิงบวก 4–5 ดาว (Positive Review Ratio)</span>
+                                <strong>@(positivePercent?.ToString("0.0") ?? "0.0")%</strong>
+                            </div>
+                            <div class="manager-review-progress">
+                                <div class="manager-review-progress-bar manager-review-bar-star-5"
+                                     data-review-progress="@((positivePercent ?? 0m).ToString("0.0", CultureInfo.InvariantCulture))"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="manager-empty-state">
+                    <i class="fa-regular fa-face-meh"></i>
+                    <p>ไม่มีข้อมูลรีวิวในระบบ จึงไม่แสดงเปอร์เซ็นต์ความพึงพอใจ</p>
+                </div>
+            }
+        </section>
+
+    </div>
+
+    <!-- ═══════════════════════ SECTION 6: REVIEW FILTERS BAR ═══════════════════════ -->
+    <section id="section-review-filters" class="manager-review-section">
+        <div class="manager-card manager-review-filter">
+            <div class="manager-card-header">
+                <div>
+                    <h2 class="manager-card-title">
+                        <i class="fa-solid fa-filter text-primary"></i>
+                        6. Review Filters (ค้นหาและกรองรายการรีวิว)
+                    </h2>
+                    <p class="manager-card-subtitle">
+                        กรองข้อมูลจากฐานข้อมูลผ่าน `GET /Manager/ReviewManagement` หรือค้นหาและจัดเรียงทันทีบนตาราง
+                    </p>
+                </div>
+            </div>
+
+            <form method="get"
+                  asp-controller="Manager"
+                  asp-action="ReviewManagement"
+                  class="manager-review-filter-form">
+                <input type="hidden" name="page" value="1" />
+
+                <div class="manager-review-filter-grid">
+                    <!-- Search Customer Name / Booking Code / Comment -->
+                    <div class="manager-form-group">
+                        <label for="reviewFilterSearch" class="manager-label">ค้นหาชื่อลูกค้า / รหัสจอง / ข้อความรีวิว</label>
+                        <div class="manager-search-box">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="search"
+                                   id="reviewFilterSearch"
+                                   name="q"
+                                   value="@Model.Search"
+                                   class="manager-input"
+                                   placeholder="ค้นหาชื่อลูกค้า, รหัสใบจอง หรือเนื้อหารีวิว..."
+                                   data-manager-search="#guestReviewsTable" />
+                        </div>
+                    </div>
+
+                    <!-- Rating Filter (1-5 Stars) -->
+                    <div class="manager-form-group">
+                        <label for="reviewFilterRating" class="manager-label">กรองตามคะแนน (Rating 1–5 ดาว)</label>
+                        <select id="reviewFilterRating"
+                                name="rating"
+                                class="manager-select"
+                                data-manager-filter="#guestReviewsTable"
+                                data-filter-key="rating">
+                            <option value="">ทุกระดับคะแนน (1 - 5 Stars)</option>
+                            <option value="5" selected="@(Model.Rating == 5 ? "selected" : null)">⭐⭐⭐⭐⭐ 5 Stars (ดีเยี่ยม)</option>
+                            <option value="4" selected="@(Model.Rating == 4 ? "selected" : null)">⭐⭐⭐⭐ 4 Stars (ดีมาก)</option>
+                            <option value="3" selected="@(Model.Rating == 3 ? "selected" : null)">⭐⭐⭐ 3 Stars (ปานกลาง)</option>
+                            <option value="2" selected="@(Model.Rating == 2 ? "selected" : null)">⭐⭐ 2 Stars (ควรปรับปรุง)</option>
+                            <option value="1" selected="@(Model.Rating == 1 ? "selected" : null)">⭐ 1 Star (ต้องแก้ไข)</option>
+                        </select>
+                    </div>
+
+                    <!-- Start Date Filter -->
+                    <div class="manager-form-group">
+                        <label for="reviewFilterStartDate" class="manager-label">ตั้งแต่วันที่รีวิว (Start Date)</label>
+                        <input type="date"
+                               id="reviewFilterStartDate"
+                               name="startDate"
+                               value="@(Model.StartDate?.ToString("yyyy-MM-dd"))"
+                               class="manager-input" />
+                    </div>
+
+                    <!-- End Date Filter -->
+                    <div class="manager-form-group">
+                        <label for="reviewFilterEndDate" class="manager-label">ถึงวันที่รีวิว (End Date)</label>
+                        <input type="date"
+                               id="reviewFilterEndDate"
+                               name="endDate"
+                               value="@(Model.EndDate?.ToString("yyyy-MM-dd"))"
+                               class="manager-input" />
+                    </div>
+
+                    <!-- Reply Status Filter -->
+                    <div class="manager-form-group">
+                        <label for="reviewFilterReplyStatus" class="manager-label">สถานะการตอบกลับ (Reply Status)</label>
+                        <select id="reviewFilterReplyStatus"
+                                class="manager-select"
+                                data-manager-filter="#guestReviewsTable"
+                                data-filter-key="replystatus">
+                            <option value="">ทุกสถานะ (All Statuses)</option>
+                            <option value="readonly">Read-only (ดูข้อมูลอย่างเดียวตามโครงสร้าง DB)</option>
+                        </select>
+                    </div>
+
+                    <!-- Sort By Latest / Oldest -->
+                    <div class="manager-form-group">
+                        <label for="reviewSortOrder" class="manager-label">เรียงลำดับ (Sort By)</label>
+                        <select id="reviewSortOrder" class="manager-select">
+                            <option value="desc">ล่าสุดก่อน (Latest First)</option>
+                            <option value="asc">เก่าสุดก่อน (Oldest First)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="manager-review-filter-actions">
+                    <a asp-controller="Manager" asp-action="ReviewManagement" class="manager-btn manager-btn-ghost">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span>Reset Filters (ล้างตัวกรอง)</span>
+                    </a>
+                    <button type="submit" class="manager-btn manager-btn-primary">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <span>Apply Filters (ค้นหาจากฐานข้อมูล)</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════ SECTION 4: GUEST REVIEWS SUMMARY TABLE ═══════════════════════ -->
+    <section id="section-guest-reviews" class="manager-review-section">
+        <div class="manager-card">
+            <div class="manager-card-header manager-card-header-responsive">
+                <div>
+                    <h2 class="manager-card-title">
+                        <i class="fa-solid fa-table-list text-primary"></i>
+                        4. Guest Reviews Summary (ตารางรายการรีวิวทั้งหมดของลูกค้า)
+                    </h2>
+                    <p class="manager-card-subtitle">
+                        แสดงรายชื่อผู้รีวิว รหัสใบจอง คะแนนดาว ข้อความรีวิว วันที่รีวิว และปุ่ม <strong>View Details</strong> เพื่ออ่านฉบับเต็ม
+                    </p>
+                </div>
+                <span class="manager-badge manager-badge-primary">
+                    แสดง @(Model.Reviews?.Count ?? 0) รายการในหน้านี้ (จากทั้งหมด @totalReviews.ToString("N0") รายการ)
+                </span>
+            </div>
+
+            <div class="manager-table-responsive">
+                <table class="manager-table manager-review-table" id="guestReviewsTable">
+                    <thead>
+                        <tr>
+                            <th>Customer Name</th>
+                            <th>Booking Reference</th>
+                            <th>Rating</th>
+                            <th>Review Comment</th>
+                            <th>Review Date</th>
+                            <th class="text-center">Reply Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Reviews != null && Model.Reviews.Any())
+                        {
+                            foreach (var rev in Model.Reviews)
+                            {
+                                var initial = string.IsNullOrWhiteSpace(rev.ReviewerName)
+                                    ? "G"
+                                    : rev.ReviewerName.Trim().Substring(0, 1).ToUpperInvariant();
+
+                                var fullComment = string.IsNullOrWhiteSpace(rev.Comment)
+                                    ? "ลูกค้าไม่ได้ระบุข้อความความคิดเห็นเพิ่มเติม (ให้เฉพาะคะแนนดาว)"
+                                    : rev.Comment;
+
+                                var reviewDetailJson = JsonSerializer.Serialize(new
+                                {
+                                    ReviewId = rev.ReviewId,
+                                    BookingId = rev.BookingId,
+                                    BookingCode = rev.BookingCode,
+                                    ReviewerName = rev.ReviewerName,
+                                    Rating = rev.Rating,
+                                    Comment = fullComment,
+                                    CreatedAtFormatted = rev.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                });
+
+                                <tr data-rating="@rev.Rating"
+                                    data-replystatus="readonly"
+                                    data-timestamp="@rev.CreatedAt.Ticks">
+                                    <td>
+                                        <div class="manager-user-cell">
+                                            <span class="manager-avatar-sm">@initial</span>
+                                            <div>
+                                                <strong>@rev.ReviewerName</strong>
+                                                <div class="manager-review-subtext">Review ID: #@rev.ReviewId</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="manager-code-badge">@rev.BookingCode</span>
+                                        <div class="manager-review-subtext">Booking ID: #@rev.BookingId</div>
+                                    </td>
+                                    <td>
+                                        <div class="manager-review-rating">
+                                            <span class="manager-review-score-pill manager-review-score-@rev.Rating">
+                                                @rev.Rating.0
+                                            </span>
+                                            <span class="manager-review-stars manager-review-stars-sm" aria-label="@rev.Rating Stars">
+                                                @for (int i = 1; i <= 5; i++)
+                                                {
+                                                    if (i <= rev.Rating)
+                                                    {
+                                                        <i class="fa-solid fa-star"></i>
+                                                    }
+                                                    else
+                                                    {
+                                                        <i class="fa-regular fa-star"></i>
+                                                    }
+                                                }
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(rev.Comment))
+                                        {
+                                            <div class="manager-review-comment-truncate" title="@rev.Comment">
+                                                @rev.Comment
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="manager-text-muted fst-italic">-- ไม่มีข้อความความคิดเห็น --</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="manager-review-date-cell">
+                                            <strong>@rev.CreatedAt.ToString("dd/MM/yyyy")</strong>
+                                            <span class="manager-review-subtext">@rev.CreatedAt.ToString("HH:mm น.")</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="manager-review-reply-badge">
+                                            <i class="fa-solid fa-eye"></i> Read-only
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <button type="button"
+                                                class="manager-btn manager-btn-outline manager-btn-sm js-select-review-btn"
+                                                data-review-detail='@Html.Raw(reviewDetailJson)'>
+                                            <i class="fa-solid fa-expand"></i>
+                                            <span>View Details</span>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr data-manager-empty-row>
+                                <td colspan="7" class="manager-empty-state">
+                                    <i class="fa-regular fa-comment-dots"></i>
+                                    <p>ไม่พบรายการรีวิวในระบบที่ตรงกับตัวกรอง</p>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                <div class="manager-empty-state d-none" data-manager-empty-for="#guestReviewsTable">
+                    <i class="fa-solid fa-filter-circle-xmark"></i>
+                    <p>ไม่พบรายการรีวิวในหน้านี้ที่ตรงกับคำค้นหา</p>
+                </div>
+            </div>
+
+            <!-- Server-Side Pagination -->
+            @if (Model.TotalPages > 1)
+            {
+                <nav class="manager-review-pagination" aria-label="Review Pages Navigation">
+                    <div class="manager-review-page-info">
+                        หน้า <strong>@Model.Page</strong> จาก <strong>@Model.TotalPages</strong> (รวมทั้งหมด @Model.TotalCount.ToString("N0") รายการ)
+                    </div>
+                    <div class="manager-review-page-btns">
+                        @if (Model.Page > 1)
+                        {
+                            <a asp-controller="Manager"
+                               asp-action="ReviewManagement"
+                               asp-route-q="@Model.Search"
+                               asp-route-rating="@Model.Rating"
+                               asp-route-startDate="@(Model.StartDate?.ToString("yyyy-MM-dd"))"
+                               asp-route-endDate="@(Model.EndDate?.ToString("yyyy-MM-dd"))"
+                               asp-route-page="@(Model.Page - 1)"
+                               class="manager-btn manager-btn-outline manager-btn-sm">
+                                <i class="fa-solid fa-chevron-left"></i> ก่อนหน้า
+                            </a>
+                        }
+
+                        @for (int p = Math.Max(1, Model.Page - 2); p <= Math.Min(Model.TotalPages, Model.Page + 2); p++)
+                        {
+                            <a asp-controller="Manager"
+                               asp-action="ReviewManagement"
+                               asp-route-q="@Model.Search"
+                               asp-route-rating="@Model.Rating"
+                               asp-route-startDate="@(Model.StartDate?.ToString("yyyy-MM-dd"))"
+                               asp-route-endDate="@(Model.EndDate?.ToString("yyyy-MM-dd"))"
+                               asp-route-page="@p"
+                               class="manager-btn manager-btn-sm @(p == Model.Page ? "manager-btn-primary" : "manager-btn-ghost")">
+                                @p
+                            </a>
+                        }
+
+                        @if (Model.Page < Model.TotalPages)
+                        {
+                            <a asp-controller="Manager"
+                               asp-action="ReviewManagement"
+                               asp-route-q="@Model.Search"
+                               asp-route-rating="@Model.Rating"
+                               asp-route-startDate="@(Model.StartDate?.ToString("yyyy-MM-dd"))"
+                               asp-route-endDate="@(Model.EndDate?.ToString("yyyy-MM-dd"))"
+                               asp-route-page="@(Model.Page + 1)"
+                               class="manager-btn manager-btn-outline manager-btn-sm">
+                                ถัดไป <i class="fa-solid fa-chevron-right"></i>
+                            </a>
+                        }
+                    </div>
+                </nav>
+            }
+        </div>
+    </section>
+
+    <!-- ═══════════════════════ SECTION 5: REVIEW DETAILS & REPLY (READ-ONLY PANEL) ═══════════════════════ -->
+    <section id="section-review-details" class="manager-review-section">
+        <div class="manager-card manager-review-reply">
+            <div class="manager-card-header manager-card-header-responsive">
+                <div>
+                    <h2 class="manager-card-title">
+                        <i class="fa-solid fa-envelope-open-text text-primary"></i>
+                        5. Review Details &amp; Reply (รายละเอียดรีวิวฉบับเต็มและสถานะการตอบกลับ)
+                    </h2>
+                    <p class="manager-card-subtitle">
+                        แสดงข้อมูลรีวิวที่เลือกจากตาราง พร้อมสถานะระบบตอบกลับตามโครงสร้างจริงของฐานข้อมูล
+                    </p>
+                </div>
+                <span class="manager-badge manager-badge-warning">
+                    <i class="fa-solid fa-database"></i> Read-only Database Mode
+                </span>
+            </div>
+
+            @{
+                var firstReview = Model.Reviews?.FirstOrDefault();
+            }
+
+            <div class="manager-review-detail-grid">
+                <!-- Left Column: Selected Review Details -->
+                <div class="manager-review-detail-box">
+                    @if (firstReview != null)
+                    {
+                        <div class="manager-review-detail-top">
+                            <div>
+                                <span class="manager-code-badge" id="panelReviewBookingCode">Booking: @firstReview.BookingCode</span>
+                                <h3 class="manager-review-detail-customer" id="panelReviewerName">@firstReview.ReviewerName</h3>
+                            </div>
+                            <div class="text-end">
+                                <span class="manager-review-score-pill manager-review-score-@firstReview.Rating" id="panelReviewScoreBadge">
+                                    @firstReview.Rating / 5 ดาว
+                                </span>
+                                <div class="manager-review-subtext mt-1" id="panelReviewDate">
+                                    วันที่รีวิว: @firstReview.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="manager-review-comment-full" id="panelReviewComment">
+                            @(string.IsNullOrWhiteSpace(firstReview.Comment)
+                                ? "ลูกค้าไม่ได้ระบุข้อความความคิดเห็นเพิ่มเติม (ให้เฉพาะคะแนนดาว)"
+                                : firstReview.Comment)
+                        </div>
+
+                        <div class="manager-review-meta-row">
+                            <span><i class="fa-solid fa-hashtag"></i> Review ID: <strong id="panelReviewId">#@firstReview.ReviewId</strong></span>
+                            <span><i class="fa-solid fa-receipt"></i> Booking ID: <strong id="panelBookingId">#@firstReview.BookingId</strong></span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="manager-empty-state">
+                            <i class="fa-regular fa-folder-open"></i>
+                            <p>ไม่มีรายการรีวิวให้แสดงรายละเอียด</p>
+                        </div>
+                    }
+                </div>
+
+                <!-- Right Column: Read-Only Reply Box (Transparent Backend Notice) -->
+                <div class="manager-review-reply-box">
+                    <div class="manager-alert manager-alert-warning mb-3">
+                        <div class="manager-alert-content">
+                            <i class="fa-solid fa-lock"></i>
+                            <div>
+                                <strong>ข้อจำกัดจากโครงสร้างฐานข้อมูล (`ManagerController`):</strong>
+                                <div>
+                                    ตามที่ระบุใน `BuildReviewManagementAsync`:
+                                    <em>"ตาราง reviews ไม่มีฟิลด์สำหรับซ่อน/ตอบกลับ จึงเป็นการดูข้อมูลอย่างเดียว"</em>
+                                    จึงแสดงในรูปแบบ Read-only โดยไม่มีปุ่มบันทึกหลอก
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="manager-form-group mb-3">
+                        <label for="readonlyReplyTextarea" class="manager-label">
+                            Existing Manager Reply / ช่องตอบกลับความคิดเห็น (Read-only)
+                        </label>
+                        <textarea id="readonlyReplyTextarea"
+                                  class="manager-textarea manager-review-textarea-disabled"
+                                  rows="3"
+                                  disabled
+                                  readonly
+                                  placeholder="ตาราง reviews ในฐานข้อมูลปัจจุบันยังไม่มีฟิลด์สำหรับเก็บข้อความตอบกลับของ Manager (ดูข้อมูลรีวิวได้อย่างเดียว)"></textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <span class="manager-room-ro-tag">
+                            <i class="fa-solid fa-ban"></i> ระบบยังไม่เปิดใช้งาน POST Action สำหรับการตอบกลับรีวิว
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            @if (Model.DataNotes != null && Model.DataNotes.Any())
+            {
+                <div class="manager-notes-box mt-4">
+                    <div class="manager-notes-title">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span>หมายเหตุการประมวลผลข้อมูลรีวิว (System Data Notes)</span>
+                    </div>
+                    <ul class="manager-notes-list">
+                        @foreach (var note in Model.DataNotes)
+                        {
+                            <li>@note</li>
+                        }
+                    </ul>
+                </div>
+            }
+        </div>
+    </section>
+
+</div>
+
+<!-- ═══════════════════════ REVIEW DETAIL MODAL (READ-ONLY) ═══════════════════════ -->
+<div class="modal fade manager-modal manager-review-modal" id="managerReviewDetailModal" tabindex="-1" aria-labelledby="managerReviewDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content manager-modal-content">
+            <div class="modal-header manager-modal-header">
+                <h5 class="modal-title" id="managerReviewDetailModalLabel">
+                    <i class="fa-solid fa-star text-warning"></i>
+                    รายละเอียดรีวิวฉบับเต็ม (Review Details)
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body manager-modal-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <span class="manager-code-badge" id="modalBookingCode">Booking</span>
+                        <h4 class="manager-review-modal-customer mt-2 mb-0" id="modalReviewerName">Customer Name</h4>
+                    </div>
+                    <div class="text-end">
+                        <span class="manager-review-score-pill manager-review-score-5" id="modalRatingBadge">5 / 5 ดาว</span>
+                        <div class="manager-review-subtext mt-1" id="modalReviewDate">Date</div>
+                    </div>
+                </div>
+
+                <div class="manager-form-group mb-3">
+                    <label class="manager-label">ข้อความรีวิวฉบับเต็ม (Full Review Comment)</label>
+                    <div class="manager-review-comment-full" id="modalReviewComment"></div>
+                </div>
+
+                <div class="manager-review-meta-row mb-3">
+                    <span>Review ID: <strong id="modalReviewId">#--</strong></span>
+                    <span>Booking ID: <strong id="modalBookingId">#--</strong></span>
+                </div>
+
+                <div class="manager-alert manager-alert-info mb-0">
+                    <div class="manager-alert-content">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span>ตาราง <code>reviews</code> ไม่มีฟิลด์สำหรับซ่อนหรือตอบกลับรีวิว หน้าต่างนี้จึงแสดงข้อมูลแบบ Read-only ตามโครงสร้างจริง</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer manager-modal-footer">
+                <button type="button" class="manager-btn manager-btn-primary" data-bs-dismiss="modal">
+                    ปิดหน้าต่าง
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            'use strict';
+
+            // 1. ตั้งค่าความกว้างของ Progress Bar สำหรับ Rating Distribution และ Customer Satisfaction
+            document.querySelectorAll('[data-review-progress]').forEach(function (bar) {
+                var pct = parseFloat(bar.getAttribute('data-review-progress')) || 0;
+                bar.style.width = Math.min(100, Math.max(0, pct)) + '%';
+            });
+
+            // 2. เรียงลำดับตารางรีวิวตามวันที่ (Latest / Oldest)
+            var sortSelect = document.getElementById('reviewSortOrder');
+            var reviewsTable = document.getElementById('guestReviewsTable');
+
+            if (sortSelect && reviewsTable) {
+                sortSelect.addEventListener('change', function () {
+                    var tbody = reviewsTable.querySelector('tbody');
+                    if (!tbody) return;
+
+                    var rows = Array.prototype.slice.call(tbody.querySelectorAll('tr[data-timestamp]'));
+                    if (!rows.length) return;
+
+                    var dir = sortSelect.value === 'asc' ? 1 : -1;
+                    rows.sort(function (a, b) {
+                        var ta = Number(a.getAttribute('data-timestamp')) || 0;
+                        var tb = Number(b.getAttribute('data-timestamp')) || 0;
+                        return (ta - tb) * dir;
+                    });
+
+                    rows.forEach(function (r) {
+                        tbody.appendChild(r);
+                    });
+                });
+            }
+
+            // 3. คลิกปุ่ม View Details เพื่อแสดงรายละเอียดใน Section 5 และเปิด Modal อ่านฉบับเต็ม
+            document.addEventListener('click', function (e) {
+                var btn = e.target && e.target.closest ? e.target.closest('.js-select-review-btn') : null;
+                if (!btn) return;
+
+                var data = null;
+                try {
+                    data = JSON.parse(btn.getAttribute('data-review-detail') || '{}');
+                } catch (err) {
+                    return;
+                }
+                if (!data || !data.ReviewId) return;
+
+                var setText = function (id, val) {
+                    var el = document.getElementById(id);
+                    if (el) el.textContent = val;
+                };
+
+                setText('panelReviewBookingCode', 'Booking: ' + (data.BookingCode || '--'));
+                setText('panelReviewerName', data.ReviewerName || '--');
+                setText('panelReviewScoreBadge', (data.Rating || '-') + ' / 5 ดาว');
+                setText('panelReviewDate', 'วันที่รีวิว: ' + (data.CreatedAtFormatted || '--'));
+                setText('panelReviewComment', data.Comment || '--');
+                setText('panelReviewId', '#' + data.ReviewId);
+                setText('panelBookingId', '#' + data.BookingId);
+
+                setText('modalBookingCode', 'Booking: ' + (data.BookingCode || '--'));
+                setText('modalReviewerName', data.ReviewerName || '--');
+                setText('modalRatingBadge', (data.Rating || '-') + ' / 5 ดาว');
+                setText('modalReviewDate', data.CreatedAtFormatted || '--');
+                setText('modalReviewComment', data.Comment || '--');
+                setText('modalReviewId', '#' + data.ReviewId);
+                setText('modalBookingId', '#' + data.BookingId);
+
+                var modalEl = document.getElementById('managerReviewDetailModal');
+                if (modalEl && window.bootstrap && window.bootstrap.Modal) {
+                    window.bootstrap.Modal.getOrCreateInstance(modalEl).show();
+                }
+            });
+        })();
+    </script>
+}

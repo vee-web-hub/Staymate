@@ -230,6 +230,7 @@ C:.
 |           HomeIndexViewModel.cs
 |           HousekeepingViewModel.cs
 |           LoginViewModel.cs
+|           ManagerViewModel.cs
 |           OwnerViewModel.cs
 |           ReceptionIndexViewModel.cs
 |           RegisterViewModel.cs
@@ -281,6 +282,7 @@ C:.
 |           |       0ca34mqj90-{0}-ptq3733fma-ptq3733fma.gz
 |           |       0ficvtfgdc-{0}-47otxtyo56-47otxtyo56.gz
 |           |       10wo29qovj-{0}-ft3s53vfgj-ft3s53vfgj.gz
+|           |       2doxilvijs-{0}-jdb10nf6d6-jdb10nf6d6.gz
 |           |       2q8nczj1zj-{0}-7wyt2gtnln-7wyt2gtnln.gz
 |           |       2tlghukceq-{0}-83jwlth58m-83jwlth58m.gz
 |           |       2ual7gkoo7-{0}-ub07r2b239-ub07r2b239.gz
@@ -302,6 +304,7 @@ C:.
 |           |       8x10uodgim-{0}-06098lyss8-06098lyss8.gz
 |           |       bareymlnuk-{0}-d7shbmvgxk-d7shbmvgxk.gz
 |           |       brr242e1i9-{0}-v8cbagddvq-v8cbagddvq.gz
+|           |       bzlr79detv-{0}-vjzkbcw9xj-vjzkbcw9xj.gz
 |           |       d195qumnqc-{0}-rzd6atqjts-rzd6atqjts.gz
 |           |       dbdeqgs9f1-{0}-x0q3zqp4vz-x0q3zqp4vz.gz
 |           |       dlf8ms1lp3-{0}-87fc7y1x7t-87fc7y1x7t.gz
@@ -319,7 +322,7 @@ C:.
 |           |       ib2j1mn2cb-{0}-7yozye0un0-7yozye0un0.gz
 |           |       iplg6kj7pp-{0}-k8d9w2qqmf-k8d9w2qqmf.gz
 |           |       iwxz5ht8fm-{0}-s35ty4nyc5-s35ty4nyc5.gz
-|           |       j1rqmv40oy-{0}-a2xf9j4qr5-a2xf9j4qr5.gz
+|           |       j1rqmv40oy-{0}-zv1d14h5h5-zv1d14h5h5.gz
 |           |       j6kvfp56yr-{0}-hrwsygsryq-hrwsygsryq.gz
 |           |       j79ipxec3l-{0}-y7v9cxd14o-y7v9cxd14o.gz
 |           |       j9kcd6sadz-{0}-6cfz1n2cew-6cfz1n2cew.gz
@@ -346,7 +349,7 @@ C:.
 |           |       tbennsm6aw-{0}-ee0r1s7dh0-ee0r1s7dh0.gz
 |           |       tbzqt5g0a8-{0}-ttgo8qnofa-ttgo8qnofa.gz
 |           |       uf54sxlupq-{0}-fvhpjtyr6v-fvhpjtyr6v.gz
-|           |       unhcd22jvu-{0}-16ory8l6b9-16ory8l6b9.gz
+|           |       unhcd22jvu-{0}-31i5natbjr-31i5natbjr.gz
 |           |       unns15k1gp-{0}-cosvhxvwiu-cosvhxvwiu.gz
 |           |       uztnehumyl-{0}-g9g1herptz-g9g1herptz.gz
 |           |       wbvn6nmods-{0}-c2oey78nd0-c2oey78nd0.gz
@@ -437,6 +440,11 @@ C:.
 |   |       
 |   +---Manager
 |   |       Index.cshtml
+|   |       Profile.cshtml
+|   |       PromotionManagement.cshtml
+|   |       ReviewManagement.cshtml
+|   |       RoomManagement.cshtml
+|   |       StaffManagement.cshtml
 |   |       
 |   +---Owner
 |   |       FinancialOverview.cshtml
@@ -475,6 +483,7 @@ C:.
     |       finance.css
     |       Home.css
     |       Housekeeping.css
+    |       Manager.css
     |       Owner.css
     |       Reception.css
     |       site.css
@@ -497,6 +506,9 @@ C:.
     |   |   
     |   +---finance
     |   |       finance.js
+    |   |       
+    |   +---manager
+    |   |       manager.js
     |   |       
     |   \---Owner
     |           Owner.js

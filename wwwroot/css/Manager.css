@@ -1,0 +1,4813 @@
+/* ═════════════════════════════════════════════════════════════════════════════
+   StayMate Hotel Management System – Manager.css
+   ดีไซน์หน้าต่างภาพรวมให้สวยงาม ทันสมัย แบบ Modern Hotel Management
+   Color Palette:
+   - Midnight Navy: #070D1E
+   - Electric Blue: #2563EB
+   - Cyber Cyan:    #00E5FF
+   - Space Violet:  #8B5CF6
+   - Background:    #F5F7FB
+   - Card:          #FFFFFF
+   ═════════════════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --manager-navy: #070D1E;
+    --manager-navy-light: #111A33;
+    --manager-blue: #2563EB;
+    --manager-blue-hover: #1D4ED8;
+    --manager-cyan: #00E5FF;
+    --manager-cyan-dark: #00B8D4;
+    --manager-violet: #8B5CF6;
+    --manager-bg: #F5F7FB;
+    --manager-card: #FFFFFF;
+    --manager-text-main: #0F172A;
+    --manager-text-secondary: #475569;
+    --manager-text-muted: #64748B;
+    --manager-border: #E2E8F0;
+    --manager-border-subtle: #F1F5F9;
+    --manager-success: #10B981;
+    --manager-warning: #F59E0B;
+    --manager-danger: #EF4444;
+    --manager-radius-lg: 16px;
+    --manager-radius-md: 12px;
+    --manager-radius-sm: 8px;
+    --manager-shadow-sm: 0 2px 10px rgba(7, 13, 30, 0.04);
+    --manager-shadow-md: 0 8px 24px rgba(7, 13, 30, 0.07);
+    --manager-shadow-lg: 0 16px 36px rgba(7, 13, 30, 0.12);
+    --manager-transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Base Body Styles Overriding safely under namespace wrapper */
+.manager-page {
+    font-family: 'Prompt', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background-color: var(--manager-bg);
+    color: var(--manager-text-main);
+}
+
+.manager-portal-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding-bottom: 2.5rem;
+}
+
+/* Tabs & Panes Visibility Control */
+.manager-tab-content {
+    display: none;
+    flex-direction: column;
+    gap: 1.5rem;
+    animation: managerTabFadeIn 0.25s ease-out;
+}
+
+.manager-tab-content.active {
+    display: flex;
+}
+
+@keyframes managerTabFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ───────────────────────── Hero Header & Navigation ───────────────────────── */
+.manager-hero-card {
+    background: linear-gradient(135deg, var(--manager-navy) 0%, #101F42 60%, #1B2E5E 100%);
+    color: #FFFFFF;
+    border-radius: var(--manager-radius-lg);
+    padding: 1.75rem 2rem 1rem;
+    box-shadow: var(--manager-shadow-md);
+    position: relative;
+    overflow: hidden;
+}
+
+.manager-hero-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.25rem;
+}
+
+.manager-hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--manager-cyan);
+    background: rgba(0, 229, 255, 0.12);
+    border: 1px solid rgba(0, 229, 255, 0.25);
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    margin-bottom: 0.5rem;
+}
+
+.manager-hero-title {
+    font-size: 1.65rem;
+    font-weight: 700;
+    margin: 0 0 0.35rem;
+    color: #FFFFFF;
+}
+
+.manager-hero-subtitle {
+    font-size: 0.92rem;
+    color: rgba(255, 255, 255, 0.78);
+    margin: 0;
+}
+
+.manager-hero-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+}
+
+.manager-meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.84rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    padding: 0.4rem 0.85rem;
+    border-radius: 999px;
+    color: #F8FAFC;
+}
+
+.manager-meta-pill-accent {
+    background: rgba(139, 92, 246, 0.2);
+    border-color: rgba(139, 92, 246, 0.4);
+}
+
+.manager-section-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    scrollbar-width: none; /* ซ่อน scrollbar ใน Firefox */
+}
+
+.manager-section-nav::-webkit-scrollbar {
+    display: none; /* ซ่อน scrollbar ใน Chrome, Safari */
+}
+
+.manager-nav-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.65rem 1.15rem;
+    border-radius: var(--manager-radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.88rem;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: var(--manager-transition);
+}
+
+.manager-nav-tab:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #FFFFFF;
+    transform: translateY(-1px);
+}
+
+.manager-nav-tab.active {
+    background: var(--manager-blue);
+    border-color: var(--manager-cyan);
+    color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+}
+
+.manager-nav-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 0.45rem;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 600;
+    background: rgba(0, 229, 255, 0.2);
+    color: var(--manager-cyan);
+}
+
+/* ───────────────────────── KPI Cards Grid ───────────────────────── */
+.manager-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+}
+
+.manager-kpi-card {
+    background: var(--manager-card);
+    border-radius: var(--manager-radius-lg);
+    padding: 1.25rem 1.5rem;
+    border: 1px solid var(--manager-border);
+    box-shadow: var(--manager-shadow-sm);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 0.75rem;
+    transition: var(--manager-transition);
+}
+
+.manager-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--manager-shadow-md);
+}
+
+.manager-kpi-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--manager-blue);
+}
+
+.manager-kpi-blue::before { background: var(--manager-blue); }
+.manager-kpi-emerald::before { background: var(--manager-success); }
+.manager-kpi-violet::before { background: var(--manager-violet); }
+.manager-kpi-amber::before { background: var(--manager-warning); }
+.manager-kpi-cyan::before { background: var(--manager-cyan-dark); }
+.manager-kpi-navy::before { background: var(--manager-navy); }
+
+.manager-kpi-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.manager-kpi-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--manager-text-secondary);
+}
+
+.manager-kpi-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    background: rgba(37, 99, 235, 0.08);
+    color: var(--manager-blue);
+}
+
+.manager-kpi-emerald .manager-kpi-icon { background: rgba(16, 185, 129, 0.1); color: var(--manager-success); }
+.manager-kpi-violet .manager-kpi-icon { background: rgba(139, 92, 246, 0.1); color: var(--manager-violet); }
+.manager-kpi-amber .manager-kpi-icon { background: rgba(245, 158, 11, 0.12); color: var(--manager-warning); }
+.manager-kpi-cyan .manager-kpi-icon { background: rgba(0, 229, 255, 0.12); color: #00838F; }
+.manager-kpi-navy .manager-kpi-icon { background: rgba(7, 13, 30, 0.08); color: var(--manager-navy); }
+
+.manager-kpi-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--manager-text-main);
+    line-height: 1.2;
+}
+
+.manager-kpi-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    font-size: 0.78rem;
+    color: var(--manager-text-muted);
+}
+
+.manager-progress-track {
+    flex: 1;
+    min-width: 80px;
+    height: 6px;
+    background: var(--manager-border-subtle);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.manager-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--manager-blue), var(--manager-cyan));
+    border-radius: 999px;
+    transition: width 0.4s ease;
+}
+
+/* ───────────────────────── Charts Layout ───────────────────────── */
+.manager-charts-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+}
+
+.manager-chart-wide {
+    grid-column: span 3;
+}
+
+.manager-chart-container {
+    width: 100%;
+    min-height: 200px;
+    position: relative;
+}
+
+/* ───────────────────────── Cards, Forms & Inputs ───────────────────────── */
+.manager-card {
+    background: var(--manager-card);
+    border-radius: var(--manager-radius-lg);
+    border: 1px solid var(--manager-border);
+    padding: 1.5rem;
+    box-shadow: var(--manager-shadow-sm);
+    transition: var(--manager-transition);
+}
+
+.manager-card:hover {
+    box-shadow: var(--manager-shadow-md);
+}
+
+.manager-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.manager-card-header-responsive {
+    flex-wrap: wrap;
+}
+
+.manager-card-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--manager-text-main);
+    margin: 0 0 0.25rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.manager-card-subtitle {
+    font-size: 0.84rem;
+    color: var(--manager-text-muted);
+    margin: 0;
+}
+
+.manager-range-form {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.manager-range-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.manager-range-controls {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.manager-preset-group {
+    display: inline-flex;
+    background: var(--manager-bg);
+    padding: 0.2rem;
+    border-radius: var(--manager-radius-sm);
+    border: 1px solid var(--manager-border);
+}
+
+.manager-date-inputs {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.manager-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.manager-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--manager-text-secondary);
+}
+
+.manager-input,
+.manager-select {
+    padding: 0.55rem 0.8rem;
+    border-radius: var(--manager-radius-sm);
+    border: 1px solid var(--manager-border);
+    background-color: #FFFFFF;
+    color: var(--manager-text-main);
+    font-size: 0.85rem;
+    transition: var(--manager-transition);
+}
+
+.manager-input:focus,
+.manager-select:focus {
+    outline: none;
+    border-color: var(--manager-blue);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+/* Buttons */
+.manager-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    padding: 0.55rem 1rem;
+    border-radius: var(--manager-radius-sm);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: var(--manager-transition);
+}
+
+.manager-btn-primary {
+    background: var(--manager-blue);
+    color: #FFFFFF;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.22);
+}
+
+.manager-btn-primary:hover {
+    background: var(--manager-blue-hover);
+    color: #FFFFFF;
+    transform: translateY(-1px);
+}
+
+.manager-btn-outline {
+    background: #FFFFFF;
+    border-color: var(--manager-border);
+    color: var(--manager-text-main);
+}
+
+.manager-btn-outline:hover {
+    border-color: var(--manager-blue);
+    color: var(--manager-blue);
+    background: rgba(37, 99, 235, 0.04);
+}
+
+.manager-btn-ghost {
+    background: transparent;
+    color: var(--manager-text-secondary);
+}
+
+.manager-btn-ghost:hover {
+    background: var(--manager-border-subtle);
+    color: var(--manager-navy);
+}
+
+/* ───────────────────────── Real Tables & Badges ───────────────────────── */
+.manager-table-tools {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.manager-search-box {
+    position: relative;
+    min-width: 220px;
+}
+
+.manager-search-box i {
+    position: absolute;
+    left: 0.8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--manager-text-muted);
+    font-size: 0.85rem;
+}
+
+.manager-search-box .manager-input {
+    padding-left: 2.2rem;
+}
+
+.manager-table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: var(--manager-radius-md);
+    border: 1px solid var(--manager-border);
+}
+
+.manager-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px;
+    background: var(--manager-card);
+}
+
+.manager-table thead th {
+    background: var(--manager-navy);
+    color: #FFFFFF;
+    font-weight: 600;
+    font-size: 0.8rem;
+    padding: 0.85rem 1rem;
+    border-bottom: none;
+    white-space: nowrap;
+}
+
+.manager-table tbody td {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--manager-border-subtle);
+    font-size: 0.86rem;
+    vertical-align: middle;
+}
+
+.manager-table tbody tr:hover {
+    background-color: #F8FAFF;
+}
+
+.manager-code-badge {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--manager-blue);
+    background: rgba(37, 99, 235, 0.08);
+    border: 1px solid rgba(37, 99, 235, 0.16);
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+}
+
+.manager-user-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.manager-avatar-sm {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--manager-blue), var(--manager-violet));
+    color: #FFFFFF;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.74rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.manager-tag-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+}
+
+.manager-room-tag {
+    background: var(--manager-bg);
+    color: var(--manager-text-secondary);
+    border: 1px solid var(--manager-border);
+    border-radius: 4px;
+    padding: 0.15rem 0.45rem;
+    font-size: 0.74rem;
+}
+
+.manager-date-range-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    white-space: nowrap;
+    font-size: 0.82rem;
+}
+
+.manager-pill-neutral {
+    display: inline-block;
+    background: var(--manager-border-subtle);
+    color: var(--manager-text-secondary);
+    padding: 0.15rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.74rem;
+}
+
+.manager-amount {
+    color: var(--manager-navy);
+    font-weight: 700;
+}
+
+/* Status Badges */
+.manager-badge,
+.manager-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.manager-badge-info { background: rgba(37, 99, 235, 0.1); color: var(--manager-blue); }
+.manager-badge-success,
+.manager-booking-status-confirmed,
+.manager-booking-status-checked_in { background: rgba(16, 185, 129, 0.1); color: #047857; }
+.manager-badge-warning,
+.manager-booking-status-pending_payment,
+.manager-booking-status-pending_approval { background: rgba(245, 158, 11, 0.12); color: #B45309; }
+.manager-badge-danger,
+.manager-booking-status-cancelled,
+.manager-booking-status-rejected { background: rgba(239, 68, 68, 0.12); color: #B91C1C; }
+.manager-booking-status-checked_out { background: rgba(37, 99, 235, 0.1); color: var(--manager-blue); }
+
+/* ───────────────────────── Summaries (Tabs 2 - 5) ───────────────────────── */
+.manager-grid-2col {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+}
+
+.manager-roomtype-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.manager-roomtype-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.manager-roomtype-name {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0.25rem 0 0;
+    color: var(--manager-navy);
+}
+
+.manager-roomtype-specs {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    background: var(--manager-bg);
+    padding: 0.85rem 1rem;
+    border-radius: var(--manager-radius-md);
+}
+
+.manager-spec-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    font-size: 0.82rem;
+}
+
+.manager-spec-label {
+    color: var(--manager-text-muted);
+    font-size: 0.76rem;
+}
+
+.manager-spec-val {
+    color: var(--manager-text-main);
+    font-weight: 500;
+}
+
+/* Promo Grid */
+.manager-promo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+}
+
+.manager-promo-card {
+    background: var(--manager-card);
+    border: 1px solid var(--manager-border);
+    border-radius: var(--manager-radius-lg);
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    box-shadow: var(--manager-shadow-sm);
+}
+
+.manager-promo-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.manager-promo-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--manager-navy);
+    margin: 0;
+}
+
+.manager-promo-desc {
+    font-size: 0.82rem;
+    color: var(--manager-text-secondary);
+    margin: 0;
+}
+
+/* Policy & Security Banners */
+.manager-policy-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    background: linear-gradient(90deg, rgba(37, 99, 235, 0.08), rgba(0, 229, 255, 0.08));
+    border: 1px solid rgba(37, 99, 235, 0.2);
+    border-radius: var(--manager-radius-md);
+    padding: 0.85rem 1.15rem;
+    font-size: 0.84rem;
+}
+
+.manager-policy-badge {
+    background: var(--manager-navy);
+    color: var(--manager-cyan);
+    padding: 0.4rem 0.75rem;
+    border-radius: var(--manager-radius-sm);
+    font-weight: 700;
+    font-size: 0.78rem;
+    white-space: nowrap;
+}
+
+.manager-security-banner {
+    background: var(--manager-card);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    border-left: 4px solid var(--manager-danger);
+    border-radius: var(--manager-radius-lg);
+    padding: 1.15rem 1.35rem;
+}
+
+.manager-security-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--manager-navy);
+    font-size: 0.95rem;
+    margin-bottom: 0.85rem;
+}
+
+.manager-security-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.85rem;
+}
+
+.manager-security-rule {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+    background: var(--manager-bg);
+    padding: 0.75rem 0.85rem;
+    border-radius: var(--manager-radius-sm);
+    font-size: 0.8rem;
+}
+
+.manager-security-rule strong {
+    display: block;
+    margin-bottom: 0.15rem;
+    color: var(--manager-text-main);
+}
+
+/* Reviews Summary */
+.manager-review-summary-box {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.manager-review-score-big {
+    background: var(--manager-navy);
+    color: #FFFFFF;
+    padding: 1.15rem 1.5rem;
+    border-radius: var(--manager-radius-md);
+    text-align: center;
+    min-width: 150px;
+}
+
+.manager-score-number {
+    font-size: 2.1rem;
+    font-weight: 700;
+    color: var(--manager-cyan);
+    display: block;
+    line-height: 1;
+}
+
+.manager-score-stars {
+    color: #FBBF24;
+    margin: 0.35rem 0;
+    font-size: 0.9rem;
+}
+
+.manager-score-count {
+    font-size: 0.76rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.manager-review-readonly-note {
+    flex: 1;
+    min-width: 240px;
+    font-size: 0.84rem;
+    color: var(--manager-text-secondary);
+}
+
+/* ───────────────────────── Alerts, Notes & Empty States ───────────────────────── */
+.manager-alert {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.85rem 1.1rem;
+    border-radius: var(--manager-radius-md);
+    font-size: 0.86rem;
+}
+
+.manager-alert-content {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+.manager-alert-success {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    color: #065F46;
+}
+
+.manager-alert-danger {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    color: #991B1B;
+}
+
+.manager-alert-close {
+    background: transparent;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.manager-empty-state,
+.manager-loading-placeholder {
+    padding: 2rem 1rem;
+    text-align: center;
+    color: var(--manager-text-muted);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.manager-empty-state i,
+.manager-loading-placeholder i {
+    font-size: 1.6rem;
+    color: var(--manager-blue);
+}
+
+.manager-text-muted {
+    color: var(--manager-text-muted);
+}
+
+/* ───────────────────────── Responsive Breakpoints ───────────────────────── */
+@media (max-width: 1199.98px) {
+    .manager-kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .manager-charts-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .manager-chart-wide {
+        grid-column: span 2;
+    }
+
+    .manager-security-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .manager-grid-2col {
+        grid-template-columns: 1fr;
+    }
+
+    .manager-hero-meta {
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .manager-hero-card {
+        padding: 1.25rem;
+    }
+
+    .manager-hero-title {
+        font-size: 1.35rem;
+    }
+
+    .manager-kpi-grid,
+    .manager-charts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .manager-chart-wide {
+        grid-column: span 1;
+    }
+
+    .manager-card {
+        padding: 1.15rem;
+    }
+
+    .manager-date-inputs,
+    .manager-table-tools {
+        width: 100%;
+    }
+
+    .manager-search-box {
+        width: 100%;
+        min-width: 100%;
+    }
+}
+/* ═════════════════════════════════════════════════════════════════════════════
+   StayMate Hotel Management System – Manager.css
+   ดีไซน์หน้าต่างภาพรวมให้สวยงาม ทันสมัย แบบ Modern Hotel Management
+   Color Palette:
+   - Midnight Navy: #070D1E
+   - Electric Blue: #2563EB
+   - Cyber Cyan:    #00E5FF
+   - Space Violet:  #8B5CF6
+   - Background:    #F5F7FB
+   - Card:          #FFFFFF
+   ═════════════════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --manager-navy: #070D1E;
+    --manager-navy-light: #111A33;
+    --manager-blue: #2563EB;
+    --manager-blue-hover: #1D4ED8;
+    --manager-cyan: #00E5FF;
+    --manager-cyan-dark: #00B8D4;
+    --manager-violet: #8B5CF6;
+    --manager-bg: #F5F7FB;
+    --manager-card: #FFFFFF;
+    --manager-text-main: #0F172A;
+    --manager-text-secondary: #475569;
+    --manager-text-muted: #64748B;
+    --manager-border: #E2E8F0;
+    --manager-border-subtle: #F1F5F9;
+    --manager-success: #10B981;
+    --manager-warning: #F59E0B;
+    --manager-danger: #EF4444;
+    --manager-radius-lg: 16px;
+    --manager-radius-md: 12px;
+    --manager-radius-sm: 8px;
+    --manager-shadow-sm: 0 2px 10px rgba(7, 13, 30, 0.04);
+    --manager-shadow-md: 0 8px 24px rgba(7, 13, 30, 0.07);
+    --manager-shadow-lg: 0 16px 36px rgba(7, 13, 30, 0.12);
+    --manager-transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Base Body Styles Overriding safely under namespace wrapper */
+.manager-page {
+    font-family: 'Prompt', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background-color: var(--manager-bg);
+    color: var(--manager-text-main);
+}
+
+.manager-portal-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding-bottom: 2.5rem;
+}
+
+/* Tabs & Panes Visibility Control */
+.manager-tab-content {
+    display: none;
+    flex-direction: column;
+    gap: 1.5rem;
+    animation: managerTabFadeIn 0.25s ease-out;
+}
+
+.manager-tab-content.active {
+    display: flex;
+}
+
+@keyframes managerTabFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ───────────────────────── Hero Header & Navigation ───────────────────────── */
+.manager-hero-card {
+    background: linear-gradient(135deg, var(--manager-navy) 0%, #101F42 60%, #1B2E5E 100%);
+    color: #FFFFFF;
+    border-radius: var(--manager-radius-lg);
+    padding: 1.75rem 2rem 1rem;
+    box-shadow: var(--manager-shadow-md);
+    position: relative;
+    overflow: hidden;
+}
+
+.manager-hero-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.25rem;
+}
+
+.manager-hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--manager-cyan);
+    background: rgba(0, 229, 255, 0.12);
+    border: 1px solid rgba(0, 229, 255, 0.25);
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    margin-bottom: 0.5rem;
+}
+
+.manager-hero-title {
+    font-size: 1.65rem;
+    font-weight: 700;
+    margin: 0 0 0.35rem;
+    color: #FFFFFF;
+}
+
+.manager-hero-subtitle {
+    font-size: 0.92rem;
+    color: rgba(255, 255, 255, 0.78);
+    margin: 0;
+}
+
+.manager-hero-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+}
+
+.manager-meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.84rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    padding: 0.4rem 0.85rem;
+    border-radius: 999px;
+    color: #F8FAFC;
+}
+
+.manager-meta-pill-accent {
+    background: rgba(139, 92, 246, 0.2);
+    border-color: rgba(139, 92, 246, 0.4);
+}
+
+.manager-section-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    scrollbar-width: none; /* ซ่อน scrollbar ใน Firefox */
+}
+
+.manager-section-nav::-webkit-scrollbar {
+    display: none; /* ซ่อน scrollbar ใน Chrome, Safari */
+}
+
+.manager-nav-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.65rem 1.15rem;
+    border-radius: var(--manager-radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.88rem;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: var(--manager-transition);
+}
+
+.manager-nav-tab:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #FFFFFF;
+    transform: translateY(-1px);
+}
+
+.manager-nav-tab.active {
+    background: var(--manager-blue);
+    border-color: var(--manager-cyan);
+    color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+}
+
+.manager-nav-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 0.45rem;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 600;
+    background: rgba(0, 229, 255, 0.2);
+    color: var(--manager-cyan);
+}
+
+/* ───────────────────────── KPI Cards Grid ───────────────────────── */
+.manager-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+}
+
+.manager-kpi-card {
+    background: var(--manager-card);
+    border-radius: var(--manager-radius-lg);
+    padding: 1.25rem 1.5rem;
+    border: 1px solid var(--manager-border);
+    box-shadow: var(--manager-shadow-sm);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 0.75rem;
+    transition: var(--manager-transition);
+}
+
+.manager-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--manager-shadow-md);
+}
+
+.manager-kpi-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--manager-blue);
+}
+
+.manager-kpi-blue::before { background: var(--manager-blue); }
+.manager-kpi-emerald::before { background: var(--manager-success); }
+.manager-kpi-violet::before { background: var(--manager-violet); }
+.manager-kpi-amber::before { background: var(--manager-warning); }
+.manager-kpi-cyan::before { background: var(--manager-cyan-dark); }
+.manager-kpi-navy::before { background: var(--manager-navy); }
+
+.manager-kpi-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.manager-kpi-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--manager-text-secondary);
+}
+
+.manager-kpi-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    background: rgba(37, 99, 235, 0.08);
+    color: var(--manager-blue);
+}
+
+.manager-kpi-emerald .manager-kpi-icon { background: rgba(16, 185, 129, 0.1); color: var(--manager-success); }
+.manager-kpi-violet .manager-kpi-icon { background: rgba(139, 92, 246, 0.1); color: var(--manager-violet); }
+.manager-kpi-amber .manager-kpi-icon { background: rgba(245, 158, 11, 0.12); color: var(--manager-warning); }
+.manager-kpi-cyan .manager-kpi-icon { background: rgba(0, 229, 255, 0.12); color: #00838F; }
+.manager-kpi-navy .manager-kpi-icon { background: rgba(7, 13, 30, 0.08); color: var(--manager-navy); }
+
+.manager-kpi-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--manager-text-main);
+    line-height: 1.2;
+}
+
+.manager-kpi-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    font-size: 0.78rem;
+    color: var(--manager-text-muted);
+}
+
+.manager-progress-track {
+    flex: 1;
+    min-width: 80px;
+    height: 6px;
+    background: var(--manager-border-subtle);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.manager-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--manager-blue), var(--manager-cyan));
+    border-radius: 999px;
+    transition: width 0.4s ease;
+}
+
+/* ───────────────────────── Charts Layout ───────────────────────── */
+.manager-charts-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+}
+
+.manager-chart-wide {
+    grid-column: span 3;
+}
+
+.manager-chart-container {
+    width: 100%;
+    min-height: 200px;
+    position: relative;
+}
+
+/* ───────────────────────── Cards, Forms & Inputs ───────────────────────── */
+.manager-card {
+    background: var(--manager-card);
+    border-radius: var(--manager-radius-lg);
+    border: 1px solid var(--manager-border);
+    padding: 1.5rem;
+    box-shadow: var(--manager-shadow-sm);
+    transition: var(--manager-transition);
+}
+
+.manager-card:hover {
+    box-shadow: var(--manager-shadow-md);
+}
+
+.manager-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.manager-card-header-responsive {
+    flex-wrap: wrap;
+}
+
+.manager-card-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--manager-text-main);
+    margin: 0 0 0.25rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.manager-card-subtitle {
+    font-size: 0.84rem;
+    color: var(--manager-text-muted);
+    margin: 0;
+}
+
+.manager-range-form {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.manager-range-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.manager-range-controls {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.manager-preset-group {
+    display: inline-flex;
+    background: var(--manager-bg);
+    padding: 0.2rem;
+    border-radius: var(--manager-radius-sm);
+    border: 1px solid var(--manager-border);
+}
+
+.manager-date-inputs {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.manager-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.manager-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--manager-text-secondary);
+}
+
+.manager-input,
+.manager-select {
+    padding: 0.55rem 0.8rem;
+    border-radius: var(--manager-radius-sm);
+    border: 1px solid var(--manager-border);
+    background-color: #FFFFFF;
+    color: var(--manager-text-main);
+    font-size: 0.85rem;
+    transition: var(--manager-transition);
+}
+
+.manager-input:focus,
+.manager-select:focus {
+    outline: none;
+    border-color: var(--manager-blue);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+/* Buttons */
+.manager-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    padding: 0.55rem 1rem;
+    border-radius: var(--manager-radius-sm);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: var(--manager-transition);
+}
+
+.manager-btn-primary {
+    background: var(--manager-blue);
+    color: #FFFFFF;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.22);
+}
+
+.manager-btn-primary:hover {
+    background: var(--manager-blue-hover);
+    color: #FFFFFF;
+    transform: translateY(-1px);
+}
+
+.manager-btn-outline {
+    background: #FFFFFF;
+    border-color: var(--manager-border);
+    color: var(--manager-text-main);
+}
+
+.manager-btn-outline:hover {
+    border-color: var(--manager-blue);
+    color: var(--manager-blue);
+    background: rgba(37, 99, 235, 0.04);
+}
+
+.manager-btn-ghost {
+    background: transparent;
+    color: var(--manager-text-secondary);
+}
+
+.manager-btn-ghost:hover {
+    background: var(--manager-border-subtle);
+    color: var(--manager-navy);
+}
+
+/* ───────────────────────── Real Tables & Badges ───────────────────────── */
+.manager-table-tools {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.manager-search-box {
+    position: relative;
+    min-width: 220px;
+}
+
+.manager-search-box i {
+    position: absolute;
+    left: 0.8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--manager-text-muted);
+    font-size: 0.85rem;
+}
+
+.manager-search-box .manager-input {
+    padding-left: 2.2rem;
+}
+
+.manager-table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: var(--manager-radius-md);
+    border: 1px solid var(--manager-border);
+}
+
+.manager-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px;
+    background: var(--manager-card);
+}
+
+.manager-table thead th {
+    background: var(--manager-navy);
+    color: #FFFFFF;
+    font-weight: 600;
+    font-size: 0.8rem;
+    padding: 0.85rem 1rem;
+    border-bottom: none;
+    white-space: nowrap;
+}
+
+.manager-table tbody td {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--manager-border-subtle);
+    font-size: 0.86rem;
+    vertical-align: middle;
+}
+
+.manager-table tbody tr:hover {
+    background-color: #F8FAFF;
+}
+
+.manager-code-badge {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--manager-blue);
+    background: rgba(37, 99, 235, 0.08);
+    border: 1px solid rgba(37, 99, 235, 0.16);
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+}
+
+.manager-user-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.manager-avatar-sm {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--manager-blue), var(--manager-violet));
+    color: #FFFFFF;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.74rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.manager-tag-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+}
+
+.manager-room-tag {
+    background: var(--manager-bg);
+    color: var(--manager-text-secondary);
+    border: 1px solid var(--manager-border);
+    border-radius: 4px;
+    padding: 0.15rem 0.45rem;
+    font-size: 0.74rem;
+}
+
+.manager-date-range-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    white-space: nowrap;
+    font-size: 0.82rem;
+}
+
+.manager-pill-neutral {
+    display: inline-block;
+    background: var(--manager-border-subtle);
+    color: var(--manager-text-secondary);
+    padding: 0.15rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.74rem;
+}
+
+.manager-amount {
+    color: var(--manager-navy);
+    font-weight: 700;
+}
+
+/* Status Badges */
+.manager-badge,
+.manager-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.manager-badge-info { background: rgba(37, 99, 235, 0.1); color: var(--manager-blue); }
+.manager-badge-success,
+.manager-booking-status-confirmed,
+.manager-booking-status-checked_in { background: rgba(16, 185, 129, 0.1); color: #047857; }
+.manager-badge-warning,
+.manager-booking-status-pending_payment,
+.manager-booking-status-pending_approval { background: rgba(245, 158, 11, 0.12); color: #B45309; }
+.manager-badge-danger,
+.manager-booking-status-cancelled,
+.manager-booking-status-rejected { background: rgba(239, 68, 68, 0.12); color: #B91C1C; }
+.manager-booking-status-checked_out { background: rgba(37, 99, 235, 0.1); color: var(--manager-blue); }
+
+/* ───────────────────────── Summaries (Tabs 2 - 5) ───────────────────────── */
+.manager-grid-2col {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+}
+
+.manager-roomtype-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.manager-roomtype-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.manager-roomtype-name {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0.25rem 0 0;
+    color: var(--manager-navy);
+}
+
+.manager-roomtype-specs {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    background: var(--manager-bg);
+    padding: 0.85rem 1rem;
+    border-radius: var(--manager-radius-md);
+}
+
+.manager-spec-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    font-size: 0.82rem;
+}
+
+.manager-spec-label {
+    color: var(--manager-text-muted);
+    font-size: 0.76rem;
+}
+
+.manager-spec-val {
+    color: var(--manager-text-main);
+    font-weight: 500;
+}
+
+/* Promo Grid */
+.manager-promo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+}
+
+.manager-promo-card {
+    background: var(--manager-card);
+    border: 1px solid var(--manager-border);
+    border-radius: var(--manager-radius-lg);
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    box-shadow: var(--manager-shadow-sm);
+}
+
+.manager-promo-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.manager-promo-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--manager-navy);
+    margin: 0;
+}
+
+.manager-promo-desc {
+    font-size: 0.82rem;
+    color: var(--manager-text-secondary);
+    margin: 0;
+}
+
+/* Policy & Security Banners */
+.manager-policy-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    background: linear-gradient(90deg, rgba(37, 99, 235, 0.08), rgba(0, 229, 255, 0.08));
+    border: 1px solid rgba(37, 99, 235, 0.2);
+    border-radius: var(--manager-radius-md);
+    padding: 0.85rem 1.15rem;
+    font-size: 0.84rem;
+}
+
+.manager-policy-badge {
+    background: var(--manager-navy);
+    color: var(--manager-cyan);
+    padding: 0.4rem 0.75rem;
+    border-radius: var(--manager-radius-sm);
+    font-weight: 700;
+    font-size: 0.78rem;
+    white-space: nowrap;
+}
+
+.manager-security-banner {
+    background: var(--manager-card);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    border-left: 4px solid var(--manager-danger);
+    border-radius: var(--manager-radius-lg);
+    padding: 1.15rem 1.35rem;
+}
+
+.manager-security-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--manager-navy);
+    font-size: 0.95rem;
+    margin-bottom: 0.85rem;
+}
+
+.manager-security-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.85rem;
+}
+
+.manager-security-rule {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+    background: var(--manager-bg);
+    padding: 0.75rem 0.85rem;
+    border-radius: var(--manager-radius-sm);
+    font-size: 0.8rem;
+}
+
+.manager-security-rule strong {
+    display: block;
+    margin-bottom: 0.15rem;
+    color: var(--manager-text-main);
+}
+
+/* Reviews Summary */
+.manager-review-summary-box {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.manager-review-score-big {
+    background: var(--manager-navy);
+    color: #FFFFFF;
+    padding: 1.15rem 1.5rem;
+    border-radius: var(--manager-radius-md);
+    text-align: center;
+    min-width: 150px;
+}
+
+.manager-score-number {
+    font-size: 2.1rem;
+    font-weight: 700;
+    color: var(--manager-cyan);
+    display: block;
+    line-height: 1;
+}
+
+.manager-score-stars {
+    color: #FBBF24;
+    margin: 0.35rem 0;
+    font-size: 0.9rem;
+}
+
+.manager-score-count {
+    font-size: 0.76rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.manager-review-readonly-note {
+    flex: 1;
+    min-width: 240px;
+    font-size: 0.84rem;
+    color: var(--manager-text-secondary);
+}
+
+/* ───────────────────────── Alerts, Notes & Empty States ───────────────────────── */
+.manager-alert {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.85rem 1.1rem;
+    border-radius: var(--manager-radius-md);
+    font-size: 0.86rem;
+}
+
+.manager-alert-content {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+.manager-alert-success {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    color: #065F46;
+}
+
+.manager-alert-danger {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    color: #991B1B;
+}
+
+.manager-alert-close {
+    background: transparent;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.manager-empty-state,
+.manager-loading-placeholder {
+    padding: 2rem 1rem;
+    text-align: center;
+    color: var(--manager-text-muted);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.manager-empty-state i,
+.manager-loading-placeholder i {
+    font-size: 1.6rem;
+    color: var(--manager-blue);
+}
+
+.manager-text-muted {
+    color: var(--manager-text-muted);
+}
+
+/* ───────────────────────── Responsive Breakpoints ───────────────────────── */
+@media (max-width: 1199.98px) {
+    .manager-kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .manager-charts-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .manager-chart-wide {
+        grid-column: span 2;
+    }
+
+    .manager-security-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .manager-grid-2col {
+        grid-template-columns: 1fr;
+    }
+
+    .manager-hero-meta {
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .manager-hero-card {
+        padding: 1.25rem;
+    }
+
+    .manager-hero-title {
+        font-size: 1.35rem;
+    }
+
+    .manager-kpi-grid,
+    .manager-charts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .manager-chart-wide {
+        grid-column: span 1;
+    }
+
+    .manager-card {
+        padding: 1.15rem;
+    }
+
+    .manager-date-inputs,
+    .manager-table-tools {
+        width: 100%;
+    }
+
+    .manager-search-box {
+        width: 100%;
+        min-width: 100%;
+    }
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   APPENDED STYLES FOR ROOM MANAGEMENT PAGE (`manager-room-` Prefix)
+   ═════════════════════════════════════════════════════════════════════════════ */
+
+/* ───────────────────────── Page Header & Breadcrumb ───────────────────────── */
+.manager-room-header {
+    background: linear-gradient(135deg, var(--manager-navy) 0%, #101F42 60%, #1B2E5E 100%);
+    color: #FFFFFF;
+    border-radius: var(--manager-radius-lg);
+    padding: 1.75rem 2rem 1.1rem;
+    box-shadow: var(--manager-shadow-md);
+}
+
+.manager-room-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.25rem;
+}
+
+.manager-room-breadcrumb {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.manager-room-breadcrumb-link {
+    color: var(--manager-cyan);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.manager-room-breadcrumb-link:hover {
+    color: #FFFFFF;
+    text-decoration: underline;
+}
+
+.manager-room-breadcrumb-sep {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.manager-room-breadcrumb-current {
+    color: #FFFFFF;
+    font-weight: 600;
+}
+
+.manager-room-title {
+    font-size: 1.65rem;
+    font-weight: 700;
+    margin: 0 0 0.3rem;
+    color: #FFFFFF;
+}
+
+.manager-room-desc {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0;
+}
+
+.manager-room-header-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.55rem;
+}
+
+.manager-room-date-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.82rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    padding: 0.38rem 0.85rem;
+    border-radius: 999px;
+    color: #F8FAFC;
+}
+
+.manager-room-pill-cyan {
+    background: rgba(0, 229, 255, 0.14);
+    border-color: rgba(0, 229, 255, 0.32);
+    color: var(--manager-cyan);
+}
+
+.manager-room-header-btns {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.2rem;
+}
+
+.manager-room-jumpnav {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    overflow-x: auto;
+    padding-top: 0.95rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    scrollbar-width: none;
+}
+
+.manager-room-jumpnav::-webkit-scrollbar {
+    display: none;
+}
+
+.manager-room-jump-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1rem;
+    border-radius: var(--manager-radius-md);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: var(--manager-transition);
+}
+
+.manager-room-jump-link:hover {
+    background: var(--manager-blue);
+    border-color: var(--manager-cyan);
+    color: #FFFFFF;
+    transform: translateY(-1px);
+}
+
+/* ───────────────────────── Sections & 4-Column Summary Grid ───────────────────────── */
+.manager-room-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
+}
+
+.manager-room-section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.manager-room-section-title {
+    font-size: 1.18rem;
+    font-weight: 700;
+    color: var(--manager-navy);
+    margin: 0 0 0.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.manager-room-section-subtitle {
+    font-size: 0.85rem;
+    color: var(--manager-text-muted);
+    margin: 0;
+}
+
+/* Desktop: 4 Columns */
+.manager-room-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+}
+
+.manager-room-card {
+    background: var(--manager-card);
+    border: 1px solid var(--manager-border);
+    border-radius: var(--manager-radius-lg);
+    box-shadow: var(--manager-shadow-sm);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    transition: var(--manager-transition);
+}
+
+.manager-room-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--manager-shadow-md);
+    border-color: rgba(37, 99, 235, 0.35);
+}
+
+.manager-room-card-banner {
+    background: linear-gradient(135deg, rgba(7, 13, 30, 0.96), rgba(37, 99, 235, 0.88));
+    padding: 1.15rem 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.manager-room-card-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(0, 229, 255, 0.16);
+    border: 1px solid rgba(0, 229, 255, 0.35);
+    color: var(--manager-cyan);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.manager-room-card-badges {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.manager-room-card-body {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    flex: 1;
+}
+
+.manager-room-card-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--manager-navy);
+    margin: 0;
+}
+
+.manager-room-card-bed {
+    font-size: 0.82rem;
+    color: var(--manager-text-secondary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.manager-room-stats-box {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    background: var(--manager-bg);
+    padding: 0.75rem;
+    border-radius: var(--manager-radius-md);
+    text-align: center;
+}
+
+.manager-room-stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.manager-room-stat-label {
+    font-size: 0.72rem;
+    color: var(--manager-text-muted);
+}
+
+.manager-room-stat-val {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--manager-navy);
+}
+
+.manager-room-stat-avail .manager-room-stat-val {
+    color: var(--manager-success);
+}
+
+.manager-room-stat-occ .manager-room-stat-val {
+    color: var(--manager-violet);
+}
+
+.manager-room-substats {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.76rem;
+    color: var(--manager-text-secondary);
+    padding: 0 0.15rem;
+}
+
+.manager-room-price-block {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding-top: 0.75rem;
+    border-top: 1px dashed var(--manager-border);
+}
+
+.manager-room-price-caption {
+    font-size: 0.72rem;
+    color: var(--manager-text-muted);
+    display: block;
+}
+
+.manager-room-price-main {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--manager-navy);
+}
+
+.manager-room-price-current {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--manager-blue);
+}
+
+.manager-room-card-footer {
+    padding: 0.9rem 1.25rem;
+    background: var(--manager-bg);
+    border-top: 1px solid var(--manager-border-subtle);
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.manager-room-card-footer .manager-btn {
+    flex: 1;
+}
+
+/* ───────────────────────── Status Badges & Actions ───────────────────────── */
+.manager-room-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.22rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.manager-room-status-active {
+    background: rgba(16, 185, 129, 0.14);
+    color: #047857;
+}
+
+.manager-room-status-inactive {
+    background: rgba(100, 116, 139, 0.16);
+    color: #475569;
+}
+
+.manager-room-occ-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.22rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 600;
+}
+
+.manager-room-occ-available {
+    background: rgba(16, 185, 129, 0.14);
+    color: #047857;
+}
+
+.manager-room-occ-occupied {
+    background: rgba(139, 92, 246, 0.14);
+    color: #6D28D9;
+}
+
+.manager-room-occ-needs_cleaning {
+    background: rgba(245, 158, 11, 0.16);
+    color: #B45309;
+}
+
+.manager-room-occ-maintenance {
+    background: rgba(239, 68, 68, 0.14);
+    color: #B91C1C;
+}
+
+.manager-room-period-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.22rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 600;
+}
+
+.manager-room-period-current {
+    background: rgba(16, 185, 129, 0.14);
+    color: #047857;
+}
+
+.manager-room-period-upcoming {
+    background: rgba(37, 99, 235, 0.12);
+    color: var(--manager-blue);
+}
+
+.manager-room-period-past {
+    background: rgba(100, 116, 139, 0.15);
+    color: #475569;
+}
+
+.manager-room-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+}
+
+.manager-btn-sm {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.78rem;
+}
+
+.manager-btn-danger {
+    background: var(--manager-danger);
+    color: #FFFFFF;
+}
+
+.manager-btn-danger:hover {
+    background: #DC2626;
+    color: #FFFFFF;
+}
+
+/* ───────────────────────── Tables & Detail Cards ───────────────────────── */
+.manager-room-type-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.manager-room-cell-sub {
+    font-size: 0.74rem;
+    color: var(--manager-text-muted);
+}
+
+.manager-room-current-price {
+    color: var(--manager-blue);
+    font-weight: 700;
+}
+
+.manager-room-period-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.72rem;
+    color: #00838F;
+    background: rgba(0, 229, 255, 0.14);
+    padding: 0.1rem 0.45rem;
+    border-radius: 4px;
+    margin-top: 0.15rem;
+}
+
+.manager-room-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+}
+
+.manager-room-detail-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.manager-room-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid var(--manager-border-subtle);
+}
+
+.manager-room-detail-name {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--manager-navy);
+    margin: 0;
+}
+
+.manager-room-spec-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+}
+
+.manager-room-spec-box {
+    background: var(--manager-bg);
+    padding: 0.75rem 0.9rem;
+    border-radius: var(--manager-radius-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    font-size: 0.84rem;
+}
+
+.manager-room-spec-label {
+    font-size: 0.74rem;
+    color: var(--manager-text-muted);
+}
+
+.manager-room-spec-value {
+    color: var(--manager-text-main);
+}
+
+.manager-room-ro-tag {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    background: rgba(100, 116, 139, 0.14);
+    color: var(--manager-text-secondary);
+}
+
+.manager-room-amenities-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-top: 0.5rem;
+}
+
+.manager-room-amenities-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--manager-text-secondary);
+}
+
+.manager-room-amenity-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+}
+
+.manager-room-amenity-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    background: var(--manager-bg);
+    border: 1px solid var(--manager-border);
+    color: var(--manager-text-secondary);
+}
+
+.manager-room-filter-bar,
+.manager-room-rate-tools {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.manager-info-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+    background: linear-gradient(90deg, rgba(37, 99, 235, 0.08), rgba(0, 229, 255, 0.08));
+    border: 1px solid rgba(37, 99, 235, 0.22);
+    border-radius: var(--manager-radius-md);
+    padding: 1rem 1.25rem;
+    font-size: 0.84rem;
+}
+
+.manager-info-banner-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--manager-blue);
+    color: #FFFFFF;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.manager-notes-box {
+    margin-top: 1.25rem;
+    background: var(--manager-bg);
+    border-radius: var(--manager-radius-md);
+    padding: 1rem 1.25rem;
+    border: 1px dashed var(--manager-border);
+}
+
+.manager-notes-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--manager-text-secondary);
+    margin-bottom: 0.4rem;
+}
+
+.manager-notes-list {
+    margin: 0;
+    padding-left: 1.25rem;
+    font-size: 0.8rem;
+    color: var(--manager-text-muted);
+}
+
+/* Modal Styling for Room Management */
+.manager-modal-content {
+    border-radius: var(--manager-radius-lg);
+    border: none;
+    box-shadow: var(--manager-shadow-lg);
+    overflow: hidden;
+}
+
+.manager-modal-header {
+    background: var(--manager-navy);
+    color: #FFFFFF;
+    padding: 1.1rem 1.5rem;
+}
+
+.manager-modal-body {
+    padding: 1.5rem;
+}
+
+.manager-modal-footer {
+    padding: 1rem 1.5rem;
+    background: var(--manager-bg);
+    border-top: 1px solid var(--manager-border);
+}
+
+.manager-form-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.85rem;
+}
+
+.manager-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.manager-req {
+    color: var(--manager-danger);
+}
+
+/* ───────────────────────── Responsive Rules for Room Management ───────────────────────── */
+/* Tablet: 2 Cards per row */
+@media (max-width: 1199.98px) {
+    .manager-room-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .manager-room-detail-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .manager-room-header-meta {
+        align-items: flex-start;
+    }
+}
+
+/* Mobile: 1 Card per row */
+@media (max-width: 767.98px) {
+    .manager-room-header {
+        padding: 1.25rem;
+    }
+
+    .manager-room-title {
+        font-size: 1.35rem;
+    }
+
+    .manager-room-grid,
+    .manager-room-spec-grid,
+    .manager-form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .manager-room-filter-bar,
+    .manager-room-rate-tools {
+        width: 100%;
+    }
+
+    .manager-room-filter-bar .manager-select,
+    .manager-room-filter-bar .manager-btn {
+        width: 100%;
+    }
+
+    .manager-room-modal .modal-dialog {
+        margin: 0.5rem;
+    }
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   APPENDED STYLES FOR PROMOTION MANAGEMENT PAGE (`manager-promo-` Prefix)
+   ═════════════════════════════════════════════════════════════════════════════ */
+
+/* ───────────────────────── Page Header & Breadcrumb ───────────────────────── */
+.manager-promo-header {
+    background: linear-gradient(135deg, var(--manager-navy) 0%, #101F42 60%, #1B2E5E 100%);
+    color: #FFFFFF;
+    border-radius: var(--manager-radius-lg);
+    padding: 1.75rem 2rem 1.15rem;
+    box-shadow: var(--manager-shadow-md);
+    margin-bottom: 0.5rem;
+}
+
+.manager-promo-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.manager-promo-breadcrumb {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.manager-promo-breadcrumb-link {
+    color: var(--manager-cyan);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.manager-promo-breadcrumb-link:hover {
+    color: #FFFFFF;
+    text-decoration: underline;
+}
+
+.manager-promo-breadcrumb-sep {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.manager-promo-breadcrumb-current {
+    color: #FFFFFF;
+    font-weight: 600;
+}
+
+.manager-promo-title {
+    font-size: 1.65rem;
+    font-weight: 700;
+    margin: 0 0 0.3rem;
+    color: #FFFFFF;
+}
+
+.manager-promo-desc {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0;
+}
+
+.manager-promo-header-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.55rem;
+}
+
+.manager-promo-date-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.82rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    padding: 0.38rem 0.85rem;
+    border-radius: 999px;
+    color: #F8FAFC;
+}
+
+.manager-promo-header-btns {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.2rem;
+}
+
+/* ───────────────────────── Section Headers ───────────────────────── */
+.manager-promo-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
+}
+
+.manager-promo-section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.manager-promo-section-title {
+    font-size: 1.18rem;
+    font-weight: 700;
+    color: var(--manager-navy);
+    margin: 0 0 0.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.manager-promo-section-subtitle {
+    font-size: 0.85rem;
+    color: var(--manager-text-muted);
+    margin: 0;
+}
+
+/* ───────────────────────── Summary Cards ───────────────────────── */
+.manager-promo-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+}
+
+.manager-promo-summary-card {
+    background: var(--manager-card);
+    border: 1px solid var(--manager-border);
+    border-radius: var(--manager-radius-lg);
+    padding: 1.25rem 1.5rem;
+    box-shadow: var(--manager-shadow-sm);
+    display: flex;
+    align-items: center;
+    gap: 1.15rem;
+    transition: var(--manager-transition);
+}
+
+.manager-promo-summary-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--manager-shadow-md);
+}
+
+.manager-promo-card-data {
+    display: flex;
+    flex-direction: column;
+}
+
+.manager-promo-card-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--manager-text-muted);
+}
+
+.manager-promo-card-val {
+    font-size: 1.85rem;
+    font-weight: 700;
+    color: var(--manager-text-main);
+    line-height: 1.1;
+    margin: 0.15rem 0;
+}
+
+.manager-promo-card-sub {
+    font-size: 0.74rem;
+    color: var(--manager-text-secondary);
+}
+
+/* Card Icons */
+.manager-promo-summary-card .manager-promo-card-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.manager-promo-card-active .manager-promo-card-icon { background: rgba(16, 185, 129, 0.1); color: var(--manager-success); }
+.manager-promo-card-scheduled .manager-promo-card-icon { background: rgba(37, 99, 235, 0.08); color: var(--manager-blue); }
+.manager-promo-card-expired .manager-promo-card-icon { background: rgba(239, 68, 68, 0.1); color: var(--manager-danger); }
+.manager-promo-card-inactive .manager-promo-card-icon { background: rgba(100, 116, 139, 0.1); color: var(--manager-text-muted); }
+
+/* ───────────────────────── Promotion Templates Grid ───────────────────────── */
+.manager-promo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+}
+
+.manager-promo-card {
+    background: var(--manager-card);
+    border: 1px solid var(--manager-border);
+    border-radius: var(--manager-radius-lg);
+    padding: 1.35rem;
+    box-shadow: var(--manager-shadow-sm);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 0.85rem;
+    transition: var(--manager-transition);
+}
+
+.manager-promo-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(139, 92, 246, 0.35);
+    box-shadow: var(--manager-shadow-md);
+}
+
+.manager-promo-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.manager-promo-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--manager-navy);
+    margin: 0;
+}
+
+.manager-promo-desc {
+    font-size: 0.84rem;
+    color: var(--manager-text-secondary);
+    margin: 0;
+    line-height: 1.5;
+}
+
+.manager-promo-meta-box {
+    background: var(--manager-bg);
+    border: 1px solid var(--manager-border-subtle);
+    border-radius: var(--manager-radius-md);
+    padding: 0.65rem 0.85rem;
+    font-size: 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.manager-promo-meta-box span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: var(--manager-text-secondary);
+}
+
+/* ───────────────────────── Active & Calendar Split Panel ───────────────────────── */
+.manager-promo-split-layout {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+}
+
+.manager-promo-split-panel {
+    display: flex;
+    flex-direction: column;
+}
+
+.manager-promo-section-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    background: var(--manager-violet);
+    border-radius: 50%;
+    margin-right: 0.25rem;
+}
+
+.manager-promo-active-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-height: 520px;
+    overflow-y: auto;
+    padding-right: 0.35rem;
+}
+
+.manager-promo-active-item {
+    background: var(--manager-bg);
+    border: 1px solid var(--manager-border-subtle);
+    border-left: 4px solid var(--manager-violet);
+    border-radius: var(--manager-radius-md);
+    padding: 1.15rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    transition: var(--manager-transition);
+}
+
+.manager-promo-active-item:hover {
+    background: #F8FAFF;
+    border-color: rgba(139, 92, 246, 0.25);
+    box-shadow: var(--manager-shadow-sm);
+}
+
+.manager-promo-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.manager-promo-item-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--manager-navy);
+    margin: 0.25rem 0 0;
+}
+
+.manager-promo-item-desc {
+    font-size: 0.82rem;
+    color: var(--manager-text-secondary);
+    margin: 0;
+    line-height: 1.4;
+}
+
+.manager-promo-item-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.manager-promo-detail-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.76rem;
+    background: #FFFFFF;
+    border: 1px solid var(--manager-border);
+    border-radius: 6px;
+    padding: 0.2rem 0.55rem;
+}
+
+.manager-promo-detail-lbl {
+    color: var(--manager-text-muted);
+}
+
+.manager-promo-item-dates {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.76rem;
+    color: var(--manager-text-secondary);
+    border-top: 1px dashed var(--manager-border);
+    padding-top: 0.65rem;
+}
+
+.manager-promo-item-dates span {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.manager-promo-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+}
+
+/* ───────────────────────── Calendar Widget Style ───────────────────────── */
+.manager-promo-calendar {
+    background: var(--manager-bg);
+    border: 1px solid var(--manager-border-subtle);
+    border-radius: var(--manager-radius-lg);
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    box-shadow: var(--manager-shadow-sm);
+}
+
+.manager-promo-calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--manager-border);
+    padding-bottom: 0.5rem;
+}
+
+.manager-promo-calendar-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--manager-navy);
+    margin: 0;
+}
+
+.manager-promo-calendar-btn {
+    background: transparent;
+    border: none;
+    color: var(--manager-text-secondary);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--manager-transition);
+}
+
+.manager-promo-calendar-btn:hover {
+    background: var(--manager-border-subtle);
+    color: var(--manager-blue);
+}
+
+.manager-promo-calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--manager-text-muted);
+}
+
+.manager-promo-calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.4rem;
+    text-align: center;
+}
+
+.manager-promo-calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--manager-text-main);
+    background: #FFFFFF;
+    border: 1px solid var(--manager-border-subtle);
+    cursor: pointer;
+    transition: var(--manager-transition);
+}
+
+.manager-promo-calendar-day:hover {
+    background: var(--manager-border-subtle);
+    transform: scale(1.05);
+}
+
+.manager-promo-calendar-day-empty {
+    aspect-ratio: 1;
+    background: transparent;
+    border: none;
+}
+
+/* Calendar Date Colors */
+.manager-promo-calendar-day-has-event {
+    font-weight: 700;
+    color: #FFFFFF !important;
+}
+
+.manager-promo-calendar-day-upcoming {
+    background: var(--manager-violet);
+    box-shadow: 0 2px 6px rgba(139, 92, 246, 0.35);
+}
+
+.manager-promo-calendar-day-ongoing {
+    background: var(--manager-blue);
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
+}
+
+/* Calendar Details Display Panel */
+.manager-promo-holiday-detail-panel {
+    background: var(--manager-bg);
+    border: 1px solid var(--manager-border-subtle);
+    border-radius: var(--manager-radius-lg);
+    padding: 1.15rem;
+    margin-top: 1rem;
+    min-height: 110px;
+}
+
+.manager-promo-detail-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.82rem;
+    color: var(--manager-text-muted);
+    min-height: 80px;
+}
+
+.manager-promo-holiday-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--manager-navy);
+    margin: 0;
+}
+
+.manager-promo-holiday-note {
+    font-size: 0.84rem;
+    color: var(--manager-text-secondary);
+    margin: 0.35rem 0 0.85rem;
+    line-height: 1.4;
+}
+
+.manager-promo-holiday-dates {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    color: var(--manager-text-secondary);
+    border-top: 1px dashed var(--manager-border);
+    padding-top: 0.65rem;
+}
+
+.manager-promo-holiday-dates span {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+/* ───────────────────────── Promotion Rules Card ───────────────────────── */
+.manager-promo-rules-box {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+}
+
+.manager-promo-rule-card {
+    background: var(--manager-bg);
+    border: 1px solid var(--manager-border-subtle);
+    border-radius: var(--manager-radius-md);
+    padding: 1.15rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+}
+
+.manager-promo-rule-title {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--manager-navy);
+    margin: 0 0 0.25rem;
+}
+
+.manager-promo-rule-desc {
+    font-size: 0.8rem;
+    color: var(--manager-text-secondary);
+    margin: 0;
+    line-height: 1.45;
+}
+
+.manager-promo-rule-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--manager-navy);
+    color: var(--manager-cyan);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+/* ───────────────────────── Database Live Filter View ───────────────────────── */
+.manager-promo-filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    flex-wrap: wrap;
+}
+
+.manager-promo-subtabs {
+    display: flex;
+    gap: 0.5rem;
+    border-bottom: 1px solid var(--manager-border);
+    padding-bottom: 0.5rem;
+    overflow-x: auto;
+}
+
+.manager-promo-subtab-btn {
+    background: transparent;
+    border: none;
+    color: var(--manager-text-secondary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: var(--manager-radius-sm);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: var(--manager-transition);
+}
+
+.manager-promo-subtab-btn:hover {
+    background: var(--manager-border-subtle);
+    color: var(--manager-blue);
+}
+
+.manager-promo-subtab-btn.active {
+    background: var(--manager-navy);
+    color: #FFFFFF;
+}
+
+.manager-promo-dbtab-pane {
+    display: none;
+    flex-direction: column;
+    animation: managerPromoPaneFadeIn 0.25s ease-out;
+}
+
+.manager-promo-dbtab-pane.active {
+    display: flex;
+}
+
+@keyframes managerPromoPaneFadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.manager-promo-holiday-req {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.72rem;
+    background: rgba(245, 158, 11, 0.14);
+    color: #92400E;
+    padding: 0.1rem 0.45rem;
+    border-radius: 4px;
+    margin-top: 0.15rem;
+}
+
+.manager-promo-table-dates {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+
+/* Badge States */
+.manager-promo-badge-status,
+.manager-promo-holiday-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.manager-promo-badge-status-active,
+.manager-promo-holiday-badge-ongoing {
+    background: rgba(16, 185, 129, 0.12);
+    color: #047857;
+}
+
+.manager-promo-badge-status-scheduled,
+.manager-promo-holiday-badge-upcoming {
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--manager-blue);
+}
+
+.manager-promo-badge-status-expired,
+.manager-promo-holiday-badge-past {
+    background: rgba(239, 68, 68, 0.1);
+    color: #B91C1C;
+}
+
+.manager-promo-badge-status-inactive {
+    background: rgba(100, 116, 139, 0.15);
+    color: #475569;
+}
+
+/* Modals */
+.manager-promo-modal .modal-header {
+    background: var(--manager-navy);
+    color: #FFFFFF;
+}
+
+/* ───────────────────────── Responsive Design for Promotions ───────────────────────── */
+@media (max-width: 1199.98px) {
+    .manager-promo-summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .manager-promo-split-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .manager-promo-header {
+        padding: 1.25rem;
+    }
+
+    .manager-promo-title {
+        font-size: 1.35rem;
+    }
+
+    .manager-promo-summary-grid,
+    .manager-promo-rules-box,
+    .manager-form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .manager-promo-filter-bar {
+        width: 100%;
+    }
+
+    .manager-promo-filter-bar .manager-select,
+    .manager-promo-filter-bar .manager-btn {
+        width: 100%;
+    }
+
+    .manager-promo-modal .modal-dialog {
+        margin: 0.5rem;
+    }
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   APPENDED STYLES FOR REVIEW MANAGEMENT PAGE (`manager-review-` Prefix)
+   ═════════════════════════════════════════════════════════════════════════════ */
+
+/* ───────────────────────── Page Header & Breadcrumb ───────────────────────── */
+.manager-review-header {
+    background: linear-gradient(135deg, var(--manager-navy) 0%, #101F42 60%, #1B2E5E 100%);
+    color: #FFFFFF;
+    border-radius: var(--manager-radius-lg);
+    padding: 1.75rem 2rem 1.1rem;
+    box-shadow: var(--manager-shadow-md);
+}
+
+.manager-review-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.25rem;
+}
+
+.manager-review-breadcrumb {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.manager-review-breadcrumb-link {
+    color: var(--manager-cyan);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.manager-review-breadcrumb-link:hover {
+    color: #FFFFFF;
+    text-decoration: underline;
+}
+
+.manager-review-breadcrumb-sep {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.manager-review-breadcrumb-current {
+    color: #FFFFFF;
+    font-weight: 600;
+}
+
+.manager-review-title {
+    font-size: 1.65rem;
+    font-weight: 700;
+    margin: 0 0 0.3rem;
+    color: #FFFFFF;
+}
+
+.manager-review-subtitle {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0;
+}
+
+.manager-review-header-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+}
+
+.manager-review-meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.82rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    padding: 0.38rem 0.85rem;
+    border-radius: 999px;
+    color: #F8FAFC;
+}
+
+.manager-review-pill-cyan {
+    background: rgba(0, 229, 255, 0.14);
+    border-color: rgba(0, 229, 255, 0.32);
+    color: var(--manager-cyan);
+}
+
+.manager-review-jumpnav {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    overflow-x: auto;
+    padding-top: 0.95rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    scrollbar-width: none;
+}
+
+.manager-review-jumpnav::-webkit-scrollbar {
+    display: none;
+}
+
+.manager-review-jump-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1rem;
+    border-radius: var(--manager-radius-md);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.84rem;
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: var(--manager-transition);
+}
+
+.manager-review-jump-link:hover {
+    background: var(--manager-blue);
+    border-color: var(--manager-cyan);
+    color: #FFFFFF;
+    transform: translateY(-1px);
+}
+
+/* ───────────────────────── Section Wrapper & Summary 4-Column Grid ───────────────────────── */
+.manager-review-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
+}
+
+.manager-review-section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.manager-review-section-title {
+    font-size: 1.18rem;
+    font-weight: 700;
+    color: var(--manager-navy);
+    margin: 0 0 0.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.manager-review-section-desc {
+    font-size: 0.85rem;
+    color: var(--manager-text-muted);
+    margin: 0;
+}
+
+/* Desktop: 4 Summary Cards */
+.manager-review-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+}
+
+.manager-review-stat-card {
+    background: var(--manager-card);
+    border: 1px solid var(--manager-border);
+    border-radius: var(--manager-radius-lg);
+    padding: 1.35rem 1.5rem;
+    box-shadow: var(--manager-shadow-sm);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 0.75rem;
+    transition: var(--manager-transition);
+}
+
+.manager-review-stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--manager-shadow-md);
+}
+
+.manager-review-stat-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--manager-blue);
+}
+
+.manager-review-stat-blue::before { background: var(--manager-blue); }
+.manager-review-stat-violet::before { background: var(--manager-violet); }
+.manager-review-stat-emerald::before { background: var(--manager-success); }
+.manager-review-stat-danger::before { background: var(--manager-danger); }
+
+.manager-review-stat-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.manager-review-stat-label {
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--manager-text-secondary);
+}
+
+.manager-review-stat-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--manager-blue);
+}
+
+.manager-review-stat-violet .manager-review-stat-icon {
+    background: rgba(139, 92, 246, 0.12);
+    color: var(--manager-violet);
+}
+
+.manager-review-stat-emerald .manager-review-stat-icon {
+    background: rgba(16, 185, 129, 0.12);
+    color: var(--manager-success);
+}
+
+.manager-review-stat-danger .manager-review-stat-icon {
+    background: rgba(239, 68, 68, 0.12);
+    color: var(--manager-danger);
+}
+
+.manager-review-stat-value {
+    font-size: 1.85rem;
+    font-weight: 700;
+    color: var(--manager-text-main);
+    line-height: 1.15;
+}
+
+.manager-review-stat-unit {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--manager-text-muted);
+}
+
+.manager-review-stat-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    font-size: 0.78rem;
+    color: var(--manager-text-muted);
+}
+
+/* ───────────────────────── Star Icons & Rating Distribution ───────────────────────── */
+.manager-review-stars {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    color: #FBBF24;
+    font-size: 0.92rem;
+}
+
+.manager-review-stars-sm {
+    font-size: 0.78rem;
+}
+
+.manager-review-stars-lg {
+    font-size: 1.15rem;
+}
+
+.manager-review-analytics-grid {
+    display: grid;
+    grid-template-columns: 1.25fr 1fr;
+    gap: 1.25rem;
+}
+
+.manager-review-dist-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.95rem;
+}
+
+.manager-review-dist-row {
+    display: grid;
+    grid-template-columns: 165px 1fr 125px;
+    align-items: center;
+    gap: 0.9rem;
+}
+
+.manager-review-dist-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.45rem;
+}
+
+.manager-review-star-tag {
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--manager-navy);
+    min-width: 58px;
+}
+
+.manager-review-progress {
+    width: 100%;
+    height: 12px;
+    background: var(--manager-border-subtle);
+    border-radius: 999px;
+    overflow: hidden;
+    border: 1px solid var(--manager-border);
+}
+
+.manager-review-progress-bar {
+    height: 100%;
+    width: 0%;
+    border-radius: 999px;
+    transition: width 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Star Level Colors: 5=Green, 4=Light Green, 3=Yellow, 2=Orange, 1=Red */
+.manager-review-bar-star-5 { background: #10B981; }
+.manager-review-bar-star-4 { background: #34D399; }
+.manager-review-bar-star-3 { background: #FBBF24; }
+.manager-review-bar-star-2 { background: #FB923C; }
+.manager-review-bar-star-1 { background: #EF4444; }
+.manager-review-bar-cyan { background: linear-gradient(90deg, var(--manager-blue), var(--manager-cyan)); }
+
+.manager-review-dist-stats {
+    display: flex;
+    justify-content: flex-end;
+    align-items: baseline;
+    gap: 0.35rem;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.manager-review-dist-pct {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--manager-navy);
+}
+
+.manager-review-dist-count {
+    font-size: 0.76rem;
+    color: var(--manager-text-muted);
+}
+
+/* ───────────────────────── Customer Satisfaction Highlight Card ───────────────────────── */
+.manager-review-sat-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.manager-review-sat-hero {
+    display: flex;
+    align-items: center;
+    gap: 1.35rem;
+    background: linear-gradient(135deg, var(--manager-navy) 0%, #16264C 100%);
+    color: #FFFFFF;
+    padding: 1.35rem;
+    border-radius: var(--manager-radius-md);
+}
+
+.manager-review-sat-score-circle {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    background: rgba(0, 229, 255, 0.12);
+    border: 2px solid var(--manager-cyan);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    text-align: center;
+}
+
+.manager-review-sat-big {
+    font-size: 1.65rem;
+    font-weight: 700;
+    color: var(--manager-cyan);
+    line-height: 1.1;
+}
+
+.manager-review-sat-outof {
+    font-size: 0.66rem;
+    color: rgba(255, 255, 255, 0.78);
+    margin-top: 0.15rem;
+}
+
+.manager-review-sat-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.manager-review-sat-pct-title {
+    font-size: 1.05rem;
+    color: #FFFFFF;
+}
+
+.manager-review-sat-pct-title strong {
+    color: var(--manager-cyan);
+}
+
+.manager-review-sat-caption {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0;
+}
+
+.manager-review-sat-meters {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    font-size: 0.82rem;
+    color: var(--manager-text-secondary);
+}
+
+/* ───────────────────────── Filter Bar & Guest Reviews Table ───────────────────────── */
+.manager-review-filter-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.manager-review-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.95rem;
+}
+
+.manager-review-filter-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+    padding-top: 0.35rem;
+    border-top: 1px solid var(--manager-border-subtle);
+}
+
+.manager-review-rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.manager-review-score-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    padding: 0.18rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    background: var(--manager-blue);
+}
+
+.manager-review-score-5 { background: #10B981; }
+.manager-review-score-4 { background: #059669; }
+.manager-review-score-3 { background: #D97706; }
+.manager-review-score-2 { background: #EA580C; }
+.manager-review-score-1 { background: #DC2626; }
+
+.manager-review-comment-truncate {
+    max-width: 340px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--manager-text-main);
+    font-size: 0.86rem;
+}
+
+.manager-review-subtext {
+    font-size: 0.74rem;
+    color: var(--manager-text-muted);
+}
+
+.manager-review-date-cell {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.82rem;
+    white-space: nowrap;
+}
+
+.manager-review-reply-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.22rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 600;
+    background: rgba(100, 116, 139, 0.14);
+    color: var(--manager-text-secondary);
+}
+
+.manager-review-pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 1.15rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--manager-border-subtle);
+}
+
+.manager-review-page-info {
+    font-size: 0.82rem;
+    color: var(--manager-text-secondary);
+}
+
+.manager-review-page-btns {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+}
+
+/* ───────────────────────── Section 5: Review Details & Reply Panel ───────────────────────── */
+.manager-review-detail-grid {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 1.25rem;
+}
+
+.manager-review-detail-box,
+.manager-review-reply-box {
+    background: var(--manager-bg);
+    border: 1px solid var(--manager-border);
+    border-radius: var(--manager-radius-md);
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 0.9rem;
+}
+
+.manager-review-detail-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.manager-review-detail-customer,
+.manager-review-modal-customer {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--manager-navy);
+    margin: 0.35rem 0 0;
+}
+
+.manager-review-comment-full {
+    background: #FFFFFF;
+    border: 1px solid var(--manager-border);
+    border-radius: var(--manager-radius-sm);
+    padding: 1rem;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--manager-text-main);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.manager-review-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    font-size: 0.8rem;
+    color: var(--manager-text-secondary);
+    padding-top: 0.5rem;
+    border-top: 1px dashed var(--manager-border);
+}
+
+.manager-review-textarea-disabled {
+    background-color: #E2E8F0 !important;
+    color: var(--manager-text-muted) !important;
+    cursor: not-allowed;
+}
+
+/* ───────────────────────── Responsive Breakpoints (Review Management) ───────────────────────── */
+/* Tablet: 2 Summary Cards per row */
+@media (max-width: 1199.98px) {
+    .manager-review-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .manager-review-analytics-grid,
+    .manager-review-detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .manager-review-filter-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 991.98px) {
+    .manager-review-header-meta {
+        align-items: flex-start;
+    }
+}
+
+/* Mobile: 1 Card per row */
+@media (max-width: 767.98px) {
+    .manager-review-header {
+        padding: 1.25rem;
+    }
+
+    .manager-review-title {
+        font-size: 1.35rem;
+    }
+
+    .manager-review-summary,
+    .manager-review-filter-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .manager-review-dist-row {
+        grid-template-columns: 1fr;
+        gap: 0.35rem;
+    }
+
+    .manager-review-dist-stats {
+        justify-content: flex-start;
+    }
+
+    .manager-review-sat-hero {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .manager-review-filter-actions .manager-btn {
+        width: 100%;
+    }
+
+    .manager-review-modal .modal-dialog {
+        margin: 0.5rem;
+    }
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   APPENDED STYLES FOR STAFF MANAGEMENT PAGE (`manager-staff-` Prefix)
+   ═════════════════════════════════════════════════════════════════════════════ */
+
+/* ───────────────────────── Page Header & Breadcrumb ───────────────────────── */
+.manager-staff-header {
+    background: linear-gradient(135deg, var(--manager-navy) 0%, #101F42 60%, #1B2E5E 100%);
+    color: #FFFFFF;
+    border-radius: var(--manager-radius-lg);
+    padding: 1.75rem 2rem 1.1rem;
+    box-shadow: var(--manager-shadow-md);
+}
+
+.manager-staff-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.25rem;
+}
+
+.manager-staff-breadcrumb {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.manager-staff-breadcrumb-link {
+    color: var(--manager-cyan);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.manager-staff-breadcrumb-link:hover {
+    color: #FFFFFF;
+    text-decoration: underline;
+}
+
+.manager-staff-breadcrumb-sep {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.manager-staff-breadcrumb-current {
+    color: #FFFFFF;
+    font-weight: 600;
+}
+
+.manager-staff-title {
+    font-size: 1.65rem;
+    font-weight: 700;
+    margin: 0 0 0.3rem;
+    color: #FFFFFF;
+}
+
+.manager-staff-subtitle {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0;
+}
+
+.manager-staff-header-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.55rem;
+}
+
+.manager-staff-meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.82rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    padding: 0.38rem 0.85rem;
+    border-radius: 999px;
+    color: #F8FAFC;
+}
+
+.manager-staff-btn-header {
+    background: rgba(0, 229, 255, 0.14);
+    border-color: rgba(0, 229, 255, 0.35);
+    color: #FFFFFF;
+}
+
+.manager-staff-btn-header:hover {
+    background: var(--manager-blue);
+    border-color: var(--manager-cyan);
+    color: #FFFFFF;
+}
+
+.manager-staff-jumpnav {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    overflow-x: auto;
+    padding-top: 0.95rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    scrollbar-width: none;
+}
+
+.manager-staff-jumpnav::-webkit-scrollbar {
+    display: none;
+}
+
+.manager-staff-jump-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1rem;
+    border-radius: var(--manager-radius-md);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.84rem;
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: var(--manager-transition);
+}
+
+.manager-staff-jump-link:hover {
+    background: var(--manager-blue);
+    border-color: var(--manager-cyan);
+    color: #FFFFFF;
+    transform: translateY(-1px);
+}
+
+/* ───────────────────────── Section 1: Operational Staffing Summary (4 Cards) ───────────────────────── */
+.manager-staff-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
+}
+
+.manager-staff-section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.manager-staff-section-title {
+    font-size: 1.18rem;
+    font-weight: 700;
+    color: var(--manager-navy);
+    margin: 0 0 0.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.manager-staff-section-desc {
+    font-size: 0.85rem;
+    color: var(--manager-text-muted);
+    margin: 0;
+}
+
+/* Desktop: 4 Columns */
+.manager-staff-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+}
+
+.manager-staff-stat-card {
+    background: var(--manager-card);
+    border: 1px solid var(--manager-border);
+    border-radius: var(--manager-radius-lg);
+    padding: 1.35rem 1.5rem;
+    box-shadow: var(--manager-shadow-sm);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 0.65rem;
+    transition: var(--manager-transition);
+}
+
+.manager-staff-stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--manager-shadow-md);
+}
+
+.manager-staff-stat-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--manager-navy);
+}
+
+.manager-staff-stat-navy::before { background: var(--manager-navy); }
+.manager-staff-stat-blue::before { background: var(--manager-blue); }
+.manager-staff-stat-cyan::before { background: var(--manager-cyan-dark); }
+.manager-staff-stat-violet::before { background: var(--manager-violet); }
+
+.manager-staff-stat-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.manager-staff-stat-label {
+    font-size: 0.74rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--manager-text-muted);
+}
+
+.manager-staff-stat-role {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--manager-navy);
+    margin: 0.15rem 0 0;
+}
+
+.manager-staff-stat-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    background: rgba(7, 13, 30, 0.08);
+    color: var(--manager-navy);
+    flex-shrink: 0;
+}
+
+.manager-staff-stat-blue .manager-staff-stat-icon {
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--manager-blue);
+}
+
+.manager-staff-stat-cyan .manager-staff-stat-icon {
+    background: rgba(0, 229, 255, 0.16);
+    color: #00838F;
+}
+
+.manager-staff-stat-violet .manager-staff-stat-icon {
+    background: rgba(139, 92, 246, 0.12);
+    color: var(--manager-violet);
+}
+
+.manager-staff-stat-value {
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: var(--manager-text-main);
+    line-height: 1.15;
+}
+
+.manager-staff-stat-desc {
+    font-size: 0.8rem;
+    color: var(--manager-text-secondary);
+    margin: 0;
+    line-height: 1.4;
+}
+
+.manager-staff-stat-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+    padding-top: 0.65rem;
+    border-top: 1px dashed var(--manager-border);
+}
+
+/* ───────────────────────── Badges & Role Chips ───────────────────────── */
+.manager-staff-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.22rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.manager-staff-badge-active {
+    background: rgba(16, 185, 129, 0.14);
+    color: #047857;
+}
+
+.manager-staff-badge-suspended {
+    background: rgba(239, 68, 68, 0.14);
+    color: #B91C1C;
+}
+
+.manager-staff-role {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.24rem 0.65rem;
+    border-radius: 8px;
+    font-size: 0.76rem;
+    font-weight: 600;
+}
+
+.manager-staff-role-front {
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--manager-blue);
+    border: 1px solid rgba(37, 99, 235, 0.22);
+}
+
+.manager-staff-role-finance {
+    background: rgba(0, 229, 255, 0.16);
+    color: #006064;
+    border: 1px solid rgba(0, 184, 212, 0.3);
+}
+
+.manager-staff-role-hk {
+    background: rgba(139, 92, 246, 0.12);
+    color: #6D28D9;
+    border: 1px solid rgba(139, 92, 246, 0.25);
+}
+
+.manager-staff-role-manager {
+    background: rgba(7, 13, 30, 0.1);
+    color: var(--manager-navy);
+    border: 1px solid rgba(7, 13, 30, 0.22);
+}
+
+.manager-staff-role-owner {
+    background: rgba(245, 158, 11, 0.16);
+    color: #B45309;
+    border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+/* ───────────────────────── Section 2 & 3: Role Distribution & Account Status ───────────────────────── */
+.manager-staff-analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+}
+
+.manager-staff-dist-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
+}
+
+.manager-staff-dist-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.manager-staff-dist-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.manager-staff-dist-numbers {
+    font-size: 0.85rem;
+    color: var(--manager-text-secondary);
+    display: flex;
+    align-items: baseline;
+    gap: 0.3rem;
+}
+
+.manager-staff-progress-track {
+    width: 100%;
+    height: 12px;
+    background: var(--manager-border-subtle);
+    border-radius: 999px;
+    overflow: hidden;
+    border: 1px solid var(--manager-border);
+}
+
+.manager-staff-progress-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 999px;
+    transition: width 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.manager-staff-fill-blue { background: var(--manager-blue); }
+.manager-staff-fill-cyan { background: var(--manager-cyan-dark); }
+.manager-staff-fill-violet { background: var(--manager-violet); }
+.manager-staff-fill-emerald { background: var(--manager-success); }
+
+.manager-staff-status-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.manager-staff-status-hero {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    background: var(--manager-bg);
+    padding: 1.15rem;
+    border-radius: var(--manager-radius-md);
+    border: 1px solid var(--manager-border);
+}
+
+.manager-staff-status-circle {
+    width: 92px;
+    height: 92px;
+    border-radius: 50%;
+    background: var(--manager-navy);
+    border: 3px solid var(--manager-cyan);
+    color: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.manager-staff-status-pct {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--manager-cyan);
+    line-height: 1.1;
+}
+
+.manager-staff-status-caption {
+    font-size: 0.68rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.manager-staff-status-boxes {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.85rem;
+    flex: 1;
+}
+
+.manager-staff-status-metric {
+    background: #FFFFFF;
+    padding: 0.85rem;
+    border-radius: var(--manager-radius-sm);
+    border: 1px solid var(--manager-border);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+}
+
+.manager-staff-metric-num {
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.manager-staff-status-bar-wrap {
+    font-size: 0.82rem;
+    color: var(--manager-text-secondary);
+}
+
+/* ───────────────────────── Section 4: Filter Bar & Staff Table ───────────────────────── */
+.manager-staff-filter {
+    background: var(--manager-bg);
+    border: 1px solid var(--manager-border);
+    border-radius: var(--manager-radius-md);
+    padding: 1.15rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.95rem;
+}
+
+.manager-staff-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.85rem;
+}
+
+.manager-staff-filter-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.manager-staff-subtext {
+    font-size: 0.74rem;
+    color: var(--manager-text-muted);
+}
+
+.manager-staff-self-chip {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+    background: rgba(37, 99, 235, 0.14);
+    color: var(--manager-blue);
+}
+
+.manager-staff-date {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.82rem;
+    white-space: nowrap;
+}
+
+.manager-staff-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+}
+
+.manager-staff-protected-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.74rem;
+    font-weight: 600;
+    padding: 0.3rem 0.65rem;
+    border-radius: var(--manager-radius-sm);
+    background: rgba(100, 116, 139, 0.14);
+    color: var(--manager-text-secondary);
+}
+
+.manager-staff-spec-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.manager-staff-spec-row {
+    background: var(--manager-bg);
+    border: 1px solid var(--manager-border);
+    border-radius: var(--manager-radius-sm);
+    padding: 0.75rem 1rem;
+    font-size: 0.84rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+/* ───────────────────────── Section 6: Security & Permission Restrictions Card ───────────────────────── */
+.manager-staff-security {
+    background: linear-gradient(135deg, var(--manager-navy) 0%, #0F1D3A 65%, #162B5B 100%);
+    color: #FFFFFF;
+    border-radius: var(--manager-radius-lg);
+    padding: 1.75rem 2rem;
+    box-shadow: var(--manager-shadow-md);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.manager-staff-security-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding-bottom: 1.15rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.manager-staff-security-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.manager-staff-security-shield {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: rgba(0, 229, 255, 0.14);
+    border: 1px solid rgba(0, 229, 255, 0.35);
+    color: var(--manager-cyan);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.45rem;
+    flex-shrink: 0;
+}
+
+.manager-staff-security-eyebrow {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--manager-cyan);
+    display: block;
+    margin-bottom: 0.2rem;
+}
+
+.manager-staff-security-heading {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    margin: 0;
+}
+
+.manager-staff-security-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    background: rgba(37, 99, 235, 0.3);
+    border: 1px solid rgba(0, 229, 255, 0.35);
+    color: #F8FAFC;
+    padding: 0.4rem 0.85rem;
+    border-radius: 999px;
+}
+
+.manager-staff-permissions-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+}
+
+.manager-staff-perm-card {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: var(--manager-radius-md);
+    padding: 1.25rem;
+}
+
+.manager-staff-perm-allowed {
+    border-left: 4px solid var(--manager-cyan);
+}
+
+.manager-staff-perm-denied {
+    border-left: 4px solid var(--manager-danger);
+}
+
+.manager-staff-perm-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    margin: 0 0 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.manager-staff-perm-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    font-size: 0.84rem;
+    color: rgba(255, 255, 255, 0.86);
+}
+
+.manager-staff-perm-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+}
+
+.manager-staff-perm-allowed .manager-staff-perm-list i {
+    color: var(--manager-cyan);
+    margin-top: 0.2rem;
+}
+
+.manager-staff-perm-denied .manager-staff-perm-list i {
+    color: #F87171;
+    margin-top: 0.2rem;
+}
+
+.manager-staff-pillars-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
+
+.manager-staff-pillar-item {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--manager-radius-md);
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+.manager-staff-pillar-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--manager-blue);
+    color: #FFFFFF;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+.manager-staff-pillar-item h4 {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    margin: 0 0 0.25rem;
+}
+
+.manager-staff-pillar-item p {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.76);
+    margin: 0;
+    line-height: 1.45;
+}
+
+/* ───────────────────────── Modals (Staff Details, Add Staff, Confirm Status) ───────────────────────── */
+.manager-staff-modal-name {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--manager-navy);
+}
+
+.manager-staff-detail-list,
+.manager-staff-confirm-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    background: var(--manager-bg);
+    border: 1px solid var(--manager-border);
+    border-radius: var(--manager-radius-md);
+    padding: 1rem;
+}
+
+.manager-staff-detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px dashed var(--manager-border);
+}
+
+.manager-staff-detail-row:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.manager-staff-detail-label {
+    color: var(--manager-text-muted);
+    white-space: nowrap;
+}
+
+.manager-staff-input-disabled {
+    background-color: #E2E8F0 !important;
+    color: var(--manager-text-muted) !important;
+    cursor: not-allowed;
+}
+
+/* ───────────────────────── Responsive Breakpoints (Staff Management) ───────────────────────── */
+/* Tablet: 2 Summary Cards per row */
+@media (max-width: 1199.98px) {
+    .manager-staff-summary,
+    .manager-staff-pillars-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .manager-staff-analytics-grid,
+    .manager-staff-permissions-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .manager-staff-filter-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 991.98px) {
+    .manager-staff-header-meta {
+        align-items: flex-start;
+    }
+}
+
+/* Mobile: 1 Card per row */
+@media (max-width: 767.98px) {
+    .manager-staff-header,
+    .manager-staff-security {
+        padding: 1.25rem;
+    }
+
+    .manager-staff-title {
+        font-size: 1.35rem;
+    }
+
+    .manager-staff-summary,
+    .manager-staff-filter-grid,
+    .manager-staff-pillars-grid,
+    .manager-staff-status-boxes {
+        grid-template-columns: 1fr;
+    }
+
+    .manager-staff-status-hero {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .manager-staff-filter-actions .manager-btn {
+        width: 100%;
+    }
+
+    .manager-staff-modal .modal-dialog {
+        margin: 0.5rem;
+    }
+}

@@ -85,6 +85,137 @@ namespace StayMate_Kavinvee_0576.Controllers
             return View(model);
         }
 
+        // =====================================================================
+// วางใน OwnerController (ต่อจาก action Profile() ในส่วน "Pages (GET)" หรือท้ายส่วนนั้นก็ได้)
+//
+// 1) แก้คอมเมนต์ summary บนหัวคลาส จาก
+//      "Owner Portal (Read-only): ทุก Action เป็น GET และทุก Query ใช้ AsNoTracking
+//       ไม่มีการเรียก SaveChanges ใน Controller นี้"
+//    เป็นเช่น
+//      "Owner Portal: หน้ารายงานทั้งหมดเป็น GET แบบ Read-only (AsNoTracking)
+//       มีเพียง UpdateProfile / ChangePassword ที่เขียนข้อมูลของบัญชี OWNER เอง"
+//
+// 2) ถ้ายังไม่มี ให้ติดตั้งแพ็กเกจ BCrypt.Net-Next (ตัวเดียวกับที่ HousekeepingController ใช้)
+// =====================================================================
+
+// ───────────────────────── Profile (POST) ─────────────────────────
+
+// POST: /Owner/UpdateProfile  (แก้ไขได้เฉพาะชื่อและเบอร์โทร)
+[HttpPost]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> UpdateProfile(string fullName, string? phone, CancellationToken cancellationToken)
+{
+    try
+    {
+        var owner = await GetValidOwnerAsync(cancellationToken);
+        if (owner == null) return RedirectToAction("Login", "Account");
+
+        var cleanName = (fullName ?? "").Trim();
+        var cleanPhone = string.IsNullOrWhiteSpace(phone) ? null : phone.Trim();
+
+        if (cleanName.Length == 0)
+        {
+            TempData["ErrorMessage"] = "กรุณากรอกชื่อ";
+            return RedirectToAction(nameof(Profile));
+        }
+        if (cleanName.Length > 120) cleanName = cleanName.Substring(0, 120);
+
+        if (cleanPhone != null &&
+            !System.Text.RegularExpressions.Regex.IsMatch(cleanPhone, @"^[0-9+\-\s]{6,20}$"))
+        {
+            TempData["ErrorMessage"] = "รูปแบบเบอร์โทรศัพท์ไม่ถูกต้อง";
+            return RedirectToAction(nameof(Profile));
+        }
+
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.UserId == owner.Value, cancellationToken);
+        if (user == null) return RedirectToAction("Login", "Account");
+
+        user.FullName = cleanName;
+        user.Phone = cleanPhone;
+        await _db.SaveChangesAsync(cancellationToken);
+
+        TempData["SuccessMessage"] = "บันทึกข้อมูลส่วนตัวเรียบร้อยแล้ว";
+    }
+    catch (Exception)
+    {
+        TempData["ErrorMessage"] = "เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง";
+    }
+
+    return RedirectToAction(nameof(Profile));
+}
+
+// POST: /Owner/ChangePassword
+// *** ใช้ BCrypt เหมือน HousekeepingController — ถ้า AccountController ใช้วิธี hash อื่น ให้แก้ 2 จุดที่มีคอมเมนต์ ***
+[HttpPost]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> ChangePassword(
+    string oldPassword, string newPassword, string confirmPassword, CancellationToken cancellationToken)
+{
+    try
+    {
+        var owner = await GetValidOwnerAsync(cancellationToken);
+        if (owner == null) return RedirectToAction("Login", "Account");
+
+        if (string.IsNullOrWhiteSpace(oldPassword) ||
+            string.IsNullOrWhiteSpace(newPassword) ||
+            newPassword.Length < 6)
+        {
+            TempData["ErrorMessage"] = "กรุณากรอกข้อมูลให้ครบ และรหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร";
+            TempData["OpenPasswordModal"] = true;
+            return RedirectToAction(nameof(Profile));
+        }
+
+        if (newPassword != confirmPassword)
+        {
+            TempData["ErrorMessage"] = "รหัสผ่านใหม่และการยืนยันรหัสผ่านไม่ตรงกัน";
+            TempData["OpenPasswordModal"] = true;
+            return RedirectToAction(nameof(Profile));
+        }
+
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.UserId == owner.Value, cancellationToken);
+        if (user == null) return RedirectToAction("Login", "Account");
+
+        // (1) ตรวจรหัสผ่านเดิม
+        if (!BCrypt.Net.BCrypt.Verify(oldPassword, user.PasswordHash))
+        {
+            TempData["ErrorMessage"] = "รหัสผ่านเดิมไม่ถูกต้อง";
+            TempData["OpenPasswordModal"] = true;
+            return RedirectToAction(nameof(Profile));
+        }
+
+        // (2) บันทึกรหัสผ่านใหม่
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+        await _db.SaveChangesAsync(cancellationToken);
+
+        TempData["SuccessMessage"] = "เปลี่ยนรหัสผ่านเรียบร้อยแล้ว";
+    }
+    catch (Exception)
+    {
+        TempData["ErrorMessage"] = "เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน กรุณาลองใหม่อีกครั้ง";
+        TempData["OpenPasswordModal"] = true;
+    }
+
+    return RedirectToAction(nameof(Profile));
+}
+
+// ───────────────────────── Helper (วางต่อจาก GetCurrentUserId) ─────────────────────────
+
+/// <summary>ยืนยันว่าผู้ใช้ปัจจุบันยังเป็น OWNER ที่ Active อยู่จริงในฐานข้อมูล ก่อนอนุญาตให้เขียนข้อมูล</summary>
+private async Task<uint?> GetValidOwnerAsync(CancellationToken ct)
+{
+    var id = GetCurrentUserId();
+    if (id == null) return null;
+    var uid = id.Value;
+
+    var exists = await _db.Users
+        .AsNoTracking()
+        .AnyAsync(u => u.UserId == uid &&
+                       u.IsActive == true &&
+                       u.UserRoles.Any(ur => ur.Role.RoleCode == OwnerRoleCode), ct);
+
+    return exists ? uid : null;
+}
+
         // ───────────────────────── JSON endpoints (GET, ให้ Owner.js เรียก) ─────────────────────────
 
         // GET: /Owner/DashboardData?year=2026&month=11

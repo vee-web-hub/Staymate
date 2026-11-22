@@ -2518,3 +2518,761 @@ body.owner-page {
         font-size: 1.4rem;
     }
 }
+/* ═══════════════════════════════════════════════════════════════════════════
+   OWNER PROFILE — EDIT FORM, ALERTS, PASSWORD MODAL (Prefix: owner-pf-*)
+   วางต่อท้าย Owner.css "ต่อจากบล็อก OWNER PROFILE STYLES ที่ให้ไปก่อนหน้า"
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ───── Alerts ───── */
+.owner-pf-alert {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.85rem 1.1rem;
+    border-radius: var(--owner-radius-md);
+    font-size: 0.88rem;
+    font-weight: 500;
+}
+
+.owner-pf-alert-success {
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    color: #34D399;
+}
+
+.owner-pf-alert-danger {
+    background: rgba(239, 68, 68, 0.14);
+    border: 1px solid rgba(239, 68, 68, 0.5);
+    color: #FCA5A5;
+}
+
+/* ───── Mode badge (โหมดแก้ไข) ───── */
+.owner-pf-mode-badge.is-editing {
+    color: #FBBF24;
+    background: rgba(245, 158, 11, 0.14);
+    border-color: rgba(245, 158, 11, 0.4);
+}
+
+/* ───── Buttons (เพิ่ม/แก้ไขจากบล็อกก่อนหน้า) ───── */
+.owner-pf-btn {
+    width: auto;
+}
+
+.owner-pf-logout-card .owner-pf-btn {
+    width: 100%;
+}
+
+.owner-pf-btn-primary {
+    background: linear-gradient(135deg, var(--owner-electric-blue), #1D4ED8);
+    color: #FFFFFF;
+    border: 1px solid rgba(0, 229, 255, 0.4);
+}
+
+.owner-pf-btn-primary:hover {
+    filter: brightness(1.12);
+    box-shadow: 0 0 14px rgba(37, 99, 235, 0.5);
+}
+
+.owner-pf-btn-outline {
+    background: rgba(148, 163, 184, 0.1);
+    color: var(--owner-text-secondary);
+    border: 1px solid var(--owner-border-subtle);
+}
+
+.owner-pf-btn-outline:hover {
+    color: var(--owner-text-primary);
+    border-color: rgba(0, 229, 255, 0.4);
+}
+
+.owner-pf-btn-success {
+    background: linear-gradient(135deg, #059669, var(--owner-success-green));
+    color: #FFFFFF;
+    border: 1px solid rgba(16, 185, 129, 0.5);
+}
+
+.owner-pf-btn-success:hover {
+    filter: brightness(1.1);
+    box-shadow: 0 0 14px rgba(16, 185, 129, 0.4);
+}
+
+.owner-pf-actions {
+    margin-top: 1.25rem;
+}
+
+.owner-pf-actions-row {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.owner-pf-actions-row.is-end {
+    justify-content: flex-end;
+}
+
+.owner-pf-actions-row[hidden] {
+    display: none;
+}
+
+/* ───── Form Fields ───── */
+.owner-pf-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.owner-pf-field-edit {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-width: 0;
+}
+
+.owner-pf-field-edit label {
+    font-size: 0.74rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--owner-text-muted);
+    margin: 0;
+}
+
+.owner-pf-req {
+    color: var(--owner-danger-red);
+}
+
+.owner-pf-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: var(--owner-midnight-navy);
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    border-radius: var(--owner-radius-sm);
+    padding: 0.5rem 0.8rem;
+    transition: var(--owner-transition);
+}
+
+.owner-pf-input-wrap:focus-within {
+    border-color: var(--owner-cyber-cyan);
+    box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.18);
+}
+
+.owner-pf-input-wrap > i {
+    color: var(--owner-text-muted);
+    font-size: 0.88rem;
+}
+
+.owner-pf-input-wrap input {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--owner-text-primary);
+    font-size: 0.9rem;
+}
+
+.owner-pf-input-wrap input::placeholder {
+    color: var(--owner-text-muted);
+}
+
+.owner-pf-input-wrap input:disabled {
+    cursor: not-allowed;
+    color: var(--owner-text-secondary);
+}
+
+.owner-pf-input-wrap.is-readonly {
+    background: rgba(5, 11, 24, 0.5);
+    border-style: dashed;
+}
+
+.owner-pf-role-box {
+    min-height: 42px;
+    align-items: center;
+    background: rgba(5, 11, 24, 0.5);
+    border: 1px dashed rgba(148, 163, 184, 0.28);
+    border-radius: var(--owner-radius-sm);
+    padding: 0.4rem 0.8rem;
+}
+
+.owner-pf-eye {
+    background: transparent;
+    border: none;
+    color: var(--owner-text-muted);
+    cursor: pointer;
+    padding: 0 0.2rem;
+}
+
+.owner-pf-eye:hover {
+    color: var(--owner-cyber-cyan);
+}
+
+.owner-pf-field-error {
+    color: #F87171;
+    font-size: 0.78rem;
+}
+
+.owner-pf-field-error[hidden] {
+    display: none;
+}
+
+/* ───── Password Modal ───── */
+.owner-pf-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(2, 6, 23, 0.78);
+    backdrop-filter: blur(6px);
+}
+
+.owner-pf-modal-overlay.is-open {
+    display: flex;
+}
+
+.owner-pf-modal {
+    width: 100%;
+    max-width: 460px;
+    background: var(--owner-surface-elevated);
+    border: 1px solid var(--owner-border-glow);
+    border-radius: var(--owner-radius-lg);
+    box-shadow: 0 30px 70px -10px rgba(0, 0, 0, 0.8);
+    overflow: hidden;
+}
+
+.owner-pf-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.2rem 1.4rem;
+    border-bottom: 1px solid var(--owner-border-subtle);
+}
+
+.owner-pf-modal-kicker {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--owner-cyber-cyan);
+    margin-bottom: 0.2rem;
+}
+
+.owner-pf-modal-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--owner-text-primary);
+}
+
+.owner-pf-modal-close {
+    background: rgba(148, 163, 184, 0.12);
+    border: 1px solid var(--owner-border-subtle);
+    color: var(--owner-text-secondary);
+    border-radius: 8px;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    transition: var(--owner-transition);
+}
+
+.owner-pf-modal-close:hover {
+    color: var(--owner-text-primary);
+    border-color: var(--owner-danger-red);
+}
+
+.owner-pf-modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.3rem 1.4rem;
+}
+
+.owner-pf-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1rem 1.4rem;
+    border-top: 1px solid var(--owner-border-subtle);
+    background: rgba(5, 11, 24, 0.4);
+}
+
+/* ───── Responsive ───── */
+@media (max-width: 768px) {
+    .owner-pf-form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .owner-pf-actions-row .owner-pf-btn {
+        flex: 1;
+    }
+}
+/* ═══════════════════════════════════════════════════════════════════════════
+   OWNER PROFILE STYLES (Prefix: owner-pf-*)
+   วางต่อท้ายไฟล์ wwwroot/css/Owner.css
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ───── Hero ───── */
+.owner-pf-hero {
+    background: linear-gradient(135deg, rgba(14, 23, 46, 0.96) 0%, rgba(5, 11, 24, 0.96) 100%);
+    border: 1px solid var(--owner-border-subtle);
+    border-radius: var(--owner-radius-lg);
+    padding: 1.7rem 1.9rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    box-shadow: var(--owner-shadow-deep);
+    position: relative;
+    overflow: hidden;
+}
+
+.owner-pf-hero::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--owner-warning-amber), var(--owner-cyber-cyan), var(--owner-space-violet));
+}
+
+.owner-pf-hero-left {
+    display: flex;
+    align-items: center;
+    gap: 1.35rem;
+    min-width: 0;
+}
+
+.owner-pf-avatar {
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #FFFFFF;
+    background: linear-gradient(135deg, var(--owner-electric-blue), var(--owner-space-violet));
+    border: 2px solid rgba(0, 229, 255, 0.45);
+    box-shadow: 0 0 0 5px rgba(0, 229, 255, 0.08), 0 0 28px rgba(139, 92, 246, 0.35);
+}
+
+.owner-pf-badge-row {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.6rem;
+}
+
+.owner-pf-badge-row .owner-eyebrow-badge {
+    margin-bottom: 0;
+}
+
+.owner-pf-since-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.74rem;
+    color: var(--owner-text-secondary);
+    background: rgba(5, 11, 24, 0.65);
+    border: 1px solid var(--owner-border-subtle);
+    padding: 0.28rem 0.7rem;
+    border-radius: 999px;
+}
+
+.owner-pf-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--owner-text-primary);
+    margin: 0 0 0.45rem 0;
+    word-break: break-word;
+}
+
+.owner-pf-contact-strip {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    font-size: 0.88rem;
+    color: var(--owner-text-secondary);
+}
+
+.owner-pf-contact-strip i {
+    color: var(--owner-cyber-cyan);
+    margin-right: 0.3rem;
+}
+
+.owner-pf-sep {
+    color: var(--owner-text-muted);
+}
+
+.owner-pf-hero-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.6rem;
+}
+
+.owner-pf-role-crown {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    color: #FBBF24;
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    padding: 0.42rem 0.95rem;
+    border-radius: 999px;
+    box-shadow: 0 0 18px rgba(245, 158, 11, 0.15);
+}
+
+/* ───── Status Badge (ใช้ซ้ำทั้งหน้า) ───── */
+.owner-pf-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 0.28rem 0.75rem;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+.owner-pf-status-badge.is-success {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34D399;
+    border: 1px solid rgba(16, 185, 129, 0.38);
+}
+
+.owner-pf-status-badge.is-danger {
+    background: rgba(239, 68, 68, 0.15);
+    color: #F87171;
+    border: 1px solid rgba(239, 68, 68, 0.38);
+}
+
+/* ───── Quick Stats ───── */
+.owner-pf-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.15rem;
+}
+
+.owner-pf-stat {
+    background: var(--owner-surface-card);
+    border: 1px solid var(--owner-border-subtle);
+    border-radius: var(--owner-radius-lg);
+    padding: 1.1rem 1.3rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: var(--owner-shadow-deep);
+    transition: var(--owner-transition);
+}
+
+.owner-pf-stat:hover {
+    transform: translateY(-3px);
+    border-color: var(--owner-border-glow);
+}
+
+.owner-pf-stat-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.owner-pf-stat-icon.is-cyan   { background: rgba(0, 229, 255, 0.12);  color: var(--owner-cyber-cyan);    border: 1px solid rgba(0, 229, 255, 0.3); }
+.owner-pf-stat-icon.is-violet { background: rgba(139, 92, 246, 0.12); color: var(--owner-space-violet);  border: 1px solid rgba(139, 92, 246, 0.3); }
+.owner-pf-stat-icon.is-green  { background: rgba(16, 185, 129, 0.12); color: var(--owner-success-green); border: 1px solid rgba(16, 185, 129, 0.3); }
+.owner-pf-stat-icon.is-red    { background: rgba(239, 68, 68, 0.12);  color: var(--owner-danger-red);    border: 1px solid rgba(239, 68, 68, 0.3); }
+
+.owner-pf-stat-value {
+    font-size: 1.4rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--owner-text-primary);
+    line-height: 1.2;
+}
+
+.owner-pf-stat-label {
+    font-size: 0.78rem;
+    color: var(--owner-text-secondary);
+}
+
+/* ───── Main Grid ───── */
+.owner-pf-grid {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 1.25rem;
+    align-items: start;
+}
+
+.owner-pf-side {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.owner-pf-mode-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: #60A5FA;
+    background: rgba(37, 99, 235, 0.14);
+    border: 1px solid rgba(37, 99, 235, 0.35);
+    padding: 0.28rem 0.75rem;
+    border-radius: 999px;
+}
+
+/* ───── Read-only Fields ───── */
+.owner-pf-field-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.owner-pf-field {
+    background: rgba(5, 11, 24, 0.6);
+    border: 1px solid var(--owner-border-subtle);
+    border-radius: var(--owner-radius-md);
+    padding: 0.9rem 1.05rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-width: 0;
+    transition: var(--owner-transition);
+}
+
+.owner-pf-field:hover {
+    border-color: rgba(37, 99, 235, 0.45);
+    background: rgba(14, 23, 46, 0.9);
+}
+
+.owner-pf-field.is-wide {
+    grid-column: 1 / -1;
+}
+
+.owner-pf-field-label {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--owner-text-muted);
+}
+
+.owner-pf-field-label i {
+    color: var(--owner-cyber-cyan);
+}
+
+.owner-pf-field-value {
+    font-size: 0.96rem;
+    font-weight: 600;
+    color: var(--owner-text-primary);
+    word-break: break-word;
+}
+
+.owner-pf-field-value.is-mono {
+    font-family: monospace;
+    color: var(--owner-cyber-cyan);
+}
+
+.owner-pf-role-chips {
+    display: flex;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+}
+
+.owner-pf-role-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #E2E8F0;
+    background: rgba(37, 99, 235, 0.16);
+    border: 1px solid rgba(37, 99, 235, 0.38);
+    padding: 0.28rem 0.75rem;
+    border-radius: 999px;
+}
+
+.owner-pf-role-chip i {
+    color: #FBBF24;
+}
+
+.owner-pf-hint {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+    margin: 1.15rem 0 0 0;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: var(--owner-text-secondary);
+    background: rgba(37, 99, 235, 0.08);
+    border: 1px solid rgba(37, 99, 235, 0.22);
+    border-radius: var(--owner-radius-sm);
+    padding: 0.7rem 0.9rem;
+}
+
+.owner-pf-hint i {
+    color: #60A5FA;
+    margin-top: 0.15rem;
+}
+
+/* ───── Account Info List ───── */
+.owner-pf-info-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.owner-pf-info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+    font-size: 0.86rem;
+}
+
+.owner-pf-info-item:last-child {
+    border-bottom: none;
+}
+
+.owner-pf-info-item > span:first-child {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--owner-text-secondary);
+}
+
+.owner-pf-info-item > span:first-child i {
+    color: var(--owner-cyber-cyan);
+    width: 1rem;
+    text-align: center;
+}
+
+.owner-pf-info-item strong {
+    color: var(--owner-text-primary);
+    font-weight: 600;
+    text-align: right;
+    word-break: break-word;
+}
+
+/* ───── Logout Card ───── */
+.owner-pf-logout-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    border-color: rgba(239, 68, 68, 0.22);
+}
+
+.owner-pf-logout-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--owner-text-primary);
+    margin: 0 0 0.3rem 0;
+}
+
+.owner-pf-logout-title i {
+    color: var(--owner-danger-red);
+}
+
+.owner-pf-logout-sub {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--owner-text-secondary);
+}
+
+.owner-pf-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    font-size: 0.86rem;
+    font-weight: 600;
+    border-radius: var(--owner-radius-sm);
+    padding: 0.6rem 1.1rem;
+    cursor: pointer;
+    transition: var(--owner-transition);
+}
+
+.owner-pf-btn-danger {
+    background: rgba(239, 68, 68, 0.14);
+    color: #F87171;
+    border: 1px solid rgba(239, 68, 68, 0.45);
+}
+
+.owner-pf-btn-danger:hover {
+    background: var(--owner-danger-red);
+    color: #FFFFFF;
+    box-shadow: 0 0 16px rgba(239, 68, 68, 0.4);
+}
+
+/* ───── Responsive ───── */
+@media (max-width: 1280px) {
+    .owner-pf-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 992px) {
+    .owner-pf-hero-right {
+        align-items: flex-start;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 768px) {
+    .owner-pf-stats,
+    .owner-pf-field-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .owner-pf-hero {
+        padding: 1.25rem;
+    }
+    .owner-pf-hero-left {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .owner-pf-title {
+        font-size: 1.45rem;
+    }
+    .owner-pf-avatar {
+        width: 68px;
+        height: 68px;
+        font-size: 1.75rem;
+    }
+}
