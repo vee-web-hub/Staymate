@@ -1,0 +1,674 @@
+@model StayMate_Kavinvee_0576.Models.ViewModels.OwnerFinancialOverviewViewModel
+@using System.Globalization
+@{
+    Layout = "~/Views/Shared/_OwnerLayout.cshtml";
+    ViewData["Title"] = "Financial Overview";
+
+    var thCulture = new CultureInfo("th-TH");
+    var todayDisplay = DateTime.Now.ToString("dd MMMM yyyy", thCulture);
+
+    var years = Model.AvailableYears != null && Model.AvailableYears.Count > 0
+        ? Model.AvailableYears
+        : new List<int> { DateTime.Today.Year };
+
+    var activePreset = string.IsNullOrWhiteSpace(Model.FilterPreset) ? "year" : Model.FilterPreset.ToLowerInvariant();
+
+    string FormatTrendClass(decimal? pct, bool inverseGood = false)
+    {
+        if (!pct.HasValue || pct.Value == 0m) return "owner-fin-trend-neutral";
+        bool isPositive = pct.Value > 0m;
+        if (inverseGood) isPositive = !isPositive;
+        return isPositive ? "owner-fin-trend-up" : "owner-fin-trend-down";
+    }
+
+    string FormatTrendIcon(decimal? pct)
+    {
+        if (!pct.HasValue || pct.Value == 0m) return "fa-minus";
+        return pct.Value > 0m ? "fa-arrow-trend-up" : "fa-arrow-trend-down";
+    }
+}
+
+<div class="owner-dashboard-wrapper owner-fin-wrapper"
+     data-owner-page="financial"
+     data-api-url="@Url.Action("FinancialData", "Owner")">
+
+    <!-- ═══════════════════ HEADER & 9. DATE FILTER ═══════════════════ -->
+    <section class="owner-fin-hero">
+        <div class="owner-fin-hero-top">
+            <div class="owner-fin-hero-info">
+                <div class="owner-eyebrow-badge">
+                    <span class="owner-pulse-dot"></span>
+                    <span>ENTERPRISE FINANCIAL INTELLIGENCE</span>
+                </div>
+                <h1 class="owner-fin-title">
+                    Financial Overview
+                    <span class="owner-title-accent">· รายรับ ต้นทุน และกำไร</span>
+                </h1>
+                <p class="owner-fin-subtitle">
+                    ตรวจสอบโครงสร้างรายได้ รายจ่ายแยกตามหมวดหมู่ อัตรากำไรสุทธิ และรายการเดินบัญชีจากฐานข้อมูลจริง (Read-Only)
+                </p>
+            </div>
+
+            <div class="owner-fin-period-chip">
+                <i class="fa-solid fa-calendar-range owner-icon-cyan"></i>
+                <div>
+                    <span class="owner-fin-chip-label">ช่วงเวลาที่กำลังแสดงผล</span>
+                    <strong class="owner-fin-chip-val" data-bind="periodLabel">@Model.PeriodLabel</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- ระบบกรองช่วงเวลาเชื่อมต่อ Backend จริง (GET) -->
+        <form method="get"
+              asp-controller="Owner"
+              asp-action="FinancialOverview"
+              class="owner-fin-filter-bar"
+              data-fin-filter-form>
+
+            <input type="hidden" name="preset" id="finPresetInput" value="@activePreset" />
+
+            <div class="owner-fin-preset-group" role="group" aria-label="ตัวเลือกช่วงเวลามาตรฐาน">
+                <button type="button"
+                        class="owner-fin-preset-btn @(activePreset == "today" ? "active" : "")"
+                        data-fin-preset="today">
+                    <i class="fa-solid fa-clock"></i> วันนี้ (Today)
+                </button>
+                <button type="button"
+                        class="owner-fin-preset-btn @(activePreset == "month" ? "active" : "")"
+                        data-fin-preset="month">
+                    <i class="fa-regular fa-calendar"></i> เดือนนี้ (This Month)
+                </button>
+                <button type="button"
+                        class="owner-fin-preset-btn @(activePreset == "year" ? "active" : "")"
+                        data-fin-preset="year">
+                    <i class="fa-solid fa-calendar-days"></i> ปีนี้ / รายปี (Year)
+                </button>
+                <button type="button"
+                        class="owner-fin-preset-btn @(activePreset == "custom" ? "active" : "")"
+                        data-fin-preset="custom">
+                    <i class="fa-solid fa-sliders"></i> กำหนดช่วงเอง (Custom)
+                </button>
+            </div>
+
+            <div class="owner-fin-filter-controls">
+                <div class="owner-fin-control-item">
+                    <label for="finYearSelect">ปีงบประมาณ</label>
+                    <select id="finYearSelect" name="year" class="owner-fin-input" data-owner-year>
+                        @foreach (var y in years)
+                        {
+                            if (y == Model.Year)
+                            {
+                                <option value="@y" selected>พ.ศ. @(y + 543) (@y)</option>
+                            }
+                            else
+                            {
+                                <option value="@y">พ.ศ. @(y + 543) (@y)</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="owner-fin-control-item owner-fin-custom-dates @(activePreset == "custom" ? "is-visible" : "")"
+                     data-fin-custom-range>
+                    <label for="finStartDate">ตั้งแต่วันที่</label>
+                    <input type="date"
+                           id="finStartDate"
+                           name="startDate"
+                           class="owner-fin-input"
+                           value="@Model.StartDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" />
+
+                    <label for="finEndDate">ถึงวันที่</label>
+                    <input type="date"
+                           id="finEndDate"
+                           name="endDate"
+                           class="owner-fin-input"
+                           value="@Model.EndDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" />
+
+                    <button type="submit" class="owner-fin-apply-btn">
+                        <i class="fa-solid fa-magnifying-glass-chart"></i> กรองข้อมูล
+                    </button>
+                </div>
+            </div>
+        </form>
+    </section>
+
+    <!-- ═══════════════════ 3. FINANCIAL SUMMARY KPI CARDS (4 CARDS) ═══════════════════ -->
+    <section class="owner-fin-kpi-grid" aria-label="ตัวชี้วัดทางการเงินหลัก">
+
+        <!-- 1. Total Revenue -->
+        <article class="owner-fin-kpi-card owner-fin-border-cyan">
+            <div class="owner-fin-kpi-header">
+                <div class="owner-fin-icon owner-icon-bg-cyan">
+                    <i class="fa-solid fa-sack-dollar"></i>
+                </div>
+                <span class="owner-fin-badge">THB · Net Revenue</span>
+            </div>
+            <div class="owner-fin-kpi-body">
+                <h2 class="owner-fin-kpi-label">Total Revenue (รายได้สุทธิรวม)</h2>
+                <div class="owner-fin-kpi-amount"
+                     data-bind="totalIncome"
+                     data-format="currency"
+                     data-counter-value="@Model.TotalIncome">
+                    @Model.TotalIncome.ToString("C2", thCulture)
+                </div>
+            </div>
+            <div class="owner-fin-kpi-footer">
+                <span class="owner-fin-trend @FormatTrendClass(Model.RevenueComparison?.PercentChange)">
+                    <i class="fa-solid @FormatTrendIcon(Model.RevenueComparison?.PercentChange)"></i>
+                    <span data-bind="revenueComparison.percentChange"
+                          data-format="percent"
+                          data-null-text="N/A">
+                        @(Model.RevenueComparison?.PercentChange.HasValue == true
+                            ? $"{Model.RevenueComparison.PercentChange.Value:N2}%"
+                            : "N/A")
+                    </span>
+                </span>
+                <span class="owner-fin-kpi-sub">
+                    Gross: <strong data-bind="grossIncome" data-format="currency">@Model.GrossIncome.ToString("C2", thCulture)</strong>
+                    · Refund: <strong data-bind="totalRefunds" data-format="currency">@Model.TotalRefunds.ToString("C2", thCulture)</strong>
+                </span>
+            </div>
+        </article>
+
+        <!-- 2. Total Expenses -->
+        <article class="owner-fin-kpi-card owner-fin-border-amber">
+            <div class="owner-fin-kpi-header">
+                <div class="owner-fin-icon owner-icon-bg-amber">
+                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                </div>
+                <span class="owner-fin-badge">THB · Operating Expenses</span>
+            </div>
+            <div class="owner-fin-kpi-body">
+                <h2 class="owner-fin-kpi-label">Total Expenses (รายจ่ายรวม)</h2>
+                <div class="owner-fin-kpi-amount"
+                     data-bind="totalExpenses"
+                     data-format="currency"
+                     data-counter-value="@Model.TotalExpenses">
+                    @Model.TotalExpenses.ToString("C2", thCulture)
+                </div>
+            </div>
+            <div class="owner-fin-kpi-footer">
+                <span class="owner-fin-trend @FormatTrendClass(Model.ExpenseComparison?.PercentChange, inverseGood: true)">
+                    <i class="fa-solid @FormatTrendIcon(Model.ExpenseComparison?.PercentChange)"></i>
+                    <span data-bind="expenseComparison.percentChange"
+                          data-format="percent"
+                          data-null-text="N/A">
+                        @(Model.ExpenseComparison?.PercentChange.HasValue == true
+                            ? $"{Model.ExpenseComparison.PercentChange.Value:N2}%"
+                            : "N/A")
+                    </span>
+                </span>
+                <span class="owner-fin-kpi-sub">
+                    เทียบช่วงก่อนหน้า (<span data-bind="expenseComparison.previousLabel">@Model.ExpenseComparison?.PreviousLabel</span>)
+                </span>
+            </div>
+        </article>
+
+        <!-- 3. Net Profit -->
+        <article class="owner-fin-kpi-card @(Model.NetProfit >= 0 ? "owner-fin-border-green" : "owner-fin-border-red")">
+            <div class="owner-fin-kpi-header">
+                <div class="owner-fin-icon @(Model.NetProfit >= 0 ? "owner-icon-bg-green" : "owner-icon-bg-red")">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                </div>
+                <span class="owner-fin-badge">THB · Revenue − Expenses</span>
+            </div>
+            <div class="owner-fin-kpi-body">
+                <h2 class="owner-fin-kpi-label">Net Profit (กำไร / ขาดทุนสุทธิ)</h2>
+                <div class="owner-fin-kpi-amount @(Model.NetProfit >= 0 ? "owner-text-success" : "owner-text-danger")"
+                     data-bind="netProfit"
+                     data-format="currency"
+                     data-counter-value="@Model.NetProfit">
+                    @Model.NetProfit.ToString("C2", thCulture)
+                </div>
+            </div>
+            <div class="owner-fin-kpi-footer">
+                <span class="owner-fin-trend @FormatTrendClass(Model.ProfitComparison?.PercentChange)">
+                    <i class="fa-solid @FormatTrendIcon(Model.ProfitComparison?.PercentChange)"></i>
+                    <span data-bind="profitComparison.percentChange"
+                          data-format="percent"
+                          data-null-text="N/A">
+                        @(Model.ProfitComparison?.PercentChange.HasValue == true
+                            ? $"{Model.ProfitComparison.PercentChange.Value:N2}%"
+                            : "N/A")
+                    </span>
+                </span>
+                <span class="owner-fin-kpi-sub">
+                    เทียบช่วงก่อนหน้า (<span data-bind="profitComparison.previousLabel">@Model.ProfitComparison?.PreviousLabel</span>)
+                </span>
+            </div>
+        </article>
+
+        <!-- 4. Profit Margin -->
+        <article class="owner-fin-kpi-card owner-fin-border-violet">
+            <div class="owner-fin-kpi-header">
+                <div class="owner-fin-icon owner-icon-bg-violet">
+                    <i class="fa-solid fa-percent"></i>
+                </div>
+                <span class="owner-fin-badge">Efficiency Ratio</span>
+            </div>
+            <div class="owner-fin-kpi-body">
+                <h2 class="owner-fin-kpi-label">Profit Margin (อัตรากำไรสุทธิ)</h2>
+                <div class="owner-fin-kpi-amount"
+                     data-bind="profitMargin"
+                     data-format="percent"
+                     data-null-text="N/A">
+                    @(Model.ProfitMargin.HasValue ? $"{Model.ProfitMargin.Value:N2}%" : "N/A")
+                </div>
+            </div>
+            <div class="owner-fin-kpi-footer">
+                <span class="owner-fin-kpi-sub">
+                    สูตร: (Net Profit ÷ Total Revenue) × 100
+                </span>
+            </div>
+        </article>
+
+    </section>
+
+    <!-- ═══════════════════ 6. INCOME VS EXPENSES ANALYTICS & 7. PROFIT ANALYSIS ═══════════════════ -->
+    <section class="owner-fin-analytics-grid">
+
+        <!-- 6. Income vs Expenses vs Profit Chart (Chart.js) -->
+        <div class="owner-panel owner-fin-chart-panel">
+            <div class="owner-panel-header">
+                <div>
+                    <span class="owner-section-tag">INCOME VS EXPENSES ANALYTICS</span>
+                    <h3 class="owner-panel-title">
+                        <i class="fa-solid fa-chart-column owner-icon-cyan"></i>
+                        วิเคราะห์รายรับ รายจ่าย และกำไรสุทธิรายเดือน (ประจำปี @Model.Year)
+                    </h3>
+                </div>
+                <div class="owner-fin-chart-switcher">
+                    <button type="button" class="owner-fin-switch-btn active" data-fin-chart-mode="bar">
+                        <i class="fa-solid fa-chart-column"></i> Bar Chart
+                    </button>
+                    <button type="button" class="owner-fin-switch-btn" data-fin-chart-mode="line">
+                        <i class="fa-solid fa-chart-line"></i> Line Chart
+                    </button>
+                </div>
+            </div>
+
+            <div class="owner-chart-container owner-fin-main-chart-box">
+                <canvas id="ownerFinIncomeExpenseChart"
+                        data-chart="incomeByMonth,expenseByMonth,profitByMonth"
+                        data-chart-type="bar"
+                        data-chart-titles="รายได้สุทธิ (THB)|รายจ่าย (THB)|กำไรสุทธิ (THB)"></canvas>
+            </div>
+        </div>
+
+        <!-- 7. Profit Analysis Panel -->
+        <div class="owner-panel owner-fin-profit-panel">
+            <div class="owner-panel-header">
+                <div>
+                    <span class="owner-section-tag">PROFITABILITY & GROWTH ANALYSIS</span>
+                    <h3 class="owner-panel-title">
+                        <i class="fa-solid fa-gauge-high owner-icon-violet"></i>
+                        วิเคราะห์ความสามารถในการทำกำไร
+                    </h3>
+                </div>
+            </div>
+
+            <div class="owner-fin-profit-metrics">
+                <div class="owner-fin-profit-highlight">
+                    <div class="owner-fin-profit-col">
+                        <span class="owner-fin-metric-caption">กำไร / ขาดทุนสุทธิ (Net Profit)</span>
+                        <strong class="owner-fin-metric-big @(Model.NetProfit >= 0 ? "owner-text-success" : "owner-text-danger")"
+                                data-bind="netProfit"
+                                data-format="currency">
+                            @Model.NetProfit.ToString("C2", thCulture)
+                        </strong>
+                    </div>
+                    <div class="owner-fin-profit-col text-end">
+                        <span class="owner-fin-metric-caption">อัตรากำไร (Profit Margin)</span>
+                        <strong class="owner-fin-metric-big owner-icon-cyan"
+                                data-bind="profitMargin"
+                                data-format="percent"
+                                data-null-text="N/A">
+                            @(Model.ProfitMargin.HasValue ? $"{Model.ProfitMargin.Value:N2}%" : "N/A")
+                        </strong>
+                    </div>
+                </div>
+
+                <!-- Growth & Period Comparison List -->
+                <div class="owner-fin-growth-list">
+                    <!-- Revenue Growth -->
+                    <div class="owner-fin-growth-item">
+                        <div class="owner-fin-growth-left">
+                            <span class="owner-dot owner-dot-cyan"></span>
+                            <div>
+                                <strong>อัตราการเติบโตของรายได้ (Revenue Growth)</strong>
+                                <small class="d-block text-secondary">
+                                    <span data-bind="revenueComparison.currentLabel">@Model.RevenueComparison?.CurrentLabel</span>
+                                    เทียบกับ
+                                    <span data-bind="revenueComparison.previousLabel">@Model.RevenueComparison?.PreviousLabel</span>
+                                </small>
+                            </div>
+                        </div>
+                        <div class="owner-fin-growth-right">
+                            <span class="owner-fin-trend @FormatTrendClass(Model.RevenueComparison?.PercentChange)">
+                                <i class="fa-solid @FormatTrendIcon(Model.RevenueComparison?.PercentChange)"></i>
+                                <span data-bind="revenueComparison.percentChange" data-format="percent" data-null-text="N/A">
+                                    @(Model.RevenueComparison?.PercentChange.HasValue == true ? $"{Model.RevenueComparison.PercentChange.Value:N2}%" : "N/A")
+                                </span>
+                            </span>
+                            <small class="d-block text-end text-secondary" data-bind="revenueComparison.difference" data-format="currency">
+                                @((Model.RevenueComparison?.Difference ?? 0m).ToString("C2", thCulture))
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Expense Growth -->
+                    <div class="owner-fin-growth-item">
+                        <div class="owner-fin-growth-left">
+                            <span class="owner-dot owner-dot-amber"></span>
+                            <div>
+                                <strong>อัตราการเปลี่ยนแปลงรายจ่าย (Expense Growth)</strong>
+                                <small class="d-block text-secondary">
+                                    <span data-bind="expenseComparison.currentLabel">@Model.ExpenseComparison?.CurrentLabel</span>
+                                    เทียบกับ
+                                    <span data-bind="expenseComparison.previousLabel">@Model.ExpenseComparison?.PreviousLabel</span>
+                                </small>
+                            </div>
+                        </div>
+                        <div class="owner-fin-growth-right">
+                            <span class="owner-fin-trend @FormatTrendClass(Model.ExpenseComparison?.PercentChange, inverseGood: true)">
+                                <i class="fa-solid @FormatTrendIcon(Model.ExpenseComparison?.PercentChange)"></i>
+                                <span data-bind="expenseComparison.percentChange" data-format="percent" data-null-text="N/A">
+                                    @(Model.ExpenseComparison?.PercentChange.HasValue == true ? $"{Model.ExpenseComparison.PercentChange.Value:N2}%" : "N/A")
+                                </span>
+                            </span>
+                            <small class="d-block text-end text-secondary" data-bind="expenseComparison.difference" data-format="currency">
+                                @((Model.ExpenseComparison?.Difference ?? 0m).ToString("C2", thCulture))
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Monthly Profit Comparison -->
+                    <div class="owner-fin-growth-item">
+                        <div class="owner-fin-growth-left">
+                            <span class="owner-dot owner-dot-green"></span>
+                            <div>
+                                <strong>เปรียบเทียบกำไรสุทธิ (Profit Comparison)</strong>
+                                <small class="d-block text-secondary">
+                                    <span data-bind="profitComparison.currentLabel">@Model.ProfitComparison?.CurrentLabel</span>
+                                    เทียบกับ
+                                    <span data-bind="profitComparison.previousLabel">@Model.ProfitComparison?.PreviousLabel</span>
+                                </small>
+                            </div>
+                        </div>
+                        <div class="owner-fin-growth-right">
+                            <span class="owner-fin-trend @FormatTrendClass(Model.ProfitComparison?.PercentChange)">
+                                <i class="fa-solid @FormatTrendIcon(Model.ProfitComparison?.PercentChange)"></i>
+                                <span data-bind="profitComparison.percentChange" data-format="percent" data-null-text="N/A">
+                                    @(Model.ProfitComparison?.PercentChange.HasValue == true ? $"{Model.ProfitComparison.PercentChange.Value:N2}%" : "N/A")
+                                </span>
+                            </span>
+                            <small class="d-block text-end text-secondary" data-bind="profitComparison.difference" data-format="currency">
+                                @((Model.ProfitComparison?.Difference ?? 0m).ToString("C2", thCulture))
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="owner-fin-formula-note">
+                    <i class="fa-solid fa-circle-info owner-icon-cyan"></i>
+                    <span>@Model.NetProfitDisclaimer</span>
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+    <!-- ═══════════════════ 4. REVENUE BREAKDOWN & 5. EXPENSE BREAKDOWN ═══════════════════ -->
+    <section class="owner-fin-breakdown-grid">
+
+        <!-- 4. Revenue Breakdown (แหล่งที่มาของรายได้จริงจาก DB) -->
+        <div class="owner-panel owner-fin-breakdown-panel">
+            <div class="owner-panel-header">
+                <div>
+                    <span class="owner-section-tag">REVENUE SOURCES</span>
+                    <h3 class="owner-panel-title">
+                        <i class="fa-solid fa-hand-holding-dollar owner-icon-cyan"></i>
+                        โครงสร้างแหล่งที่มาของรายได้จริง (Revenue Breakdown)
+                    </h3>
+                </div>
+                <span class="owner-badge-count">
+                    รวมสุทธิ <strong data-bind="totalIncome" data-format="currency">@Model.TotalIncome.ToString("C2", thCulture)</strong>
+                </span>
+            </div>
+
+            <div class="owner-fin-breakdown-content">
+                <div class="owner-fin-mini-donut-box">
+                    <canvas id="ownerFinRevenueDonut"
+                            data-chart="revenueBreakdown"
+                            data-chart-type="doughnut"
+                            data-chart-titles="สัดส่วนรายได้ (THB)"></canvas>
+                </div>
+
+                <div class="owner-fin-category-list" data-fin-breakdown-list="revenueBreakdown">
+                    @if (Model.RevenueBreakdown == null || Model.RevenueBreakdown.Count == 0)
+                    {
+                        <div class="owner-fin-empty-box">ยังไม่มีข้อมูลรายรับในช่วงเวลาที่เลือก</div>
+                    }
+                    else
+                    {
+                        foreach (var item in Model.RevenueBreakdown)
+                        {
+                            <div class="owner-fin-cat-item">
+                                <div class="owner-fin-cat-top">
+                                    <span class="owner-fin-cat-name">@item.Category</span>
+                                    <span class="owner-fin-cat- figures">
+                                        <strong>@item.Amount.ToString("C2", thCulture)</strong>
+                                        <small class="owner-fin-cat-pct">(@item.Percent.ToString("N2")%)</small>
+                                    </span>
+                                </div>
+                                <div class="owner-fin-progress-track">
+                                    <div class="owner-fin-progress-fill owner-fill-cyan"
+                                         style="width: @(Math.Clamp(item.Percent, 0m, 100m).ToString(CultureInfo.InvariantCulture))%"></div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Expense Breakdown (รายจ่ายแยกตาม Category จริงใน FinancialTransaction) -->
+        <div class="owner-panel owner-fin-breakdown-panel">
+            <div class="owner-panel-header">
+                <div>
+                    <span class="owner-section-tag">EXPENSE CATEGORIES</span>
+                    <h3 class="owner-panel-title">
+                        <i class="fa-solid fa-receipt owner-icon-amber"></i>
+                        โครงสร้างรายจ่ายแยกตามหมวดหมู่จริง (Expense Breakdown)
+                    </h3>
+                </div>
+                <span class="owner-badge-count">
+                    รวมรายจ่าย <strong data-bind="totalExpenses" data-format="currency">@Model.TotalExpenses.ToString("C2", thCulture)</strong>
+                </span>
+            </div>
+
+            <div class="owner-fin-breakdown-content">
+                <div class="owner-fin-mini-donut-box">
+                    <canvas id="ownerFinExpenseDonut"
+                            data-chart="expenseByCategory"
+                            data-chart-type="doughnut"
+                            data-chart-titles="หมวดหมู่รายจ่าย (THB)"></canvas>
+                </div>
+
+                <div class="owner-fin-category-list" data-fin-breakdown-list="expenseByCategory">
+                    @if (Model.ExpenseByCategory == null || Model.ExpenseByCategory.Count == 0)
+                    {
+                        <div class="owner-fin-empty-box">ยังไม่มีข้อมูลรายจ่ายใน FinancialTransaction สำหรับช่วงเวลานี้</div>
+                    }
+                    else
+                    {
+                        foreach (var item in Model.ExpenseByCategory)
+                        {
+                            <div class="owner-fin-cat-item">
+                                <div class="owner-fin-cat-top">
+                                    <span class="owner-fin-cat-name">@item.Category</span>
+                                    <span class="owner-fin-cat-figures">
+                                        <strong>@item.Amount.ToString("C2", thCulture)</strong>
+                                        <small class="owner-fin-cat-pct">(@item.Percent.ToString("N2")%)</small>
+                                    </span>
+                                </div>
+                                <div class="owner-fin-progress-track">
+                                    <div class="owner-fin-progress-fill owner-fill-amber"
+                                         style="width: @(Math.Clamp(item.Percent, 0m, 100m).ToString(CultureInfo.InvariantCulture))%"></div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+    <!-- ═══════════════════ 8. FINANCIAL TRANSACTIONS TABLE ═══════════════════ -->
+    <section class="owner-panel owner-fin-tx-section" aria-label="ตารางรายการธุรกรรมการเงิน">
+        <div class="owner-panel-header">
+            <div>
+                <span class="owner-section-tag">VERIFIED FINANCIAL LEDGER</span>
+                <h3 class="owner-panel-title">
+                    <i class="fa-solid fa-table-list owner-icon-cyan"></i>
+                    รายการธุรกรรมการเงิน (Financial Transactions & Approved Payments)
+                </h3>
+            </div>
+            <span class="owner-badge-count" data-fin-tx-count>
+                ทั้งหมด @(Model.Transactions?.Count ?? 0) รายการ
+            </span>
+        </div>
+
+        <!-- Toolbar สำหรับ Search & Filter ตารางธุรกรรม -->
+        <div class="owner-fin-tx-toolbar">
+            <div class="owner-fin-search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="search"
+                       class="owner-fin-search-input"
+                       placeholder="ค้นหารหัสธุรกรรม, หมวดหมู่ หรือคำอธิบาย..."
+                       data-fin-tx-search />
+            </div>
+
+            <div class="owner-fin-tx-filters">
+                <select class="owner-fin-input" data-fin-tx-type aria-label="กรองตามประเภทธุรกรรม">
+                    <option value="">ทุกประเภท (All Types)</option>
+                    <option value="Room Payment">ชำระค่าห้องพัก (Room Payment)</option>
+                    <option value="Income">รายรับอื่นๆ (Income)</option>
+                    <option value="Expense">รายจ่าย (Expense)</option>
+                    <option value="Refund">เงินคืน (Refund)</option>
+                </select>
+
+                <select class="owner-fin-input" data-fin-tx-status aria-label="กรองตามสถานะ">
+                    <option value="">ทุกสถานะ (All Statuses)</option>
+                    <option value="approved">อนุมัติแล้ว (approved)</option>
+                    <option value="recorded">บันทึกในระบบ (recorded)</option>
+                </select>
+
+                <input type="date"
+                       class="owner-fin-input"
+                       title="กรองตั้งแต่วันที่"
+                       data-fin-tx-from />
+
+                <input type="date"
+                       class="owner-fin-input"
+                       title="กรองถึงวันที่"
+                       data-fin-tx-to />
+
+                <button type="button" class="owner-fin-reset-btn" data-fin-tx-reset>
+                    <i class="fa-solid fa-rotate-left"></i> ล้างตัวกรอง
+                </button>
+            </div>
+        </div>
+
+        <div class="owner-table-responsive">
+            <table class="owner-table owner-fin-tx-table" id="ownerFinTransactionsTable">
+                <thead>
+                    <tr>
+                        <th>วันที่ธุรกรรม (Transaction Date)</th>
+                        <th>รหัสอ้างอิง (Transaction ID)</th>
+                        <th>รายละเอียด / หมวดหมู่ (Description)</th>
+                        <th>ประเภท (Transaction Type)</th>
+                        <th class="text-end">จำนวนเงิน (Amount THB)</th>
+                        <th class="text-center">สถานะ (Status)</th>
+                    </tr>
+                </thead>
+                <tbody data-fin-tx-tbody>
+                    @if (Model.Transactions == null || Model.Transactions.Count == 0)
+                    {
+                        <tr data-fin-empty-row>
+                            <td colspan="6" class="owner-empty-cell">ไม่พบรายการธุรกรรมการเงินในช่วงเวลาที่เลือก</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var tx in Model.Transactions)
+                        {
+                            var isNegative = tx.TransactionType == "Expense" || tx.TransactionType == "Refund";
+                            var typeBadgeClass = tx.TransactionType switch
+                            {
+                                "Room Payment" => "owner-fin-type-payment",
+                                "Income" => "owner-fin-type-income",
+                                "Expense" => "owner-fin-type-expense",
+                                "Refund" => "owner-fin-type-refund",
+                                _ => "owner-fin-type-default"
+                            };
+
+                            <tr data-tx-row
+                                data-tx-date="@tx.TransactionDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)"
+                                data-tx-id="@tx.TransactionId"
+                                data-tx-desc="@($"{tx.Category} {tx.Description}")"
+                                data-tx-type="@tx.TransactionType"
+                                data-tx-status="@tx.Status">
+                                <td>@tx.TransactionDate.ToString("dd MMM yyyy HH:mm", thCulture)</td>
+                                <td><span class="owner-fin-code-badge">@tx.TransactionId</span></td>
+                                <td>
+                                    <strong class="d-block text-light">@tx.Category</strong>
+                                    @if (!string.IsNullOrWhiteSpace(tx.Description))
+                                    {
+                                        <small class="text-secondary">@tx.Description</small>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="owner-fin-type-pill @typeBadgeClass">@tx.TransactionType</span>
+                                </td>
+                                <td class="text-end @(isNegative ? "owner-text-danger" : "owner-text-success")">
+                                    @(isNegative ? "-" : "+")@tx.Amount.ToString("C2", thCulture)
+                                </td>
+                                <td class="text-center">
+                                    <span class="owner-fin-status-pill">@tx.Status</span>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Bar -->
+        <div class="owner-fin-pagination-bar" data-fin-pagination>
+            <span class="owner-fin-page-info" data-fin-page-info>แสดงรายการธุรกรรม</span>
+            <div class="owner-fin-page-buttons" data-fin-page-buttons></div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════ DATA NOTES & AUDIT RULES ═══════════════════ -->
+    <section class="owner-panel">
+        <div class="owner-disclaimer-box">
+            <div class="owner-disclaimer-title">
+                <i class="fa-solid fa-shield-check"></i>
+                เกณฑ์การตรวจสอบและดึงข้อมูลทางการเงินจากฐานข้อมูล StayMate
+            </div>
+            <ul class="owner-notes-list" data-list="dataNotes">
+                @if (Model.DataNotes != null)
+                {
+                    foreach (var note in Model.DataNotes)
+                    {
+                        <li>@note</li>
+                    }
+                }
+            </ul>
+        </div>
+    </section>
+
+</div>

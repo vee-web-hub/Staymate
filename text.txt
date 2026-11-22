@@ -230,6 +230,7 @@ C:.
 |           HomeIndexViewModel.cs
 |           HousekeepingViewModel.cs
 |           LoginViewModel.cs
+|           OwnerViewModel.cs
 |           ReceptionIndexViewModel.cs
 |           RegisterViewModel.cs
 |           RoomExtrasCatalog.cs
@@ -313,11 +314,12 @@ C:.
 |           |       fb9wif4nsc-{0}-356vix0kms-356vix0kms.gz
 |           |       fho7g43ely-{0}-2tz4jy55bf-2tz4jy55bf.gz
 |           |       h1lyw2vlih-{0}-tdbxkamptv-tdbxkamptv.gz
-|           |       i1x1kz1fsl-{0}-drruijrp25-drruijrp25.gz
+|           |       i1x1kz1fsl-{0}-tgadfym4ri-tgadfym4ri.gz
 |           |       i23z9ljo7z-{0}-4v8eqarkd7-4v8eqarkd7.gz
 |           |       ib2j1mn2cb-{0}-7yozye0un0-7yozye0un0.gz
 |           |       iplg6kj7pp-{0}-k8d9w2qqmf-k8d9w2qqmf.gz
 |           |       iwxz5ht8fm-{0}-s35ty4nyc5-s35ty4nyc5.gz
+|           |       j1rqmv40oy-{0}-a2xf9j4qr5-a2xf9j4qr5.gz
 |           |       j6kvfp56yr-{0}-hrwsygsryq-hrwsygsryq.gz
 |           |       j79ipxec3l-{0}-y7v9cxd14o-y7v9cxd14o.gz
 |           |       j9kcd6sadz-{0}-6cfz1n2cew-6cfz1n2cew.gz
@@ -331,7 +333,7 @@ C:.
 |           |       o8nkortlbl-{0}-37tfw0ft22-37tfw0ft22.gz
 |           |       p4ugsuiwru-{0}-muycvpuwrr-muycvpuwrr.gz
 |           |       pezw8s05uq-{0}-c2jlpeoesf-c2jlpeoesf.gz
-|           |       pt1k9kq9eu-{0}-8jb9wpmxmv-8jb9wpmxmv.gz
+|           |       pt1k9kq9eu-{0}-elz40haf1e-elz40haf1e.gz
 |           |       pzv0fe9zp4-{0}-7uwepcaqx8-7uwepcaqx8.gz
 |           |       q1qwgno2ax-{0}-0i3buxo5is-0i3buxo5is.gz
 |           |       ru5wq50895-{0}-mbxehriccz-mbxehriccz.gz
@@ -344,6 +346,7 @@ C:.
 |           |       tbennsm6aw-{0}-ee0r1s7dh0-ee0r1s7dh0.gz
 |           |       tbzqt5g0a8-{0}-ttgo8qnofa-ttgo8qnofa.gz
 |           |       uf54sxlupq-{0}-fvhpjtyr6v-fvhpjtyr6v.gz
+|           |       unhcd22jvu-{0}-16ory8l6b9-16ory8l6b9.gz
 |           |       unns15k1gp-{0}-cosvhxvwiu-cosvhxvwiu.gz
 |           |       uztnehumyl-{0}-g9g1herptz-g9g1herptz.gz
 |           |       wbvn6nmods-{0}-c2oey78nd0-c2oey78nd0.gz
@@ -436,7 +439,11 @@ C:.
 |   |       Index.cshtml
 |   |       
 |   +---Owner
+|   |       FinancialOverview.cshtml
 |   |       Index.cshtml
+|   |       PerformanceReports.cshtml
+|   |       Profile.cshtml
+|   |       StaffOverview.cshtml
 |   |       
 |   +---Reception
 |   |       Bookings.cshtml
@@ -468,6 +475,7 @@ C:.
     |       finance.css
     |       Home.css
     |       Housekeeping.css
+    |       Owner.css
     |       Reception.css
     |       site.css
     |       staymate-layout.css
@@ -487,8 +495,11 @@ C:.
     |   |   reception-housekeeping.js
     |   |   site.js
     |   |   
-    |   \---finance
-    |           finance.js
+    |   +---finance
+    |   |       finance.js
+    |   |       
+    |   \---Owner
+    |           Owner.js
     |           
     +---lib
     |   +---bootstrap

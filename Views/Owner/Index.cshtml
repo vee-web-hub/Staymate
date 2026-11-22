@@ -1,148 +1,685 @@
-
+@model StayMate_Kavinvee_0576.Models.ViewModels.OwnerViewModel
+@using System.Globalization
 @{
+    Layout = "~/Views/Shared/_OwnerLayout.cshtml";
     ViewData["Title"] = "Executive Dashboard";
+
+    var thCulture = new CultureInfo("th-TH");
+    var todayDisplay = DateTime.Now.ToString("dd MMMM yyyy", thCulture);
+    var selectedMonthDate = new DateTime(Model.Year, Model.Month, 1);
+    var selectedMonthDisplay = selectedMonthDate.ToString("MMMM yyyy", thCulture);
+
+    var years = Model.AvailableYears != null && Model.AvailableYears.Count > 0
+        ? Model.AvailableYears
+        : new List<int> { DateTime.Today.Year };
+
+    var maxMonth = Model.Year == DateTime.Today.Year ? DateTime.Today.Month : 12;
+
+    string FormatTrendBadge(decimal? pct, bool inverseGood = false)
+    {
+        if (!pct.HasValue) return "owner-trend-neutral";
+        if (pct.Value == 0m) return "owner-trend-neutral";
+        bool isPositive = pct.Value > 0m;
+        if (inverseGood) isPositive = !isPositive;
+        return isPositive ? "owner-trend-up" : "owner-trend-down";
+    }
+
+    string FormatTrendIcon(decimal? pct)
+    {
+        if (!pct.HasValue || pct.Value == 0m) return "fa-minus";
+        return pct.Value > 0m ? "fa-arrow-trend-up" : "fa-arrow-trend-down";
+    }
 }
 
-<div class="container-fluid py-3">
-    <div class="d-flex justify-content-between align-items-start mb-4">
-        <div>
-            <h2 class="fw-bold">Executive Dashboard</h2>
-            <p class="text-secondary">
-                ภาพรวมผลประกอบการสำหรับเจ้าของโรงแรม
+<div class="owner-dashboard-wrapper"
+     data-owner-page="dashboard"
+     data-api-url="@Url.Action("DashboardData", "Owner")">
+
+    <!-- ═══════════════════ 7.1 DASHBOARD HEADER ═══════════════════ -->
+    <section class="owner-hero-header">
+        <div class="owner-hero-left">
+            <div class="owner-eyebrow-badge">
+                <span class="owner-pulse-dot"></span>
+                <span>HOSPITALITY EXECUTIVE INTELLIGENCE</span>
+            </div>
+            <h1 class="owner-hero-title">
+                Executive Overview
+                <span class="owner-title-accent">· StayMate</span>
+            </h1>
+            <p class="owner-hero-subtitle">
+                ยินดีต้อนรับคุณ <strong>@(User.Identity?.Name ?? "Executive Owner")</strong> —
+                ศูนย์บัญชาการวิเคราะห์ผลประกอบการ รายได้ รายจ่าย และอัตราการเข้าพักจากฐานข้อมูลจริง (Read-Only)
             </p>
         </div>
 
-        <span class="badge bg-secondary">
-            Read-only
-        </span>
-    </div>
+        <div class="owner-hero-right">
+            <div class="owner-meta-pills">
+                <div class="owner-meta-pill">
+                    <i class="fa-regular fa-calendar-check owner-icon-cyan"></i>
+                    <div>
+                        <span class="owner-meta-label">วันที่ปัจจุบัน</span>
+                        <strong class="owner-meta-value">@todayDisplay</strong>
+                    </div>
+                </div>
+                <div class="owner-meta-pill">
+                    <i class="fa-solid fa-clock-rotate-left owner-icon-violet"></i>
+                    <div>
+                        <span class="owner-meta-label">รอบการรายงานสะสม</span>
+                        <strong class="owner-meta-value">ปี @Model.Year (เทียบเดือน @selectedMonthDisplay)</strong>
+                    </div>
+                </div>
+            </div>
 
-    <div class="row g-3">
-        <div class="col-md-6 col-xl-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <p class="text-secondary">รายได้รวมเดือนนี้</p>
-                    <h3>฿850,000</h3>
-                    <small class="text-secondary">
-                        Monthly Revenue
-                    </small>
+            <!-- ตัวกรองช่วงเวลา (GET เท่านั้น รองรับ Owner.js initFilters) -->
+            <div class="owner-filter-bar" role="region" aria-label="ตัวกรองช่วงเวลารายงาน">
+                <div class="owner-filter-group">
+                    <label for="ownerYearSelect" class="owner-filter-label">
+                        <i class="fa-solid fa-calendar-days"></i> ปีงบประมาณ
+                    </label>
+                    <select id="ownerYearSelect" class="owner-filter-select" data-owner-year>
+                        @foreach (var y in years)
+                        {
+                            if (y == Model.Year)
+                            {
+                                <option value="@y" selected>พ.ศ. @(y + 543) (@y)</option>
+                            }
+                            else
+                            {
+                                <option value="@y">พ.ศ. @(y + 543) (@y)</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="owner-filter-group">
+                    <label for="ownerMonthSelect" class="owner-filter-label">
+                        <i class="fa-solid fa-filter"></i> เดือนเปรียบเทียบ
+                    </label>
+                    <select id="ownerMonthSelect" class="owner-filter-select" data-owner-month>
+                        @for (int m = 1; m <= maxMonth; m++)
+                        {
+                            var mName = new DateTime(Model.Year, m, 1).ToString("MMMM", thCulture);
+                            if (m == Model.Month)
+                            {
+                                <option value="@m" selected>@mName</option>
+                            }
+                            else
+                            {
+                                <option value="@m">@mName</option>
+                            }
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════ 7.2 KPI CARDS (6 CARDS) ═══════════════════ -->
+    <section class="owner-kpi-grid" aria-label="ตัวชี้วัดหลักทางธุรกิจ">
+
+        <!-- 1. Total Revenue -->
+        <article class="owner-kpi-card owner-kpi-cyan">
+            <div class="owner-kpi-glow"></div>
+            <div class="owner-kpi-top">
+                <div class="owner-kpi-icon-box owner-icon-bg-cyan">
+                    <i class="fa-solid fa-Coins fa-coins"></i>
+                </div>
+                <span class="owner-kpi-unit-badge">THB · รายปี @Model.Year</span>
+            </div>
+            <div class="owner-kpi-body">
+                <h2 class="owner-kpi-title">Total Revenue (รายได้รวมสุทธิ)</h2>
+                <div class="owner-kpi-value"
+                     data-bind="totalRevenue"
+                     data-format="currency"
+                     data-counter-value="@Model.TotalRevenue">
+                    @Model.TotalRevenue.ToString("C2", thCulture)
+                </div>
+            </div>
+            <div class="owner-kpi-footer">
+                <span class="owner-trend-pill @FormatTrendBadge(Model.RevenueComparison?.PercentChange)">
+                    <i class="fa-solid @FormatTrendIcon(Model.RevenueComparison?.PercentChange)"></i>
+                    <span data-bind="revenueComparison.percentChange"
+                          data-format="percent"
+                          data-null-text="ไม่มีฐานเปรียบเทียบ">
+                        @(Model.RevenueComparison?.PercentChange.HasValue == true
+                            ? $"{Model.RevenueComparison.PercentChange.Value:N2}%"
+                            : "ไม่มีฐานเปรียบเทียบ")
+                    </span>
+                </span>
+                <span class="owner-kpi-footnote">เทียบเดือนก่อนหน้า (@(Model.RevenueComparison?.PreviousLabel ?? "-"))</span>
+            </div>
+        </article>
+
+        <!-- 2. Total Expenses -->
+        <article class="owner-kpi-card owner-kpi-amber">
+            <div class="owner-kpi-glow"></div>
+            <div class="owner-kpi-top">
+                <div class="owner-kpi-icon-box owner-icon-bg-amber">
+                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                </div>
+                <span class="owner-kpi-unit-badge">THB · รายปี @Model.Year</span>
+            </div>
+            <div class="owner-kpi-body">
+                <h2 class="owner-kpi-title">Total Expenses (รายจ่ายรวม)</h2>
+                <div class="owner-kpi-value"
+                     data-bind="totalExpense"
+                     data-format="currency"
+                     data-counter-value="@Model.TotalExpense">
+                    @Model.TotalExpense.ToString("C2", thCulture)
+                </div>
+            </div>
+            <div class="owner-kpi-footer">
+                <span class="owner-trend-pill @FormatTrendBadge(Model.ExpenseComparison?.PercentChange, inverseGood: true)">
+                    <i class="fa-solid @FormatTrendIcon(Model.ExpenseComparison?.PercentChange)"></i>
+                    <span data-bind="expenseComparison.percentChange"
+                          data-format="percent"
+                          data-null-text="ไม่มีฐานเปรียบเทียบ">
+                        @(Model.ExpenseComparison?.PercentChange.HasValue == true
+                            ? $"{Model.ExpenseComparison.PercentChange.Value:N2}%"
+                            : "ไม่มีฐานเปรียบเทียบ")
+                    </span>
+                </span>
+                <span class="owner-kpi-footnote">เทียบเดือนก่อนหน้า (@(Model.ExpenseComparison?.PreviousLabel ?? "-"))</span>
+            </div>
+        </article>
+
+        <!-- 3. Net Profit -->
+        <article class="owner-kpi-card @(Model.NetProfit >= 0 ? "owner-kpi-green" : "owner-kpi-red")">
+            <div class="owner-kpi-glow"></div>
+            <div class="owner-kpi-top">
+                <div class="owner-kpi-icon-box @(Model.NetProfit >= 0 ? "owner-icon-bg-green" : "owner-icon-bg-red")">
+                    <i class="fa-solid fa-chart-pie"></i>
+                </div>
+                <span class="owner-kpi-unit-badge">THB · @(Model.NetProfit >= 0 ? "กำไรจากการดำเนินงาน" : "ขาดทุนจากการดำเนินงาน")</span>
+            </div>
+            <div class="owner-kpi-body">
+                <h2 class="owner-kpi-title">Net Profit (กำไร / ขาดทุนสุทธิ)</h2>
+                <div class="owner-kpi-value @(Model.NetProfit >= 0 ? "owner-text-success" : "owner-text-danger")"
+                     data-bind="netProfit"
+                     data-format="currency"
+                     data-counter-value="@Model.NetProfit">
+                    @Model.NetProfit.ToString("C2", thCulture)
+                </div>
+            </div>
+            <div class="owner-kpi-footer">
+                <span class="owner-trend-pill @FormatTrendBadge(Model.ProfitComparison?.PercentChange)">
+                    <i class="fa-solid @FormatTrendIcon(Model.ProfitComparison?.PercentChange)"></i>
+                    <span data-bind="profitComparison.percentChange"
+                          data-format="percent"
+                          data-null-text="ไม่มีฐานเปรียบเทียบ">
+                        @(Model.ProfitComparison?.PercentChange.HasValue == true
+                            ? $"{Model.ProfitComparison.PercentChange.Value:N2}%"
+                            : "ไม่มีฐานเปรียบเทียบ")
+                    </span>
+                </span>
+                <span class="owner-kpi-footnote">เทียบเดือนก่อนหน้า (@(Model.ProfitComparison?.PreviousLabel ?? "-"))</span>
+            </div>
+        </article>
+
+        <!-- 4. Occupancy Rate -->
+        <article class="owner-kpi-card owner-kpi-violet">
+            <div class="owner-kpi-glow"></div>
+            <div class="owner-kpi-top">
+                <div class="owner-kpi-icon-box owner-icon-bg-violet">
+                    <i class="fa-solid fa-bed"></i>
+                </div>
+                <span class="owner-kpi-unit-badge">Room-Nights Ratio</span>
+            </div>
+            <div class="owner-kpi-body">
+                <h2 class="owner-kpi-title">Occupancy Rate (อัตราการเข้าพักจริง)</h2>
+                <div class="owner-kpi-value"
+                     data-bind="occupancyRate"
+                     data-format="percent"
+                     data-counter-value="@Model.OccupancyRate">
+                    @Model.OccupancyRate.ToString("N2")%
+                </div>
+            </div>
+            <div class="owner-kpi-footer">
+                <span class="owner-kpi-stat-chip">
+                    <i class="fa-solid fa-door-closed"></i>
+                    <span data-bind="occupiedRoomNights" data-format="number">@Model.OccupiedRoomNights.ToString("N0")</span>
+                    /
+                    <span data-bind="availableRoomNights" data-format="number">@Model.AvailableRoomNights.ToString("N0")</span>
+                    ห้อง-คืน
+                </span>
+                <span class="owner-kpi-footnote">ห้องเปิดบริการ <strong data-bind="activeRoomCount" data-format="number">@Model.ActiveRoomCount</strong> ห้อง</span>
+            </div>
+        </article>
+
+        <!-- 5. Total Bookings -->
+        <article class="owner-kpi-card owner-kpi-blue">
+            <div class="owner-kpi-glow"></div>
+            <div class="owner-kpi-top">
+                <div class="owner-kpi-icon-box owner-icon-bg-blue">
+                    <i class="fa-solid fa-calendar-check"></i>
+                </div>
+                <span class="owner-kpi-unit-badge">รายการจองที่มีผล</span>
+            </div>
+            <div class="owner-kpi-body">
+                <h2 class="owner-kpi-title">Total Bookings (จำนวนการจองทั้งหมด)</h2>
+                <div class="owner-kpi-value"
+                     data-bind="totalBookings"
+                     data-format="number"
+                     data-counter-value="@Model.TotalBookings">
+                    @Model.TotalBookings.ToString("N0")
+                </div>
+            </div>
+            <div class="owner-kpi-footer">
+                <span class="owner-kpi-stat-chip">
+                    <i class="fa-solid fa-circle-check owner-text-success"></i>
+                    Confirmed · Checked-In · Checked-Out
+                </span>
+                <span class="owner-kpi-footnote">ไม่รวมรายการยกเลิก/ปฏิเสธ</span>
+            </div>
+        </article>
+
+        <!-- 6. Average Revenue Per Booking -->
+        <article class="owner-kpi-card owner-kpi-cyan">
+            <div class="owner-kpi-glow"></div>
+            <div class="owner-kpi-top">
+                <div class="owner-kpi-icon-box owner-icon-bg-cyan">
+                    <i class="fa-solid fa-hand-holding-dollar"></i>
+                </div>
+                <span class="owner-kpi-unit-badge">THB / Booking</span>
+            </div>
+            <div class="owner-kpi-body">
+                <h2 class="owner-kpi-title">Average Revenue / Booking (เฉลี่ยต่อการจอง)</h2>
+                <div class="owner-kpi-value"
+                     data-bind="averageRevenuePerBooking"
+                     data-format="currency"
+                     data-counter-value="@Model.AverageRevenuePerBooking">
+                    @Model.AverageRevenuePerBooking.ToString("C2", thCulture)
+                </div>
+            </div>
+            <div class="owner-kpi-footer">
+                <span class="owner-kpi-stat-chip">
+                    <i class="fa-solid fa-calculator"></i>
+                    Total Revenue ÷ Total Bookings
+                </span>
+                <span class="owner-kpi-footnote">คำนวณจากยอดรับเงินจริง</span>
+            </div>
+        </article>
+
+    </section>
+
+    <!-- ═══════════════════ 7.3 & 7.4 ANALYTICS CHARTS ═══════════════════ -->
+    <section class="owner-analytics-grid" aria-label="กราฟวิเคราะห์รายได้และอัตราการเข้าพัก">
+
+        <!-- 7.3 Revenue & Expense Analytics (Line Chart) -->
+        <div class="owner-panel owner-panel-main-chart">
+            <div class="owner-panel-header">
+                <div>
+                    <span class="owner-section-tag">FINANCIAL TRAJECTORY</span>
+                    <h3 class="owner-panel-title">
+                        <i class="fa-solid fa-chart-line owner-icon-cyan"></i>
+                        วิเคราะห์แนวโน้มรายได้ รายจ่าย และกำไรรายเดือน (ปี @Model.Year)
+                    </h3>
+                </div>
+                <div class="owner-chart-legend-pills">
+                    <span class="owner-legend-item"><i class="owner-dot owner-dot-cyan"></i> รายได้สุทธิ</span>
+                    <span class="owner-legend-item"><i class="owner-dot owner-dot-amber"></i> รายจ่าย</span>
+                    <span class="owner-legend-item"><i class="owner-dot owner-dot-green"></i> กำไร/ขาดทุน</span>
+                </div>
+            </div>
+
+            <div class="owner-chart-container owner-line-chart-box">
+                <canvas id="ownerRevenueLineChart"
+                        data-chart="monthlyRevenue,monthlyExpense,monthlyProfit"
+                        data-chart-type="line"
+                        data-chart-titles="รายได้สุทธิ (THB)|รายจ่าย (THB)|กำไรสุทธิ (THB)"></canvas>
+            </div>
+        </div>
+
+        <!-- 7.4 Occupancy Donut Chart -->
+        <div class="owner-panel owner-panel-donut-chart">
+            <div class="owner-panel-header">
+                <div>
+                    <span class="owner-section-tag">ROOM UTILIZATION</span>
+                    <h3 class="owner-panel-title">
+                        <i class="fa-solid fa-chart-pie owner-icon-violet"></i>
+                        สัดส่วนอัตราการเข้าพักจริง
+                    </h3>
+                </div>
+            </div>
+
+            <div class="owner-donut-wrapper">
+                <div class="owner-chart-container owner-donut-chart-box">
+                    <canvas id="ownerOccupancyDonutChart"
+                            data-chart="occupancyBreakdown"
+                            data-chart-type="doughnut"
+                            data-chart-titles="สัดส่วนห้องพัก (%)"></canvas>
+                    <div class="owner-donut-center-label">
+                        <span class="owner-donut-percent" data-bind="occupiedRoomRate" data-format="percent">
+                            @Model.OccupiedRoomRate.ToString("N2")%
+                        </span>
+                        <span class="owner-donut-caption">Occupied</span>
+                    </div>
+                </div>
+
+                <div class="owner-occupancy-stats">
+                    <div class="owner-occ-stat-row">
+                        <div class="owner-occ-label">
+                            <span class="owner-dot owner-dot-cyan"></span>
+                            <span>อัตราเข้าพักจริง (Occupied Rate)</span>
+                        </div>
+                        <strong class="owner-occ-val" data-bind="occupiedRoomRate" data-format="percent">
+                            @Model.OccupiedRoomRate.ToString("N2")%
+                        </strong>
+                    </div>
+                    <div class="owner-occ-stat-row">
+                        <div class="owner-occ-label">
+                            <span class="owner-dot owner-dot-slate"></span>
+                            <span>อัตราห้องว่าง (Available Rate)</span>
+                        </div>
+                        <strong class="owner-occ-val" data-bind="availableRoomRate" data-format="percent">
+                            @Model.AvailableRoomRate.ToString("N2")%
+                        </strong>
+                    </div>
+                    <div class="owner-occ-stat-row owner-occ-divider">
+                        <div class="owner-occ-label">
+                            <i class="fa-solid fa-moon owner-icon-violet"></i>
+                            <span>จำนวนห้อง-คืนที่มีผู้เข้าพักจริง</span>
+                        </div>
+                        <strong class="owner-occ-val">
+                            <span data-bind="occupiedRoomNights" data-format="number">@Model.OccupiedRoomNights.ToString("N0")</span> คืน
+                        </strong>
+                    </div>
+                    <div class="owner-occ-stat-row">
+                        <div class="owner-occ-label">
+                            <i class="fa-solid fa-building owner-icon-cyan"></i>
+                            <span>จำนวนห้อง-คืนที่เปิดให้บริการทั้งหมด</span>
+                        </div>
+                        <strong class="owner-occ-val">
+                            <span data-bind="availableRoomNights" data-format="number">@Model.AvailableRoomNights.ToString("N0")</span> คืน
+                        </strong>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-6 col-xl-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <p class="text-secondary">ค่าใช้จ่ายเดือนนี้</p>
-                    <h3>฿510,000</h3>
-                    <small class="text-secondary">
-                        Monthly Expenses
-                    </small>
-                </div>
+    </section>
+
+    <!-- ═══════════════════ 7.5 PERFORMANCE COMPARISON ═══════════════════ -->
+    <section class="owner-panel owner-comparison-section" aria-label="เปรียบเทียบผลประกอบการระหว่างเดือน">
+        <div class="owner-panel-header">
+            <div>
+                            <span data-bind="revenueComparison.currentLabel">
+                @(Model.RevenueComparison?.CurrentLabel ?? "-")
+            </span>
+
+            เทียบกับ
+
+            <span data-bind="revenueComparison.previousLabel">
+                @(Model.RevenueComparison?.PreviousLabel ?? "-")
+            </span>
+                </h3>
             </div>
         </div>
 
-        <div class="col-md-6 col-xl-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <p class="text-secondary">กำไรจากการดำเนินงาน</p>
-                    <h3 class="text-success">฿340,000</h3>
-                    <small class="text-secondary">
-                        Operating Profit
-                    </small>
+        <div class="owner-comparison-grid">
+
+            <!-- Revenue Comparison Card -->
+            <div class="owner-comp-card">
+                <div class="owner-comp-header">
+                    <span class="owner-comp-title">
+                        <i class="fa-solid fa-coins owner-icon-cyan"></i> เปรียบเทียบรายได้ (Revenue)
+                    </span>
+                    <span class="owner-trend-pill @FormatTrendBadge(Model.RevenueComparison?.PercentChange)">
+                        <i class="fa-solid @FormatTrendIcon(Model.RevenueComparison?.PercentChange)"></i>
+                        <span data-bind="revenueComparison.percentChange"
+                              data-format="percent"
+                              data-null-text="ไม่มีข้อมูลเปรียบเทียบ">
+                            @(Model.RevenueComparison?.PercentChange.HasValue == true
+                                ? $"{Model.RevenueComparison.PercentChange.Value:N2}%"
+                                : "ไม่มีข้อมูลเปรียบเทียบ")
+                        </span>
+                    </span>
+                </div>
+                <div class="owner-comp-metrics">
+                    <div class="owner-comp-col">
+                        <span class="owner-comp-sublabel">เดือนปัจจุบัน (<span data-bind="revenueComparison.currentLabel">@Model.RevenueComparison?.CurrentLabel</span>)</span>
+                        <strong class="owner-comp-main-val" data-bind="revenueComparison.currentValue" data-format="currency">
+                            @((Model.RevenueComparison?.CurrentValue ?? 0m).ToString("C2", thCulture))
+                        </strong>
+                    </div>
+                    <div class="owner-comp-col">
+                        <span class="owner-comp-sublabel">เดือนก่อนหน้า (<span data-bind="revenueComparison.previousLabel">@Model.RevenueComparison?.PreviousLabel</span>)</span>
+                        <strong class="owner-comp-prev-val" data-bind="revenueComparison.previousValue" data-format="currency">
+                            @((Model.RevenueComparison?.PreviousValue ?? 0m).ToString("C2", thCulture))
+                        </strong>
+                    </div>
+                </div>
+                <div class="owner-comp-diff-bar">
+                    <span>ส่วนต่าง (Difference):</span>
+                    <strong data-bind="revenueComparison.difference" data-format="currency">
+                        @((Model.RevenueComparison?.Difference ?? 0m).ToString("C2", thCulture))
+                    </strong>
                 </div>
             </div>
-        </div>
 
-        <div class="col-md-6 col-xl-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <p class="text-secondary">อัตราการเข้าพัก</p>
-                    <h3>72%</h3>
-                    <small class="text-secondary">
-                        Occupancy Rate
-                    </small>
+            <!-- Expense Comparison Card -->
+            <div class="owner-comp-card">
+                <div class="owner-comp-header">
+                    <span class="owner-comp-title">
+                        <i class="fa-solid fa-file-invoice-dollar owner-icon-amber"></i> เปรียบเทียบรายจ่าย (Expenses)
+                    </span>
+                    <span class="owner-trend-pill @FormatTrendBadge(Model.ExpenseComparison?.PercentChange, inverseGood: true)">
+                        <i class="fa-solid @FormatTrendIcon(Model.ExpenseComparison?.PercentChange)"></i>
+                        <span data-bind="expenseComparison.percentChange"
+                              data-format="percent"
+                              data-null-text="ไม่มีข้อมูลเปรียบเทียบ">
+                            @(Model.ExpenseComparison?.PercentChange.HasValue == true
+                                ? $"{Model.ExpenseComparison.PercentChange.Value:N2}%"
+                                : "ไม่มีข้อมูลเปรียบเทียบ")
+                        </span>
+                    </span>
+                </div>
+                <div class="owner-comp-metrics">
+                    <div class="owner-comp-col">
+                        <span class="owner-comp-sublabel">เดือนปัจจุบัน (<span data-bind="expenseComparison.currentLabel">@Model.ExpenseComparison?.CurrentLabel</span>)</span>
+                        <strong class="owner-comp-main-val" data-bind="expenseComparison.currentValue" data-format="currency">
+                            @((Model.ExpenseComparison?.CurrentValue ?? 0m).ToString("C2", thCulture))
+                        </strong>
+                    </div>
+                    <div class="owner-comp-col">
+                        <span class="owner-comp-sublabel">เดือนก่อนหน้า (<span data-bind="expenseComparison.previousLabel">@Model.ExpenseComparison?.PreviousLabel</span>)</span>
+                        <strong class="owner-comp-prev-val" data-bind="expenseComparison.previousValue" data-format="currency">
+                            @((Model.ExpenseComparison?.PreviousValue ?? 0m).ToString("C2", thCulture))
+                        </strong>
+                    </div>
+                </div>
+                <div class="owner-comp-diff-bar">
+                    <span>ส่วนต่าง (Difference):</span>
+                    <strong data-bind="expenseComparison.difference" data-format="currency">
+                        @((Model.ExpenseComparison?.Difference ?? 0m).ToString("C2", thCulture))
+                    </strong>
                 </div>
             </div>
+
+            <!-- Net Profit Comparison Card -->
+            <div class="owner-comp-card">
+                <div class="owner-comp-header">
+                    <span class="owner-comp-title">
+                        <i class="fa-solid fa-sack-dollar owner-icon-green"></i> เปรียบเทียบกำไรสุทธิ (Net Profit)
+                    </span>
+                    <span class="owner-trend-pill @FormatTrendBadge(Model.ProfitComparison?.PercentChange)">
+                        <i class="fa-solid @FormatTrendIcon(Model.ProfitComparison?.PercentChange)"></i>
+                        <span data-bind="profitComparison.percentChange"
+                              data-format="percent"
+                              data-null-text="ไม่มีข้อมูลเปรียบเทียบ">
+                            @(Model.ProfitComparison?.PercentChange.HasValue == true
+                                ? $"{Model.ProfitComparison.PercentChange.Value:N2}%"
+                                : "ไม่มีข้อมูลเปรียบเทียบ")
+                        </span>
+                    </span>
+                </div>
+                <div class="owner-comp-metrics">
+                    <div class="owner-comp-col">
+                        <span class="owner-comp-sublabel">เดือนปัจจุบัน (<span data-bind="profitComparison.currentLabel">@Model.ProfitComparison?.CurrentLabel</span>)</span>
+                        <strong class="owner-comp-main-val" data-bind="profitComparison.currentValue" data-format="currency">
+                            @((Model.ProfitComparison?.CurrentValue ?? 0m).ToString("C2", thCulture))
+                        </strong>
+                    </div>
+                    <div class="owner-comp-col">
+                        <span class="owner-comp-sublabel">เดือนก่อนหน้า (<span data-bind="profitComparison.previousLabel">@Model.ProfitComparison?.PreviousLabel</span>)</span>
+                        <strong class="owner-comp-prev-val" data-bind="profitComparison.previousValue" data-format="currency">
+                            @((Model.ProfitComparison?.PreviousValue ?? 0m).ToString("C2", thCulture))
+                        </strong>
+                    </div>
+                </div>
+                <div class="owner-comp-diff-bar">
+                    <span>ส่วนต่าง (Difference):</span>
+                    <strong data-bind="profitComparison.difference" data-format="currency">
+                        @((Model.ProfitComparison?.Difference ?? 0m).ToString("C2", thCulture))
+                    </strong>
+                </div>
+            </div>
+
         </div>
-    </div>
+    </section>
 
-    <div class="row g-4 mt-1">
-        <div class="col-lg-7">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <h5 class="fw-bold">Monthly Financial Summary</h5>
+    <!-- ═══════════════════ 7.6 MONTHLY PERFORMANCE TABLE & 7.7 EXECUTIVE SUMMARY ═══════════════════ -->
+    <section class="owner-bottom-grid">
 
-                    <div class="table-responsive mt-3">
-                        <table class="table">
-                            <tbody>
+        <!-- 7.6 Monthly Performance Table -->
+        <div class="owner-panel owner-table-panel">
+            <div class="owner-panel-header">
+                <div>
+                    <span class="owner-section-tag">MONTHLY LEDGER BREAKDOWN</span>
+                    <h3 class="owner-panel-title">
+                        <i class="fa-solid fa-table-list owner-icon-cyan"></i>
+                        ตารางสรุปผลประกอบการรายเดือน (ประจำปี @Model.Year)
+                    </h3>
+                </div>
+                <span class="owner-badge-count">
+                    แสดง @(Model.MonthlyReports?.Count ?? 0) เดือน
+                </span>
+            </div>
+
+            <div class="owner-table-responsive">
+                <table class="owner-table" data-table="monthlyReports">
+                    <thead>
+                        <tr>
+                            <th data-col="label">เดือน (Month)</th>
+                            <th data-col="revenue" data-format="currency" class="text-end">รายได้สุทธิ (Revenue)</th>
+                            <th data-col="expense" data-format="currency" class="text-end">รายจ่าย (Expenses)</th>
+                            <th data-col="profit" data-format="currency" class="text-end">กำไร/ขาดทุน (Net Profit)</th>
+                            <th data-col="occupancyRate" data-format="percent" class="text-end">อัตราเข้าพัก (Occupancy Rate)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.MonthlyReports == null || Model.MonthlyReports.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="5" class="owner-empty-cell">ไม่มีข้อมูลผลประกอบการรายเดือนสำหรับปีที่เลือก</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var row in Model.MonthlyReports)
+                            {
                                 <tr>
-                                    <th>รายได้จากห้องพัก</th>
-                                    <td class="text-end">฿780,000</td>
-                                </tr>
-                                <tr>
-                                    <th>รายได้จากบริการอื่น</th>
-                                    <td class="text-end">฿70,000</td>
-                                </tr>
-                                <tr>
-                                    <th>รายได้รวม</th>
-                                    <td class="text-end">฿850,000</td>
-                                </tr>
-                                <tr>
-                                    <th>ต้นทุนและค่าใช้จ่าย</th>
-                                    <td class="text-end">฿510,000</td>
-                                </tr>
-                                <tr>
-                                    <th>กำไรจากการดำเนินงาน</th>
-                                    <td class="text-end fw-bold text-success">
-                                        ฿340,000
+                                    <td><strong>@row.Label</strong></td>
+                                    <td class="text-end">@row.Revenue.ToString("C2", thCulture)</td>
+                                    <td class="text-end">@row.Expense.ToString("C2", thCulture)</td>
+                                    <td class="text-end @(row.Profit >= 0 ? "owner-text-success" : "owner-text-danger")">
+                                        @row.Profit.ToString("C2", thCulture)
                                     </td>
+                                    <td class="text-end">@row.OccupancyRate.ToString("N2")%</td>
                                 </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                            }
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        <div class="col-lg-5">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <h5 class="fw-bold">Occupancy Overview</h5>
-
-                    <div class="my-4">
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>อัตราการเข้าพัก</span>
-                            <strong>72%</strong>
-                        </div>
-
-                        <div class="progress" style="height: 14px;">
-                            <div class="progress-bar"
-                                 role="progressbar"
-                                 style="width: 72%;"
-                                 aria-valuenow="72"
-                                 aria-valuemin="0"
-                                 aria-valuemax="100">
-                            </div>
-                        </div>
-                    </div>
-
-                    <p class="text-secondary">
-                        ข้อมูลสรุปสำหรับติดตามผลประกอบการ
-                        และประกอบการตัดสินใจทางธุรกิจ
-                    </p>
+        <!-- 7.7 Executive Summary -->
+        <aside class="owner-panel owner-summary-panel" aria-label="สรุปสถานะภาพรวมทางธุรกิจ">
+            <div class="owner-panel-header">
+                <div>
+                    <span class="owner-section-tag">EXECUTIVE BRIEFING</span>
+                    <h3 class="owner-panel-title">
+                        <i class="fa-solid fa-shield-halved owner-icon-violet"></i>
+                        สรุปภาพรวมทางธุรกิจ (Data-Driven Summary)
+                    </h3>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <div class="alert alert-light border mt-4">
-        <strong>Executive access:</strong>
-        หน้านี้ออกแบบให้ดูข้อมูลอย่างเดียว
-        การป้องกันการแก้ไขข้อมูลต้องบังคับใช้สิทธิ์ฝั่ง Server ด้วย
-    </div>
+            <div class="owner-status-banner owner-status-@Model.BusinessStatusTone">
+                <div class="owner-status-icon">
+                    @if (Model.BusinessStatusTone == "positive")
+                    {
+                        <i class="fa-solid fa-circle-check"></i>
+                    }
+                    else if (Model.BusinessStatusTone == "negative")
+                    {
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    }
+                    else
+                    {
+                        <i class="fa-solid fa-circle-info"></i>
+                    }
+                </div>
+                <div>
+                    <span class="owner-status-label">สถานะภาพรวมทางธุรกิจปัจจุบัน</span>
+                    <strong class="owner-status-value" data-bind="businessStatusLabel">@Model.BusinessStatusLabel</strong>
+                </div>
+            </div>
 
-    <p class="text-secondary small">
-        ตัวเลขทั้งหมดในหน้านี้เป็นข้อมูลตัวอย่าง ไม่ใช่ผลประกอบการจริง
-    </p>
+            <div class="owner-summary-highlights">
+                <div class="owner-summary-item">
+                    <span class="owner-summary-bullet owner-dot-cyan"></span>
+                    <div>
+                        <strong>รายได้รวมสะสมปี @Model.Year:</strong>
+                        <span data-bind="totalRevenue" data-format="currency">@Model.TotalRevenue.ToString("C2", thCulture)</span>
+                        จากการจองที่มีผลรวม <strong data-bind="totalBookings" data-format="number">@Model.TotalBookings.ToString("N0")</strong> รายการ
+                        (เฉลี่ย <span data-bind="averageRevenuePerBooking" data-format="currency">@Model.AverageRevenuePerBooking.ToString("C2", thCulture)</span> ต่อการจอง)
+                    </div>
+                </div>
+
+                <div class="owner-summary-item">
+                    <span class="owner-summary-bullet owner-dot-amber"></span>
+                    <div>
+                        <strong>รายจ่ายและผลประกอบการ:</strong>
+                        รายจ่ายรวมทั้งสิ้น <span data-bind="totalExpense" data-format="currency">@Model.TotalExpense.ToString("C2", thCulture)</span>
+                        ส่งผลให้มีผลประกอบการสุทธิ (Net Profit) อยู่ที่
+                        <strong class="@(Model.NetProfit >= 0 ? "owner-text-success" : "owner-text-danger")"
+                                data-bind="netProfit"
+                                data-format="currency">
+                            @Model.NetProfit.ToString("C2", thCulture)
+                        </strong>
+                    </div>
+                </div>
+
+                <div class="owner-summary-item">
+                    <span class="owner-summary-bullet owner-dot-violet"></span>
+                    <div>
+                        <strong>อัตราการเข้าพักจริง (Occupancy):</strong>
+                        อยู่ที่ <strong data-bind="occupancyRate" data-format="percent">@Model.OccupancyRate.ToString("N2")%</strong>
+                        คิดเป็น <span data-bind="occupiedRoomNights" data-format="number">@Model.OccupiedRoomNights.ToString("N0")</span> ห้อง-คืน
+                        จากห้องเปิดให้บริการทั้งหมด <span data-bind="availableRoomNights" data-format="number">@Model.AvailableRoomNights.ToString("N0")</span> ห้อง-คืน
+                    </div>
+                </div>
+            </div>
+
+            <div class="owner-disclaimer-box">
+                <div class="owner-disclaimer-title">
+                    <i class="fa-solid fa-scale-unbalanced-flip"></i>
+                    ข้อกำหนดและเกณฑ์การคำนวณจากฐานข้อมูลจริง
+                </div>
+                <ul class="owner-notes-list" data-list="dataNotes">
+                    @if (Model.DataNotes != null)
+                    {
+                        foreach (var note in Model.DataNotes)
+                        {
+                            <li>@note</li>
+                        }
+                    }
+                </ul>
+            </div>
+        </aside>
+
+    </section>
+
 </div>

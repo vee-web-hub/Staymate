@@ -1,0 +1,605 @@
+@model StayMate_Kavinvee_0576.Models.ViewModels.OwnerStaffOverviewViewModel
+@using System.Globalization
+@using StayMate_Kavinvee_0576.Models.ViewModels
+@{
+    Layout = "~/Views/Shared/_OwnerLayout.cshtml";
+    ViewData["Title"] = "Staff Overview";
+
+    var thCulture = new CultureInfo("th-TH");
+    var nowDisplay = DateTime.Now.ToString("dd MMMM yyyy HH:mm น.", thCulture);
+
+    var roleList = Model.StaffByRole ?? new List<StaffRoleRow>();
+    var directoryList = Model.StaffDirectory ?? new List<StaffDirectoryRow>();
+
+    int totalEmployees = Model.TotalStaff;
+    int activeEmployees = Model.ActiveStaff;
+    int inactiveEmployees = Model.InactiveStaff;
+    int totalRolesCount = roleList.Count(r => r.Total > 0);
+
+    decimal activePct = totalEmployees > 0
+        ? Math.Round(activeEmployees * 100m / totalEmployees, 2)
+        : 0m;
+
+    decimal inactivePct = totalEmployees > 0
+        ? Math.Round(inactiveEmployees * 100m / totalEmployees, 2)
+        : 0m;
+
+    decimal? suspendedPct = (Model.SuspendedStaff.HasValue && totalEmployees > 0)
+        ? Math.Round(Model.SuspendedStaff.Value * 100m / totalEmployees, 2)
+        : null;
+
+    decimal? resignedPct = (Model.ResignedStaff.HasValue && totalEmployees > 0)
+        ? Math.Round(Model.ResignedStaff.Value * 100m / totalEmployees, 2)
+        : null;
+
+    string GetRoleIcon(string roleCode)
+    {
+        return (roleCode ?? "").ToUpperInvariant() switch
+        {
+            "OWNER" => "fa-crown",
+            "MANAGER" => "fa-user-tie",
+            "FRONT_ADMIN" or "RECEPTION" or "FRONT_DESK" => "fa-bell-concierge",
+            "FINANCE" or "ACCOUNTING" => "fa-Calculator fa-calculator",
+            "HOUSEKEEPING" => "fa-broom",
+            _ => "fa-id-badge"
+        };
+    }
+
+    string GetRoleAccent(string roleCode)
+    {
+        return (roleCode ?? "").ToUpperInvariant() switch
+        {
+            "OWNER" => "owner-staff-role-violet",
+            "MANAGER" => "owner-staff-role-blue",
+            "FRONT_ADMIN" or "RECEPTION" => "owner-staff-role-cyan",
+            "FINANCE" => "owner-staff-role-green",
+            "HOUSEKEEPING" => "owner-staff-role-amber",
+            _ => "owner-staff-role-cyan"
+        };
+    }
+}
+
+<div class="owner-dashboard-wrapper owner-staff-wrapper"
+     data-owner-page="staff"
+     data-api-url="@Url.Action("StaffData", "Owner")">
+
+    <!-- ═══════════════════ 3. PAGE HEADER ═══════════════════ -->
+    <section class="owner-staff-header">
+        <div class="owner-staff-header-left">
+            <div class="owner-eyebrow-badge">
+                <span class="owner-pulse-dot"></span>
+                <span>WORKFORCE &amp; ORGANIZATION INTELLIGENCE</span>
+            </div>
+            <div class="owner-staff-title-group">
+                <div class="owner-staff-hero-icon">
+                    <i class="fa-solid fa-id-card-clip"></i>
+                </div>
+                <div>
+                    <h1 class="owner-staff-title">
+                        Staff Overview
+                        <span class="owner-title-accent">· สรุปภาพรวมบุคลากร</span>
+                    </h1>
+                    <p class="owner-staff-subtitle">
+                        Employee &amp; Workforce Analytics — ตรวจสอบจำนวนบุคลากร โครงสร้างตำแหน่ง (Role) และสถานะบัญชีผู้ใช้งานภายในโรงแรมจากฐานข้อมูลจริง (Read-Only)
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="owner-staff-header-right">
+            <div class="owner-staff-meta-card">
+                <i class="fa-solid fa-clock-rotate-left owner-icon-cyan"></i>
+                <div>
+                    <span class="owner-staff-meta-label">อัปเดตข้อมูลล่าสุดจากฐานข้อมูล</span>
+                    <strong class="owner-staff-meta-val">@nowDisplay</strong>
+                </div>
+            </div>
+            <div class="owner-staff-meta-card">
+                <i class="fa-solid fa-user-shield owner-icon-violet"></i>
+                <div>
+                    <span class="owner-staff-meta-label">ขอบเขตการนับบุคลากร</span>
+                    <strong class="owner-staff-meta-val">เฉพาะพนักงาน (ไม่รวม CUSTOMER / GUEST)</strong>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════ 4. STAFF KPI CARDS (5 CARDS) ═══════════════════ -->
+    <section class="owner-staff-kpi-grid" aria-label="ตัวชี้วัดบุคลากรหลัก 5 รายการ">
+
+        <!-- 1. Total Employees -->
+        <article class="owner-staff-kpi-card owner-staff-card-blue">
+            <div class="owner-staff-kpi-head">
+                <div class="owner-staff-kpi-icon owner-icon-bg-blue">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+                <span class="owner-staff-status-pill owner-staff-pill-blue">100% Workforce</span>
+            </div>
+            <div class="owner-staff-kpi-body">
+                <h2 class="owner-staff-kpi-title">Total Employees (พนักงานทั้งหมด)</h2>
+                <div class="owner-staff-kpi-count"
+                     data-bind="totalStaff"
+                     data-format="number"
+                     data-counter-value="@totalEmployees">
+                    @totalEmployees.ToString("N0")
+                </div>
+            </div>
+            <div class="owner-staff-kpi-foot">
+                <span class="owner-staff-kpi-pct">นับแบบ Distinct User (ไม่ซ้ำแม้มีหลาย Role)</span>
+            </div>
+        </article>
+
+        <!-- 2. Active Employees -->
+        <article class="owner-staff-kpi-card owner-staff-card-green">
+            <div class="owner-staff-kpi-head">
+                <div class="owner-staff-kpi-icon owner-icon-bg-green">
+                    <i class="fa-solid fa-user-check"></i>
+                </div>
+                <span class="owner-staff-status-pill owner-staff-pill-green">
+                    @activePct.ToString("N2")% ของทั้งหมด
+                </span>
+            </div>
+            <div class="owner-staff-kpi-body">
+                <h2 class="owner-staff-kpi-title">Active Employees (ปฏิบัติงานอยู่)</h2>
+                <div class="owner-staff-kpi-count owner-text-success"
+                     data-bind="activeStaff"
+                     data-format="number"
+                     data-counter-value="@activeEmployees">
+                    @activeEmployees.ToString("N0")
+                </div>
+            </div>
+            <div class="owner-staff-kpi-foot">
+                <span class="owner-staff-kpi-pct">บัญชีที่เปิดใช้งานปกติ (<code>users.is_active = 1</code>)</span>
+            </div>
+        </article>
+
+        <!-- 3. Suspended Employees -->
+        <article class="owner-staff-kpi-card owner-staff-card-amber">
+            <div class="owner-staff-kpi-head">
+                <div class="owner-staff-kpi-icon owner-icon-bg-amber">
+                    <i class="fa-solid fa-user-lock"></i>
+                </div>
+                <span class="owner-staff-status-pill owner-staff-pill-amber">
+                    @(suspendedPct.HasValue ? $"{suspendedPct.Value:N2}%" : $"Inactive {inactivePct:N2}%")
+                </span>
+            </div>
+            <div class="owner-staff-kpi-body">
+                <h2 class="owner-staff-kpi-title">Suspended Employees (ถูกระงับสิทธิ์)</h2>
+                <div class="owner-staff-kpi-count"
+                     data-bind="suspendedStaff"
+                     data-format="number"
+                     data-null-text="N/A (ดู Inactive)">
+                    @(Model.SuspendedStaff.HasValue ? Model.SuspendedStaff.Value.ToString("N0") : "N/A (ดู Inactive)")
+                </div>
+            </div>
+            <div class="owner-staff-kpi-foot">
+                <span class="owner-staff-kpi-pct">
+                    บัญชีที่ปิดใช้งาน (<code>is_active = 0</code>): <strong data-bind="inactiveStaff" data-format="number">@inactiveEmployees.ToString("N0")</strong> คน
+                </span>
+            </div>
+        </article>
+
+        <!-- 4. Resigned Employees -->
+        <article class="owner-staff-kpi-card owner-staff-card-red">
+            <div class="owner-staff-kpi-head">
+                <div class="owner-staff-kpi-icon owner-icon-bg-red">
+                    <i class="fa-solid fa-user-xmark"></i>
+                </div>
+                <span class="owner-staff-status-pill owner-staff-pill-red">
+                    @(resignedPct.HasValue ? $"{resignedPct.Value:N2}%" : "ไม่มีฟิลด์ใน DB")
+                </span>
+            </div>
+            <div class="owner-staff-kpi-body">
+                <h2 class="owner-staff-kpi-title">Resigned Employees (พนักงานลาออก)</h2>
+                <div class="owner-staff-kpi-count"
+                     data-bind="resignedStaff"
+                     data-format="number"
+                     data-null-text="N/A">
+                    @(Model.ResignedStaff.HasValue ? Model.ResignedStaff.Value.ToString("N0") : "N/A")
+                </div>
+            </div>
+            <div class="owner-staff-kpi-foot">
+                <span class="owner-staff-kpi-pct">ตาราง <code>users</code> ยังไม่มีคอลัมน์แยกสถานะลาออก</span>
+            </div>
+        </article>
+
+        <!-- 5. Total Departments / Roles -->
+        <article class="owner-staff-kpi-card owner-staff-card-violet">
+            <div class="owner-staff-kpi-head">
+                <div class="owner-staff-kpi-icon owner-icon-bg-violet">
+                    <i class="fa-solid fa-sitemap"></i>
+                </div>
+                <span class="owner-staff-status-pill owner-staff-pill-violet">Active Roles</span>
+            </div>
+            <div class="owner-staff-kpi-body">
+                <h2 class="owner-staff-kpi-title">Total Positions / Roles (ตำแหน่งที่มีพนักงาน)</h2>
+                <div class="owner-staff-kpi-count owner-icon-cyan" data-staff-total-roles>
+                    @totalRolesCount.ToString("N0")
+                </div>
+            </div>
+            <div class="owner-staff-kpi-foot">
+                <span class="owner-staff-kpi-pct">จากทั้งหมด @roleList.Count ตำแหน่งพนักงานในระบบ</span>
+            </div>
+        </article>
+
+    </section>
+
+    <!-- ═══════════════════ 5. STAFF STATUS DISTRIBUTION & 6. EMPLOYEE BY POSITION ═══════════════════ -->
+    <section class="owner-staff-charts-grid" aria-label="กราฟสัดส่วนสถานะและจำนวนพนักงานตามตำแหน่ง">
+
+        <!-- 5. Staff Status Distribution (Donut Chart) -->
+        <div class="owner-panel owner-staff-chart-panel">
+            <div class="owner-panel-header">
+                <div>
+                    <span class="owner-section-tag">SECTION 5 · ACCOUNT STATUS RATIO</span>
+                    <h3 class="owner-panel-title">
+                        <i class="fa-solid fa-chart-pie owner-icon-green"></i>
+                        สัดส่วนสถานะบัญชีพนักงาน (Staff Status Distribution)
+                    </h3>
+                </div>
+            </div>
+
+            <div class="owner-staff-status-layout">
+                <div class="owner-staff-donut-wrap">
+                    <canvas id="ownerStaffStatusDonutChart"></canvas>
+                    <div class="owner-donut-center-label">
+                        <span class="owner-donut-percent" data-staff-active-pct>@activePct.ToString("N1")%</span>
+                        <span class="owner-donut-caption">Active</span>
+                    </div>
+                </div>
+
+                <div class="owner-staff-status-breakdown">
+                    <!-- Active -->
+                    <div class="owner-staff-stat-item">
+                        <div class="owner-staff-stat-left">
+                            <span class="owner-dot owner-dot-green"></span>
+                            <div>
+                                <strong>Active (ปฏิบัติงานปกติ)</strong>
+                                <small class="d-block text-secondary"><code>users.is_active = true</code></small>
+                            </div>
+                        </div>
+                        <div class="owner-staff-stat-right">
+                            <strong class="owner-text-success">@activeEmployees.ToString("N0") คน</strong>
+                            <span class="owner-staff-pct-chip">@activePct.ToString("N2")%</span>
+                        </div>
+                    </div>
+
+                    <!-- Suspended / Inactive -->
+                    <div class="owner-staff-stat-item">
+                        <div class="owner-staff-stat-left">
+                            <span class="owner-dot owner-dot-amber"></span>
+                            <div>
+                                <strong>Suspended / Inactive (ระงับ/ปิดสิทธิ์)</strong>
+                                <small class="d-block text-secondary">
+                                    @(Model.SuspendedStaff.HasValue ? "สถานะ Suspended จาก DB" : "อ้างอิงจาก users.is_active = false")
+                                </small>
+                            </div>
+                        </div>
+                        <div class="owner-staff-stat-right">
+                            <strong class="owner-icon-amber">
+                                @(Model.SuspendedStaff.HasValue ? $"{Model.SuspendedStaff.Value:N0} คน" : $"{inactiveEmployees:N0} คน (Inactive)")
+                            </strong>
+                            <span class="owner-staff-pct-chip">
+                                @(suspendedPct.HasValue ? $"{suspendedPct.Value:N2}%" : $"{inactivePct:N2}%")
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Resigned -->
+                    <div class="owner-staff-stat-item">
+                        <div class="owner-staff-stat-left">
+                            <span class="owner-dot" style="background:#EF4444;"></span>
+                            <div>
+                                <strong>Resigned (ลาออก)</strong>
+                                <small class="d-block text-secondary">ไม่ตีความจาก <code>is_active = false</code> อัตโนมัติ</small>
+                            </div>
+                        </div>
+                        <div class="owner-staff-stat-right">
+                            <strong class="owner-text-danger">
+                                @(Model.ResignedStaff.HasValue ? $"{Model.ResignedStaff.Value:N0} คน" : "N/A")
+                            </strong>
+                            <span class="owner-staff-pct-chip">
+                                @(resignedPct.HasValue ? $"{resignedPct.Value:N2}%" : "ไม่มีข้อมูลใน DB")
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Employee by Position (Horizontal Bar Chart) -->
+        <div class="owner-panel owner-staff-chart-panel">
+            <div class="owner-panel-header">
+                <div>
+                    <span class="owner-section-tag">SECTION 6 · WORKFORCE BY ROLE</span>
+                    <h3 class="owner-panel-title">
+                        <i class="fa-solid fa-bars-progress owner-icon-cyan"></i>
+                        จำนวนพนักงานแยกตามตำแหน่ง (Employee by Position)
+                    </h3>
+                </div>
+                <span class="owner-badge-count">ไม่รวม CUSTOMER / GUEST</span>
+            </div>
+
+            <div class="owner-chart-container owner-staff-bar-wrap">
+                <canvas id="ownerStaffPositionBarChart"></canvas>
+            </div>
+        </div>
+
+    </section>
+
+    <!-- ═══════════════════ 7. EMPLOYEE DISTRIBUTION BY POSITION CARDS ═══════════════════ -->
+    <section class="owner-panel owner-staff-dist-section" aria-label="การกระจายตัวของพนักงานในแต่ละตำแหน่ง">
+        <div class="owner-panel-header">
+            <div>
+                <span class="owner-section-tag">SECTION 7 · ROLE &amp; DEPARTMENT BREAKDOWN</span>
+                <h3 class="owner-panel-title">
+                    <i class="fa-solid fa-network-wired owner-icon-violet"></i>
+                    ภาพรวมจำนวนพนักงานและสถานะในแต่ละตำแหน่ง (Employee Distribution)
+                </h3>
+            </div>
+        </div>
+
+        @if (roleList.Count == 0)
+        {
+            <div class="owner-fin-empty-box">ยังไม่มีข้อมูลตำแหน่งพนักงานในฐานข้อมูล</div>
+        }
+        else
+        {
+            <div class="owner-staff-role-cards-grid">
+                @foreach (var role in roleList)
+                {
+                    decimal roleSharePct = totalEmployees > 0
+                        ? Math.Round(role.Total * 100m / totalEmployees, 2)
+                        : 0m;
+
+                    <article class="owner-staff-role-card @GetRoleAccent(role.RoleCode)">
+                        <div class="owner-staff-rc-top">
+                            <div class="owner-staff-rc-icon">
+                                <i class="fa-solid @GetRoleIcon(role.RoleCode)"></i>
+                            </div>
+                            <span class="owner-staff-rc-code">@role.RoleCode</span>
+                        </div>
+
+                        <div class="owner-staff-rc-main">
+                            <h4 class="owner-staff-rc-name">
+                                @(string.IsNullOrWhiteSpace(role.RoleName) ? role.RoleCode : role.RoleName)
+                            </h4>
+                            <div class="owner-staff-rc-number">
+                                <strong>@role.Total.ToString("N0")</strong>
+                                <span>คน (@roleSharePct.ToString("N1")%)</span>
+                            </div>
+                        </div>
+
+                        <div class="owner-staff-rc-bar">
+                            <div class="owner-staff-rc-bar-fill"
+                                 style="width: @(Math.Clamp(roleSharePct, 0m, 100m).ToString(CultureInfo.InvariantCulture))%"></div>
+                        </div>
+
+                        <div class="owner-staff-rc-meta">
+                            <span class="owner-text-success">
+                                <i class="fa-solid fa-circle-check"></i> Active: @role.Active
+                            </span>
+                            <span class="owner-icon-amber">
+                                <i class="fa-solid fa-circle-pause"></i> Inactive: @role.Inactive
+                            </span>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+
+    <!-- ═══════════════════ 8. STAFF DIRECTORY TABLE ═══════════════════ -->
+    <section class="owner-panel owner-staff-dir-section" aria-label="ตารางรายชื่อพนักงาน">
+        <div class="owner-panel-header">
+            <div>
+                <span class="owner-section-tag">SECTION 8 · VERIFIED STAFF DIRECTORY</span>
+                <h3 class="owner-panel-title">
+                    <i class="fa-solid fa-address-book owner-icon-cyan"></i>
+                    ทำเนียบรายชื่อบุคลากรภายในโรงแรม (Staff Directory · Read-Only)
+                </h3>
+            </div>
+            <span class="owner-badge-count" data-staff-dir-count>
+                ทั้งหมด @directoryList.Count บัญชี
+            </span>
+        </div>
+
+        <!-- Search, Role Filter, Status Filter & Sort Controls -->
+        <div class="owner-staff-toolbar">
+            <div class="owner-staff-search-wrap">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="search"
+                       class="owner-staff-search-input"
+                       placeholder="ค้นหาด้วยรหัสพนักงาน, ชื่อ-นามสกุล, Username หรือตำแหน่ง..."
+                       data-staff-search />
+            </div>
+
+            <div class="owner-staff-filters">
+                <select class="owner-staff-select" data-staff-role-filter aria-label="กรองตามตำแหน่ง">
+                    <option value="">ทุกตำแหน่ง (All Roles)</option>
+                    @foreach (var r in roleList)
+                    {
+                        <option value="@r.RoleCode">@r.RoleCode (@(string.IsNullOrWhiteSpace(r.RoleName) ? r.RoleCode : r.RoleName))</option>
+                    }
+                </select>
+
+                <select class="owner-staff-select" data-staff-status-filter aria-label="กรองตามสถานะบัญชี">
+                    <option value="">ทุกสถานะ (All Statuses)</option>
+                    <option value="Active">Active (ปฏิบัติงาน)</option>
+                    <option value="Inactive">Inactive / Suspended (ปิดสิทธิ์)</option>
+                </select>
+
+                <select class="owner-staff-select" data-staff-sort aria-label="เรียงลำดับข้อมูล">
+                    <option value="id-asc">เรียงตาม Employee ID (น้อย → มาก)</option>
+                    <option value="name-asc">เรียงตามชื่อพนักงาน (ก → ฮ / A → Z)</option>
+                    <option value="name-desc">เรียงตามชื่อพนักงาน (ฮ → ก / Z → A)</option>
+                    <option value="role-asc">เรียงตามตำแหน่ง (Position A → Z)</option>
+                </select>
+
+                <button type="button" class="owner-staff-reset-btn" data-staff-reset>
+                    <i class="fa-solid fa-rotate-left"></i> ล้างตัวกรอง
+                </button>
+            </div>
+        </div>
+
+        <div class="owner-table-responsive">
+            <table class="owner-table owner-staff-table" id="ownerStaffDirectoryTable">
+                <thead>
+                    <tr>
+                        <th>รหัสพนักงาน (Employee ID)</th>
+                        <th>ชื่อ-นามสกุล (Employee Name)</th>
+                        <th>ชื่อผู้ใช้ (Username)</th>
+                        <th>ตำแหน่ง / บทบาท (Position / Role)</th>
+                        <th class="text-center">สถานะบัญชี (Account Status)</th>
+                    </tr>
+                </thead>
+                <tbody data-staff-dir-tbody>
+                    @if (directoryList.Count == 0)
+                    {
+                        <tr data-staff-empty-static>
+                            <td colspan="5" class="owner-empty-cell">
+                                ไม่มีข้อมูลรายชื่อพนักงาน หรือยังไม่ได้อัปเดต StaffDirectory ใน Controller
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var emp in directoryList)
+                        {
+                            var statusKey = emp.IsActive == true ? "Active" : "Inactive";
+                            var rolesJoined = string.Join(", ", emp.RoleCodes);
+
+                            <tr data-staff-row
+                                data-emp-id="@emp.UserId"
+                                data-emp-name="@emp.FullName"
+                                data-emp-username="@emp.Username"
+                                data-emp-roles="@rolesJoined"
+                                data-emp-status="@statusKey">
+                                <td>
+                                    <span class="owner-staff-id-badge">EMP-@emp.UserId.ToString("D4")</span>
+                                </td>
+                                <td>
+                                    <div class="owner-staff-person-cell">
+                                        <div class="owner-staff-avatar">
+                                            @(!string.IsNullOrWhiteSpace(emp.FullName) ? emp.FullName.Trim()[0].ToString().ToUpperInvariant() : "S")
+                                        </div>
+                                        <strong>@(string.IsNullOrWhiteSpace(emp.FullName) ? "-" : emp.FullName)</strong>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="owner-staff-username">@emp.Username</span>
+                                </td>
+                                <td>
+                                    <div class="owner-staff-role-chips">
+                                        @for (int i = 0; i < emp.RoleCodes.Count; i++)
+                                        {
+                                            var code = emp.RoleCodes[i];
+                                            var name = i < emp.RoleNames.Count ? emp.RoleNames[i] : code;
+                                            <span class="owner-staff-role-chip">
+                                                <i class="fa-solid @GetRoleIcon(code)"></i>
+                                                @code @(!string.IsNullOrWhiteSpace(name) && name != code ? $"· {name}" : "")
+                                            </span>
+                                        }
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    @if (emp.IsActive == true)
+                                    {
+                                        <span class="owner-staff-badge-status owner-staff-status-active">
+                                            <i class="fa-solid fa-circle-check"></i> Active
+                                        </span>
+                                    }
+                                    else if (emp.IsActive == false)
+                                    {
+                                        <span class="owner-staff-badge-status owner-staff-status-suspended">
+                                            <i class="fa-solid fa-circle-pause"></i> Inactive (is_active = 0)
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="owner-staff-badge-status owner-staff-status-unknown">
+                                            Unknown
+                                        </span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Bar -->
+        <div class="owner-staff-pagination" data-staff-pagination>
+            <span class="owner-staff-page-info" data-staff-page-info>แสดงรายชื่อบุคลากร</span>
+            <div class="owner-staff-page-btns" data-staff-page-btns></div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════ 9. STAFF STATUS LEGEND & DATA NOTES ═══════════════════ -->
+    <section class="owner-staff-bottom-grid" aria-label="คำอธิบายสถานะและข้อกำหนดฐานข้อมูล">
+
+        <!-- 9. Staff Status Legend -->
+        <div class="owner-panel">
+            <div class="owner-panel-header">
+                <div>
+                    <span class="owner-section-tag">SECTION 9 · ACCOUNT STATUS DEFINITIONS</span>
+                    <h3 class="owner-panel-title">
+                        <i class="fa-solid fa-circle-info owner-icon-cyan"></i>
+                        คำอธิบายความหมายสถานะบัญชีพนักงาน (Staff Status Legend)
+                    </h3>
+                </div>
+            </div>
+
+            <div class="owner-staff-legend-grid">
+                <div class="owner-staff-legend-card">
+                    <span class="owner-staff-badge-status owner-staff-status-active">
+                        <i class="fa-solid fa-circle-check"></i> Active
+                    </span>
+                    <p>
+                        <strong>บัญชีใช้งานได้ปกติ:</strong> บุคลากรกำลังปฏิบัติงานและมีสิทธิ์เข้าสู่ระบบตาม Role ที่ได้รับมอบหมาย (ตรวจสอบจาก <code>users.is_active = true</code>)
+                    </p>
+                </div>
+
+                <div class="owner-staff-legend-card">
+                    <span class="owner-staff-badge-status owner-staff-status-suspended">
+                        <i class="fa-solid fa-circle-pause"></i> Suspended / Inactive
+                    </span>
+                    <p>
+                        <strong>บัญชีถูกระงับหรือปิดสิทธิ์ชั่วคราว:</strong> ตรวจสอบจาก <code>users.is_active = false</code> โดยระบบแสดงแยกไว้อย่างชัดเจนและไม่ตีความว่าเป็นพนักงานลาออกโดยอัตโนมัติ
+                    </p>
+                </div>
+
+                <div class="owner-staff-legend-card">
+                    <span class="owner-staff-badge-status owner-staff-status-resigned">
+                        <i class="fa-solid fa-user-xmark"></i> Resigned (N/A)
+                    </span>
+                    <p>
+                        <strong>พนักงานลาออก:</strong> โครงสร้างตาราง <code>users</code> ปัจจุบันยังไม่มีคอลัมน์บันทึกสถานะการลาออกโดยเฉพาะ จึงแสดงค่าเป็น <strong>N/A</strong> เพื่อความถูกต้องของข้อมูลจริง
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Database Audit Notes -->
+        <div class="owner-panel">
+            <div class="owner-disclaimer-box h-100">
+                <div class="owner-disclaimer-title">
+                    <i class="fa-solid fa-database"></i>
+                    ข้อกำหนดการดึงข้อมูลบุคลากรจากฐานข้อมูล (Database Rules)
+                </div>
+                <ul class="owner-notes-list" data-list="dataNotes">
+                    @if (Model.DataNotes != null)
+                    {
+                        foreach (var note in Model.DataNotes)
+                        {
+                            <li>@note</li>
+                        }
+                    }
+                </ul>
+            </div>
+        </div>
+
+    </section>
+
+</div>
