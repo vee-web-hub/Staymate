@@ -1,4 +1,6 @@
 @{
+    var hotel = (ViewBag.Hotel as StayMate_Kavinvee_0576.Models.HotelSetting)
+            ?? StayMate_Kavinvee_0576.Models.HotelSetting.Default();
     // ---- ตรวจหน้าปัจจุบันเพื่อใส่ class active ----
     var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
     bool Is(params string[] names) => names.Any(n => string.Equals(n, action, StringComparison.OrdinalIgnoreCase));
@@ -12,7 +14,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - StayMate Hotel</title>
+    <title>@ViewData["Title"] - @hotel.HotelName</title>
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
@@ -32,7 +34,7 @@
             </button>
 
             <a asp-controller="Home" asp-action="Index" class="brand-group text-decoration-none">
-                <img src="~/images/Logo/LogoStayMate.jpg"
+                <img src="@(hotel.LogoPath ?? "/images/Logo/LogoStayMate.jpg")"
                      alt="StayMate Logo"
                      class="brand-logo-img"
                      onerror="this.onerror=null; this.src='https://placehold.co/76x76/070D1E/00E5FF?text=SM';" />
@@ -83,7 +85,7 @@
     <!-- Mobile Menu (Offcanvas) -->
     <div class="offcanvas offcanvas-start sm-offcanvas" tabindex="-1" id="mobileMenu" aria-labelledby="mobileMenuLabel">
         <div class="offcanvas-header">
-            <span class="brand-text" id="mobileMenuLabel">StayMate</span>
+            <span class="brand-text">@hotel.HotelName</span>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="ปิด"></button>
         </div>
         <div class="offcanvas-body">
@@ -135,8 +137,9 @@
             </div>
             <div class="footer-col">
                 <h5>ติดต่อเรา</h5>
-                <p><i class="fa-solid fa-phone me-2 text-warning"></i> 02-888-9999 </p>
-                <p><i class="fa-solid fa-envelope me-2 text-warning"></i> booking@staymate-hotel.com</p>
+                <p><i class="fa-solid fa-phone me-2 text-warning"></i> @hotel.Phone</p>
+                <p><i class="fa-solid fa-envelope me-2 text-warning"></i> @hotel.Email</p> 
+                    <i class="fa-regular fa-clock me-2 text-warning"></i> เช็คอิน @hotel.CheckInTime.ToString("HH:mm") · เช็คเอาท์ @hotel.CheckOutTime.ToString("HH:mm")</p>
             </div>
         </div>
         <div class="footer-bottom-bar">

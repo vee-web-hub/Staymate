@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap');
 
 /* ==========================================================
-   STAYMATE - Future Urban Hotel Auth Theme
+   STAYMATE - Auth Theme (Login / Register)
    ========================================================== */
 :root {
     --sm-bg-dark: #070D1E;
@@ -37,7 +37,7 @@ body.staymate-auth {
     box-sizing: border-box;
 }
 
-/* Background Cosmic Ambient Lights */
+/* Background ambient lights */
 body.staymate-auth::before,
 body.staymate-auth::after {
     content: "";
@@ -70,7 +70,7 @@ body.staymate-auth::after {
     width: 100%;
 }
 
-/* Outer Master Card (ตามแบบภาพ) */
+/* Outer card */
 .staymate-auth .master-auth-card {
     background: var(--sm-card-bg);
     border: 1px solid var(--sm-border-subtle);
@@ -80,7 +80,7 @@ body.staymate-auth::after {
     animation: sm-fade-up 0.5s ease-out both;
 }
 
-/* Top App Header inside card */
+/* Top bar */
 .staymate-auth .master-top-bar {
     display: flex;
     align-items: center;
@@ -93,6 +93,8 @@ body.staymate-auth::after {
     display: flex;
     align-items: center;
     gap: 12px;
+    text-decoration: none;
+    color: inherit;
 }
 
 .staymate-auth .brand-logo-img {
@@ -113,20 +115,27 @@ body.staymate-auth::after {
 }
 
 .staymate-auth .system-tagline {
-    font-size: 0.78rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
     color: var(--sm-text-muted);
-    letter-spacing: 1.2px;
-    font-weight: 600;
-    text-transform: uppercase;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.2s ease;
 }
 
-/* Split Main Content */
+.staymate-auth a.system-tagline:hover {
+    color: var(--sm-cyan);
+}
+
+/* Split layout */
 .staymate-auth .split-layout {
     display: grid;
     grid-template-columns: 1fr 1fr;
 }
 
-/* Left Hero Showcase */
+/* Left showcase (Login) */
 .staymate-auth .left-showcase {
     padding: 36px 32px 28px 32px;
     display: flex;
@@ -135,26 +144,12 @@ body.staymate-auth::after {
     border-right: 1px solid var(--sm-border-subtle);
 }
 
-.staymate-auth .pill-tag {
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 999px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    background: rgba(0, 118, 255, 0.18);
-    color: #38BDF8;
-    margin-bottom: 16px;
-    width: fit-content;
-}
-
 .staymate-auth .headline-title {
-    font-size: 2.15rem;
-    font-weight: 800;
-    line-height: 1.2;
+    font-size: 2.05rem;
+    font-weight: 700;
+    line-height: 1.3;
     margin: 0 0 12px 0;
-    letter-spacing: -0.5px;
+    letter-spacing: -0.3px;
 }
 
 .staymate-auth .cyan-highlight {
@@ -164,9 +159,9 @@ body.staymate-auth::after {
 
 .staymate-auth .headline-desc {
     color: var(--sm-text-secondary);
-    font-size: 0.88rem;
-    line-height: 1.6;
-    margin-bottom: 24px;
+    font-size: 0.9rem;
+    line-height: 1.7;
+    margin: 0 0 24px 0;
 }
 
 .staymate-auth .room-preview-box {
@@ -185,16 +180,7 @@ body.staymate-auth::after {
     display: block;
 }
 
-.staymate-auth .badge-secure {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: #38BDF8;
-    font-size: 0.85rem;
-    font-weight: 500;
-}
-
-/* Right Form Panel */
+/* Right form panel */
 .staymate-auth .right-form-panel {
     background: var(--sm-panel-right);
     padding: 44px 38px;
@@ -211,7 +197,7 @@ body.staymate-auth::after {
 .staymate-auth .form-welcome-title {
     font-size: 1.7rem;
     font-weight: 700;
-    margin: 10px 0 6px 0;
+    margin: 0 0 6px 0;
     color: #FFFFFF;
 }
 
@@ -221,7 +207,7 @@ body.staymate-auth::after {
     margin: 0;
 }
 
-/* Custom Input Field with Icon */
+/* Inputs */
 .staymate-auth .form-field-group {
     margin-bottom: 20px;
 }
@@ -275,7 +261,18 @@ body.staymate-auth::after {
     box-shadow: 0 0 14px var(--sm-cyan-glow);
 }
 
-/* Primary Action Button (Blue Pill) */
+.staymate-auth .styled-input.input-validation-error {
+    border-color: var(--sm-danger);
+}
+
+/* Autofill: keep dark theme */
+.staymate-auth .styled-input:-webkit-autofill {
+    -webkit-text-fill-color: #FFFFFF;
+    -webkit-box-shadow: 0 0 0 1000px var(--sm-input-bg) inset;
+    caret-color: #FFFFFF;
+}
+
+/* Primary button */
 .staymate-auth .btn-action-primary {
     width: 100%;
     height: 48px;
@@ -283,6 +280,7 @@ body.staymate-auth::after {
     border-radius: 10px;
     background: var(--sm-blue-accent);
     color: #FFFFFF;
+    font-family: inherit;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
@@ -307,7 +305,7 @@ body.staymate-auth::after {
     transform: translateY(0);
 }
 
-/* Link Switch Mode */
+/* Switch link */
 .staymate-auth .switch-link-center {
     text-align: center;
     margin-top: 20px;
@@ -326,7 +324,13 @@ body.staymate-auth::after {
     text-decoration: underline;
 }
 
-/* Bottom Footer Bar */
+.staymate-auth .switch-link-center .muted {
+    color: var(--sm-text-muted);
+    font-size: 0.9rem;
+    margin-right: 4px;
+}
+
+/* Footer bar */
 .staymate-auth .master-bottom-bar {
     display: flex;
     align-items: center;
@@ -338,26 +342,33 @@ body.staymate-auth::after {
     color: #64748B;
 }
 
-.staymate-auth .master-bottom-bar a {
-    color: #64748B;
-    text-decoration: none;
-    margin-left: 14px;
-    transition: color 0.2s;
-}
-
-.staymate-auth .master-bottom-bar a:hover {
-    color: #94A3B8;
-}
-
-/* Register Split Page Hero Feature */
+/* Register hero (local image) */
 .staymate-auth .register-hero {
     background: linear-gradient(145deg, rgba(11, 19, 43, 0.95), rgba(0, 118, 255, 0.7)),
                 url('https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1000&q=80') center/cover;
-    padding: 44px 36px;
+    padding: 44px 40px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     border-right: 1px solid var(--sm-border-subtle);
+}
+
+.staymate-auth .hero-title {
+    font-size: 1.85rem;
+    font-weight: 700;
+    line-height: 1.35;
+    margin: 0 0 12px;
+}
+
+.staymate-auth .hero-desc {
+    color: #CBD5E1;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.staymate-auth .hero-features {
+    margin: 24px 0;
 }
 
 .staymate-auth .hero-feature {
@@ -380,7 +391,53 @@ body.staymate-auth::after {
     flex-shrink: 0;
 }
 
-/* Validation Styling */
+.staymate-auth .hero-feature-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.staymate-auth .hero-feature-desc {
+    font-size: 0.82rem;
+    color: #94A3B8;
+}
+
+.staymate-auth .register-panel {
+    padding: 36px 36px 28px;
+}
+
+.staymate-auth .register-heading {
+    margin-bottom: 20px;
+}
+
+.staymate-auth .register-heading .form-welcome-title {
+    font-size: 1.65rem;
+    margin: 0 0 6px;
+}
+
+/* Trust list (Login) */
+.staymate-auth .trust-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 10px;
+}
+
+.staymate-auth .trust-list li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.86rem;
+    color: var(--sm-text-secondary);
+}
+
+.staymate-auth .trust-list i {
+    color: var(--sm-cyan);
+    width: 18px;
+    text-align: center;
+}
+
+/* Validation */
 .staymate-auth .field-validation-error,
 .staymate-auth .text-danger {
     color: var(--sm-danger) !important;
@@ -389,6 +446,13 @@ body.staymate-auth::after {
     display: block;
 }
 
+.staymate-auth .optional {
+    color: var(--sm-text-muted);
+    font-weight: 300;
+    font-size: 0.78rem;
+}
+
+/* Alerts (inline) */
 .staymate-auth .alert-custom-success {
     background: rgba(52, 211, 153, 0.15);
     border: 1px solid rgba(52, 211, 153, 0.4);
@@ -402,16 +466,82 @@ body.staymate-auth::after {
     gap: 10px;
 }
 
-/* Fade Up Animation */
+.staymate-auth .alert-custom-error,
+.staymate-auth .validation-summary-errors {
+    background: rgba(248, 113, 113, 0.12);
+    border: 1px solid rgba(248, 113, 113, 0.4);
+    color: #FCA5A5;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.88rem;
+    margin-bottom: 18px;
+}
+
+.staymate-auth .validation-summary-errors ul {
+    margin: 0;
+    padding-left: 18px;
+}
+
+.staymate-auth .validation-summary-valid {
+    display: none;
+}
+
+/* Password toggle */
+.staymate-auth .styled-input.has-toggle {
+    padding-right: 46px;
+}
+
+.staymate-auth .toggle-password {
+    position: absolute;
+    right: 6px;
+    width: 36px;
+    height: 36px;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    color: var(--sm-text-muted);
+    border-radius: 8px;
+}
+
+.staymate-auth .toggle-password:hover {
+    color: var(--sm-cyan);
+}
+
+.staymate-auth .input-icon-box .toggle-password i {
+    position: static;
+    color: inherit;
+    pointer-events: none;
+}
+
+/* Remember me */
+.staymate-auth .remember-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.86rem;
+    color: var(--sm-text-secondary);
+    cursor: pointer;
+    margin-bottom: 6px;
+}
+
+.staymate-auth .remember-row input {
+    accent-color: var(--sm-blue-accent);
+    width: 16px;
+    height: 16px;
+}
+
+/* Focus visibility */
+.staymate-auth .btn-action-primary:focus-visible,
+.staymate-auth .toggle-password:focus-visible,
+.staymate-auth a:focus-visible {
+    outline: 2px solid var(--sm-cyan);
+    outline-offset: 2px;
+}
+
+/* Animations */
 @keyframes sm-fade-up {
-    from {
-        opacity: 0;
-        transform: translateY(18px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 /* Responsive */
@@ -423,138 +553,18 @@ body.staymate-auth::after {
     .staymate-auth .register-hero {
         display: none;
     }
-    .staymate-auth .right-form-panel {
+    .staymate-auth .right-form-panel,
+    .staymate-auth .register-panel {
         padding: 32px 24px;
     }
 }
-/* ==========================================================
-   StayMate - Motion layer (โหลดต่อจาก staymate_login_Register.css)
-   ========================================================== */
-
-/* ---------- Smoother surfaces ---------- */
-.staymate-auth .master-auth-card {
-    border-radius: 24px;
-    background: linear-gradient(180deg, #0C1530 0%, #0A1229 100%);
+/* ข้อความแนะนำใต้ช่องรหัสผ่าน */
+.staymate-auth .field-hint {
+    font-size: 0.78rem;
+    color: var(--sm-text-muted);
+    margin: -8px 0 18px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
-
-.staymate-auth .right-form-panel {
-    background: linear-gradient(160deg, #101C42 0%, #0C1634 100%);
-}
-
-.staymate-auth .styled-input,
-.staymate-auth .btn-action-primary,
-.staymate-auth .switch-link-center a {
-    transition: border-color .3s cubic-bezier(.22,.61,.36,1),
-                background .3s cubic-bezier(.22,.61,.36,1),
-                box-shadow .3s cubic-bezier(.22,.61,.36,1),
-                transform .3s cubic-bezier(.22,.61,.36,1),
-                color .2s ease;
-}
-
-/* ไอคอนในช่องกรอกขยับเมื่อ focus */
-.staymate-auth .input-icon-box:focus-within i {
-    color: var(--sm-cyan);
-    transform: scale(1.12);
-}
-.staymate-auth .input-icon-box i { transition: color .25s ease, transform .3s cubic-bezier(.34,1.56,.64,1); }
-
-/* ---------- Hotel image (Login) ---------- */
-.staymate-auth .room-preview-box {
-    height: 240px;
-    border-radius: 18px;
-}
-.staymate-auth .room-preview-img {
-    height: 100%;
-    transform-origin: 60% 50%;
-    animation: sm-kenburns 18s ease-in-out infinite alternate;
-}
-.staymate-auth .room-preview-box::after {
-    content: "";
-    position: absolute; inset: 0;
-    background: linear-gradient(180deg, transparent 45%, rgba(7,13,30,.75) 100%);
-    pointer-events: none;
-}
-.staymate-auth .room-caption {
-    position: absolute;
-    left: 16px; bottom: 14px; z-index: 2;
-    display: flex; align-items: center; gap: 8px;
-    font-size: .82rem; color: #E2E8F0;
-}
-.staymate-auth .room-caption .dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: var(--sm-success);
-    animation: sm-pulse 2.2s ease-out infinite;
-}
-
-@keyframes sm-kenburns {
-    from { transform: scale(1)    translate(0, 0); }
-    to   { transform: scale(1.12) translate(-2%, -1.5%); }
-}
-@keyframes sm-pulse {
-    0%   { box-shadow: 0 0 0 0 rgba(52,211,153,.55); }
-    100% { box-shadow: 0 0 0 10px rgba(52,211,153,0); }
-}
-
-/* ---------- Ambient glow ลอยช้า ๆ ---------- */
-body.staymate-auth::before { animation: sm-drift-a 16s ease-in-out infinite alternate; }
-body.staymate-auth::after  { animation: sm-drift-b 20s ease-in-out infinite alternate; }
-@keyframes sm-drift-a { to { transform: translate(90px, 60px); } }
-@keyframes sm-drift-b { to { transform: translate(-80px, -50px); } }
-
-/* ---------- ปุ่มหลัก: shine + loading ---------- */
-.staymate-auth .btn-action-primary { position: relative; overflow: hidden; }
-.staymate-auth .btn-action-primary::after {
-    content: "";
-    position: absolute; top: 0; left: -60%;
-    width: 40%; height: 100%;
-    background: linear-gradient(100deg, transparent, rgba(255,255,255,.28), transparent);
-    transform: skewX(-20deg);
-}
-.staymate-auth .btn-action-primary:hover::after { left: 130%; transition: left .8s ease; }
-
-.staymate-auth .btn-action-primary.is-loading { pointer-events: none; opacity: .85; }
-.staymate-auth .btn-action-primary.is-loading span { opacity: 0; }
-.staymate-auth .btn-action-primary.is-loading::before {
-    content: "";
-    position: absolute; left: 50%; top: 50%;
-    width: 20px; height: 20px; margin: -10px 0 0 -10px;
-    border: 2.5px solid rgba(255,255,255,.35);
-    border-top-color: #fff; border-radius: 50%;
-    animation: sm-spin .7s linear infinite;
-}
-@keyframes sm-spin { to { transform: rotate(360deg); } }
-
-/* ---------- Lottie slot ---------- */
-.staymate-auth .lottie-slot { width: 28px; height: 28px; display: none; }
-.staymate-auth .lottie-slot.is-ready { display: inline-block; }
-
-/* ---------- SweetAlert2 ธีมมืด ---------- */
-.swal2-popup.sm-swal {
-    background: #0E1838;
-    color: #fff;
-    border: 1px solid rgba(255,255,255,.08);
-    border-radius: 18px;
-    font-family: 'Prompt', sans-serif;
-    box-shadow: 0 25px 60px rgba(0,0,0,.6), 0 0 30px rgba(0,118,255,.18);
-}
-.swal2-popup.sm-swal .swal2-title { color: #fff; font-size: 1.3rem; }
-.swal2-popup.sm-swal .swal2-html-container { color: #CBD5E1; }
-.swal2-popup.sm-swal .swal2-confirm {
-    background: #0076FF; border-radius: 10px; box-shadow: 0 8px 20px rgba(0,118,255,.4);
-}
-.swal2-popup.sm-swal .swal2-confirm:focus { box-shadow: 0 0 0 3px rgba(0,229,255,.35); }
-
-/* ---------- Register: พื้นหลังรูปขยับเบา ๆ ---------- */
-.staymate-auth .register-hero { background-size: 112%; animation: sm-hero-pan 22s ease-in-out infinite alternate; }
-@keyframes sm-hero-pan { from { background-position: 40% 50%; } to { background-position: 60% 50%; } }
-.staymate-auth .hero-feature { transition: transform .3s cubic-bezier(.22,.61,.36,1); }
-.staymate-auth .hero-feature:hover { transform: translateX(6px); }
-
-/* ---------- เคารพผู้ใช้ที่ปิด animation ---------- */
-@media (prefers-reduced-motion: reduce) {
-    .staymate-auth *, .staymate-auth *::before, .staymate-auth *::after,
-    body.staymate-auth::before, body.staymate-auth::after {
-        animation: none !important;
-        transition-duration: .01ms !important;
-    }
-}
+.staymate-auth .field-hint i { color: #38BDF8; font-size: 0.75rem; }

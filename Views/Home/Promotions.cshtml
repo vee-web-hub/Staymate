@@ -43,7 +43,7 @@
                         <span class="sm-text-gradient">โปรโมชั่นและสิทธิพิเศษสำหรับคุณ</span>
                     </h1>
                     <p class="text-light opacity-75 mb-0" style="max-width: 620px;">
-                        ดูโปรโมชั่นที่เปิดให้บริการอยู่ในขณะนี้ เมื่อพร้อมเข้าพัก เข้าสู่ระบบเพื่อจองห้องพักและรับสิทธิ์ตามเงื่อนไขของแต่ละโปรโมชั่น
+                        ดูโปรโมชั่นที่เปิดให้บริการอยู่ในขณะนี้ เมื่อพร้อมเข้าพัก เข้าสู่ระบบเพื่อจองห้องพักและรับสิทธิ์ตามเงื่อนไขของแต่ละโปรโมชั่นโดยอัตโนมัติ
                     </p>
                 </div>
             </div>
@@ -141,22 +141,19 @@
                                     }
                                 </div>
 
-                                <div class="sm-promo-showcase-footer">
-                                    <div class="sm-coupon-box">
-                                        <small>รหัสโปรโมชั่น:</small>
-                                        <div class="sm-coupon-code">
-                                            <span class="code-text">@p.PromoCode</span>
-                                            <button type="button" class="sm-copy-btn" data-code="@p.PromoCode" aria-label="คัดลอกโค้ด"><i class="fa-regular fa-copy"></i></button>
-                                        </div>
-                                    </div>
-
+                                <!-- ส่วน Footer ตัดกล่องรหัสโปรโมชั่นออก เหลือเฉพาะปุ่มไปหน้าห้องพัก -->
+                                <div class="sm-promo-showcase-footer d-flex justify-content-end align-items-center mt-3">
                                     @if (p.ApplicableRoomTypeId.HasValue)
                                     {
-                                        <a asp-controller="Home" asp-action="RoomDetails" asp-route-id="@p.ApplicableRoomTypeId" class="sm-promo-action-btn">ดูห้องพักที่ร่วมรายการ <i class="fa-solid fa-angle-right"></i></a>
+                                        <a asp-controller="Home" asp-action="RoomDetails" asp-route-id="@p.ApplicableRoomTypeId" class="sm-promo-action-btn">
+                                            ดูห้องพักที่ร่วมรายการ <i class="fa-solid fa-angle-right"></i>
+                                        </a>
                                     }
                                     else
                                     {
-                                        <a asp-controller="Home" asp-action="Rooms" class="sm-promo-action-btn">ดูห้องพักที่ร่วมรายการ <i class="fa-solid fa-angle-right"></i></a>
+                                        <a asp-controller="Home" asp-action="Rooms" class="sm-promo-action-btn">
+                                            ดูห้องพักที่ร่วมรายการ <i class="fa-solid fa-angle-right"></i>
+                                        </a>
                                     }
                                 </div>
                             </div>
@@ -169,7 +166,7 @@
             <!-- 4. แจ้งให้ล็อกอินก่อนจอง -->
             <div class="mt-5 p-4 rounded-4 border text-center" data-aos="fade-up">
                 <h5 class="mb-1"><i class="fa-solid fa-circle-info text-primary me-2"></i>สนใจโปรโมชั่นไหน?</h5>
-                <p class="text-muted mb-3">การจองห้องพักและการใช้สิทธิ์โปรโมชั่นต้องเข้าสู่ระบบก่อน</p>
+                <p class="text-muted mb-3">การจองห้องพักและการใช้สิทธิ์โปรโมชั่นระบบจะคำนวณสิทธิ์ให้อัตโนมัติเมื่อท่านเข้าสู่ระบบและทำตามเงื่อนไข</p>
                 @if (User.Identity?.IsAuthenticated == true)
                 {
                     <a asp-controller="Customer" asp-action="Index" class="sm-btn-primary px-4 py-2">ไปที่หน้าของฉัน</a>
@@ -190,7 +187,7 @@
         document.addEventListener("DOMContentLoaded", function () {
             if (typeof AOS !== "undefined") AOS.init({ duration: 700, once: true });
 
-            // 1. กรองการ์ด (ใช้ split เพื่อไม่ให้ "popular" ไปชนกับชื่ออื่น)
+            // 1. กรองการ์ด
             const filterBtns = document.querySelectorAll(".sm-filter-btn");
             const promoCards = document.querySelectorAll(".sm-promo-item-card");
             filterBtns.forEach(btn => {
@@ -205,7 +202,7 @@
                 });
             });
 
-            // 2. Countdown จากวันสิ้นสุดจริง (data-end)
+            // 2. Countdown
             document.querySelectorAll(".sm-countdown-wrap[data-end]").forEach(wrap => {
                 const target = new Date(wrap.dataset.end).getTime();
                 const display = wrap.querySelector(".countdown-timer");
@@ -224,17 +221,6 @@
                 if (tick()) {
                     const id = setInterval(() => { if (!tick()) clearInterval(id); }, 1000);
                 }
-            });
-
-            // 3. คัดลอกโค้ด
-            document.querySelectorAll(".sm-copy-btn").forEach(btn => {
-                btn.addEventListener("click", function () {
-                    navigator.clipboard.writeText(this.dataset.code).then(() => {
-                        const icon = this.querySelector("i");
-                        icon.className = "fa-solid fa-check text-success";
-                        setTimeout(() => icon.className = "fa-regular fa-copy", 2000);
-                    }).catch(err => console.error("คัดลอกโค้ดไม่สำเร็จ:", err));
-                });
             });
         });
     </script>

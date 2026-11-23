@@ -1,5 +1,6 @@
 ﻿@model StayMate_Kavinvee_0576.Models.ViewModels.HomeIndexViewModel
 @{
+    var hotel = (ViewBag.Hotel as StayMate_Kavinvee_0576.Models.HotelSetting) ?? StayMate_Kavinvee_0576.Models.HotelSetting.Default();
     Layout = "~/Views/Shared/_HomeLayout.cshtml";
     ViewData["Title"] = "หน้าแรก";
 
@@ -524,14 +525,14 @@
                         </div>
                         <p class="sm-footer-address mb-0">
                             <i class="fa-solid fa-location-dot text-info me-2"></i>
-                            888 อาคารสเตย์เมท ทาวเวอร์ ถนนสุขุมวิท แขวงคลองเตยเหนือ เขตวัฒนา กรุงเทพมหานคร 10110 (ใกล้รถไฟฟ้า BTS อโศก)
+                           @hotel.Address
                         </p>
                     </div>
 
                     <div class="col-lg-4">
                         <div class="sm-footer-contact-pills">
-                            <span><i class="fa-solid fa-phone-volume text-info me-2"></i> 02-888-9999 (ดูแล 24 ชั่วโมง)</span>
-                            <span><i class="fa-solid fa-envelope-open-text text-info me-2"></i> booking@staymate-hotel.com</span>
+                            <span><i class="fa-solid fa-phone-volume text-info me-2"></i> @hotel.Phone</span>
+                            <span><i class="fa-solid fa-envelope-open-text text-info me-2"></i> @hotel.Email</span>
                         </div>
                         <div class="sm-social-group mt-3">
                             <a href="https://facebook.com" target="_blank" rel="noopener" class="sm-social-btn" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
@@ -608,26 +609,46 @@
                     { opacity: 1, x: 0, duration: 1.1, ease: "power3.out", delay: 0.5 });
             }
 
-            // 3. Swiper: โปรโมชั่นจาก DB (loop เฉพาะเมื่อสไลด์มากพอ)
+                       // 3. Swiper: โปรโมชั่นจาก DB (ปิด loop และเลื่อนเป็นกลุ่มหน้า)
             const promoEl = document.querySelector(".sm-promo-swiper");
             if (typeof Swiper !== "undefined" && promoEl) {
                 new Swiper(".sm-promo-swiper", {
                     slidesPerView: 1,
+                    slidesPerGroup: 1,
                     spaceBetween: 24,
-                    loop: @(promoCount > 3 ? "true" : "false"),
+                    loop: false, // ปิด loop เพื่อไม่ให้วนซ้ำโปรโมชั่นเดิม
+                    watchOverflow: true, // ซ่อน/ล็อกปุ่มและ pagination เมื่อสไลด์พอดีหน้าจอ
                     grabCursor: true,
                     speed: prefersReducedMotion ? 0 : 700,
                     autoplay: prefersReducedMotion ? false : {
-                        delay: 4000,
+                        delay: 4500,
                         disableOnInteraction: false,
                         pauseOnMouseEnter: true
                     },
-                    pagination: { el: ".sm-swiper-pagination", clickable: true },
-                    navigation: { nextEl: ".promo-next", prevEl: ".promo-prev" },
+                    pagination: { 
+                        el: ".sm-swiper-pagination", 
+                        clickable: true 
+                    },
+                    navigation: { 
+                        nextEl: ".promo-next", 
+                        prevEl: ".promo-prev" 
+                    },
                     breakpoints: {
-                        640: { slidesPerView: 1.3, spaceBetween: 20 },
-                        768: { slidesPerView: 2, spaceBetween: 24 },
-                        1200: { slidesPerView: 3, spaceBetween: 28 }
+                        640: { 
+                            slidesPerView: 1.2, 
+                            slidesPerGroup: 1,
+                            spaceBetween: 20 
+                        },
+                        768: { 
+                            slidesPerView: 2, 
+                            slidesPerGroup: 2, // แท็บเล็ตเลื่อนทีละ 2 การ์ด
+                            spaceBetween: 24 
+                        },
+                        1200: { 
+                            slidesPerView: 3, 
+                            slidesPerGroup: 3, // เดสก์ท็อปเลื่อนทีละ 3 การ์ด (5 ใบจะแบ่งเป็น 2 หน้าพอดี)
+                            spaceBetween: 28 
+                        }
                     }
                 });
             }

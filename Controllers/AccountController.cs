@@ -1,4 +1,4 @@
-
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -41,6 +41,7 @@ public class AccountController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("auth")]  
     public async Task<IActionResult> Login(
         LoginViewModel model,
         string? returnUrl = null)
@@ -142,17 +143,22 @@ public class AccountController : Controller
         );
 
         // สร้าง Authentication Cookie
-        var identity = new ClaimsIdentity(
-            claims,
-            CookieAuthenticationDefaults.AuthenticationScheme
-        );
+       var identity = new ClaimsIdentity(
+    claims,
+    CookieAuthenticationDefaults.AuthenticationScheme);
 
-        var principal = new ClaimsPrincipal(identity);
+var principal = new ClaimsPrincipal(identity);
 
-        await HttpContext.SignInAsync(
-            CookieAuthenticationDefaults.AuthenticationScheme,
-            principal
-        );
+await HttpContext.SignInAsync(
+    CookieAuthenticationDefaults.AuthenticationScheme,
+    principal,
+    new AuthenticationProperties
+    {
+        IsPersistent = model.RememberMe,
+        ExpiresUtc = model.RememberMe
+            ? DateTimeOffset.UtcNow.AddDays(14)
+            : null
+    });
 
         // Redirect CUSTOMER ไปหน้าลูกค้าเสมอ
         if (roleCodes.Contains("CUSTOMER"))
@@ -219,6 +225,7 @@ public class AccountController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("auth")]  
     public async Task<IActionResult> Register(
         RegisterViewModel model)
     {
@@ -254,9 +261,9 @@ public class AccountController : Controller
     // USER LIST
     // =========================================================
 
-    [HttpGet]
-    [Authorize]
-    public async Task<IActionResult> UserList(string? q)
+ [HttpGet]
+[Authorize(Roles = "OWNER,MANAGER")]
+public async Task<IActionResult> UserList(string? q)
     {
         var query = _db.Users
             .Include(u => u.UserRoles)
@@ -321,13 +328,9 @@ public class AccountController : Controller
         }
 
         // RECEPTION
-        // RECEPTION
     if (roles.Contains("FRONT_ADMIN"))
     {
-        return RedirectToAction(
-            "Index",
-            "Reception"
-        );
+        return RedirectToAction("Index", "Reception");
     }
 
         // FINANCE

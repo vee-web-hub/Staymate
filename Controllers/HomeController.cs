@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StayMate_Kavinvee_0576.Models;
 using StayMate_Kavinvee_0576.Models.ViewModels;
+using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace StayMate_Kavinvee_0576.Controllers;
 
@@ -481,4 +482,11 @@ public class HomeController : Controller
             RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
         });
     }
+
+                public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
+            {
+                ViewBag.Hotel = await _db.HotelSettings.AsNoTracking().FirstOrDefaultAsync()
+                                ?? HotelSetting.Default();
+                await next();
+            }
 }

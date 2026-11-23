@@ -1,0 +1,123 @@
+/* ==========================================================
+   StayMate - Motion layer (โหลดต่อจาก staymate_login_Register.css)
+   ========================================================== */
+
+/* ---------- Surfaces ---------- */
+.staymate-auth .master-auth-card {
+    border-radius: 24px;
+    background: linear-gradient(180deg, #0C1530 0%, #0A1229 100%);
+}
+
+.staymate-auth .right-form-panel {
+    background: linear-gradient(160deg, #101C42 0%, #0C1634 100%);
+}
+
+.staymate-auth .styled-input,
+.staymate-auth .btn-action-primary,
+.staymate-auth .switch-link-center a {
+    transition: border-color .3s cubic-bezier(.22,.61,.36,1),
+                background .3s cubic-bezier(.22,.61,.36,1),
+                box-shadow .3s cubic-bezier(.22,.61,.36,1),
+                transform .3s cubic-bezier(.22,.61,.36,1),
+                color .2s ease;
+}
+
+/* ไอคอนในช่องกรอกขยับเมื่อ focus */
+.staymate-auth .input-icon-box i {
+    transition: color .25s ease, transform .3s cubic-bezier(.34,1.56,.64,1);
+}
+.staymate-auth .input-icon-box:focus-within i {
+    color: var(--sm-cyan);
+    transform: scale(1.12);
+}
+.staymate-auth .input-icon-box .toggle-password i,
+.staymate-auth .input-icon-box:focus-within .toggle-password i {
+    transform: none;
+}
+
+/* ---------- Hotel image (Login) ---------- */
+.staymate-auth .room-preview-box {
+    height: 240px;
+    border-radius: 18px;
+}
+.staymate-auth .room-preview-img {
+    height: 100%;
+    transform-origin: 60% 50%;
+    animation: sm-kenburns 18s ease-in-out infinite alternate;
+}
+.staymate-auth .room-preview-box::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 55%, rgba(7,13,30,.6) 100%);
+    pointer-events: none;
+}
+
+@keyframes sm-kenburns {
+    from { transform: scale(1)    translate(0, 0); }
+    to   { transform: scale(1.1)  translate(-2%, -1.5%); }
+}
+
+/* ---------- Ambient glow ---------- */
+body.staymate-auth::before { animation: sm-drift-a 16s ease-in-out infinite alternate; }
+body.staymate-auth::after  { animation: sm-drift-b 20s ease-in-out infinite alternate; }
+@keyframes sm-drift-a { to { transform: translate(90px, 60px); } }
+@keyframes sm-drift-b { to { transform: translate(-80px, -50px); } }
+
+/* ---------- Primary button: shine + loading ---------- */
+.staymate-auth .btn-action-primary { position: relative; overflow: hidden; }
+.staymate-auth .btn-action-primary::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -60%;
+    width: 40%;
+    height: 100%;
+    background: linear-gradient(100deg, transparent, rgba(255,255,255,.28), transparent);
+    transform: skewX(-20deg);
+}
+.staymate-auth .btn-action-primary:hover::after {
+    left: 130%;
+    transition: left .8s ease;
+}
+
+.staymate-auth .btn-action-primary.is-loading { pointer-events: none; opacity: .85; }
+.staymate-auth .btn-action-primary.is-loading span { opacity: 0; }
+.staymate-auth .btn-action-primary.is-loading::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2.5px solid rgba(255,255,255,.35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: sm-spin .7s linear infinite;
+}
+@keyframes sm-spin { to { transform: rotate(360deg); } }
+
+/* ---------- Alerts ---------- */
+.staymate-auth .alert-custom-success { animation: sm-fade-up .4s ease-out both; }
+
+/* ---------- Register: พื้นหลังรูปขยับเบา ๆ ---------- */
+.staymate-auth .register-hero {
+    background-size: 112%;
+    animation: sm-hero-pan 22s ease-in-out infinite alternate;
+}
+@keyframes sm-hero-pan {
+    from { background-position: 40% 50%; }
+    to   { background-position: 60% 50%; }
+}
+.staymate-auth .hero-feature { transition: transform .3s cubic-bezier(.22,.61,.36,1); }
+.staymate-auth .hero-feature:hover { transform: translateX(6px); }
+
+/* ---------- เคารพผู้ใช้ที่ปิด animation ---------- */
+@media (prefers-reduced-motion: reduce) {
+    .staymate-auth *, .staymate-auth *::before, .staymate-auth *::after,
+    body.staymate-auth::before, body.staymate-auth::after {
+        animation: none !important;
+        transition-duration: .01ms !important;
+    }
+}

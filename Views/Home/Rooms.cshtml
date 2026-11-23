@@ -1,86 +1,73 @@
 @model List<StayMate_Kavinvee_0576.Models.ViewModels.RoomCardItem>
 @{
     Layout = "~/Views/Shared/_HomeLayout.cshtml";
-    ViewData["Title"] = "ประเภทห้องพัก";
+    ViewData["Title"] = "ห้องพัก";
+    var minPrice = Model.Any() ? Model.Min(x => x.Price) : 0m;
+    var totalAvail = Model.Sum(x => x.AvailableRooms);
 }
 
 @section Styles {
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" />
     <link rel="stylesheet" href="~/css/Home.css" asp-append-version="true" />
 }
 
 <div class="sm-home-wrapper">
 
-    <!-- 1. PAGE HERO BANNER -->
-    <section class="sm-subpage-hero sm-full-bleed">
+    <!-- HERO -->
+    <section class="sm-subpage-hero sm-rooms-hero sm-full-bleed">
         <div class="sm-subpage-hero-bg"
-             style="background-image: url('https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=2000&q=85');">
-        </div>
+             style="background-image: url('https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=2000&q=85');"></div>
         <div class="sm-hero-overlay"></div>
-        <div class="sm-hero-glow-orb sm-orb-cyan"></div>
-
-        <div class="container position-relative z-2 py-4">
-            <nav aria-label="breadcrumb" class="mb-3" data-aos="fade-down">
+        <div class="container position-relative z-2">
+            <nav aria-label="breadcrumb" class="mb-3">
                 <ol class="breadcrumb sm-breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index"><i class="fa-solid fa-house me-1"></i>หน้าแรก</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">ประเภทห้องพัก</li>
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">หน้าแรก</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">ห้องพัก</li>
                 </ol>
             </nav>
-
-            <div class="row align-items-end g-4">
-                <div class="col-lg-12" data-aos="fade-up">
-                    <div class="sm-hero-badge mb-2">
-                        <span class="sm-badge-pulse"></span>
-                        <span>SMART ACCOMMODATION SERIES</span>
-                    </div>
-                    <h1 class="sm-subpage-title text-white">
-                        Our Rooms &amp; Suites<br />
-                        <span class="sm-text-gradient">เลือกพื้นที่พักผ่อนระดับอนาคตของคุณ</span>
-                    </h1>
-                    <p class="text-light opacity-75 mb-0" style="max-width: 620px;">
-                        ห้องพักทุกห้องของ StayMate ติดตั้งระบบ Smart Room Automation ควบคุมแสงไฟ อุณหภูมิ และความบันเทิงได้เพียงปลายนิ้ว พร้อมเตียงนอนเกรดพรีเมียมเพื่อการหลับลึกตลอดคืน
-                    </p>
+            <div class="d-flex flex-wrap justify-content-between align-items-end gap-4">
+                <div>
+                    <h1 class="sm-subpage-title text-white mb-2">เลือกห้องพักที่เหมาะกับคุณ</h1>
+                    <p class="text-light opacity-75 mb-0">เปรียบเทียบประเภทห้อง ราคา และโปรโมชั่นที่ใช้ได้ในหน้าเดียว</p>
                 </div>
+                @if (Model.Any())
+                {
+                    <div class="sm-hero-facts">
+                        <div><strong>@Model.Count</strong><span>ประเภทห้อง</span></div>
+                        <div><strong>฿@minPrice.ToString("N0")</strong><span>เริ่มต้น / คืน</span></div>
+                        <div><strong>@totalAvail</strong><span>ห้องว่างตอนนี้</span></div>
+                    </div>
+                }
             </div>
         </div>
     </section>
 
-    <!-- 2. FILTER & SORT -->
-    <section class="sm-rooms-filter-wrap" data-aos="fade-up">
+    <!-- FILTER -->
+    <section class="sm-rooms-filter-wrap">
         <div class="container">
             <div class="sm-filter-bar">
                 <div class="d-flex align-items-center flex-wrap gap-2">
-                    <span class="sm-filter-label"><i class="fa-solid fa-sliders text-primary me-1"></i> กรองตามสไตล์:</span>
                     <button type="button" class="sm-filter-btn active" data-filter="all">ทั้งหมด (@Model.Count)</button>
-                    <button type="button" class="sm-filter-btn" data-filter="couple">
-                        <i class="fa-solid fa-user-group me-1"></i> คู่รัก / มาเดี่ยว (1–2 ท่าน)
-                    </button>
-                    <button type="button" class="sm-filter-btn" data-filter="extrabed">
-                        <i class="fa-solid fa-gift me-1"></i> รองรับเตียงเสริม
-                    </button>
-                    <button type="button" class="sm-filter-btn" data-filter="group">
-                        <i class="fa-solid fa-people-roof me-1"></i> ครอบครัว &amp; กลุ่มเพื่อน (4 ท่านขึ้นไป)
-                    </button>
+                    <button type="button" class="sm-filter-btn" data-filter="couple"><i class="fa-solid fa-user-group me-1"></i>1–2 ท่าน</button>
+                    <button type="button" class="sm-filter-btn" data-filter="extrabed"><i class="fa-solid fa-bed me-1"></i>เสริมเตียงได้</button>
+                    <button type="button" class="sm-filter-btn" data-filter="group"><i class="fa-solid fa-people-roof me-1"></i>4 ท่านขึ้นไป</button>
                 </div>
-
                 <div class="d-flex align-items-center gap-2 ms-auto">
-                    <span class="text-secondary small d-none d-md-inline">เรียงตาม:</span>
-                    <select id="roomSortSelect" class="form-select form-select-sm sm-sort-select" aria-label="เรียงลำดับห้องพัก">
-                        <option value="recommended" selected>แนะนำโดย StayMate</option>
-                        <option value="price-asc">ราคา: ต่ำ ไป สูง</option>
-                        <option value="price-desc">ราคา: สูง ไป ต่ำ</option>
-                        <option value="size-desc">พื้นที่ห้อง: กว้างที่สุด</option>
+                    <label for="roomSortSelect" class="text-secondary small mb-0">เรียงตาม</label>
+                    <select id="roomSortSelect" class="form-select form-select-sm sm-sort-select">
+                        <option value="recommended" selected>ค่าเริ่มต้น</option>
+                        <option value="price-asc">ราคาต่ำ → สูง</option>
+                        <option value="price-desc">ราคาสูง → ต่ำ</option>
+                        <option value="size-desc">พื้นที่กว้างที่สุด</option>
                     </select>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- 3. ROOM LIST (จากตาราง room_types) -->
+    <!-- ROOM LIST -->
     <section class="sm-section pt-3">
         <div class="container">
             <div class="row g-4" id="roomsGridContainer">
-
                 @if (!Model.Any())
                 {
                     <div class="col-12 text-center text-muted py-5">ยังไม่มีข้อมูลห้องพักในระบบ</div>
@@ -89,87 +76,73 @@
                 @foreach (var r in Model)
                 {
                     var guestsText = r.MinGuests == r.MaxGuests ? $"{r.MaxGuests} ท่าน" : $"{r.MinGuests}–{r.MaxGuests} ท่าน";
-                    <div class="col-12 sm-room-item" data-category="@r.Category" data-price="@((int)r.Price)" data-size="@r.SizeSqm" data-order="@r.Order" data-aos="fade-up">
+                    var tags = new List<string>();
+                    if (!string.IsNullOrWhiteSpace(r.BedType)) { tags.Add(r.BedType!); }
+                    if (r.AllowExtraBed) { tags.Add("เสริมเตียงได้"); }
+
+                    <div class="col-12 sm-room-item" data-category="@r.Category" data-price="@((int)r.Price)" data-size="@r.SizeSqm" data-order="@r.Order">
                         <article class="sm-room-showcase-card @(r.IsFeatured ? "sm-card-featured" : "")">
                             <div class="row g-0">
-                                <div class="col-lg-5 position-relative">
-                                    <div class="sm-room-showcase-img-wrap">
+                                <div class="col-lg-5">
+                                    <a asp-action="RoomDetails" asp-route-id="@r.RoomTypeId" class="sm-room-showcase-img-wrap d-block" aria-label="ดูรายละเอียด @r.TypeName">
                                         <img src="@r.ImageUrl" alt="@r.TypeName" class="sm-room-showcase-img" loading="lazy" />
-                                        <span class="sm-room-badge @r.BadgeClass">@r.Order.ToString("00") · @(string.IsNullOrEmpty(r.BadgeText) ? r.TypeName : r.BadgeText.ToUpper())</span>
+                                        @if (r.IsFeatured)
+                                        {
+                                            <span class="sm-room-badge sm-badge-violet">แนะนำ</span>
+                                        }
                                         @if (r.AvailableRooms > 0)
                                         {
                                             <span class="sm-room-status-pill"><span class="sm-live-dot"></span> ว่าง @r.AvailableRooms ห้อง</span>
                                         }
                                         else
                                         {
-                                            <span class="sm-room-status-pill">เต็มชั่วคราว</span>
+                                            <span class="sm-room-status-pill sm-status-full">เต็มชั่วคราว</span>
                                         }
-                                    </div>
+                                    </a>
                                 </div>
                                 <div class="col-lg-7">
                                     <div class="sm-room-showcase-body">
-                                        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
-                                            <div>
-                                                <span class="sm-room-code">@r.Code</span>
-                                                <h2 class="sm-room-showcase-title">@r.TypeName</h2>
-                                            </div>
+                                        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-2">
+                                            <h2 class="sm-room-showcase-title">@r.TypeName</h2>
                                             <div class="sm-room-price-box text-end">
-                                                <small>ราคาเริ่มต้น</small>
                                                 <div class="sm-price-num">฿@r.Price.ToString("N0") <span>/ คืน</span></div>
-                                                <span class="sm-tax-note">
-                                                    @(r.AllowExtraBed ? $"เสริมเตียงได้ (+฿{r.ExtraBedPrice:N0})" : "ไม่รองรับเตียงเสริม")
-                                                </span>
+                                                <span class="sm-tax-note">@(r.AllowExtraBed ? $"เตียงเสริม +฿{r.ExtraBedPrice:N0}" : "ไม่รองรับเตียงเสริม")</span>
                                             </div>
                                         </div>
 
-                                        <p class="sm-room-showcase-desc">@r.Description</p>
+                                        @if (!string.IsNullOrWhiteSpace(r.Description))
+                                        {
+                                            <p class="sm-room-showcase-desc">@r.Description</p>
+                                        }
 
                                         <div class="sm-room-specs-grid">
                                             @if (r.SizeSqm > 0)
                                             {
-                                                <div class="sm-spec-chip">
-                                                    <i class="fa-solid fa-maximize"></i>
-                                                    <div><small>ขนาดพื้นที่</small><strong>@r.SizeText</strong></div>
-                                                </div>
+                                                <div class="sm-spec-chip"><i class="fa-solid fa-maximize"></i><div><small>ขนาด</small><strong>@r.SizeText</strong></div></div>
                                             }
-                                            <div class="sm-spec-chip">
-                                                <i class="fa-solid fa-user-group"></i>
-                                                <div><small>จำนวนผู้เข้าพัก</small><strong>@guestsText</strong></div>
-                                            </div>
-                                            <div class="sm-spec-chip">
-                                                <i class="fa-solid fa-bed"></i>
-                                                <div><small>ประเภทเตียง</small><strong>@(r.BedType ?? "-")</strong></div>
-                                            </div>
-                                            <div class="sm-spec-chip">
-                                                <i class="fa-solid fa-city"></i>
-                                                <div><small>ทิวทัศน์</small><strong>@r.ViewText</strong></div>
-                                            </div>
+                                            <div class="sm-spec-chip"><i class="fa-solid fa-user-group"></i><div><small>ผู้เข้าพัก</small><strong>@guestsText</strong></div></div>
+                                            <div class="sm-spec-chip"><i class="fa-solid fa-bed"></i><div><small>เตียง</small><strong>@(r.BedType ?? "-")</strong></div></div>
+                                            @if (!string.IsNullOrWhiteSpace(r.ViewText) && r.ViewText != "-")
+                                            {
+                                                <div class="sm-spec-chip"><i class="fa-solid fa-city"></i><div><small>วิว</small><strong>@r.ViewText</strong></div></div>
+                                            }
                                         </div>
 
-                                        <div class="sm-room-tags-row">
-                                            @foreach (var h in r.Highlights.Where(x => !string.IsNullOrWhiteSpace(x)).Take(3))
-                                            {
-                                                <span class="sm-feat-pill"><i class="fa-solid fa-check text-info"></i> @h</span>
-                                            }
-                                            @foreach (var pn in r.PromoNames)
-                                            {
-                                                <span class="sm-promo-match-pill"><i class="fa-solid fa-gift"></i> ร่วมโปร @pn</span>
-                                            }
-                                        </div>
+                                        @if (r.PromoNames.Any())
+                                        {
+                                            <div class="sm-room-tags-row">
+                                                @foreach (var pn in r.PromoNames)
+                                                {
+                                                    <span class="sm-promo-match-pill"><i class="fa-solid fa-tag me-1"></i>@pn</span>
+                                                }
+                                            </div>
+                                        }
 
                                         <div class="sm-room-showcase-footer">
-                                            <div class="text-secondary small">
-                                                <i class="fa-solid fa-circle-check text-success me-1"></i> ฟรีเช็คอินด้วย Digital Key ผ่านสมาร์ตโฟน
-                                            </div>
-                                            <div class="d-flex flex-wrap gap-2">
-                                                <a asp-controller="Home" asp-action="RoomDetails" asp-route-id="@r.RoomTypeId" class="sm-btn-outline-dark">
-                                                    <i class="fa-regular fa-eye me-1"></i> ดูรายละเอียดห้อง
-                                                </a>
-                                                <a asp-controller="Home" asp-action="RoomDetails" asp-route-id="@r.RoomTypeId" class="sm-btn-primary py-2 px-4">
-                                                    <span>เลือกห้องนี้</span>
-                                                    <i class="fa-solid fa-arrow-right"></i>
-                                                </a>
-                                            </div>
+                                            <a asp-action="RoomDetails" asp-route-id="@r.RoomTypeId" class="sm-btn-outline-dark">ดูรายละเอียด</a>
+                                            <a asp-action="RoomDetails" asp-route-id="@r.RoomTypeId" class="sm-btn-primary py-2 px-4">
+                                                <span>เลือกห้องนี้</span><i class="fa-solid fa-arrow-right"></i>
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
@@ -181,23 +154,19 @@
         </div>
     </section>
 
-    <!-- 4. COMPARISON TABLE (จาก DB) -->
-    @if (Model.Any())
+    <!-- COMPARISON -->
+    @if (Model.Count > 1)
     {
-        <section class="sm-section pt-0" data-aos="fade-up">
+        <section class="sm-section pt-0">
             <div class="container">
                 <div class="sm-comparison-box">
-                    <div class="text-center mb-4">
-                        <span class="sm-eyebrow"><i class="fa-solid fa-table-columns me-1"></i> SPEC COMPARISON</span>
-                        <h3 class="sm-section-title">เปรียบเทียบจุดเด่นห้องพักทั้ง @Model.Count ประเภท</h3>
-                        <p class="text-secondary mb-0">เลือกห้องพักที่ตรงกับจำนวนผู้เข้าพักและโปรโมชั่นที่คุณต้องการใช้สิทธิ์</p>
-                    </div>
-
+                    <h2 class="sm-section-title mb-1">เปรียบเทียบห้องพัก</h2>
+                    <p class="text-secondary mb-4">ดูความแตกต่างของแต่ละประเภทห้องแบบเรียงข้างกัน</p>
                     <div class="table-responsive">
                         <table class="table sm-compare-table align-middle mb-0">
                             <thead>
                                 <tr>
-                                    <th>คุณสมบัติห้องพัก</th>
+                                    <th></th>
                                     @foreach (var r in Model)
                                     {
                                         <th class="@(r.IsFeatured ? "sm-th-highlight" : "")">@r.TypeName</th>
@@ -206,76 +175,49 @@
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td class="fw-semibold">ขนาดพื้นที่</td>
-                                    @foreach (var r in Model)
-                                    {
-                                        <td class="@(r.IsFeatured ? "sm-td-highlight fw-bold" : "")">@(r.SizeSqm > 0 ? r.SizeText : "-")</td>
-                                    }
+                                    <td class="fw-semibold">ขนาด</td>
+                                    @foreach (var r in Model) { <td>@(r.SizeSqm > 0 ? r.SizeText : "-")</td> }
                                 </tr>
                                 <tr>
-                                    <td class="fw-semibold">จำนวนผู้เข้าพัก</td>
-                                    @foreach (var r in Model)
-                                    {
-                                        <td class="@(r.IsFeatured ? "sm-td-highlight" : "")">@(r.MinGuests == r.MaxGuests ? $"{r.MaxGuests} ท่าน" : $"{r.MinGuests}–{r.MaxGuests} ท่าน")</td>
-                                    }
+                                    <td class="fw-semibold">ผู้เข้าพัก</td>
+                                    @foreach (var r in Model) { <td>@(r.MinGuests == r.MaxGuests ? $"{r.MaxGuests} ท่าน" : $"{r.MinGuests}–{r.MaxGuests} ท่าน")</td> }
                                 </tr>
                                 <tr>
-                                    <td class="fw-semibold">ประเภทเตียง</td>
-                                    @foreach (var r in Model)
-                                    {
-                                        <td class="@(r.IsFeatured ? "sm-td-highlight" : "")">@(r.BedType ?? "-")</td>
-                                    }
+                                    <td class="fw-semibold">เตียง</td>
+                                    @foreach (var r in Model) { <td>@(r.BedType ?? "-")</td> }
                                 </tr>
                                 <tr>
-                                    <td class="fw-semibold">เตียงเสริม (Extra Bed)</td>
+                                    <td class="fw-semibold">เตียงเสริม</td>
                                     @foreach (var r in Model)
                                     {
-                                        <td class="@(r.IsFeatured ? "sm-td-highlight" : "")">
-                                            @if (r.AllowExtraBed)
-                                            {
-                                                <i class="fa-solid fa-circle-check text-success"></i> <span>+฿@r.ExtraBedPrice.ToString("N0")</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="text-muted">—</span>
-                                            }
+                                        <td>
+                                            @if (r.AllowExtraBed) { <i class="fa-solid fa-circle-check text-success me-1"></i><span>+฿@r.ExtraBedPrice.ToString("N0")</span> }
+                                            else { <span class="text-muted">—</span> }
                                         </td>
                                     }
                                 </tr>
                                 <tr>
-                                    <td class="fw-semibold">โปรโมชั่นที่ใช้ได้</td>
+                                    <td class="fw-semibold">โปรโมชั่น</td>
                                     @foreach (var r in Model)
                                     {
-                                        <td class="@(r.IsFeatured ? "sm-td-highlight" : "")">
+                                        <td>
                                             @if (r.PromoNames.Any())
                                             {
-                                                @foreach (var pn in r.PromoNames)
-                                                {
-                                                    <span class="badge bg-primary me-1 mb-1">@pn</span>
-                                                }
+                                                @foreach (var pn in r.PromoNames) { <span class="badge bg-primary-subtle text-primary me-1 mb-1">@pn</span> }
                                             }
-                                            else
-                                            {
-                                                <span class="text-muted">—</span>
-                                            }
+                                            else { <span class="text-muted">—</span> }
                                         </td>
                                     }
                                 </tr>
                                 <tr>
-                                    <td class="fw-semibold">ราคาเริ่มต้น / คืน</td>
-                                    @foreach (var r in Model)
-                                    {
-                                        <td class="fw-bold @(r.IsFeatured ? "sm-td-highlight text-primary" : "")">฿@r.Price.ToString("N0")</td>
-                                    }
+                                    <td class="fw-semibold">ราคา / คืน</td>
+                                    @foreach (var r in Model) { <td class="fw-bold text-primary">฿@r.Price.ToString("N0")</td> }
                                 </tr>
                                 <tr>
                                     <td></td>
                                     @foreach (var r in Model)
                                     {
-                                        <td class="@(r.IsFeatured ? "sm-td-highlight" : "")">
-                                            <a asp-controller="Home" asp-action="RoomDetails" asp-route-id="@r.RoomTypeId"
-                                               class="btn btn-sm @(r.IsFeatured ? "btn-primary" : "btn-outline-primary") rounded-pill px-3">ดูห้องนี้</a>
-                                        </td>
+                                        <td><a asp-action="RoomDetails" asp-route-id="@r.RoomTypeId" class="btn btn-sm btn-outline-primary rounded-pill px-3">ดูห้องนี้</a></td>
                                     }
                                 </tr>
                             </tbody>
@@ -285,17 +227,11 @@
             </div>
         </section>
     }
-
 </div>
 
 @section Scripts {
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            if (typeof AOS !== "undefined") {
-                AOS.init({ duration: 700, once: true, offset: 50 });
-            }
-
             const filterBtns = document.querySelectorAll(".sm-filter-btn");
             const roomItems = document.querySelectorAll(".sm-room-item");
 
@@ -303,29 +239,26 @@
                 btn.addEventListener("click", function () {
                     filterBtns.forEach(b => b.classList.remove("active"));
                     this.classList.add("active");
-
-                    const filterVal = this.getAttribute("data-filter");
+                    const f = this.getAttribute("data-filter");
                     roomItems.forEach(item => {
-                        const categories = (item.getAttribute("data-category") || "").split(" ");
-                        item.classList.toggle("d-none", !(filterVal === "all" || categories.includes(filterVal)));
+                        const cats = (item.getAttribute("data-category") || "").split(" ");
+                        item.classList.toggle("d-none", !(f === "all" || cats.includes(f)));
                     });
                 });
             });
 
             const sortSelect = document.getElementById("roomSortSelect");
-            const gridContainer = document.getElementById("roomsGridContainer");
-
-            if (sortSelect && gridContainer) {
+            const grid = document.getElementById("roomsGridContainer");
+            if (sortSelect && grid) {
                 sortSelect.addEventListener("change", function () {
                     const mode = this.value;
                     const num = (el, k) => parseInt(el.getAttribute(k), 10) || 0;
-
                     Array.from(roomItems).sort((a, b) => {
                         if (mode === "price-asc") return num(a, "data-price") - num(b, "data-price");
                         if (mode === "price-desc") return num(b, "data-price") - num(a, "data-price");
                         if (mode === "size-desc") return num(b, "data-size") - num(a, "data-size");
                         return num(a, "data-order") - num(b, "data-order");
-                    }).forEach(el => gridContainer.appendChild(el));
+                    }).forEach(el => grid.appendChild(el));
                 });
             }
         });

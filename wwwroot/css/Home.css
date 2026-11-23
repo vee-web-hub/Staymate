@@ -2509,3 +2509,106 @@ body.customer-page {
     color: #475569;
     line-height: 1.7;
 }
+/* ==========================================================
+   ต่อท้าย wwwroot/css/Home.css  (Rooms + RoomDetails polish)
+   ธีมเดียวกับหน้าแรก: Navy / Cyan / Violet + glow + gradient
+   ========================================================== */
+
+/* ---------- Focus (คีย์บอร์ด) ---------- */
+.sm-filter-btn:focus-visible, .sm-gallery-thumb:focus-visible,
+.sm-switch-pill:focus-visible, .sm-btn-primary:focus-visible,
+.sm-btn-outline-dark:focus-visible, .sm-btn-search:focus-visible {
+    outline: 3px solid rgba(0, 229, 255, .55);
+    outline-offset: 2px;
+}
+
+/* ---------- Rooms hero ---------- */
+.sm-rooms-hero { padding: 32px 0 44px; margin-bottom: 20px;
+    border: 1px solid rgba(0, 229, 255, .22);
+    box-shadow: 0 20px 45px rgba(7, 13, 30, .22); }
+.sm-rooms-hero::after { content: ""; position: absolute; width: 340px; height: 340px; right: -80px; bottom: -140px;
+    border-radius: 50%; background: rgba(124, 58, 237, .28); filter: blur(80px); z-index: 1; pointer-events: none; }
+.sm-rooms-hero .sm-subpage-title { letter-spacing: -.3px; }
+.sm-hero-facts { display: flex; gap: 26px; padding: 14px 24px; border-radius: 18px;
+    background: rgba(15, 23, 42, .65); border: 1px solid rgba(0, 229, 255, .3);
+    backdrop-filter: blur(12px); box-shadow: 0 0 24px rgba(0, 229, 255, .12); }
+.sm-hero-facts div { display: flex; flex-direction: column; }
+.sm-hero-facts div + div { padding-left: 26px; border-left: 1px solid rgba(255, 255, 255, .15); }
+.sm-hero-facts strong { font-family: 'Space Grotesk', 'Prompt', sans-serif; color: var(--sm-home-cyan);
+    font-size: 1.35rem; font-weight: 700; line-height: 1.15; }
+.sm-hero-facts span { color: #CBD5E1; font-size: .78rem; }
+
+/* ---------- Filter bar ---------- */
+.sm-filter-bar { border-radius: 20px; box-shadow: 0 10px 25px rgba(7, 13, 30, .06); }
+.sm-filter-btn:hover { border-color: var(--sm-home-blue); background: #EFF6FF; }
+.sm-filter-btn.active { border: 1px solid rgba(0, 229, 255, .45);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, .3), 0 0 10px rgba(0, 229, 255, .2); }
+
+/* ---------- Room card ---------- */
+.sm-room-showcase-card { border-radius: 24px; }
+.sm-room-showcase-card:hover { transform: translateY(-4px); border-color: rgba(37, 99, 235, .4);
+    box-shadow: 0 20px 42px rgba(7, 13, 30, .12), 0 0 20px rgba(0, 229, 255, .12); }
+.sm-card-featured { border: 1.5px solid rgba(0, 229, 255, .55);
+    box-shadow: 0 14px 36px rgba(37, 99, 235, .12), 0 0 0 4px rgba(0, 229, 255, .06); }
+.sm-room-showcase-img-wrap { min-height: 300px; }
+.sm-room-badge { position: absolute; top: 14px; left: 14px; }
+.sm-room-status-pill.sm-status-full { background: rgba(127, 29, 29, .9); }
+.sm-room-showcase-title { font-size: 1.5rem; }
+.sm-price-num { color: var(--sm-home-blue); }
+.sm-room-specs-grid { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+.sm-spec-chip i { width: 34px; height: 34px; border-radius: 10px; background: #EFF6FF;
+    display: inline-flex; align-items: center; justify-content: center; font-size: .95rem; }
+.sm-room-showcase-footer { justify-content: flex-end; }
+
+/* ---------- Detail header bar (navy เหมือนธีมหลัก) ---------- */
+.sm-detail-header-bar { background: linear-gradient(135deg, #070D1E 0%, #0D1836 100%);
+    border: 1px solid rgba(0, 229, 255, .25); padding: 14px 24px; border-radius: 20px;
+    box-shadow: 0 12px 28px rgba(7, 13, 30, .2); }
+.sm-switch-pill { background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .18); color: #E2E8F0; }
+.sm-switch-pill:hover { border-color: var(--sm-home-cyan); color: var(--sm-home-cyan); }
+.sm-switch-pill.active { background: var(--sm-home-cyan); border-color: var(--sm-home-cyan);
+    color: var(--sm-home-navy); box-shadow: 0 0 14px rgba(0, 229, 255, .4); }
+
+/* ---------- Gallery ---------- */
+.sm-gallery-main-wrap { height: 460px; border-radius: 22px; border: 1px solid rgba(0, 229, 255, .22);
+    box-shadow: 0 18px 40px rgba(7, 13, 30, .16); }
+.sm-gallery-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px; }
+.sm-gallery-thumb { padding: 0; background: none; height: 110px; border-radius: 14px; opacity: .7; }
+.sm-gallery-thumb:hover { opacity: 1; }
+.sm-gallery-thumb.active { opacity: 1; border-color: var(--sm-home-cyan);
+    box-shadow: 0 0 0 3px rgba(0, 229, 255, .2), 0 0 14px rgba(0, 229, 255, .3); }
+
+/* ---------- Detail cards ---------- */
+.sm-detail-card { border-radius: 22px; box-shadow: 0 8px 24px rgba(7, 13, 30, .05); }
+.sm-detail-card-title { display: flex; align-items: center; gap: 10px; }
+.sm-detail-card-title::before { content: ""; width: 4px; height: 1.15em; border-radius: 4px;
+    background: linear-gradient(180deg, var(--sm-home-cyan), var(--sm-home-blue)); }
+.sm-detail-spec-item i { background: linear-gradient(135deg, #070D1E 0%, #1E3A8A 100%); color: var(--sm-home-cyan); }
+.sm-amenity-cols { grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+.sm-review-item { padding: 16px 18px; border-radius: 16px; background: #F8FAFC; border: 1px solid #E2E8F0; }
+
+/* ---------- Price panel ---------- */
+.sm-sticky-booking-panel { top: 96px; border: 1.5px solid rgba(0, 229, 255, .35);
+    box-shadow: 0 20px 45px rgba(7, 13, 30, .15), 0 0 24px rgba(0, 229, 255, .1); }
+.sm-booking-panel-header { padding: 20px 24px; border-bottom: 2px solid var(--sm-home-cyan); }
+.sm-panel-price { color: var(--sm-home-cyan); }
+.sm-panel-price small { font-size: .85rem; font-weight: 500; color: #CBD5E1; }
+.sm-total-highlight { color: var(--sm-home-blue); }
+
+/* ---------- Comparison ---------- */
+.sm-comparison-box { border-radius: 24px; }
+.sm-compare-table thead th:first-child { border-top-left-radius: 14px; }
+.sm-compare-table thead th:last-child { border-top-right-radius: 14px; }
+.sm-compare-table tbody tr:hover td { background: rgba(37, 99, 235, .04); }
+
+/* ---------- Mobile ---------- */
+@media (max-width: 991.98px) {
+    .sm-gallery-main-wrap { height: 300px; }
+    .sm-gallery-thumb { height: 80px; }
+    .sm-hero-facts { width: 100%; justify-content: space-between; gap: 12px; padding: 12px 16px; }
+    .sm-hero-facts div + div { padding-left: 12px; }
+    .sm-sticky-booking-panel { position: static; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .sm-room-showcase-card, .sm-room-showcase-img { transition: none !important; transform: none !important; }
+}

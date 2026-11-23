@@ -35,21 +35,34 @@ namespace StayMate_Kavinvee_0576.Controllers
 
         private readonly StayMateDbContext _db;
         private readonly ILogger<ManagerController> _logger;
+        private readonly IWebHostEnvironment _env; // (ก) เพิ่มสำหรับบันทึกไฟล์โลโก้
         private readonly PasswordHasher<User> _hasher = new();
 
-        public ManagerController(StayMateDbContext db, ILogger<ManagerController> logger)
+        // (ก) ปรับปรุง Constructor เพื่อรับ IWebHostEnvironment
+        public ManagerController(StayMateDbContext db, ILogger<ManagerController> logger, IWebHostEnvironment env)
         {
             _db = db;
             _logger = logger;
+            _env = env;
         }
 
         // ═════════════════════════ Pages (GET) ═════════════════════════
 
         // GET: /Manager?startDate=2026-11-01&endDate=2026-11-23
+        // (ข) แทนที่ action Index เดิมเพื่อส่งข้อมูลเพิ่มไปยังแท็บตั้งค่าของ Dashboard ผ่าน ViewBag
         [HttpGet]
         public async Task<IActionResult> Index(DateOnly? startDate, DateOnly? endDate, CancellationToken ct)
         {
             ViewData["Title"] = "ภาพรวมการดำเนินงาน";
+            ViewBag.Hotel = await _db.HotelSettings.AsNoTracking().FirstOrDefaultAsync(ct) ?? HotelSetting.Default();
+            ViewBag.RoomTypes = await _db.RoomTypes.AsNoTracking().OrderBy(t => t.RoomTypeId).ToListAsync(ct);
+            ViewBag.RoomCounts = (await _db.Rooms.AsNoTracking()
+                    .Where(r => r.IsActive != false)
+                    .GroupBy(r => r.RoomTypeId)
+                    .Select(g => new { Id = g.Key, C = g.Count() })
+                    .ToListAsync(ct))
+                .ToDictionary(x => x.Id, x => x.C);
+
             return View(await BuildDashboardAsync(startDate, endDate, ct));
         }
 
@@ -446,7 +459,95 @@ namespace StayMate_Kavinvee_0576.Controllers
             }
         }
 
-        // ═════════════════════════ Profile (POST) ═════════════════════════
+        // ═════════════════════════ Profile & Hotel Settings (POST) ═════════════════════════
+
+        // (ค) เพิ่ม Action ใหม่สำหรับการบันทึกการตั้งค่าข้อมูลโรงแรม (Hotel Settings)
+        // POST: /Manager/SaveHotelSettings
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequestSizeLimit(3_000_000)]
+        public async Task<IActionResult> SaveHotelSettings(
+            string? hotelName, string? address, string? phone, string? email,
+            string? checkInTime, string? checkOutTime, IFormFile? logo, CancellationToken ct)
+        {
+            const string back = nameof(Index);
+            try
+            {
+                var managerId = await GetValidManagerAsync(ct);
+                if (managerId == null) return Denied();
+
+                var name = CleanText(hotelName, 150);
+                if (name == null) return Respond(false, "กรุณากรอกชื่อโรงแรม", back);
+
+                var addr = CleanText(address, 500);
+                if (addr == null) return Respond(false, "กรุณากรอกที่อยู่", back);
+
+                var ph = CleanText(phone, 30);
+                if (ph == null || !Regex.IsMatch(ph, @"^[0-9+\-\s()]{6,30}$"))
+                    return Respond(false, "รูปแบบเบอร์โทรศัพท์ไม่ถูกต้อง", back);
+
+                var mail = CleanText(email, 120);
+                if (mail == null || !Regex.IsMatch(mail, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+                    return Respond(false, "รูปแบบอีเมลไม่ถูกต้อง", back);
+
+                if (!TimeOnly.TryParseExact(checkInTime, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out var tin) ||
+                    !TimeOnly.TryParseExact(checkOutTime, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out var tout))
+                    return Respond(false, "รูปแบบเวลาเช็คอิน/เช็คเอาท์ไม่ถูกต้อง", back);
+
+                var s = await _db.HotelSettings.FirstOrDefaultAsync(ct);
+                if (s == null)
+                {
+                    s = new HotelSetting { SettingId = 1 };
+                    _db.HotelSettings.Add(s);
+                }
+
+                if (logo != null && logo.Length > 0)
+                {
+                    var ext = Path.GetExtension(logo.FileName).ToLowerInvariant();
+                    if (ext is not (".jpg" or ".jpeg" or ".png" or ".webp"))
+                        return Respond(false, "โลโก้ต้องเป็นไฟล์ .jpg .png หรือ .webp", back);
+
+                    if (logo.Length > 2 * 1024 * 1024)
+                        return Respond(false, "ไฟล์โลโก้ต้องไม่เกิน 2 MB", back);
+
+                    if (!logo.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+                        return Respond(false, "ไฟล์โลโก้ไม่ใช่รูปภาพ", back);
+
+                    var dir = Path.Combine(_env.WebRootPath, "images", "Logo");
+                    Directory.CreateDirectory(dir);
+
+                    var fileName = $"hotel-logo-{Guid.NewGuid():N}{ext}";
+                    await using (var fs = new FileStream(Path.Combine(dir, fileName), FileMode.Create))
+                        await logo.CopyToAsync(fs, ct);
+
+                    // ลบโลโก้ที่อัปโหลดไว้ก่อนหน้า (ไม่แตะโลโก้ดั้งเดิม LogoStayMate.jpg)
+                    if (s.LogoPath != null && s.LogoPath.StartsWith("/images/Logo/hotel-logo-"))
+                    {
+                        var old = Path.Combine(_env.WebRootPath, s.LogoPath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+                        if (System.IO.File.Exists(old)) System.IO.File.Delete(old);
+                    }
+
+                    s.LogoPath = "/images/Logo/" + fileName;
+                }
+
+                s.HotelName = name;
+                s.Address = addr;
+                s.Phone = ph;
+                s.Email = mail;
+                s.CheckInTime = tin;
+                s.CheckOutTime = tout;
+                s.UpdatedAt = DateTime.Now;
+                s.UpdatedBy = managerId.Value;
+
+                await _db.SaveChangesAsync(ct);
+                return Respond(true, "บันทึกข้อมูลโรงแรมเรียบร้อยแล้ว", back);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "SaveHotelSettings failed");
+                return Respond(false, "เกิดข้อผิดพลาดในการบันทึกข้อมูลโรงแรม กรุณาลองใหม่อีกครั้ง", back);
+            }
+        }
 
         // POST: /Manager/UpdateProfile  (แก้ได้เฉพาะชื่อและเบอร์โทร)
         [HttpPost]

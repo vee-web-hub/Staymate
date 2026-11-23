@@ -26,6 +26,8 @@ public partial class StayMateDbContext : DbContext
 
     public virtual DbSet<Holiday> Holidays { get; set; }
 
+    public virtual DbSet<HotelSetting> HotelSettings { get; set; }
+
     public virtual DbSet<HousekeepingTask> HousekeepingTasks { get; set; }
 
     public virtual DbSet<Payment> Payments { get; set; }
@@ -935,7 +937,23 @@ public partial class StayMateDbContext : DbContext
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("fk_vc_promo");
         });
+         
+                        modelBuilder.Entity<HotelSetting>(entity =>
+                {
+                    entity.HasKey(e => e.SettingId).HasName("PRIMARY");
+                    entity.ToTable("hotel_settings");
 
+                    entity.Property(e => e.SettingId).ValueGeneratedNever().HasColumnName("setting_id");
+                    entity.Property(e => e.HotelName).HasMaxLength(150).HasColumnName("hotel_name");
+                    entity.Property(e => e.LogoPath).HasMaxLength(255).HasColumnName("logo_path");
+                    entity.Property(e => e.Address).HasMaxLength(500).HasColumnName("address");
+                    entity.Property(e => e.Phone).HasMaxLength(30).HasColumnName("phone");
+                    entity.Property(e => e.Email).HasMaxLength(120).HasColumnName("email");
+                    entity.Property(e => e.CheckInTime).HasColumnType("time").HasColumnName("check_in_time");
+                    entity.Property(e => e.CheckOutTime).HasColumnType("time").HasColumnName("check_out_time");
+                    entity.Property(e => e.UpdatedAt).HasColumnType("datetime").HasColumnName("updated_at");
+                    entity.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+                });
         OnModelCreatingPartial(modelBuilder);
     }
 

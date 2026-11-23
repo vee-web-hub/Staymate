@@ -65,7 +65,7 @@
             </div>
         </div>
 
-        <!-- 5 Tabs Navigation สำหรับแสดงข้อมูลสรุปแต่ละด้านภายในหน้า Dashboard -->
+        <!-- 6 Tabs Navigation สำหรับแสดงข้อมูลสรุปแต่ละด้านภายในหน้า Dashboard -->
         <nav class="manager-section-nav" aria-label="Dashboard Overview Tabs">
             <button type="button" class="manager-nav-tab active" data-manager-tab-target="tab-dashboard">
                 <i class="fa-solid fa-chart-pie"></i>
@@ -88,6 +88,10 @@
             <button type="button" class="manager-nav-tab" data-manager-tab-target="tab-staff-summary">
                 <i class="fa-solid fa-user-shield"></i>
                 <span>สรุปสายงานพนักงาน</span>
+            </button>
+            <button type="button" class="manager-nav-tab" data-manager-tab-target="tab-hotel-settings">
+                <i class="fa-solid fa-hotel"></i>
+                <span>ข้อมูลโรงแรม</span>
             </button>
         </nav>
     </div>
@@ -444,82 +448,33 @@
                 </a>
             </div>
 
+            @{
+                var rtList = ViewBag.RoomTypes as List<StayMate_Kavinvee_0576.Models.RoomType>
+                             ?? new List<StayMate_Kavinvee_0576.Models.RoomType>();
+                var rtCounts = ViewBag.RoomCounts as Dictionary<byte, int> ?? new Dictionary<byte, int>();
+            }
             <div class="manager-grid-2col">
-                <div class="manager-card manager-roomtype-card">
-                    <div class="manager-roomtype-top">
-                        <div>
-                            <span class="manager-code-badge">STD | ID: 1</span>
-                            <h3 class="manager-roomtype-name">Standard Room</h3>
+                @foreach (var rt in rtList)
+                {
+                    <div class="manager-card manager-roomtype-card">
+                        <div class="manager-roomtype-top">
+                            <div>
+                                <span class="manager-code-badge">@rt.TypeCode | ID: @rt.RoomTypeId</span>
+                                <h3 class="manager-roomtype-name">@rt.TypeName</h3>
+                            </div>
+                        </div>
+                        <div class="manager-roomtype-specs">
+                            <div class="manager-spec-item">
+                                <span class="manager-spec-label"><i class="fa-solid fa-users"></i> เตียง &amp; ผู้เข้าพัก</span>
+                                <span class="manager-spec-val">@rt.BedType / @rt.MinGuests–@rt.MaxGuests ท่าน</span>
+                            </div>
+                            <div class="manager-spec-item">
+                                <span class="manager-spec-label"><i class="fa-solid fa-door-open"></i> จำนวนห้อง / ราคาพื้นฐาน</span>
+                                <span class="manager-spec-val">@(rtCounts.TryGetValue(rt.RoomTypeId, out var c) ? c : 0) ห้อง · ฿@rt.BasePrice.ToString("N0") / คืน</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="manager-roomtype-specs">
-                        <div class="manager-spec-item">
-                            <span class="manager-spec-label"><i class="fa-solid fa-users"></i> รูปแบบ & ขีดจำกัด</span>
-                            <span class="manager-spec-val">เตียงมาตรฐาน / เข้าพักได้ 1-2 ท่าน</span>
-                        </div>
-                        <div class="manager-spec-item">
-                            <span class="manager-spec-label"><i class="fa-solid fa-star"></i> สิ่งอำนวยความสะดวกหลัก</span>
-                            <span class="manager-spec-val">เครื่องปรับอากาศ, Wi-Fi, สมาร์ททีวี, ห้องน้ำในตัว</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="manager-card manager-roomtype-card">
-                    <div class="manager-roomtype-top">
-                        <div>
-                            <span class="manager-code-badge">DLX | ID: 2</span>
-                            <h3 class="manager-roomtype-name">Deluxe Room</h3>
-                        </div>
-                    </div>
-                    <div class="manager-roomtype-specs">
-                        <div class="manager-spec-item">
-                            <span class="manager-spec-label"><i class="fa-solid fa-users"></i> รูปแบบ & ขีดจำกัด</span>
-                            <span class="manager-spec-val">เตียงคิงไซส์พรีเมียม / รองรับเตียงเสริม</span>
-                        </div>
-                        <div class="manager-spec-item">
-                            <span class="manager-spec-label"><i class="fa-solid fa-star"></i> สิ่งอำนวยความสะดวกหลัก</span>
-                            <span class="manager-spec-val">วิวระเบียง, มินิบาร์, โต๊ะทำงาน, ชุดน้ำชา-กาแฟ</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="manager-card manager-roomtype-card">
-                    <div class="manager-roomtype-top">
-                        <div>
-                            <span class="manager-code-badge">FAM | ID: 3</span>
-                            <h3 class="manager-roomtype-name">Family Room</h3>
-                        </div>
-                    </div>
-                    <div class="manager-roomtype-specs">
-                        <div class="manager-spec-item">
-                            <span class="manager-spec-label"><i class="fa-solid fa-users"></i> รูปแบบ & ขีดจำกัด</span>
-                            <span class="manager-spec-val">เตียงคู่ขนาดใหญ่ / เหมาะสำหรับครอบครัว 3-4 ท่าน</span>
-                        </div>
-                        <div class="manager-spec-item">
-                            <span class="manager-spec-label"><i class="fa-solid fa-star"></i> สิ่งอำนวยความสะดวกหลัก</span>
-                            <span class="manager-spec-val">พื้นที่นั่งเล่นส่วนกลาง, ตู้เย็นใหญ่, อุปกรณ์ครอบครัวครบครัน</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="manager-card manager-roomtype-card">
-                    <div class="manager-roomtype-top">
-                        <div>
-                            <span class="manager-code-badge">SUI | ID: 4</span>
-                            <h3 class="manager-roomtype-name">Suite Room</h3>
-                        </div>
-                    </div>
-                    <div class="manager-roomtype-specs">
-                        <div class="manager-spec-item">
-                            <span class="manager-spec-label"><i class="fa-solid fa-users"></i> รูปแบบ & ขีดจำกัด</span>
-                            <span class="manager-spec-val">ห้องชุดพรีเมียม / แยกสัดส่วนห้องนั่งเล่นระดับหรู</span>
-                        </div>
-                        <div class="manager-spec-item">
-                            <span class="manager-spec-label"><i class="fa-solid fa-star"></i> สิ่งอำนวยความสะดวกหลัก</span>
-                            <span class="manager-spec-val">อ่างอาบน้ำหรูหรา, เครื่องชงกาแฟแคปซูล, วิวพาโนรามาพิเศษ</span>
-                        </div>
-                    </div>
-                </div>
+                }
             </div>
         </div>
     </div>
@@ -704,6 +659,63 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- ═════════════════════════════════════════════════════════════════════════════
+         TAB 6: HOTEL SETTINGS (SECTION 6)
+         ═════════════════════════════════════════════════════════════════════════════ -->
+    <div id="tab-hotel-settings" class="manager-tab-content">
+        @{
+            var hotel = ViewBag.Hotel as StayMate_Kavinvee_0576.Models.HotelSetting
+                        ?? StayMate_Kavinvee_0576.Models.HotelSetting.Default();
+        }
+        <div class="manager-card">
+            <div class="manager-card-header">
+                <div>
+                    <h2 class="manager-card-title"><i class="fa-solid fa-hotel text-primary"></i> ข้อมูลโรงแรม (Hotel Settings)</h2>
+                    <p class="manager-card-subtitle">บันทึกลงฐานข้อมูลจริง และแสดงบนหน้าเว็บไซต์ทันที</p>
+                </div>
+            </div>
+            <form asp-controller="Manager" asp-action="SaveHotelSettings" method="post" enctype="multipart/form-data" class="p-3">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="manager-label" for="hsName">ชื่อโรงแรม *</label>
+                        <input id="hsName" name="hotelName" class="manager-input" maxlength="150" required value="@hotel.HotelName" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="manager-label" for="hsLogo">โลโก้โรงแรม (.jpg .png .webp ไม่เกิน 2 MB)</label>
+                        <input id="hsLogo" name="logo" type="file" accept=".jpg,.jpeg,.png,.webp" class="manager-input" />
+                        <img src="@(hotel.LogoPath ?? "/images/Logo/LogoStayMate.jpg")" alt="โลโก้ปัจจุบัน" style="height:56px;margin-top:8px;border-radius:8px;" />
+                    </div>
+                    <div class="col-12">
+                        <label class="manager-label" for="hsAddr">ที่อยู่ *</label>
+                        <textarea id="hsAddr" name="address" class="manager-input" rows="2" maxlength="500" required>@hotel.Address</textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="manager-label" for="hsPhone">เบอร์โทรศัพท์ *</label>
+                        <input id="hsPhone" name="phone" class="manager-input" maxlength="30" required value="@hotel.Phone" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="manager-label" for="hsEmail">อีเมล *</label>
+                        <input id="hsEmail" name="email" type="email" class="manager-input" maxlength="120" required value="@hotel.Email" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="manager-label" for="hsIn">เวลา Check-in *</label>
+                        <input id="hsIn" name="checkInTime" type="time" class="manager-input" required value="@hotel.CheckInTime.ToString("HH:mm")" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="manager-label" for="hsOut">เวลา Check-out *</label>
+                        <input id="hsOut" name="checkOutTime" type="time" class="manager-input" required value="@hotel.CheckOutTime.ToString("HH:mm")" />
+                    </div>
+                </div>
+                <div class="mt-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <small class="manager-text-muted">แก้ไขล่าสุด: @hotel.UpdatedAt.ToString("dd/MM/yyyy HH:mm")</small>
+                    <button type="submit" class="manager-btn manager-btn-primary">
+                        <i class="fa-solid fa-floppy-disk"></i> <span>บันทึกข้อมูลโรงแรม</span>
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
