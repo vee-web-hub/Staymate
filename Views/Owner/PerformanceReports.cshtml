@@ -11,7 +11,6 @@
     var monthlyList = Model.MonthlyReports ?? new List<PeriodReportRow>();
     var yearlyList = Model.YearlyReports ?? new List<PeriodReportRow>();
 
-    // รายการปีที่มีข้อมูลจริงจาก YearlyReports
     var availableYears = yearlyList
         .Select(y => y.Year)
         .Union(new[] { Model.Year, DateTime.Today.Year })
@@ -22,7 +21,7 @@
     var maxMonth = Model.Year == DateTime.Today.Year ? DateTime.Today.Month : 12;
     var selectedMonthName = new DateTime(Model.Year, Math.Clamp(Model.Month, 1, 12), 1).ToString("MMMM yyyy", thCulture);
 
-    // ───── คำนวณ KPI รวมของปีที่เลือกจากข้อมูลจริงใน MonthlyReports ─────
+    // ───── คำนวณ KPI รวมของปีที่เลือกจาก MonthlyReports ─────
     decimal ytdRevenue = monthlyList.Sum(r => r.Revenue);
     decimal ytdExpense = monthlyList.Sum(r => r.Expense);
     decimal ytdProfit = monthlyList.Sum(r => r.Profit);
@@ -38,12 +37,11 @@
         ? Math.Round(Math.Max(0m, 100m - ytdOccupancyRate), 2)
         : 0m;
 
-    // Average Daily Rate (ADR) = รายได้ห้องพักรวม ÷ จำนวนห้อง-คืนที่มีผู้เข้าพักจริง
+    // Average Daily Rate (ADR)
     decimal? ytdAdr = ytdOccupiedNights > 0
         ? Math.Round(ytdRevenue / ytdOccupiedNights, 2)
         : null;
 
-    // คำนวณ ADR เปรียบเทียบของเดือนที่เลือกกับเดือนก่อนหน้า (ถ้าอยู่ในปีเดียวกัน)
     var curMonthRow = monthlyList.FirstOrDefault(r => r.Month == Model.Month);
     var prevMonthRow = monthlyList.FirstOrDefault(r => r.Month == Model.Month - 1);
     decimal? curMonthAdr = curMonthRow != null && curMonthRow.OccupiedRoomNights > 0
@@ -56,7 +54,7 @@
         ? Math.Round((curMonthAdr.Value - prevMonthAdr.Value) / prevMonthAdr.Value * 100m, 2)
         : null;
 
-    // ───── ค้นหาเดือนที่ผลประกอบการดีที่สุด (Best) และต่ำที่สุด (Lowest) จากข้อมูลจริง ─────
+    // ───── ค้นหาเดือนที่ผลประกอบการดีที่สุด (Best) และต่ำที่สุด (Lowest) ─────
     var activeMonths = monthlyList
         .Where(r => r.Revenue > 0m || r.Expense > 0m || r.Bookings > 0 || r.OccupiedRoomNights > 0)
         .ToList();
@@ -69,7 +67,7 @@
         ? activeMonths.OrderBy(r => r.Profit).ThenBy(r => r.Revenue).First()
         : null;
 
-    // เตรียมครบ 12 เดือนสำหรับตารางรายเดือนเมื่อเลือกดูทั้งปี
+    // เตรียมครบ 12 เดือนสำหรับตารางรายเดือน
     var full12Months = new List<PeriodReportRow>();
     for (int m = 1; m <= 12; m++)
     {
@@ -116,12 +114,12 @@
      data-owner-page="performance"
      data-api-url="@Url.Action("PerformanceData", "Owner")">
 
-    <!-- ═══════════════════ SECTION 1: PAGE HEADER ═══════════════════ -->
+    <!-- ═══════════════════ PAGE HEADER ═══════════════════ -->
     <section class="owner-perf-header">
         <div class="owner-perf-header-left">
             <div class="owner-eyebrow-badge">
                 <span class="owner-pulse-dot"></span>
-                <span>EXECUTIVE PERFORMANCE ANALYTICS</span>
+                <span>STAYMATE PERFORMANCE ANALYTICS</span>
             </div>
             <div class="owner-perf-title-row">
                 <div class="owner-perf-header-icon">
@@ -130,10 +128,9 @@
                 <div>
                     <h1 class="owner-perf-title">
                         Performance Reports
-                        <span class="owner-title-accent">· วิเคราะห์ผลประกอบการ</span>
                     </h1>
                     <p class="owner-perf-subtitle">
-                        Monthly &amp; Yearly Business Performance — รายงานเปรียบเทียบรายได้ ค่าใช้จ่าย กำไรสุทธิ และอัตราการเข้าพักจากฐานข้อมูลจริง (Read-Only)
+                        รายงานวิเคราะห์ผลประกอบการรายเดือนและรายปี เปรียบเทียบรายได้ ค่าใช้จ่าย กำไรสุทธิ และอัตราการเข้าพัก
                     </p>
                 </div>
             </div>
@@ -143,7 +140,7 @@
             <div class="owner-perf-timestamp-card">
                 <i class="fa-solid fa-clock-rotate-left owner-icon-cyan"></i>
                 <div>
-                    <span class="owner-perf-ts-label">ข้อมูลประมวลผลล่าสุดจากระบบ</span>
+                    <span class="owner-perf-ts-label">อัปเดตล่าสุด</span>
                     <strong class="owner-perf-ts-val">@nowDisplay</strong>
                 </div>
             </div>
@@ -157,33 +154,31 @@
         </div>
     </section>
 
-    <!-- ═══════════════════ SECTION 2: REPORT FILTERS ═══════════════════ -->
+    <!-- ═══════════════════ REPORT FILTERS ═══════════════════ -->
     <section class="owner-perf-filter-panel" aria-label="ตัวกรองรายงานผลประกอบการ">
         <div class="owner-perf-filter-top">
-            <!-- โหมดมุมมองรายงาน: Monthly / Yearly / Custom Month Range -->
             <div class="owner-perf-mode-tabs" role="tablist" aria-label="รูปแบบการแสดงผลรายงาน">
                 <button type="button"
                         class="owner-perf-mode-btn active"
                         data-perf-view-mode="monthly">
-                    <i class="fa-regular fa-calendar-days"></i> รายเดือน (Monthly View)
+                    <i class="fa-regular fa-calendar-days"></i> รายเดือน
                 </button>
                 <button type="button"
                         class="owner-perf-mode-btn"
                         data-perf-view-mode="yearly">
-                    <i class="fa-solid fa-chart-column"></i> รายปี (Yearly Comparison)
+                    <i class="fa-solid fa-chart-column"></i> รายปี
                 </button>
                 <button type="button"
                         class="owner-perf-mode-btn"
                         data-perf-view-mode="custom">
-                    <i class="fa-solid fa-sliders"></i> กำหนดช่วงเดือน (Custom Range)
+                    <i class="fa-solid fa-sliders"></i> กำหนดช่วงเดือน
                 </button>
             </div>
 
-            <!-- Year & Month Selector (เชื่อมต่อ Backend GET ?year=&month= ผ่าน Owner.js) -->
             <div class="owner-perf-selectors">
                 <div class="owner-perf-select-group">
                     <label for="perfYearSelect">
-                        <i class="fa-solid fa-calendar"></i> ปีที่วิเคราะห์ (Year)
+                        <i class="fa-solid fa-calendar"></i> ปี
                     </label>
                     <select id="perfYearSelect" class="owner-perf-select" data-owner-year>
                         @foreach (var y in availableYears)
@@ -202,7 +197,7 @@
 
                 <div class="owner-perf-select-group">
                     <label for="perfMonthSelect">
-                        <i class="fa-solid fa-filter"></i> เดือนอ้างอิง (Month Benchmark)
+                        <i class="fa-solid fa-filter"></i> เดือนเปรียบเทียบ
                     </label>
                     <select id="perfMonthSelect" class="owner-perf-select" data-owner-month>
                         @for (int m = 1; m <= maxMonth; m++)
@@ -222,12 +217,12 @@
             </div>
         </div>
 
-        <!-- แถบกรองช่วงเดือน (Custom Date/Month Range สำหรับกรองตารางและกราฟในปีที่เลือก) -->
+        <!-- แถบกรองช่วงเดือนภายในปี -->
         <div class="owner-perf-custom-range-bar" data-perf-custom-bar>
             <div class="owner-perf-range-inputs">
                 <span class="owner-perf-range-title">
                     <i class="fa-solid fa-calendar-week owner-icon-cyan"></i>
-                    กรองช่วงเดือนภายในปี @Model.Year:
+                    ช่วงเดือนในปี @Model.Year:
                 </span>
                 <label for="perfStartMonth">ตั้งแต่เดือน</label>
                 <select id="perfStartMonth" class="owner-perf-select" data-perf-start-month>
@@ -248,7 +243,7 @@
                 </select>
 
                 <button type="button" class="owner-perf-btn-apply" data-perf-apply-range>
-                    <i class="fa-solid fa-check"></i> ใช้ช่วงเดือนนี้
+                    <i class="fa-solid fa-check"></i> กรองช่วงเดือน
                 </button>
                 <button type="button" class="owner-perf-btn-reset" data-perf-reset-range>
                     <i class="fa-solid fa-rotate-left"></i> แสดงทั้ง 12 เดือน
@@ -257,8 +252,8 @@
         </div>
     </section>
 
-    <!-- ═══════════════════ SECTION 3: PERFORMANCE KPI CARDS (6 CARDS) ═══════════════════ -->
-    <section class="owner-perf-kpi-grid" aria-label="ตัวชี้วัดผลประกอบการหลัก 6 รายการ">
+    <!-- ═══════════════════ PERFORMANCE KPI CARDS (6 CARDS) ═══════════════════ -->
+    <section class="owner-perf-kpi-grid" aria-label="ตัวชี้วัดผลประกอบการหลัก">
 
         <!-- 1. Total Revenue -->
         <article class="owner-perf-kpi-card owner-perf-glow-cyan">
@@ -266,10 +261,10 @@
                 <div class="owner-perf-kpi-icon owner-icon-bg-cyan">
                     <i class="fa-solid fa-coins"></i>
                 </div>
-                <span class="owner-perf-kpi-tag">THB · Annual YTD</span>
+                <span class="owner-perf-kpi-tag">สะสมปี @Model.Year</span>
             </div>
             <div class="owner-perf-kpi-body">
-                <h2 class="owner-perf-kpi-name">Total Revenue (รายได้รวมสุทธิ)</h2>
+                <h2 class="owner-perf-kpi-name">รายได้รวม (Total Revenue)</h2>
                 <div class="owner-perf-kpi-val" data-perf-kpi="totalRevenue">
                     @ytdRevenue.ToString("C2", thCulture)
                 </div>
@@ -279,14 +274,14 @@
                     <i class="fa-solid @GetTrendIcon(Model.RevenueComparison?.PercentChange)"></i>
                     <span data-bind="revenueComparison.percentChange"
                           data-format="percent"
-                          data-null-text="N/A">
+                          data-null-text="-">
                         @(Model.RevenueComparison?.PercentChange.HasValue == true
                             ? $"{Model.RevenueComparison.PercentChange.Value:N2}%"
-                            : "N/A")
+                            : "-")
                     </span>
                 </span>
                 <span class="owner-perf-kpi-sub">
-                    เดือน <span data-bind="revenueComparison.currentLabel">@Model.RevenueComparison?.CurrentLabel</span>
+                    <span data-bind="revenueComparison.currentLabel">@Model.RevenueComparison?.CurrentLabel</span>
                     เทียบ <span data-bind="revenueComparison.previousLabel">@Model.RevenueComparison?.PreviousLabel</span>
                 </span>
             </div>
@@ -298,10 +293,10 @@
                 <div class="owner-perf-kpi-icon owner-icon-bg-amber">
                     <i class="fa-solid fa-file-invoice-dollar"></i>
                 </div>
-                <span class="owner-perf-kpi-tag">THB · Annual YTD</span>
+                <span class="owner-perf-kpi-tag">สะสมปี @Model.Year</span>
             </div>
             <div class="owner-perf-kpi-body">
-                <h2 class="owner-perf-kpi-name">Total Expenses (ค่าใช้จ่ายรวม)</h2>
+                <h2 class="owner-perf-kpi-name">ค่าใช้จ่ายรวม (Total Expenses)</h2>
                 <div class="owner-perf-kpi-val" data-perf-kpi="totalExpenses">
                     @ytdExpense.ToString("C2", thCulture)
                 </div>
@@ -311,14 +306,14 @@
                     <i class="fa-solid @GetTrendIcon(Model.ExpenseComparison?.PercentChange)"></i>
                     <span data-bind="expenseComparison.percentChange"
                           data-format="percent"
-                          data-null-text="N/A">
+                          data-null-text="-">
                         @(Model.ExpenseComparison?.PercentChange.HasValue == true
                             ? $"{Model.ExpenseComparison.PercentChange.Value:N2}%"
-                            : "N/A")
+                            : "-")
                     </span>
                 </span>
                 <span class="owner-perf-kpi-sub">
-                    เดือน <span data-bind="expenseComparison.currentLabel">@Model.ExpenseComparison?.CurrentLabel</span>
+                    <span data-bind="expenseComparison.currentLabel">@Model.ExpenseComparison?.CurrentLabel</span>
                     เทียบ <span data-bind="expenseComparison.previousLabel">@Model.ExpenseComparison?.PreviousLabel</span>
                 </span>
             </div>
@@ -330,10 +325,10 @@
                 <div class="owner-perf-kpi-icon @(ytdProfit >= 0 ? "owner-icon-bg-green" : "owner-icon-bg-red")">
                     <i class="fa-solid fa-sack-dollar"></i>
                 </div>
-                <span class="owner-perf-kpi-tag">THB · Revenue − Expenses</span>
+                <span class="owner-perf-kpi-tag">@(ytdProfit >= 0 ? "กำไรสุทธิ" : "ขาดทุนสุทธิ")</span>
             </div>
             <div class="owner-perf-kpi-body">
-                <h2 class="owner-perf-kpi-name">Net Profit (กำไร / ขาดทุนสุทธิ)</h2>
+                <h2 class="owner-perf-kpi-name">กำไรสุทธิ (Net Profit)</h2>
                 <div class="owner-perf-kpi-val @(ytdProfit >= 0 ? "owner-text-success" : "owner-text-danger")"
                      data-perf-kpi="netProfit">
                     @ytdProfit.ToString("C2", thCulture)
@@ -344,14 +339,14 @@
                     <i class="fa-solid @GetTrendIcon(Model.ProfitComparison?.PercentChange)"></i>
                     <span data-bind="profitComparison.percentChange"
                           data-format="percent"
-                          data-null-text="N/A">
+                          data-null-text="-">
                         @(Model.ProfitComparison?.PercentChange.HasValue == true
                             ? $"{Model.ProfitComparison.PercentChange.Value:N2}%"
-                            : "N/A")
+                            : "-")
                     </span>
                 </span>
                 <span class="owner-perf-kpi-sub">
-                    เดือน <span data-bind="profitComparison.currentLabel">@Model.ProfitComparison?.CurrentLabel</span>
+                    <span data-bind="profitComparison.currentLabel">@Model.ProfitComparison?.CurrentLabel</span>
                     เทียบ <span data-bind="profitComparison.previousLabel">@Model.ProfitComparison?.PreviousLabel</span>
                 </span>
             </div>
@@ -363,10 +358,10 @@
                 <div class="owner-perf-kpi-icon owner-icon-bg-violet">
                     <i class="fa-solid fa-bed"></i>
                 </div>
-                <span class="owner-perf-kpi-tag">Room-Nights Utilization</span>
+                <span class="owner-perf-kpi-tag">เฉลี่ยปี @Model.Year</span>
             </div>
             <div class="owner-perf-kpi-body">
-                <h2 class="owner-perf-kpi-name">Occupancy Rate (อัตราการเข้าพักเฉลี่ย)</h2>
+                <h2 class="owner-perf-kpi-name">อัตราการเข้าพัก (Occupancy Rate)</h2>
                 <div class="owner-perf-kpi-val" data-perf-kpi="occupancyRate">
                     @ytdOccupancyRate.ToString("N2")%
                 </div>
@@ -377,7 +372,7 @@
                     <span>@(curMonthRow != null ? $"{curMonthRow.OccupancyRate:N2}%" : "0.00%")</span>
                 </span>
                 <span class="owner-perf-kpi-sub">
-                    ในเดือน @selectedMonthName (@ytdOccupiedNights.ToString("N0") / @ytdAvailableNights.ToString("N0") ห้อง-คืน)
+                    เดือน @selectedMonthName (@ytdOccupiedNights.ToString("N0") / @ytdAvailableNights.ToString("N0") คืน)
                 </span>
             </div>
         </article>
@@ -388,10 +383,10 @@
                 <div class="owner-perf-kpi-icon owner-icon-bg-blue">
                     <i class="fa-solid fa-calendar-check"></i>
                 </div>
-                <span class="owner-perf-kpi-tag">Confirmed Reservations</span>
+                <span class="owner-perf-kpi-tag">สะสมปี @Model.Year</span>
             </div>
             <div class="owner-perf-kpi-body">
-                <h2 class="owner-perf-kpi-name">Total Bookings (จำนวนการจองทั้งหมด)</h2>
+                <h2 class="owner-perf-kpi-name">จำนวนการจอง (Total Bookings)</h2>
                 <div class="owner-perf-kpi-val" data-perf-kpi="totalBookings">
                     @ytdBookings.ToString("N0")
                 </div>
@@ -401,7 +396,7 @@
                     <i class="fa-solid fa-bookmark"></i>
                     <span>@(curMonthRow != null ? $"{curMonthRow.Bookings:N0} รายการ" : "0 รายการ")</span>
                 </span>
-                <span class="owner-perf-kpi-sub">เฉพาะในเดือน @selectedMonthName</span>
+                <span class="owner-perf-kpi-sub">ในเดือน @selectedMonthName</span>
             </div>
         </article>
 
@@ -411,38 +406,38 @@
                 <div class="owner-perf-kpi-icon owner-icon-bg-cyan">
                     <i class="fa-solid fa-tag"></i>
                 </div>
-                <span class="owner-perf-kpi-tag">Revenue ÷ Occupied Nights</span>
+                <span class="owner-perf-kpi-tag">เฉลี่ยต่อคืน (ADR)</span>
             </div>
             <div class="owner-perf-kpi-body">
-                <h2 class="owner-perf-kpi-name">Average Daily Rate (ADR เฉลี่ยต่อคืน)</h2>
+                <h2 class="owner-perf-kpi-name">รายได้เฉลี่ยต่อห้อง-คืน (ADR)</h2>
                 <div class="owner-perf-kpi-val" data-perf-kpi="adr">
-                    @(ytdAdr.HasValue ? ytdAdr.Value.ToString("C2", thCulture) : "N/A")
+                    @(ytdAdr.HasValue ? ytdAdr.Value.ToString("C2", thCulture) : "-")
                 </div>
             </div>
             <div class="owner-perf-kpi-foot">
                 <span class="owner-perf-trend-badge @GetTrendClass(adrPctChange)">
                     <i class="fa-solid @GetTrendIcon(adrPctChange)"></i>
-                    <span>@(adrPctChange.HasValue ? $"{adrPctChange.Value:N2}%" : "N/A")</span>
+                    <span>@(adrPctChange.HasValue ? $"{adrPctChange.Value:N2}%" : "-")</span>
                 </span>
                 <span class="owner-perf-kpi-sub">
-                    ADR เดือนนี้: @(curMonthAdr.HasValue ? curMonthAdr.Value.ToString("C2", thCulture) : "N/A")
+                    เดือนนี้: @(curMonthAdr.HasValue ? curMonthAdr.Value.ToString("C2", thCulture) : "-")
                 </span>
             </div>
         </article>
 
     </section>
 
-    <!-- ═══════════════════ SECTION 4 & SECTION 5: REVENUE & PROFIT/EXPENSE CHARTS ═══════════════════ -->
+    <!-- ═══════════════════ REVENUE & PROFIT/EXPENSE CHARTS ═══════════════════ -->
     <section class="owner-perf-charts-grid" aria-label="กราฟวิเคราะห์ผลประกอบการ">
 
-        <!-- Section 4: Revenue Performance Chart (Area / Line Chart) -->
+        <!-- Revenue Performance Chart -->
         <div class="owner-panel owner-perf-chart-card">
             <div class="owner-panel-header">
                 <div>
-                    <span class="owner-section-tag">SECTION 4 · REVENUE TRAJECTORY</span>
+                    <span class="owner-section-tag">REVENUE TREND</span>
                     <h3 class="owner-panel-title">
                         <i class="fa-solid fa-chart-area owner-icon-cyan"></i>
-                        แนวโน้มรายได้ผลประกอบการ (Revenue Performance Trend)
+                        แนวโน้มรายได้ผลประกอบการ
                     </h3>
                 </div>
                 <div class="owner-perf-chart-pills">
@@ -450,7 +445,7 @@
                         รายเดือน (@Model.Year)
                     </button>
                     <button type="button" class="owner-perf-pill-btn" data-perf-rev-series="yearly">
-                        รายปี (Multi-Year)
+                        รายปี
                     </button>
                 </div>
             </div>
@@ -483,20 +478,20 @@
             </div>
         </div>
 
-        <!-- Section 5: Profit & Expense Analysis (Grouped Bar Chart) -->
+        <!-- Profit & Expense Analysis Chart -->
         <div class="owner-panel owner-perf-chart-card">
             <div class="owner-panel-header">
                 <div>
-                    <span class="owner-section-tag">SECTION 5 · PROFIT &amp; EXPENSE ANALYSIS</span>
+                    <span class="owner-section-tag">PROFIT &amp; EXPENSE</span>
                     <h3 class="owner-panel-title">
                         <i class="fa-solid fa-chart-column owner-icon-violet"></i>
-                        เปรียบเทียบ รายได้ vs ค่าใช้จ่าย vs กำไรสุทธิ (Bar Chart)
+                        เปรียบเทียบรายได้ รายจ่าย และกำไรสุทธิ
                     </h3>
                 </div>
                 <div class="owner-chart-legend-pills">
-                    <span class="owner-legend-item"><i class="owner-dot owner-dot-cyan"></i> Revenue</span>
-                    <span class="owner-legend-item"><i class="owner-dot owner-dot-amber"></i> Expenses</span>
-                    <span class="owner-legend-item"><i class="owner-dot owner-dot-green"></i> Net Profit</span>
+                    <span class="owner-legend-item"><i class="owner-dot owner-dot-cyan"></i> รายได้</span>
+                    <span class="owner-legend-item"><i class="owner-dot owner-dot-amber"></i> รายจ่าย</span>
+                    <span class="owner-legend-item"><i class="owner-dot owner-dot-green"></i> กำไรสุทธิ</span>
                 </div>
             </div>
 
@@ -506,13 +501,13 @@
 
             <div class="owner-perf-mini-benchmark">
                 <div class="owner-perf-bm-item">
-                    <span>ส่วนต่างค่าใช้จ่าย (MoM):</span>
+                    <span>ส่วนต่างรายจ่าย:</span>
                     <strong data-bind="expenseComparison.difference" data-format="currency">
                         @((Model.ExpenseComparison?.Difference ?? 0m).ToString("C2", thCulture))
                     </strong>
                 </div>
                 <div class="owner-perf-bm-item">
-                    <span>ส่วนต่างกำไรสุทธิ (MoM):</span>
+                    <span>ส่วนต่างกำไรสุทธิ:</span>
                     <strong class="@((Model.ProfitComparison?.Difference ?? 0m) >= 0 ? "owner-text-success" : "owner-text-danger")"
                             data-bind="profitComparison.difference"
                             data-format="currency">
@@ -524,17 +519,17 @@
 
     </section>
 
-    <!-- ═══════════════════ SECTION 6: OCCUPANCY PERFORMANCE & SECTION 9: PERFORMANCE INSIGHTS ═══════════════════ -->
+    <!-- ═══════════════════ OCCUPANCY PERFORMANCE & PERFORMANCE INSIGHTS ═══════════════════ -->
     <section class="owner-perf-mid-grid">
 
-        <!-- Section 6: Occupancy Performance (Donut Chart & Progress Indicators) -->
+        <!-- Occupancy Performance -->
         <div class="owner-panel owner-perf-occ-panel">
             <div class="owner-panel-header">
                 <div>
-                    <span class="owner-section-tag">SECTION 6 · OCCUPANCY PERFORMANCE</span>
+                    <span class="owner-section-tag">OCCUPANCY PERFORMANCE</span>
                     <h3 class="owner-panel-title">
                         <i class="fa-solid fa-bed-pulse owner-icon-violet"></i>
-                        ประสิทธิภาพการเข้าพักและสัดส่วนห้อง-คืน (ปี @Model.Year)
+                        สัดส่วนห้อง-คืนและการเข้าพัก (ปี @Model.Year)
                     </h3>
                 </div>
             </div>
@@ -544,15 +539,14 @@
                     <canvas id="ownerPerfOccupancyDonut"></canvas>
                     <div class="owner-donut-center-label">
                         <span class="owner-donut-percent" data-perf-occ-center>@ytdOccupancyRate.ToString("N2")%</span>
-                        <span class="owner-donut-caption">Occupancy</span>
+                        <span class="owner-donut-caption">Occupied</span>
                     </div>
                 </div>
 
                 <div class="owner-perf-occ-details">
-                    <!-- Occupied Room-Nights Progress -->
                     <div class="owner-perf-progress-card">
                         <div class="owner-perf-prog-head">
-                            <span><i class="owner-dot owner-dot-cyan"></i> ห้องที่มีผู้เข้าพักจริง (Occupied Room-Nights)</span>
+                            <span><i class="owner-dot owner-dot-cyan"></i> ห้อง-คืนที่มีผู้เข้าพัก</span>
                             <strong><span data-perf-occ-nights>@ytdOccupiedNights.ToString("N0")</span> คืน (@ytdOccupancyRate.ToString("N2")%)</strong>
                         </div>
                         <div class="owner-perf-prog-track">
@@ -561,10 +555,9 @@
                         </div>
                     </div>
 
-                    <!-- Available / Vacant Room-Nights Progress -->
                     <div class="owner-perf-progress-card">
                         <div class="owner-perf-prog-head">
-                            <span><i class="owner-dot owner-dot-slate"></i> ห้องว่างที่ยังไม่มีผู้เข้าพัก (Available Room-Nights)</span>
+                            <span><i class="owner-dot owner-dot-slate"></i> ห้อง-คืนว่าง</span>
                             <strong><span data-perf-vacant-nights>@totalVacantNights.ToString("N0")</span> คืน (@ytdVacantRate.ToString("N2")%)</strong>
                         </div>
                         <div class="owner-perf-prog-track">
@@ -573,10 +566,9 @@
                         </div>
                     </div>
 
-                    <!-- Total Capacity -->
                     <div class="owner-perf-capacity-summary">
                         <div>
-                            <span class="owner-perf-cap-label">จำนวนห้อง-คืนที่เปิดให้บริการทั้งหมด (Total Capacity)</span>
+                            <span class="owner-perf-cap-label">จำนวนห้อง-คืนที่เปิดให้บริการทั้งหมด</span>
                             <strong class="owner-perf-cap-val"><span data-perf-total-nights>@ytdAvailableNights.ToString("N0")</span> ห้อง-คืน</strong>
                         </div>
                         <i class="fa-solid fa-hotel owner-icon-cyan fs-4"></i>
@@ -585,14 +577,14 @@
             </div>
         </div>
 
-        <!-- Section 9: Performance Insights (คำนวณจากข้อมูลจริง 100%) -->
+        <!-- Performance Insights -->
         <div class="owner-panel owner-perf-insights-panel">
             <div class="owner-panel-header">
                 <div>
-                    <span class="owner-section-tag">SECTION 9 · DATA-DRIVEN PERFORMANCE INSIGHTS</span>
+                    <span class="owner-section-tag">PERFORMANCE HIGHLIGHTS</span>
                     <h3 class="owner-panel-title">
                         <i class="fa-solid fa-bolt-lightning owner-icon-cyan"></i>
-                        สรุปข้อมูลเชิงวิเคราะห์จากผลประกอบการจริง
+                        สรุปไฮไลต์ผลประกอบการ (ปี @Model.Year)
                     </h3>
                 </div>
             </div>
@@ -604,7 +596,7 @@
                         <i class="fa-solid fa-trophy"></i>
                     </div>
                     <div class="owner-perf-insight-body">
-                        <span class="owner-perf-insight-label">เดือนที่มีผลประกอบการดีที่สุด (Best Performing Month)</span>
+                        <span class="owner-perf-insight-label">เดือนที่กำไรสูงสุด</span>
                         @if (bestMonth != null)
                         {
                             <strong class="owner-perf-insight-title">@bestMonth.Label</strong>
@@ -616,8 +608,8 @@
                         }
                         else
                         {
-                            <strong class="owner-perf-insight-title">ยังไม่มีข้อมูลธุรกรรมในปี @Model.Year</strong>
-                            <span class="owner-perf-insight-meta">ระบบจะแสดงผลเมื่อมีการบันทึกการชำระเงินหรือการเข้าพัก</span>
+                            <strong class="owner-perf-insight-title">-</strong>
+                            <span class="owner-perf-insight-meta">ยังไม่มีรายการธุรกรรมในปี @Model.Year</span>
                         }
                     </div>
                 </div>
@@ -628,7 +620,7 @@
                         <i class="fa-solid fa-chart-line"></i>
                     </div>
                     <div class="owner-perf-insight-body">
-                        <span class="owner-perf-insight-label">เดือนที่ผลประกอบการต่ำที่สุด (Lowest Active Month)</span>
+                        <span class="owner-perf-insight-label">เดือนที่กำไรต่ำสุด</span>
                         @if (lowestMonth != null)
                         {
                             <strong class="owner-perf-insight-title">@lowestMonth.Label</strong>
@@ -640,36 +632,36 @@
                         }
                         else
                         {
-                            <strong class="owner-perf-insight-title">ข้อมูลไม่เพียงพอสำหรับการเปรียบเทียบขั้นต่ำ</strong>
-                            <span class="owner-perf-insight-meta">ต้องมีข้อมูลเดือนที่มีธุรกรรมอย่างน้อย 2 เดือนขึ้นไป</span>
+                            <strong class="owner-perf-insight-title">-</strong>
+                            <span class="owner-perf-insight-meta">ยังไม่มีข้อมูลเปรียบเทียบระหว่างเดือนเพียงพอ</span>
                         }
                     </div>
                 </div>
 
-                <!-- Revenue & Profit Growth Summary -->
+                <!-- Growth Summary -->
                 <div class="owner-perf-insight-metrics-row">
                     <div class="owner-perf-mini-metric">
-                        <span class="owner-perf-mm-label">การเติบโตของรายได้ (Revenue Growth MoM)</span>
+                        <span class="owner-perf-mm-label">การเปลี่ยนแปลงรายได้</span>
                         <strong class="owner-perf-mm-val @GetTrendClass(Model.RevenueComparison?.PercentChange)">
                             <i class="fa-solid @GetTrendIcon(Model.RevenueComparison?.PercentChange)"></i>
                             @(Model.RevenueComparison?.PercentChange.HasValue == true
                                 ? $"{Model.RevenueComparison.PercentChange.Value:N2}%"
-                                : "ไม่มีฐานเปรียบเทียบ")
+                                : "-")
                         </strong>
                     </div>
 
                     <div class="owner-perf-mini-metric">
-                        <span class="owner-perf-mm-label">การเติบโตของกำไร (Profit Growth MoM)</span>
+                        <span class="owner-perf-mm-label">การเปลี่ยนแปลงกำไร</span>
                         <strong class="owner-perf-mm-val @GetTrendClass(Model.ProfitComparison?.PercentChange)">
                             <i class="fa-solid @GetTrendIcon(Model.ProfitComparison?.PercentChange)"></i>
                             @(Model.ProfitComparison?.PercentChange.HasValue == true
                                 ? $"{Model.ProfitComparison.PercentChange.Value:N2}%"
-                                : "ไม่มีฐานเปรียบเทียบ")
+                                : "-")
                         </strong>
                     </div>
 
                     <div class="owner-perf-mini-metric">
-                        <span class="owner-perf-mm-label">แนวโน้มอัตราเข้าพักสะสม (YTD Occupancy)</span>
+                        <span class="owner-perf-mm-label">อัตราเข้าพักเฉลี่ยทั้งปี</span>
                         <strong class="owner-perf-mm-val owner-icon-cyan">
                             <i class="fa-solid fa-bed"></i> @ytdOccupancyRate.ToString("N2")%
                         </strong>
@@ -680,22 +672,22 @@
 
     </section>
 
-    <!-- ═══════════════════ SECTION 7: MONTHLY PERFORMANCE COMPARISON TABLE (12 MONTHS) ═══════════════════ -->
+    <!-- ═══════════════════ MONTHLY PERFORMANCE COMPARISON TABLE (12 MONTHS) ═══════════════════ -->
     <section class="owner-panel owner-perf-monthly-section" data-perf-section="monthly" aria-label="ตารางเปรียบเทียบผลประกอบการรายเดือน">
         <div class="owner-panel-header">
             <div>
-                <span class="owner-section-tag">SECTION 7 · MONTHLY PERFORMANCE COMPARISON (12 MONTHS)</span>
+                <span class="owner-section-tag">MONTHLY REPORT</span>
                 <h3 class="owner-panel-title">
                     <i class="fa-solid fa-calendar-week owner-icon-cyan"></i>
-                    ตารางเปรียบเทียบผลประกอบการรายเดือนครบ 12 เดือน (ประจำปี @Model.Year)
+                    ผลประกอบการรายเดือน (ประจำปี @Model.Year)
                 </h3>
             </div>
             <div class="owner-perf-table-badges">
                 <span class="owner-perf-legend-chip owner-chip-best">
-                    <i class="fa-solid fa-crown"></i> เดือนที่กำไรสูงสุด (Best Month)
+                    <i class="fa-solid fa-crown"></i> กำไรสูงสุด
                 </span>
                 <span class="owner-perf-legend-chip owner-chip-low">
-                    <i class="fa-solid fa-circle-arrow-down"></i> เดือนที่กำไรต่ำสุด (Lowest Active Month)
+                    <i class="fa-solid fa-circle-arrow-down"></i> กำไรต่ำสุด
                 </span>
             </div>
         </div>
@@ -704,12 +696,12 @@
             <table class="owner-table owner-perf-table" id="ownerPerfMonthlyTable">
                 <thead>
                     <tr>
-                        <th>เดือน (Month)</th>
-                        <th class="text-end">รายได้สุทธิ (Revenue)</th>
-                        <th class="text-end">ค่าใช้จ่าย (Expenses)</th>
-                        <th class="text-end">กำไร/ขาดทุน (Net Profit)</th>
-                        <th class="text-end">อัตราเข้าพัก (Occupancy Rate)</th>
-                        <th class="text-end">จำนวนการจอง (Total Bookings)</th>
+                        <th>เดือน</th>
+                        <th class="text-end">รายได้</th>
+                        <th class="text-end">รายจ่าย</th>
+                        <th class="text-end">กำไรสุทธิ</th>
+                        <th class="text-end">อัตราเข้าพัก</th>
+                        <th class="text-end">จำนวนการจอง</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -763,7 +755,7 @@
                 </tbody>
                 <tfoot>
                     <tr class="owner-perf-tfoot-row">
-                        <td><strong>รวมทั้งปี @Model.Year (YTD Total)</strong></td>
+                        <td><strong>รวมทั้งปี @Model.Year</strong></td>
                         <td class="text-end"><strong>@ytdRevenue.ToString("C2", thCulture)</strong></td>
                         <td class="text-end"><strong>@ytdExpense.ToString("C2", thCulture)</strong></td>
                         <td class="text-end @(ytdProfit >= 0 ? "owner-text-success" : "owner-text-danger")">
@@ -777,18 +769,18 @@
         </div>
     </section>
 
-    <!-- ═══════════════════ SECTION 8: YEARLY PERFORMANCE COMPARISON ═══════════════════ -->
+    <!-- ═══════════════════ YEARLY PERFORMANCE COMPARISON ═══════════════════ -->
     <section class="owner-panel owner-perf-yearly-section" data-perf-section="yearly" aria-label="เปรียบเทียบผลประกอบการรายปี">
         <div class="owner-panel-header">
             <div>
-                <span class="owner-section-tag">SECTION 8 · MULTI-YEAR PERFORMANCE BENCHMARK</span>
+                <span class="owner-section-tag">YEARLY REPORT</span>
                 <h3 class="owner-panel-title">
                     <i class="fa-solid fa-layer-group owner-icon-violet"></i>
-                    เปรียบเทียบผลประกอบการรายปี (Annual Revenue, Expenses, Profit, Occupancy &amp; Bookings)
+                    เปรียบเทียบผลประกอบการรายปี
                 </h3>
             </div>
             <span class="owner-badge-count">
-                ข้อมูลสะสม @yearlyList.Count ปี
+                @yearlyList.Count ปี
             </span>
         </div>
 
@@ -803,19 +795,19 @@
                 <table class="owner-table owner-perf-table" data-table="yearlyReports">
                     <thead>
                         <tr>
-                            <th data-col="label">ปี (Year)</th>
-                            <th data-col="revenue" data-format="currency" class="text-end">Annual Revenue</th>
-                            <th data-col="expense" data-format="currency" class="text-end">Annual Expenses</th>
-                            <th data-col="profit" data-format="currency" class="text-end">Annual Profit</th>
-                            <th data-col="occupancyRate" data-format="percent" class="text-end">Annual Occupancy</th>
-                            <th data-col="bookings" data-format="number" class="text-end">Annual Bookings</th>
+                            <th data-col="label">ปี</th>
+                            <th data-col="revenue" data-format="currency" class="text-end">รายได้</th>
+                            <th data-col="expense" data-format="currency" class="text-end">รายจ่าย</th>
+                            <th data-col="profit" data-format="currency" class="text-end">กำไรสุทธิ</th>
+                            <th data-col="occupancyRate" data-format="percent" class="text-end">อัตราเข้าพัก</th>
+                            <th data-col="bookings" data-format="number" class="text-end">จำนวนการจอง</th>
                         </tr>
                     </thead>
                     <tbody>
                         @if (yearlyList.Count == 0)
                         {
                             <tr>
-                                <td colspan="6" class="owner-empty-cell">ยังไม่มีข้อมูลผลประกอบการรายปีในฐานข้อมูล</td>
+                                <td colspan="6" class="owner-empty-cell">ยังไม่มีข้อมูลผลประกอบการรายปี</td>
                             </tr>
                         }
                         else
@@ -837,25 +829,6 @@
                     </tbody>
                 </table>
             </div>
-        </div>
-    </section>
-
-    <!-- ═══════════════════ DATA NOTES & AUDIT DISCLAIMER ═══════════════════ -->
-    <section class="owner-panel">
-        <div class="owner-disclaimer-box">
-            <div class="owner-disclaimer-title">
-                <i class="fa-solid fa-scale-unbalanced-flip"></i>
-                หมายเหตุและเกณฑ์การคำนวณรายงานผลประกอบการ (Database Audit Notes)
-            </div>
-            <ul class="owner-notes-list" data-list="dataNotes">
-                @if (Model.DataNotes != null)
-                {
-                    foreach (var note in Model.DataNotes)
-                    {
-                        <li>@note</li>
-                    }
-                }
-            </ul>
         </div>
     </section>
 

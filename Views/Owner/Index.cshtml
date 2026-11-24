@@ -17,8 +17,7 @@
 
     string FormatTrendBadge(decimal? pct, bool inverseGood = false)
     {
-        if (!pct.HasValue) return "owner-trend-neutral";
-        if (pct.Value == 0m) return "owner-trend-neutral";
+        if (!pct.HasValue || pct.Value == 0m) return "owner-trend-neutral";
         bool isPositive = pct.Value > 0m;
         if (inverseGood) isPositive = !isPositive;
         return isPositive ? "owner-trend-up" : "owner-trend-down";
@@ -35,20 +34,18 @@
      data-owner-page="dashboard"
      data-api-url="@Url.Action("DashboardData", "Owner")">
 
-    <!-- ═══════════════════ 7.1 DASHBOARD HEADER ═══════════════════ -->
+    <!-- ═══════════════════ DASHBOARD HEADER ═══════════════════ -->
     <section class="owner-hero-header">
         <div class="owner-hero-left">
             <div class="owner-eyebrow-badge">
                 <span class="owner-pulse-dot"></span>
-                <span>HOSPITALITY EXECUTIVE INTELLIGENCE</span>
+                <span>STAYMATE EXECUTIVE INTELLIGENCE</span>
             </div>
             <h1 class="owner-hero-title">
-                Executive Overview
-                <span class="owner-title-accent">· StayMate</span>
+                Executive Dashboard
             </h1>
             <p class="owner-hero-subtitle">
-                ยินดีต้อนรับคุณ <strong>@(User.Identity?.Name ?? "Executive Owner")</strong> —
-                ศูนย์บัญชาการวิเคราะห์ผลประกอบการ รายได้ รายจ่าย และอัตราการเข้าพักจากฐานข้อมูลจริง (Read-Only)
+                ภาพรวมผลประกอบการ รายได้ รายจ่าย และอัตราการเข้าพักของโรงแรม
             </p>
         </div>
 
@@ -57,24 +54,24 @@
                 <div class="owner-meta-pill">
                     <i class="fa-regular fa-calendar-check owner-icon-cyan"></i>
                     <div>
-                        <span class="owner-meta-label">วันที่ปัจจุบัน</span>
+                        <span class="owner-meta-label">ข้อมูล ณ วันที่</span>
                         <strong class="owner-meta-value">@todayDisplay</strong>
                     </div>
                 </div>
                 <div class="owner-meta-pill">
-                    <i class="fa-solid fa-clock-rotate-left owner-icon-violet"></i>
+                    <i class="fa-solid fa-chart-simple owner-icon-violet"></i>
                     <div>
-                        <span class="owner-meta-label">รอบการรายงานสะสม</span>
-                        <strong class="owner-meta-value">ปี @Model.Year (เทียบเดือน @selectedMonthDisplay)</strong>
+                        <span class="owner-meta-label">รอบการรายงาน</span>
+                        <strong class="owner-meta-value">ประจำเดือน @selectedMonthDisplay</strong>
                     </div>
                 </div>
             </div>
 
-            <!-- ตัวกรองช่วงเวลา (GET เท่านั้น รองรับ Owner.js initFilters) -->
+            <!-- ตัวกรองปีและเดือน -->
             <div class="owner-filter-bar" role="region" aria-label="ตัวกรองช่วงเวลารายงาน">
                 <div class="owner-filter-group">
                     <label for="ownerYearSelect" class="owner-filter-label">
-                        <i class="fa-solid fa-calendar-days"></i> ปีงบประมาณ
+                        <i class="fa-solid fa-calendar-days"></i> ปี
                     </label>
                     <select id="ownerYearSelect" class="owner-filter-select" data-owner-year>
                         @foreach (var y in years)
@@ -93,7 +90,7 @@
 
                 <div class="owner-filter-group">
                     <label for="ownerMonthSelect" class="owner-filter-label">
-                        <i class="fa-solid fa-filter"></i> เดือนเปรียบเทียบ
+                        <i class="fa-solid fa-filter"></i> เดือน
                     </label>
                     <select id="ownerMonthSelect" class="owner-filter-select" data-owner-month>
                         @for (int m = 1; m <= maxMonth; m++)
@@ -114,7 +111,7 @@
         </div>
     </section>
 
-    <!-- ═══════════════════ 7.2 KPI CARDS (6 CARDS) ═══════════════════ -->
+    <!-- ═══════════════════ KPI CARDS ═══════════════════ -->
     <section class="owner-kpi-grid" aria-label="ตัวชี้วัดหลักทางธุรกิจ">
 
         <!-- 1. Total Revenue -->
@@ -122,12 +119,12 @@
             <div class="owner-kpi-glow"></div>
             <div class="owner-kpi-top">
                 <div class="owner-kpi-icon-box owner-icon-bg-cyan">
-                    <i class="fa-solid fa-Coins fa-coins"></i>
+                    <i class="fa-solid fa-coins"></i>
                 </div>
-                <span class="owner-kpi-unit-badge">THB · รายปี @Model.Year</span>
+                <span class="owner-kpi-unit-badge">@selectedMonthDisplay</span>
             </div>
             <div class="owner-kpi-body">
-                <h2 class="owner-kpi-title">Total Revenue (รายได้รวมสุทธิ)</h2>
+                <h2 class="owner-kpi-title">รายได้รวม (Total Revenue)</h2>
                 <div class="owner-kpi-value"
                      data-bind="totalRevenue"
                      data-format="currency"
@@ -140,13 +137,13 @@
                     <i class="fa-solid @FormatTrendIcon(Model.RevenueComparison?.PercentChange)"></i>
                     <span data-bind="revenueComparison.percentChange"
                           data-format="percent"
-                          data-null-text="ไม่มีฐานเปรียบเทียบ">
+                          data-null-text="-">
                         @(Model.RevenueComparison?.PercentChange.HasValue == true
                             ? $"{Model.RevenueComparison.PercentChange.Value:N2}%"
-                            : "ไม่มีฐานเปรียบเทียบ")
+                            : "-")
                     </span>
                 </span>
-                <span class="owner-kpi-footnote">เทียบเดือนก่อนหน้า (@(Model.RevenueComparison?.PreviousLabel ?? "-"))</span>
+                <span class="owner-kpi-footnote">เทียบ @(Model.RevenueComparison?.PreviousLabel ?? "เดือนก่อน")</span>
             </div>
         </article>
 
@@ -157,10 +154,10 @@
                 <div class="owner-kpi-icon-box owner-icon-bg-amber">
                     <i class="fa-solid fa-file-invoice-dollar"></i>
                 </div>
-                <span class="owner-kpi-unit-badge">THB · รายปี @Model.Year</span>
+                <span class="owner-kpi-unit-badge">@selectedMonthDisplay</span>
             </div>
             <div class="owner-kpi-body">
-                <h2 class="owner-kpi-title">Total Expenses (รายจ่ายรวม)</h2>
+                <h2 class="owner-kpi-title">ค่าใช้จ่ายรวม (Total Expenses)</h2>
                 <div class="owner-kpi-value"
                      data-bind="totalExpense"
                      data-format="currency"
@@ -173,13 +170,13 @@
                     <i class="fa-solid @FormatTrendIcon(Model.ExpenseComparison?.PercentChange)"></i>
                     <span data-bind="expenseComparison.percentChange"
                           data-format="percent"
-                          data-null-text="ไม่มีฐานเปรียบเทียบ">
+                          data-null-text="-">
                         @(Model.ExpenseComparison?.PercentChange.HasValue == true
                             ? $"{Model.ExpenseComparison.PercentChange.Value:N2}%"
-                            : "ไม่มีฐานเปรียบเทียบ")
+                            : "-")
                     </span>
                 </span>
-                <span class="owner-kpi-footnote">เทียบเดือนก่อนหน้า (@(Model.ExpenseComparison?.PreviousLabel ?? "-"))</span>
+                <span class="owner-kpi-footnote">เทียบ @(Model.ExpenseComparison?.PreviousLabel ?? "เดือนก่อน")</span>
             </div>
         </article>
 
@@ -188,12 +185,12 @@
             <div class="owner-kpi-glow"></div>
             <div class="owner-kpi-top">
                 <div class="owner-kpi-icon-box @(Model.NetProfit >= 0 ? "owner-icon-bg-green" : "owner-icon-bg-red")">
-                    <i class="fa-solid fa-chart-pie"></i>
+                    <i class="fa-solid fa-sack-dollar"></i>
                 </div>
-                <span class="owner-kpi-unit-badge">THB · @(Model.NetProfit >= 0 ? "กำไรจากการดำเนินงาน" : "ขาดทุนจากการดำเนินงาน")</span>
+                <span class="owner-kpi-unit-badge">@(Model.NetProfit >= 0 ? "กำไรสุทธิ" : "ขาดทุนสุทธิ")</span>
             </div>
             <div class="owner-kpi-body">
-                <h2 class="owner-kpi-title">Net Profit (กำไร / ขาดทุนสุทธิ)</h2>
+                <h2 class="owner-kpi-title">กำไรสุทธิ (Net Profit)</h2>
                 <div class="owner-kpi-value @(Model.NetProfit >= 0 ? "owner-text-success" : "owner-text-danger")"
                      data-bind="netProfit"
                      data-format="currency"
@@ -206,13 +203,13 @@
                     <i class="fa-solid @FormatTrendIcon(Model.ProfitComparison?.PercentChange)"></i>
                     <span data-bind="profitComparison.percentChange"
                           data-format="percent"
-                          data-null-text="ไม่มีฐานเปรียบเทียบ">
+                          data-null-text="-">
                         @(Model.ProfitComparison?.PercentChange.HasValue == true
                             ? $"{Model.ProfitComparison.PercentChange.Value:N2}%"
-                            : "ไม่มีฐานเปรียบเทียบ")
+                            : "-")
                     </span>
                 </span>
-                <span class="owner-kpi-footnote">เทียบเดือนก่อนหน้า (@(Model.ProfitComparison?.PreviousLabel ?? "-"))</span>
+                <span class="owner-kpi-footnote">เทียบ @(Model.ProfitComparison?.PreviousLabel ?? "เดือนก่อน")</span>
             </div>
         </article>
 
@@ -223,10 +220,10 @@
                 <div class="owner-kpi-icon-box owner-icon-bg-violet">
                     <i class="fa-solid fa-bed"></i>
                 </div>
-                <span class="owner-kpi-unit-badge">Room-Nights Ratio</span>
+                <span class="owner-kpi-unit-badge">ห้องเปิดบริการ <span data-bind="activeRoomCount" data-format="number">@Model.ActiveRoomCount</span> ห้อง</span>
             </div>
             <div class="owner-kpi-body">
-                <h2 class="owner-kpi-title">Occupancy Rate (อัตราการเข้าพักจริง)</h2>
+                <h2 class="owner-kpi-title">อัตราการเข้าพัก (Occupancy Rate)</h2>
                 <div class="owner-kpi-value"
                      data-bind="occupancyRate"
                      data-format="percent"
@@ -242,7 +239,6 @@
                     <span data-bind="availableRoomNights" data-format="number">@Model.AvailableRoomNights.ToString("N0")</span>
                     ห้อง-คืน
                 </span>
-                <span class="owner-kpi-footnote">ห้องเปิดบริการ <strong data-bind="activeRoomCount" data-format="number">@Model.ActiveRoomCount</strong> ห้อง</span>
             </div>
         </article>
 
@@ -253,10 +249,10 @@
                 <div class="owner-kpi-icon-box owner-icon-bg-blue">
                     <i class="fa-solid fa-calendar-check"></i>
                 </div>
-                <span class="owner-kpi-unit-badge">รายการจองที่มีผล</span>
+                <span class="owner-kpi-unit-badge">@selectedMonthDisplay</span>
             </div>
             <div class="owner-kpi-body">
-                <h2 class="owner-kpi-title">Total Bookings (จำนวนการจองทั้งหมด)</h2>
+                <h2 class="owner-kpi-title">จำนวนการจอง (Total Bookings)</h2>
                 <div class="owner-kpi-value"
                      data-bind="totalBookings"
                      data-format="number"
@@ -265,11 +261,7 @@
                 </div>
             </div>
             <div class="owner-kpi-footer">
-                <span class="owner-kpi-stat-chip">
-                    <i class="fa-solid fa-circle-check owner-text-success"></i>
-                    Confirmed · Checked-In · Checked-Out
-                </span>
-                <span class="owner-kpi-footnote">ไม่รวมรายการยกเลิก/ปฏิเสธ</span>
+                <span class="owner-kpi-footnote">รายการจองที่ยืนยันและเข้าพักจริง</span>
             </div>
         </article>
 
@@ -280,10 +272,10 @@
                 <div class="owner-kpi-icon-box owner-icon-bg-cyan">
                     <i class="fa-solid fa-hand-holding-dollar"></i>
                 </div>
-                <span class="owner-kpi-unit-badge">THB / Booking</span>
+                <span class="owner-kpi-unit-badge">@selectedMonthDisplay</span>
             </div>
             <div class="owner-kpi-body">
-                <h2 class="owner-kpi-title">Average Revenue / Booking (เฉลี่ยต่อการจอง)</h2>
+                <h2 class="owner-kpi-title">รายได้เฉลี่ยต่อการจอง</h2>
                 <div class="owner-kpi-value"
                      data-bind="averageRevenuePerBooking"
                      data-format="currency"
@@ -292,33 +284,29 @@
                 </div>
             </div>
             <div class="owner-kpi-footer">
-                <span class="owner-kpi-stat-chip">
-                    <i class="fa-solid fa-calculator"></i>
-                    Total Revenue ÷ Total Bookings
-                </span>
-                <span class="owner-kpi-footnote">คำนวณจากยอดรับเงินจริง</span>
+                <span class="owner-kpi-footnote">Average Revenue / Booking</span>
             </div>
         </article>
 
     </section>
 
-    <!-- ═══════════════════ 7.3 & 7.4 ANALYTICS CHARTS ═══════════════════ -->
+    <!-- ═══════════════════ ANALYTICS CHARTS ═══════════════════ -->
     <section class="owner-analytics-grid" aria-label="กราฟวิเคราะห์รายได้และอัตราการเข้าพัก">
 
-        <!-- 7.3 Revenue & Expense Analytics (Line Chart) -->
+        <!-- Revenue, Expense & Profit Chart -->
         <div class="owner-panel owner-panel-main-chart">
             <div class="owner-panel-header">
                 <div>
-                    <span class="owner-section-tag">FINANCIAL TRAJECTORY</span>
+                    <span class="owner-section-tag">FINANCIAL OVERVIEW</span>
                     <h3 class="owner-panel-title">
                         <i class="fa-solid fa-chart-line owner-icon-cyan"></i>
-                        วิเคราะห์แนวโน้มรายได้ รายจ่าย และกำไรรายเดือน (ปี @Model.Year)
+                        แนวโน้มรายได้ รายจ่าย และกำไรรายเดือน (ปี @Model.Year)
                     </h3>
                 </div>
                 <div class="owner-chart-legend-pills">
-                    <span class="owner-legend-item"><i class="owner-dot owner-dot-cyan"></i> รายได้สุทธิ</span>
+                    <span class="owner-legend-item"><i class="owner-dot owner-dot-cyan"></i> รายได้</span>
                     <span class="owner-legend-item"><i class="owner-dot owner-dot-amber"></i> รายจ่าย</span>
-                    <span class="owner-legend-item"><i class="owner-dot owner-dot-green"></i> กำไร/ขาดทุน</span>
+                    <span class="owner-legend-item"><i class="owner-dot owner-dot-green"></i> กำไรสุทธิ</span>
                 </div>
             </div>
 
@@ -326,18 +314,18 @@
                 <canvas id="ownerRevenueLineChart"
                         data-chart="monthlyRevenue,monthlyExpense,monthlyProfit"
                         data-chart-type="line"
-                        data-chart-titles="รายได้สุทธิ (THB)|รายจ่าย (THB)|กำไรสุทธิ (THB)"></canvas>
+                        data-chart-titles="รายได้ (THB)|รายจ่าย (THB)|กำไรสุทธิ (THB)"></canvas>
             </div>
         </div>
 
-        <!-- 7.4 Occupancy Donut Chart -->
+        <!-- Occupancy Donut Chart -->
         <div class="owner-panel owner-panel-donut-chart">
             <div class="owner-panel-header">
                 <div>
                     <span class="owner-section-tag">ROOM UTILIZATION</span>
                     <h3 class="owner-panel-title">
                         <i class="fa-solid fa-chart-pie owner-icon-violet"></i>
-                        สัดส่วนอัตราการเข้าพักจริง
+                        สัดส่วนการเข้าพัก (@selectedMonthDisplay)
                     </h3>
                 </div>
             </div>
@@ -360,7 +348,7 @@
                     <div class="owner-occ-stat-row">
                         <div class="owner-occ-label">
                             <span class="owner-dot owner-dot-cyan"></span>
-                            <span>อัตราเข้าพักจริง (Occupied Rate)</span>
+                            <span>เข้าพัก (Occupied)</span>
                         </div>
                         <strong class="owner-occ-val" data-bind="occupiedRoomRate" data-format="percent">
                             @Model.OccupiedRoomRate.ToString("N2")%
@@ -369,7 +357,7 @@
                     <div class="owner-occ-stat-row">
                         <div class="owner-occ-label">
                             <span class="owner-dot owner-dot-slate"></span>
-                            <span>อัตราห้องว่าง (Available Rate)</span>
+                            <span>ห้องว่าง (Available)</span>
                         </div>
                         <strong class="owner-occ-val" data-bind="availableRoomRate" data-format="percent">
                             @Model.AvailableRoomRate.ToString("N2")%
@@ -378,7 +366,7 @@
                     <div class="owner-occ-stat-row owner-occ-divider">
                         <div class="owner-occ-label">
                             <i class="fa-solid fa-moon owner-icon-violet"></i>
-                            <span>จำนวนห้อง-คืนที่มีผู้เข้าพักจริง</span>
+                            <span>ห้อง-คืนที่มีผู้เข้าพัก</span>
                         </div>
                         <strong class="owner-occ-val">
                             <span data-bind="occupiedRoomNights" data-format="number">@Model.OccupiedRoomNights.ToString("N0")</span> คืน
@@ -387,7 +375,7 @@
                     <div class="owner-occ-stat-row">
                         <div class="owner-occ-label">
                             <i class="fa-solid fa-building owner-icon-cyan"></i>
-                            <span>จำนวนห้อง-คืนที่เปิดให้บริการทั้งหมด</span>
+                            <span>ห้อง-คืนที่เปิดให้บริการ</span>
                         </div>
                         <strong class="owner-occ-val">
                             <span data-bind="availableRoomNights" data-format="number">@Model.AvailableRoomNights.ToString("N0")</span> คืน
@@ -399,19 +387,17 @@
 
     </section>
 
-    <!-- ═══════════════════ 7.5 PERFORMANCE COMPARISON ═══════════════════ -->
+    <!-- ═══════════════════ PERFORMANCE COMPARISON ═══════════════════ -->
     <section class="owner-panel owner-comparison-section" aria-label="เปรียบเทียบผลประกอบการระหว่างเดือน">
         <div class="owner-panel-header">
             <div>
-                            <span data-bind="revenueComparison.currentLabel">
-                @(Model.RevenueComparison?.CurrentLabel ?? "-")
-            </span>
-
-            เทียบกับ
-
-            <span data-bind="revenueComparison.previousLabel">
-                @(Model.RevenueComparison?.PreviousLabel ?? "-")
-            </span>
+                <span class="owner-section-tag">PERIOD COMPARISON</span>
+                <h3 class="owner-panel-title">
+                    <i class="fa-solid fa-code-compare owner-icon-cyan"></i>
+                    เปรียบเทียบผลประกอบการ:
+                    <span data-bind="revenueComparison.currentLabel">@(Model.RevenueComparison?.CurrentLabel ?? "-")</span>
+                    เทียบกับ
+                    <span data-bind="revenueComparison.previousLabel">@(Model.RevenueComparison?.PreviousLabel ?? "-")</span>
                 </h3>
             </div>
         </div>
@@ -422,35 +408,35 @@
             <div class="owner-comp-card">
                 <div class="owner-comp-header">
                     <span class="owner-comp-title">
-                        <i class="fa-solid fa-coins owner-icon-cyan"></i> เปรียบเทียบรายได้ (Revenue)
+                        <i class="fa-solid fa-coins owner-icon-cyan"></i> รายได้ (Revenue)
                     </span>
                     <span class="owner-trend-pill @FormatTrendBadge(Model.RevenueComparison?.PercentChange)">
                         <i class="fa-solid @FormatTrendIcon(Model.RevenueComparison?.PercentChange)"></i>
                         <span data-bind="revenueComparison.percentChange"
                               data-format="percent"
-                              data-null-text="ไม่มีข้อมูลเปรียบเทียบ">
+                              data-null-text="-">
                             @(Model.RevenueComparison?.PercentChange.HasValue == true
                                 ? $"{Model.RevenueComparison.PercentChange.Value:N2}%"
-                                : "ไม่มีข้อมูลเปรียบเทียบ")
+                                : "-")
                         </span>
                     </span>
                 </div>
                 <div class="owner-comp-metrics">
                     <div class="owner-comp-col">
-                        <span class="owner-comp-sublabel">เดือนปัจจุบัน (<span data-bind="revenueComparison.currentLabel">@Model.RevenueComparison?.CurrentLabel</span>)</span>
+                        <span class="owner-comp-sublabel" data-bind="revenueComparison.currentLabel">@Model.RevenueComparison?.CurrentLabel</span>
                         <strong class="owner-comp-main-val" data-bind="revenueComparison.currentValue" data-format="currency">
                             @((Model.RevenueComparison?.CurrentValue ?? 0m).ToString("C2", thCulture))
                         </strong>
                     </div>
                     <div class="owner-comp-col">
-                        <span class="owner-comp-sublabel">เดือนก่อนหน้า (<span data-bind="revenueComparison.previousLabel">@Model.RevenueComparison?.PreviousLabel</span>)</span>
+                        <span class="owner-comp-sublabel" data-bind="revenueComparison.previousLabel">@Model.RevenueComparison?.PreviousLabel</span>
                         <strong class="owner-comp-prev-val" data-bind="revenueComparison.previousValue" data-format="currency">
                             @((Model.RevenueComparison?.PreviousValue ?? 0m).ToString("C2", thCulture))
                         </strong>
                     </div>
                 </div>
                 <div class="owner-comp-diff-bar">
-                    <span>ส่วนต่าง (Difference):</span>
+                    <span>ส่วนต่าง</span>
                     <strong data-bind="revenueComparison.difference" data-format="currency">
                         @((Model.RevenueComparison?.Difference ?? 0m).ToString("C2", thCulture))
                     </strong>
@@ -461,35 +447,35 @@
             <div class="owner-comp-card">
                 <div class="owner-comp-header">
                     <span class="owner-comp-title">
-                        <i class="fa-solid fa-file-invoice-dollar owner-icon-amber"></i> เปรียบเทียบรายจ่าย (Expenses)
+                        <i class="fa-solid fa-file-invoice-dollar owner-icon-amber"></i> รายจ่าย (Expenses)
                     </span>
                     <span class="owner-trend-pill @FormatTrendBadge(Model.ExpenseComparison?.PercentChange, inverseGood: true)">
                         <i class="fa-solid @FormatTrendIcon(Model.ExpenseComparison?.PercentChange)"></i>
                         <span data-bind="expenseComparison.percentChange"
                               data-format="percent"
-                              data-null-text="ไม่มีข้อมูลเปรียบเทียบ">
+                              data-null-text="-">
                             @(Model.ExpenseComparison?.PercentChange.HasValue == true
                                 ? $"{Model.ExpenseComparison.PercentChange.Value:N2}%"
-                                : "ไม่มีข้อมูลเปรียบเทียบ")
+                                : "-")
                         </span>
                     </span>
                 </div>
                 <div class="owner-comp-metrics">
                     <div class="owner-comp-col">
-                        <span class="owner-comp-sublabel">เดือนปัจจุบัน (<span data-bind="expenseComparison.currentLabel">@Model.ExpenseComparison?.CurrentLabel</span>)</span>
+                        <span class="owner-comp-sublabel" data-bind="expenseComparison.currentLabel">@Model.ExpenseComparison?.CurrentLabel</span>
                         <strong class="owner-comp-main-val" data-bind="expenseComparison.currentValue" data-format="currency">
                             @((Model.ExpenseComparison?.CurrentValue ?? 0m).ToString("C2", thCulture))
                         </strong>
                     </div>
                     <div class="owner-comp-col">
-                        <span class="owner-comp-sublabel">เดือนก่อนหน้า (<span data-bind="expenseComparison.previousLabel">@Model.ExpenseComparison?.PreviousLabel</span>)</span>
+                        <span class="owner-comp-sublabel" data-bind="expenseComparison.previousLabel">@Model.ExpenseComparison?.PreviousLabel</span>
                         <strong class="owner-comp-prev-val" data-bind="expenseComparison.previousValue" data-format="currency">
                             @((Model.ExpenseComparison?.PreviousValue ?? 0m).ToString("C2", thCulture))
                         </strong>
                     </div>
                 </div>
                 <div class="owner-comp-diff-bar">
-                    <span>ส่วนต่าง (Difference):</span>
+                    <span>ส่วนต่าง</span>
                     <strong data-bind="expenseComparison.difference" data-format="currency">
                         @((Model.ExpenseComparison?.Difference ?? 0m).ToString("C2", thCulture))
                     </strong>
@@ -500,35 +486,35 @@
             <div class="owner-comp-card">
                 <div class="owner-comp-header">
                     <span class="owner-comp-title">
-                        <i class="fa-solid fa-sack-dollar owner-icon-green"></i> เปรียบเทียบกำไรสุทธิ (Net Profit)
+                        <i class="fa-solid fa-sack-dollar owner-icon-green"></i> กำไรสุทธิ (Net Profit)
                     </span>
                     <span class="owner-trend-pill @FormatTrendBadge(Model.ProfitComparison?.PercentChange)">
                         <i class="fa-solid @FormatTrendIcon(Model.ProfitComparison?.PercentChange)"></i>
                         <span data-bind="profitComparison.percentChange"
                               data-format="percent"
-                              data-null-text="ไม่มีข้อมูลเปรียบเทียบ">
+                              data-null-text="-">
                             @(Model.ProfitComparison?.PercentChange.HasValue == true
                                 ? $"{Model.ProfitComparison.PercentChange.Value:N2}%"
-                                : "ไม่มีข้อมูลเปรียบเทียบ")
+                                : "-")
                         </span>
                     </span>
                 </div>
                 <div class="owner-comp-metrics">
                     <div class="owner-comp-col">
-                        <span class="owner-comp-sublabel">เดือนปัจจุบัน (<span data-bind="profitComparison.currentLabel">@Model.ProfitComparison?.CurrentLabel</span>)</span>
+                        <span class="owner-comp-sublabel" data-bind="profitComparison.currentLabel">@Model.ProfitComparison?.CurrentLabel</span>
                         <strong class="owner-comp-main-val" data-bind="profitComparison.currentValue" data-format="currency">
                             @((Model.ProfitComparison?.CurrentValue ?? 0m).ToString("C2", thCulture))
                         </strong>
                     </div>
                     <div class="owner-comp-col">
-                        <span class="owner-comp-sublabel">เดือนก่อนหน้า (<span data-bind="profitComparison.previousLabel">@Model.ProfitComparison?.PreviousLabel</span>)</span>
+                        <span class="owner-comp-sublabel" data-bind="profitComparison.previousLabel">@Model.ProfitComparison?.PreviousLabel</span>
                         <strong class="owner-comp-prev-val" data-bind="profitComparison.previousValue" data-format="currency">
                             @((Model.ProfitComparison?.PreviousValue ?? 0m).ToString("C2", thCulture))
                         </strong>
                     </div>
                 </div>
                 <div class="owner-comp-diff-bar">
-                    <span>ส่วนต่าง (Difference):</span>
+                    <span>ส่วนต่าง</span>
                     <strong data-bind="profitComparison.difference" data-format="currency">
                         @((Model.ProfitComparison?.Difference ?? 0m).ToString("C2", thCulture))
                     </strong>
@@ -538,21 +524,21 @@
         </div>
     </section>
 
-    <!-- ═══════════════════ 7.6 MONTHLY PERFORMANCE TABLE & 7.7 EXECUTIVE SUMMARY ═══════════════════ -->
+    <!-- ═══════════════════ MONTHLY TABLE & EXECUTIVE SUMMARY ═══════════════════ -->
     <section class="owner-bottom-grid">
 
-        <!-- 7.6 Monthly Performance Table -->
+        <!-- Monthly Performance Table -->
         <div class="owner-panel owner-table-panel">
             <div class="owner-panel-header">
                 <div>
-                    <span class="owner-section-tag">MONTHLY LEDGER BREAKDOWN</span>
+                    <span class="owner-section-tag">MONTHLY SUMMARY</span>
                     <h3 class="owner-panel-title">
                         <i class="fa-solid fa-table-list owner-icon-cyan"></i>
-                        ตารางสรุปผลประกอบการรายเดือน (ประจำปี @Model.Year)
+                        สรุปผลประกอบการรายเดือน (ปี @Model.Year)
                     </h3>
                 </div>
                 <span class="owner-badge-count">
-                    แสดง @(Model.MonthlyReports?.Count ?? 0) เดือน
+                    @(Model.MonthlyReports?.Count ?? 0) เดือน
                 </span>
             </div>
 
@@ -560,11 +546,11 @@
                 <table class="owner-table" data-table="monthlyReports">
                     <thead>
                         <tr>
-                            <th data-col="label">เดือน (Month)</th>
-                            <th data-col="revenue" data-format="currency" class="text-end">รายได้สุทธิ (Revenue)</th>
-                            <th data-col="expense" data-format="currency" class="text-end">รายจ่าย (Expenses)</th>
-                            <th data-col="profit" data-format="currency" class="text-end">กำไร/ขาดทุน (Net Profit)</th>
-                            <th data-col="occupancyRate" data-format="percent" class="text-end">อัตราเข้าพัก (Occupancy Rate)</th>
+                            <th data-col="label">เดือน</th>
+                            <th data-col="revenue" data-format="currency" class="text-end">รายได้</th>
+                            <th data-col="expense" data-format="currency" class="text-end">รายจ่าย</th>
+                            <th data-col="profit" data-format="currency" class="text-end">กำไรสุทธิ</th>
+                            <th data-col="occupancyRate" data-format="percent" class="text-end">อัตราเข้าพัก</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -594,14 +580,14 @@
             </div>
         </div>
 
-        <!-- 7.7 Executive Summary -->
+        <!-- Executive Summary -->
         <aside class="owner-panel owner-summary-panel" aria-label="สรุปสถานะภาพรวมทางธุรกิจ">
             <div class="owner-panel-header">
                 <div>
-                    <span class="owner-section-tag">EXECUTIVE BRIEFING</span>
+                    <span class="owner-section-tag">EXECUTIVE SUMMARY</span>
                     <h3 class="owner-panel-title">
                         <i class="fa-solid fa-shield-halved owner-icon-violet"></i>
-                        สรุปภาพรวมทางธุรกิจ (Data-Driven Summary)
+                        สรุปภาพรวมการดำเนินงาน
                     </h3>
                 </div>
             </div>
@@ -622,7 +608,7 @@
                     }
                 </div>
                 <div>
-                    <span class="owner-status-label">สถานะภาพรวมทางธุรกิจปัจจุบัน</span>
+                    <span class="owner-status-label">สถานะผลประกอบการ (@selectedMonthDisplay)</span>
                     <strong class="owner-status-value" data-bind="businessStatusLabel">@Model.BusinessStatusLabel</strong>
                 </div>
             </div>
@@ -631,19 +617,19 @@
                 <div class="owner-summary-item">
                     <span class="owner-summary-bullet owner-dot-cyan"></span>
                     <div>
-                        <strong>รายได้รวมสะสมปี @Model.Year:</strong>
+                        <strong>รายได้ประจำเดือน @selectedMonthDisplay:</strong>
                         <span data-bind="totalRevenue" data-format="currency">@Model.TotalRevenue.ToString("C2", thCulture)</span>
-                        จากการจองที่มีผลรวม <strong data-bind="totalBookings" data-format="number">@Model.TotalBookings.ToString("N0")</strong> รายการ
-                        (เฉลี่ย <span data-bind="averageRevenuePerBooking" data-format="currency">@Model.AverageRevenuePerBooking.ToString("C2", thCulture)</span> ต่อการจอง)
+                        จากการจอง <strong data-bind="totalBookings" data-format="number">@Model.TotalBookings.ToString("N0")</strong> รายการ
+                        (เฉลี่ย <span data-bind="averageRevenuePerBooking" data-format="currency">@Model.AverageRevenuePerBooking.ToString("C2", thCulture)</span> / รายการ)
                     </div>
                 </div>
 
                 <div class="owner-summary-item">
                     <span class="owner-summary-bullet owner-dot-amber"></span>
                     <div>
-                        <strong>รายจ่ายและผลประกอบการ:</strong>
-                        รายจ่ายรวมทั้งสิ้น <span data-bind="totalExpense" data-format="currency">@Model.TotalExpense.ToString("C2", thCulture)</span>
-                        ส่งผลให้มีผลประกอบการสุทธิ (Net Profit) อยู่ที่
+                        <strong>รายจ่ายและกำไรสุทธิ:</strong>
+                        รายจ่ายรวม <span data-bind="totalExpense" data-format="currency">@Model.TotalExpense.ToString("C2", thCulture)</span>
+                        คงเหลือกำไรสุทธิ
                         <strong class="@(Model.NetProfit >= 0 ? "owner-text-success" : "owner-text-danger")"
                                 data-bind="netProfit"
                                 data-format="currency">
@@ -655,28 +641,12 @@
                 <div class="owner-summary-item">
                     <span class="owner-summary-bullet owner-dot-violet"></span>
                     <div>
-                        <strong>อัตราการเข้าพักจริง (Occupancy):</strong>
-                        อยู่ที่ <strong data-bind="occupancyRate" data-format="percent">@Model.OccupancyRate.ToString("N2")%</strong>
-                        คิดเป็น <span data-bind="occupiedRoomNights" data-format="number">@Model.OccupiedRoomNights.ToString("N0")</span> ห้อง-คืน
-                        จากห้องเปิดให้บริการทั้งหมด <span data-bind="availableRoomNights" data-format="number">@Model.AvailableRoomNights.ToString("N0")</span> ห้อง-คืน
+                        <strong>อัตราการเข้าพัก:</strong>
+                        <strong data-bind="occupancyRate" data-format="percent">@Model.OccupancyRate.ToString("N2")%</strong>
+                        (<span data-bind="occupiedRoomNights" data-format="number">@Model.OccupiedRoomNights.ToString("N0")</span>
+                        จาก <span data-bind="availableRoomNights" data-format="number">@Model.AvailableRoomNights.ToString("N0")</span> ห้อง-คืน)
                     </div>
                 </div>
-            </div>
-
-            <div class="owner-disclaimer-box">
-                <div class="owner-disclaimer-title">
-                    <i class="fa-solid fa-scale-unbalanced-flip"></i>
-                    ข้อกำหนดและเกณฑ์การคำนวณจากฐานข้อมูลจริง
-                </div>
-                <ul class="owner-notes-list" data-list="dataNotes">
-                    @if (Model.DataNotes != null)
-                    {
-                        foreach (var note in Model.DataNotes)
-                        {
-                            <li>@note</li>
-                        }
-                    }
-                </ul>
             </div>
         </aside>
 

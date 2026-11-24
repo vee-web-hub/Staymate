@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -9,25 +10,28 @@ using StayMate_Kavinvee_0576.Models.ViewModels;
 namespace StayMate_Kavinvee_0576.Controllers
 {
     /// <summary>
-    /// Owner Portal (Read-only): ทุก Action เป็น GET และทุก Query ใช้ AsNoTracking
-    /// ไม่มีการเรียก SaveChanges ใน Controller นี้
+    /// Owner Portal: หน้ารายงานทั้งหมดเป็น GET แบบ Read-only (AsNoTracking)
+    /// มีเพียง UpdateProfile / ChangePassword ที่เขียนข้อมูลของบัญชี OWNER เอง
+    /// (ไม่แตะข้อมูลการปฏิบัติงาน ราคา โปรโมชั่น หรือบัญชีผู้ใช้อื่น)
     /// </summary>
     [Authorize(Roles = "OWNER")]
     public class OwnerController : Controller
     {
-        // ค่า enum จริงจาก StayMateDbContext
         private const string PaymentApproved = "approved";
         private const string TxnIncome = "income";
         private const string TxnExpense = "expense";
         private const string TxnRefund = "refund";
         private const string BookingCheckedIn = "checked_in";
         private const string OwnerRoleCode = "OWNER";
+        private const int MinPasswordLength = 8;
 
         private readonly StayMateDbContext _db;
+        private readonly ILogger<OwnerController> _logger;
 
-        public OwnerController(StayMateDbContext db)
+        public OwnerController(StayMateDbContext db, ILogger<OwnerController> logger)
         {
             _db = db;
+            _logger = logger;
         }
 
         // ───────────────────────── Pages (GET) ─────────────────────────
@@ -85,146 +89,124 @@ namespace StayMate_Kavinvee_0576.Controllers
             return View(model);
         }
 
-        // =====================================================================
-// วางใน OwnerController (ต่อจาก action Profile() ในส่วน "Pages (GET)" หรือท้ายส่วนนั้นก็ได้)
-//
-// 1) แก้คอมเมนต์ summary บนหัวคลาส จาก
-//      "Owner Portal (Read-only): ทุก Action เป็น GET และทุก Query ใช้ AsNoTracking
-//       ไม่มีการเรียก SaveChanges ใน Controller นี้"
-//    เป็นเช่น
-//      "Owner Portal: หน้ารายงานทั้งหมดเป็น GET แบบ Read-only (AsNoTracking)
-//       มีเพียง UpdateProfile / ChangePassword ที่เขียนข้อมูลของบัญชี OWNER เอง"
-//
-// 2) ถ้ายังไม่มี ให้ติดตั้งแพ็กเกจ BCrypt.Net-Next (ตัวเดียวกับที่ HousekeepingController ใช้)
-// =====================================================================
+        // ───────────────────────── Profile (POST) ─────────────────────────
 
-// ───────────────────────── Profile (POST) ─────────────────────────
-
-// POST: /Owner/UpdateProfile  (แก้ไขได้เฉพาะชื่อและเบอร์โทร)
-[HttpPost]
-[ValidateAntiForgeryToken]
-public async Task<IActionResult> UpdateProfile(string fullName, string? phone, CancellationToken cancellationToken)
-{
-    try
-    {
-        var owner = await GetValidOwnerAsync(cancellationToken);
-        if (owner == null) return RedirectToAction("Login", "Account");
-
-        var cleanName = (fullName ?? "").Trim();
-        var cleanPhone = string.IsNullOrWhiteSpace(phone) ? null : phone.Trim();
-
-        if (cleanName.Length == 0)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateProfile(string fullName, string? phone, CancellationToken cancellationToken)
         {
-            TempData["ErrorMessage"] = "กรุณากรอกชื่อ";
-            return RedirectToAction(nameof(Profile));
-        }
-        if (cleanName.Length > 120) cleanName = cleanName.Substring(0, 120);
+            try
+            {
+                var owner = await GetValidOwnerAsync(cancellationToken);
+                if (owner == null) return RedirectToAction("Login", "Account");
 
-        if (cleanPhone != null &&
-            !System.Text.RegularExpressions.Regex.IsMatch(cleanPhone, @"^[0-9+\-\s]{6,20}$"))
-        {
-            TempData["ErrorMessage"] = "รูปแบบเบอร์โทรศัพท์ไม่ถูกต้อง";
-            return RedirectToAction(nameof(Profile));
-        }
+                var cleanName = (fullName ?? "").Trim();
+                var cleanPhone = string.IsNullOrWhiteSpace(phone) ? null : phone.Trim();
 
-        var user = await _db.Users.FirstOrDefaultAsync(u => u.UserId == owner.Value, cancellationToken);
-        if (user == null) return RedirectToAction("Login", "Account");
+                if (cleanName.Length == 0)
+                {
+                    TempData["ErrorMessage"] = "กรุณากรอกชื่อ";
+                    return RedirectToAction(nameof(Profile));
+                }
+                if (cleanName.Length > 120) cleanName = cleanName.Substring(0, 120);
 
-        user.FullName = cleanName;
-        user.Phone = cleanPhone;
-        await _db.SaveChangesAsync(cancellationToken);
+                if (cleanPhone != null && !Regex.IsMatch(cleanPhone, @"^[0-9+\-\s]{6,20}$"))
+                {
+                    TempData["ErrorMessage"] = "รูปแบบเบอร์โทรศัพท์ไม่ถูกต้อง";
+                    return RedirectToAction(nameof(Profile));
+                }
 
-        TempData["SuccessMessage"] = "บันทึกข้อมูลส่วนตัวเรียบร้อยแล้ว";
-    }
-    catch (Exception)
-    {
-        TempData["ErrorMessage"] = "เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง";
-    }
+                var user = await _db.Users.FirstOrDefaultAsync(u => u.UserId == owner.Value, cancellationToken);
+                if (user == null) return RedirectToAction("Login", "Account");
 
-    return RedirectToAction(nameof(Profile));
-}
+                user.FullName = cleanName;
+                user.Phone = cleanPhone;
+                await _db.SaveChangesAsync(cancellationToken);
 
-// POST: /Owner/ChangePassword
-// *** ใช้ BCrypt เหมือน HousekeepingController — ถ้า AccountController ใช้วิธี hash อื่น ให้แก้ 2 จุดที่มีคอมเมนต์ ***
-[HttpPost]
-[ValidateAntiForgeryToken]
-public async Task<IActionResult> ChangePassword(
-    string oldPassword, string newPassword, string confirmPassword, CancellationToken cancellationToken)
-{
-    try
-    {
-        var owner = await GetValidOwnerAsync(cancellationToken);
-        if (owner == null) return RedirectToAction("Login", "Account");
+                TempData["SuccessMessage"] = "บันทึกข้อมูลส่วนตัวเรียบร้อยแล้ว";
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Owner UpdateProfile failed");
+                TempData["ErrorMessage"] = "เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง";
+            }
 
-        if (string.IsNullOrWhiteSpace(oldPassword) ||
-            string.IsNullOrWhiteSpace(newPassword) ||
-            newPassword.Length < 6)
-        {
-            TempData["ErrorMessage"] = "กรุณากรอกข้อมูลให้ครบ และรหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร";
-            TempData["OpenPasswordModal"] = true;
             return RedirectToAction(nameof(Profile));
         }
 
-        if (newPassword != confirmPassword)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(
+            string oldPassword, string newPassword, string confirmPassword, CancellationToken cancellationToken)
         {
-            TempData["ErrorMessage"] = "รหัสผ่านใหม่และการยืนยันรหัสผ่านไม่ตรงกัน";
-            TempData["OpenPasswordModal"] = true;
+            try
+            {
+                var owner = await GetValidOwnerAsync(cancellationToken);
+                if (owner == null) return RedirectToAction("Login", "Account");
+
+                if (string.IsNullOrWhiteSpace(oldPassword) ||
+                    string.IsNullOrWhiteSpace(newPassword) ||
+                    newPassword.Length < MinPasswordLength)
+                {
+                    TempData["ErrorMessage"] = $"กรุณากรอกข้อมูลให้ครบ และรหัสผ่านใหม่ต้องมีอย่างน้อย {MinPasswordLength} ตัวอักษร";
+                    TempData["OpenPasswordModal"] = true;
+                    return RedirectToAction(nameof(Profile));
+                }
+
+                if (newPassword != confirmPassword)
+                {
+                    TempData["ErrorMessage"] = "รหัสผ่านใหม่และการยืนยันรหัสผ่านไม่ตรงกัน";
+                    TempData["OpenPasswordModal"] = true;
+                    return RedirectToAction(nameof(Profile));
+                }
+
+                if (newPassword == oldPassword)
+                {
+                    TempData["ErrorMessage"] = "รหัสผ่านใหม่ต้องไม่ซ้ำกับรหัสผ่านเดิม";
+                    TempData["OpenPasswordModal"] = true;
+                    return RedirectToAction(nameof(Profile));
+                }
+
+                var user = await _db.Users.FirstOrDefaultAsync(u => u.UserId == owner.Value, cancellationToken);
+                if (user == null) return RedirectToAction("Login", "Account");
+
+                if (!BCrypt.Net.BCrypt.Verify(oldPassword, user.PasswordHash))
+                {
+                    TempData["ErrorMessage"] = "รหัสผ่านเดิมไม่ถูกต้อง";
+                    TempData["OpenPasswordModal"] = true;
+                    return RedirectToAction(nameof(Profile));
+                }
+
+                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+                await _db.SaveChangesAsync(cancellationToken);
+
+                TempData["SuccessMessage"] = "เปลี่ยนรหัสผ่านเรียบร้อยแล้ว";
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Owner ChangePassword failed");
+                TempData["ErrorMessage"] = "เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน กรุณาลองใหม่อีกครั้ง";
+                TempData["OpenPasswordModal"] = true;
+            }
+
             return RedirectToAction(nameof(Profile));
         }
 
-        var user = await _db.Users.FirstOrDefaultAsync(u => u.UserId == owner.Value, cancellationToken);
-        if (user == null) return RedirectToAction("Login", "Account");
+        // ───────────────────────── JSON endpoints (GET) ─────────────────────────
 
-        // (1) ตรวจรหัสผ่านเดิม
-        if (!BCrypt.Net.BCrypt.Verify(oldPassword, user.PasswordHash))
-        {
-            TempData["ErrorMessage"] = "รหัสผ่านเดิมไม่ถูกต้อง";
-            TempData["OpenPasswordModal"] = true;
-            return RedirectToAction(nameof(Profile));
-        }
-
-        // (2) บันทึกรหัสผ่านใหม่
-        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
-        await _db.SaveChangesAsync(cancellationToken);
-
-        TempData["SuccessMessage"] = "เปลี่ยนรหัสผ่านเรียบร้อยแล้ว";
-    }
-    catch (Exception)
-    {
-        TempData["ErrorMessage"] = "เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน กรุณาลองใหม่อีกครั้ง";
-        TempData["OpenPasswordModal"] = true;
-    }
-
-    return RedirectToAction(nameof(Profile));
-}
-
-// ───────────────────────── Helper (วางต่อจาก GetCurrentUserId) ─────────────────────────
-
-/// <summary>ยืนยันว่าผู้ใช้ปัจจุบันยังเป็น OWNER ที่ Active อยู่จริงในฐานข้อมูล ก่อนอนุญาตให้เขียนข้อมูล</summary>
-private async Task<uint?> GetValidOwnerAsync(CancellationToken ct)
-{
-    var id = GetCurrentUserId();
-    if (id == null) return null;
-    var uid = id.Value;
-
-    var exists = await _db.Users
-        .AsNoTracking()
-        .AnyAsync(u => u.UserId == uid &&
-                       u.IsActive == true &&
-                       u.UserRoles.Any(ur => ur.Role.RoleCode == OwnerRoleCode), ct);
-
-    return exists ? uid : null;
-}
-
-        // ───────────────────────── JSON endpoints (GET, ให้ Owner.js เรียก) ─────────────────────────
-
-        // GET: /Owner/DashboardData?year=2026&month=11
         [HttpGet]
         [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
         public async Task<IActionResult> DashboardData(int? year, int? month, CancellationToken cancellationToken)
             => Json(await BuildDashboardAsync(year, month, cancellationToken));
 
-        // GET: /Owner/FinancialData?year=2026&preset=year&startDate=2026-01-01&endDate=2026-12-31
         [HttpGet]
         [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
         public async Task<IActionResult> FinancialData(
@@ -235,13 +217,11 @@ private async Task<uint?> GetValidOwnerAsync(CancellationToken ct)
             CancellationToken cancellationToken)
             => Json(await BuildFinancialOverviewAsync(year, preset, startDate, endDate, cancellationToken));
 
-        // GET: /Owner/PerformanceData?year=2026&month=11
         [HttpGet]
         [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
         public async Task<IActionResult> PerformanceData(int? year, int? month, CancellationToken cancellationToken)
             => Json(await BuildPerformanceReportsAsync(year, month, cancellationToken));
 
-        // GET: /Owner/StaffData
         [HttpGet]
         [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
         public async Task<IActionResult> StaffData(CancellationToken cancellationToken)
@@ -253,7 +233,7 @@ private async Task<uint?> GetValidOwnerAsync(CancellationToken ct)
         {
             var y = ResolveYear(year);
             var m = ResolveMonth(y, month);
-            var today = DateTime.Today;
+            var today = Today;
 
             var firstYear = await GetFirstDataYearAsync(ct) ?? today.Year;
             firstYear = Math.Min(firstYear, y);
@@ -273,29 +253,28 @@ private async Task<uint?> GetValidOwnerAsync(CancellationToken ct)
             // โหลดตั้งแต่เดือนธันวาคมปีก่อน เพื่อใช้เทียบเดือนมกราคม
             var data = await LoadPeriodDataAsync(yearFrom.AddMonths(-1), yearTo, ct);
 
-            var yearSummary = Summarize(data, yearFrom, yearTo);
             var monthlyRows = BuildMonthlyRows(data, y);
             var cur = Summarize(data, curStart, curEnd);
             var prev = Summarize(data, prevStart, curStart);
 
-            var occupiedRate = yearSummary.OccupancyRate;
-            var availableRate = yearSummary.AvailableRoomNights > 0
+            var occupiedRate = cur.OccupancyRate;
+            var availableRate = cur.AvailableRoomNights > 0
                 ? Math.Round(Math.Max(0m, 100m - occupiedRate), 2)
                 : 0m;
 
             string statusLabel;
             string statusTone;
-            if (yearSummary.Revenue == 0m && yearSummary.Expense == 0m && yearSummary.Bookings == 0)
+            if (cur.Revenue == 0m && cur.Expense == 0m && cur.Bookings == 0)
             {
-                statusLabel = "ยังไม่มีรายการธุรกรรมในปีที่เลือก";
+                statusLabel = $"ยังไม่มีรายการธุรกรรมในเดือน {MonthLabel(curStart)}";
                 statusTone = "neutral";
             }
-            else if (yearSummary.Profit > 0m)
+            else if (cur.Profit > 0m)
             {
                 statusLabel = "ผลประกอบการเป็นกำไร (Profitable Operation)";
                 statusTone = "positive";
             }
-            else if (yearSummary.Profit < 0m)
+            else if (cur.Profit < 0m)
             {
                 statusLabel = "ผลประกอบการขาดทุน (Operating Deficit)";
                 statusTone = "negative";
@@ -306,33 +285,32 @@ private async Task<uint?> GetValidOwnerAsync(CancellationToken ct)
                 statusTone = "warning";
             }
 
-            var notes = BuildCommonNotes();
-            notes.Add($"KPI ด้านบนเป็นยอดสะสมทั้งปี {y} ส่วนการเปรียบเทียบเป็นของเดือน {MonthLabel(curStart)} เทียบกับ {MonthLabel(prevStart)}");
-
             return new OwnerViewModel
             {
                 Year = y,
                 Month = m,
-                CurrentPeriodLabel = $"{MonthLabel(curStart)} (สะสมรายปี {y})",
+                CurrentPeriodLabel = MonthLabel(curStart),
                 AvailableYears = availableYears,
 
-                TotalRevenue = yearSummary.Revenue,
-                TotalExpense = yearSummary.Expense,
-                NetProfit = yearSummary.Profit,
+                // KPI Cards แสดงตามเดือนที่เลือก
+                TotalRevenue = cur.Revenue,
+                TotalExpense = cur.Expense,
+                NetProfit = cur.Profit,
                 OccupancyRate = occupiedRate,
-                TotalBookings = yearSummary.Bookings,
-                AverageRevenuePerBooking = yearSummary.AverageRevenuePerBooking,
+                TotalBookings = cur.Bookings,
+                AverageRevenuePerBooking = cur.AverageRevenuePerBooking,
 
+                // Occupancy Donut แสดงตามเดือนที่เลือก
                 OccupiedRoomRate = occupiedRate,
                 AvailableRoomRate = availableRate,
-                OccupiedRoomNights = yearSummary.OccupiedRoomNights,
-                AvailableRoomNights = yearSummary.AvailableRoomNights,
+                OccupiedRoomNights = cur.OccupiedRoomNights,
+                AvailableRoomNights = cur.AvailableRoomNights,
                 ActiveRoomCount = data.ActiveRoomCount,
                 OccupancyBreakdown = new List<CategoryAmount>
                 {
                     new()
                     {
-                        Category = "ห้องที่มีผู้เข้าพักจริง (Occupied)",
+                        Category = "ห้องที่มีผู้เข้าพัก (Occupied)",
                         Amount = occupiedRate,
                         Percent = occupiedRate
                     },
@@ -344,6 +322,7 @@ private async Task<uint?> GetValidOwnerAsync(CancellationToken ct)
                     }
                 },
 
+                // กราฟและตารางรายเดือนแสดงแนวโน้มทั้งปีที่เลือก
                 MonthlyRevenue = monthlyRows.Select(r => ToPoint(r, r.Revenue)).ToList(),
                 MonthlyExpense = monthlyRows.Select(r => ToPoint(r, r.Expense)).ToList(),
                 MonthlyProfit = monthlyRows.Select(r => ToPoint(r, r.Profit)).ToList(),
@@ -355,7 +334,7 @@ private async Task<uint?> GetValidOwnerAsync(CancellationToken ct)
                 MonthlyReports = monthlyRows,
                 BusinessStatusLabel = statusLabel,
                 BusinessStatusTone = statusTone,
-                DataNotes = notes
+                DataNotes = BuildCommonNotes()
             };
         }
 
@@ -366,7 +345,7 @@ private async Task<uint?> GetValidOwnerAsync(CancellationToken ct)
             DateOnly? endDate,
             CancellationToken ct)
         {
-            var today = DateTime.Today;
+            var today = Today;
             var y = ResolveYear(year);
             var firstYear = await GetFirstDataYearAsync(ct) ?? today.Year;
             firstYear = Math.Min(firstYear, y);
@@ -412,7 +391,7 @@ private async Task<uint?> GetValidOwnerAsync(CancellationToken ct)
                 prevToExclusive = periodFrom;
                 periodLabel = $"{DateLabel(periodFrom)} – {DateLabel(endDate.Value.ToDateTime(TimeOnly.MinValue))}";
                 prevLabel = $"ช่วงก่อนหน้า ({spanDays} วัน)";
-                y = startDate.Value.Year;
+                y = Math.Clamp(startDate.Value.Year, 2000, today.Year);
             }
             else
             {
@@ -423,7 +402,6 @@ private async Task<uint?> GetValidOwnerAsync(CancellationToken ct)
 
                 if (y == today.Year)
                 {
-                    // ปีปัจจุบัน: เทียบ YTD กับ YTD ของปีก่อน เพื่อไม่ให้เทียบครึ่งปีกับทั้งปี
                     prevToExclusive = today.AddDays(1).AddYears(-1);
                     periodLabel = $"ประจำปี {y} (ถึงปัจจุบัน)";
                     prevLabel = $"ช่วงเดียวกันของปี {y - 1}";
@@ -447,7 +425,6 @@ private async Task<uint?> GetValidOwnerAsync(CancellationToken ct)
             var prevSummary = Summarize(data, prevFrom, prevToExclusive);
             var monthlyRows = BuildMonthlyRows(data, y);
 
-            // ─────── Revenue Breakdown: ใช้ข้อมูล Payment ชุดเดียวกับที่โหลดแล้ว (ไม่ Query ซ้ำ) ───────
             var pFromDate = DateOnly.FromDateTime(periodFrom);
             var pToDate = DateOnly.FromDateTime(periodToExclusive);
 
@@ -487,17 +464,24 @@ private async Task<uint?> GetValidOwnerAsync(CancellationToken ct)
                     Percent = grossTotal > 0 ? Math.Round(roomPaymentSum * 100m / grossTotal, 2) : 0m
                 });
             }
-            if (manualIncomeSum > 0)
-            {
-                revenueBreakdown.Add(new CategoryAmount
-                {
-                    Category = "รายรับอื่นๆ ที่บันทึกในระบบ (Other Income)",
-                    Amount = manualIncomeSum,
-                    Percent = grossTotal > 0 ? Math.Round(manualIncomeSum * 100m / grossTotal, 2) : 0m
-                });
-            }
 
-            // ─────── Expense Breakdown ───────
+            var manualIncomeByCategory = finTxns
+                .Where(t => t.TxnType == TxnIncome && t.PaymentId == null)
+                .GroupBy(t => string.IsNullOrWhiteSpace(t.Category) ? "รายรับอื่นๆ (ไม่ระบุหมวด)" : t.Category!.Trim())
+                .Select(g =>
+                {
+                    var amount = g.Sum(x => x.Amount);
+                    return new CategoryAmount
+                    {
+                        Category = g.Key,
+                        Amount = amount,
+                        Percent = grossTotal > 0 ? Math.Round(amount * 100m / grossTotal, 2) : 0m
+                    };
+                })
+                .Where(c => c.Amount > 0)
+                .OrderByDescending(c => c.Amount);
+            revenueBreakdown.AddRange(manualIncomeByCategory);
+
             var expenseRows = data.Expenses.Where(e => e.Date >= periodFrom && e.Date < periodToExclusive).ToList();
             var totalExpense = expenseRows.Sum(e => e.Amount);
 
@@ -516,7 +500,6 @@ private async Task<uint?> GetValidOwnerAsync(CancellationToken ct)
                 .OrderByDescending(c => c.Amount)
                 .ToList();
 
-            // ─────── รายการธุรกรรมการเงิน (ไม่แสดงข้อมูลส่วนบุคคลของลูกค้า) ───────
             var txRows = new List<FinancialTransactionRow>();
 
             foreach (var p in approvedPayments)
@@ -535,7 +518,6 @@ private async Task<uint?> GetValidOwnerAsync(CancellationToken ct)
 
             foreach (var t in finTxns)
             {
-                // ข้ามรายการ income ที่ผูก PaymentId เพื่อไม่ให้แสดงซ้ำกับ Payment ข้างต้น
                 if (t.TxnType == TxnIncome && t.PaymentId != null)
                 {
                     continue;
@@ -566,13 +548,12 @@ private async Task<uint?> GetValidOwnerAsync(CancellationToken ct)
                 .ThenByDescending(r => r.TransactionId)
                 .ToList();
 
-            // ─────── Profit Margin (ป้องกันการหารด้วยศูนย์) ───────
             decimal? profitMargin = curSummary.Revenue > 0m
                 ? Math.Round(curSummary.Profit * 100m / curSummary.Revenue, 2)
                 : null;
 
             var notes = BuildCommonNotes();
-            notes.Add("OperatingCosts = รายจ่ายทั้งหมดที่บันทึกใน FinancialTransaction (txn_type = expense) เนื่องจากระบบยังไม่มีการจำแนกหมวดต้นทุนในการดำเนินงานแยกจากรายจ่ายอื่น");
+            notes.Add("OperatingCosts = รายจ่ายทั้งหมดที่บันทึกใน FinancialTransaction (txn_type = expense)");
             notes.Add($"กราฟรายเดือนแสดงทั้งปี {y} เสมอ ส่วน KPI, การเปรียบเทียบ และตารางธุรกรรมเป็นไปตามช่วงเวลาที่เลือก ({periodLabel})");
 
             return new OwnerFinancialOverviewViewModel
@@ -612,7 +593,7 @@ private async Task<uint?> GetValidOwnerAsync(CancellationToken ct)
         {
             var y = ResolveYear(year);
             var m = ResolveMonth(y, month);
-            var today = DateTime.Today;
+            var today = Today;
 
             var firstYear = await GetFirstDataYearAsync(ct) ?? today.Year;
             firstYear = Math.Min(firstYear, y);
@@ -651,7 +632,6 @@ private async Task<uint?> GetValidOwnerAsync(CancellationToken ct)
 
         private async Task<OwnerStaffOverviewViewModel> BuildStaffOverviewAsync(CancellationToken ct)
         {
-            // ข้อสมมติ: CUSTOMER และ GUEST ไม่ใช่พนักงาน (ตรวจกับตาราง roles จริงแล้วแก้ที่นี่)
             var rows = await _db.UserRoles
                 .AsNoTracking()
                 .Where(ur => ur.Role.RoleCode != "CUSTOMER" && ur.Role.RoleCode != "GUEST")
@@ -664,7 +644,6 @@ private async Task<uint?> GetValidOwnerAsync(CancellationToken ct)
                 })
                 .ToListAsync(ct);
 
-            // ผู้ใช้หนึ่งคนอาจมีหลาย Role จึงนับ distinct ต่อผู้ใช้สำหรับยอดรวม
             var distinctUsers = rows
                 .GroupBy(r => r.UserId)
                 .Select(g => g.First().IsActive)
@@ -702,6 +681,27 @@ private async Task<uint?> GetValidOwnerAsync(CancellationToken ct)
                 byStatus.Add(new CountByLabel { Label = "Unknown", Count = unknown });
             }
 
+            var directory = await _db.Users
+                .AsNoTracking()
+                .Where(u => u.UserRoles.Any(ur => ur.Role.RoleCode != "CUSTOMER" && ur.Role.RoleCode != "GUEST"))
+                .OrderBy(u => u.UserId)
+                .Select(u => new StaffDirectoryRow
+                {
+                    UserId = u.UserId,
+                    FullName = u.FullName,
+                    Username = u.Username,
+                    IsActive = u.IsActive,
+                    RoleCodes = u.UserRoles
+                        .Where(ur => ur.Role.RoleCode != "CUSTOMER" && ur.Role.RoleCode != "GUEST")
+                        .Select(ur => ur.Role.RoleCode)
+                        .ToList(),
+                    RoleNames = u.UserRoles
+                        .Where(ur => ur.Role.RoleCode != "CUSTOMER" && ur.Role.RoleCode != "GUEST")
+                        .Select(ur => ur.Role.RoleName)
+                        .ToList()
+                })
+                .ToListAsync(ct);
+
             return new OwnerStaffOverviewViewModel
             {
                 TotalStaff = distinctUsers.Count,
@@ -712,9 +712,10 @@ private async Task<uint?> GetValidOwnerAsync(CancellationToken ct)
                 ResignedStaff = null,
                 StaffByRole = byRole,
                 StaffByStatus = byStatus,
+                StaffDirectory = directory,
                 DataNotes = new List<string>
                 {
-                    "ฐานข้อมูลมีเพียง users.is_active จึงแยกสถานะ Suspended และ Resigned ไม่ได้ (แสดงเป็น null) ใช้ Inactive แทน",
+                    "ฐานข้อมูลมีเพียง users.is_active จึงแยกสถานะ Suspended และ Resigned ไม่ได้ ใช้ Inactive แทน",
                     "ตำแหน่งพนักงานอ้างอิงจาก roles.role_code ผ่าน user_roles",
                     "ผู้ที่มี Role เป็น CUSTOMER หรือ GUEST ไม่ถูกนับเป็นพนักงาน"
                 }
@@ -744,7 +745,6 @@ private async Task<uint?> GetValidOwnerAsync(CancellationToken ct)
                 return null;
             }
 
-            // ไม่ดึง PasswordHash
             return await query
                 .Select(u => new OwnerProfileViewModel
                 {
@@ -766,12 +766,26 @@ private async Task<uint?> GetValidOwnerAsync(CancellationToken ct)
             return uint.TryParse(raw, out var id) ? id : null;
         }
 
+        private async Task<uint?> GetValidOwnerAsync(CancellationToken ct)
+        {
+            var id = GetCurrentUserId();
+            if (id == null) return null;
+            var uid = id.Value;
+
+            var exists = await _db.Users
+                .AsNoTracking()
+                .AnyAsync(u => u.UserId == uid &&
+                               u.IsActive == true &&
+                               u.UserRoles.Any(ur => ur.Role.RoleCode == OwnerRoleCode), ct);
+
+            return exists ? uid : null;
+        }
+
         // ───────────────────────── Data loading ─────────────────────────
 
-        /// <summary>PaymentId/BookingId มีค่าเฉพาะแถวที่มาจากตาราง Payment</summary>
         private sealed record MoneyRow(DateTime Date, decimal Amount, bool IsRefund, uint? PaymentId = null, uint? BookingId = null);
         private sealed record ExpenseRow(DateTime Date, string Category, decimal Amount);
-        private sealed record StayRow(uint RoomId, DateTime CheckedInAt, DateTime? CheckedOutAt, string BookingStatus, DateOnly PlannedCheckOut);
+        private sealed record StayRow(uint UniqueSlotId, DateTime CheckedInAt, DateTime? CheckedOutAt, string BookingStatus, DateOnly PlannedCheckOut);
 
         private sealed class PeriodData
         {
@@ -799,7 +813,7 @@ private async Task<uint?> GetValidOwnerAsync(CancellationToken ct)
             var fromDate = DateOnly.FromDateTime(from);
             var toDate = DateOnly.FromDateTime(toExclusive);
 
-            // 1) เงินรับจริง: Payment ที่อนุมัติแล้วเท่านั้น (ไม่รวม Receipt เพื่อกันนับซ้ำ)
+            // 1) เงินรับจริง: Payment ที่อนุมัติแล้ว
             var payments = await _db.Payments
                 .AsNoTracking()
                 .Where(p => p.Status == PaymentApproved)
@@ -807,14 +821,14 @@ private async Task<uint?> GetValidOwnerAsync(CancellationToken ct)
                 .Where(x => x.Date >= from && x.Date < toExclusive)
                 .ToListAsync(ct);
 
-            // 2) รายรับที่บันทึกเองและไม่ผูก Payment (ผูก Payment แล้วถือว่าซ้ำกับข้อ 1)
+            // 2) รายรับที่บันทึกเองและไม่ผูก Payment
             var manualIncome = await _db.FinancialTransactions
                 .AsNoTracking()
                 .Where(t => t.TxnType == TxnIncome && t.PaymentId == null && t.TxnDate >= fromDate && t.TxnDate < toDate)
                 .Select(t => new { t.TxnDate, t.Amount })
                 .ToListAsync(ct);
 
-            // 3) เงินคืน (หักออกจากรายได้)
+            // 3) เงินคืน
             var refunds = await _db.FinancialTransactions
                 .AsNoTracking()
                 .Where(t => t.TxnType == TxnRefund && t.TxnDate >= fromDate && t.TxnDate < toDate)
@@ -828,7 +842,7 @@ private async Task<uint?> GetValidOwnerAsync(CancellationToken ct)
                 .Select(t => new { t.TxnDate, t.Category, t.Amount })
                 .ToListAsync(ct);
 
-            // 5) Booking ที่มีผล (นับตามวันที่สร้าง: confirmed, checked_in, checked_out)
+            // 5) Booking ที่มีผล (confirmed, checked_in, checked_out)
             var bookingDates = await _db.Bookings
                 .AsNoTracking()
                 .Where(b => (b.Status == "confirmed" || b.Status == "checked_in" || b.Status == "checked_out")
@@ -837,17 +851,39 @@ private async Task<uint?> GetValidOwnerAsync(CancellationToken ct)
                 .Select(b => b.CreatedAt)
                 .ToListAsync(ct);
 
-            // 6) การเข้าพักจริงจาก StayRecord (ตัด Booking ที่ยกเลิกและปฏิเสธ: cancelled, rejected)
-            var stays = await _db.StayRecords
+            // 6) การเข้าพัก: ดึงจาก StayRecord จริง และเสริมด้วย Booking ที่ยืนยันแล้วแต่ยังไม่ได้สร้าง StayRecord
+            var stayRecords = await _db.StayRecords
                 .AsNoTracking()
                 .Where(s => s.Booking.Status != "cancelled"
                             && s.Booking.Status != "rejected"
                             && s.CheckedInAt < toExclusive
                             && (s.CheckedOutAt == null || s.CheckedOutAt >= from))
-                .Select(s => new StayRow(s.RoomId, s.CheckedInAt, s.CheckedOutAt, s.Booking.Status, s.Booking.CheckOutDate))
+                .Select(s => new
+                {
+                    s.BookingId,
+                    Row = new StayRow(s.RoomId, s.CheckedInAt, s.CheckedOutAt, s.Booking.Status, s.Booking.CheckOutDate)
+                })
                 .ToListAsync(ct);
 
-            // 7) จำนวนห้องที่เปิดให้บริการ (IsActive = true หรือ null ถือว่าเปิด ตามค่า default ของ DB คือ 1)
+            var stayedBookingIds = stayRecords.Select(x => x.BookingId).ToHashSet();
+
+            var bookedNotCheckedIn = await _db.Bookings
+                .AsNoTracking()
+                .Where(b => !stayedBookingIds.Contains(b.BookingId)
+                            && (b.Status == "confirmed" || b.Status == "checked_in" || b.Status == "checked_out")
+                            && b.CheckInDate < toDate
+                            && b.CheckOutDate > fromDate)
+                .Select(b => new StayRow(
+                    1000000u + b.BookingId,
+                    b.CheckInDate.ToDateTime(TimeOnly.MinValue),
+                    b.CheckOutDate.ToDateTime(TimeOnly.MinValue),
+                    b.Status,
+                    b.CheckOutDate))
+                .ToListAsync(ct);
+
+            var stays = stayRecords.Select(x => x.Row).Concat(bookedNotCheckedIn).ToList();
+
+            // 7) จำนวนห้องที่เปิดให้บริการ
             var activeRooms = await _db.Rooms
                 .AsNoTracking()
                 .CountAsync(r => r.IsActive != false, ct);
@@ -909,7 +945,7 @@ private async Task<uint?> GetValidOwnerAsync(CancellationToken ct)
         {
             var start = DateOnly.FromDateTime(from);
             var endExclusive = DateOnly.FromDateTime(toExclusive);
-            var capExclusive = DateOnly.FromDateTime(DateTime.Today).AddDays(1); // นับถึงคืนนี้
+            var capExclusive = DateOnly.FromDateTime(Today).AddDays(1);
 
             if (endExclusive > capExclusive) endExclusive = capExclusive;
             if (endExclusive <= start) return (0, 0);
@@ -917,7 +953,7 @@ private async Task<uint?> GetValidOwnerAsync(CancellationToken ct)
             var days = endExclusive.DayNumber - start.DayNumber;
             var available = d.ActiveRoomCount * days;
 
-            var occupiedNights = new HashSet<(uint RoomId, int Day)>();
+            var occupiedNights = new HashSet<(uint SlotId, int Day)>();
             foreach (var s in d.Stays)
             {
                 var inDate = DateOnly.FromDateTime(s.CheckedInAt);
@@ -929,11 +965,11 @@ private async Task<uint?> GetValidOwnerAsync(CancellationToken ct)
                 }
                 else if (s.BookingStatus == BookingCheckedIn)
                 {
-                    outDate = capExclusive; // ยังพักอยู่
+                    outDate = capExclusive;
                 }
                 else
                 {
-                    outDate = s.PlannedCheckOut; // ข้อมูลไม่ครบ ใช้วันเช็คเอาท์ตาม Booking
+                    outDate = s.PlannedCheckOut;
                 }
 
                 var a = inDate > start ? inDate : start;
@@ -941,7 +977,7 @@ private async Task<uint?> GetValidOwnerAsync(CancellationToken ct)
 
                 for (var day = a; day < b; day = day.AddDays(1))
                 {
-                    occupiedNights.Add((s.RoomId, day.DayNumber));
+                    occupiedNights.Add((s.UniqueSlotId, day.DayNumber));
                 }
             }
 
@@ -950,7 +986,7 @@ private async Task<uint?> GetValidOwnerAsync(CancellationToken ct)
 
         private static List<PeriodReportRow> BuildMonthlyRows(PeriodData data, int year)
         {
-            var today = DateTime.Today;
+            var today = Today;
             var lastMonth = year == today.Year ? today.Month : 12;
             var rows = new List<PeriodReportRow>();
 
@@ -997,31 +1033,42 @@ private async Task<uint?> GetValidOwnerAsync(CancellationToken ct)
 
         // ───────────────────────── Helpers ─────────────────────────
 
-        // ใช้ InvariantCulture ทุกป้ายวันที่ เพื่อไม่ให้ปี พ.ศ. ปนกับ ค.ศ. ตาม Culture ของเซิร์ฟเวอร์
+        private static readonly Lazy<TimeZoneInfo> ThaiTimeZone = new(() =>
+        {
+            foreach (var id in new[] { "SE Asia Standard Time", "Asia/Bangkok" })
+            {
+                try { return TimeZoneInfo.FindSystemTimeZoneById(id); }
+                catch (TimeZoneNotFoundException) { }
+                catch (InvalidTimeZoneException) { }
+            }
+            return TimeZoneInfo.Local;
+        });
+
+        private static DateTime Today => TimeZoneInfo.ConvertTime(DateTime.UtcNow, ThaiTimeZone.Value).Date;
+
         private static string MonthLabel(DateTime d) => d.ToString("MMM yyyy", CultureInfo.InvariantCulture);
 
         private static string DateLabel(DateTime d) => d.ToString("dd MMM yyyy", CultureInfo.InvariantCulture);
 
         private static int ResolveYear(int? year)
         {
-            var current = DateTime.Today.Year;
+            var current = Today.Year;
             return year.HasValue ? Math.Clamp(year.Value, 2000, current) : current;
         }
 
         private static int ResolveMonth(int year, int? month)
         {
-            var today = DateTime.Today;
+            var today = Today;
             var maxMonth = year == today.Year ? today.Month : 12;
             return month.HasValue ? Math.Clamp(month.Value, 1, maxMonth) : maxMonth;
         }
 
         private static List<string> BuildCommonNotes() => new()
         {
-            "Revenue = Payment ที่อนุมัติแล้ว (approved) + FinancialTransaction ประเภท income ที่ไม่ผูก Payment − refund (ไม่รวม Receipt และ Booking.TotalAmount เพื่อกันนับซ้ำ)",
+            "Revenue = Payment ที่อนุมัติแล้ว (approved) + FinancialTransaction ประเภท income ที่ไม่ผูก Payment − refund",
             "Expenses = FinancialTransaction ประเภท expense",
-            "Occupancy = ห้อง-คืนที่มี StayRecord จริง ÷ (จำนวนห้อง Active ปัจจุบัน × จำนวนวัน) ไม่นับ Booking ที่ยกเลิกหรือถูกปฏิเสธ และมีเพดาน 100%",
+            "Occupancy = ห้อง-คืนที่มีการเข้าพักจริงและยืนยันแล้ว ÷ (จำนวนห้อง Active × จำนวนวัน)",
             "TotalBookings นับ Booking สถานะ confirmed/checked_in/checked_out ตามวันที่สร้าง Booking",
-            "จำนวนห้องที่เปิดให้บริการใช้ค่าปัจจุบัน เพราะฐานข้อมูลไม่มีประวัติการเปิด/ปิดห้องย้อนหลัง",
             OwnerReportNotes.NetProfitDisclaimer
         };
     }
