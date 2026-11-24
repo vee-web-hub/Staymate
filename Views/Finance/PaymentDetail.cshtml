@@ -2,7 +2,7 @@
 
 @{
     Layout = "~/Views/Shared/_FinanceLayout.cshtml";
-    ViewData["Title"] = $"ตรวจสอบการชำระเงิน #{Model.PaymentId} - {Model.BookingCode}";
+    ViewData["Title"] = $"Payment #{Model.PaymentId} - {Model.BookingCode}";
 
     var statusLower = (Model.Status ?? "pending").ToLowerInvariant();
     bool isPending = statusLower == "pending";
@@ -25,21 +25,20 @@
 
     string statusText = statusLower switch
     {
-        "approved" => "Approved (อนุมัติแล้ว)",
-        "rejected" => "Rejected (ปฏิเสธรายการ)",
-        _ => "Pending (รอตรวจสอบ)"
+        "approved" => "Approved",
+        "rejected" => "Rejected",
+        _ => "Pending"
     };
 
     string methodDisplay = (Model.Method ?? "").ToLowerInvariant() switch
     {
         "promptpay" => "PromptPay QR",
-        "bank_transfer" => "Bank Transfer (โอนผ่านบัญชีธนาคาร)",
+        "bank_transfer" => "Bank Transfer",
         "credit_card" => "Credit Card",
-        "cash" => "Cash (เงินสด)",
-        _ => string.IsNullOrWhiteSpace(Model.Method) ? "N/A" : Model.Method
+        "cash" => "Cash",
+        _ => string.IsNullOrWhiteSpace(Model.Method) ? "-" : Model.Method
     };
 
-    // จัดรูปแบบ Web Path สำหรับรูปสลิปจาก wwwroot/uploads/slips/ โดยไม่แสดง Physical Path
     string? slipWebUrl = null;
     if (!string.IsNullOrWhiteSpace(Model.SlipImagePath))
     {
@@ -66,7 +65,7 @@
 <div class="finance-dashboard-wrapper fpd-page-wrapper" id="fpdPaymentDetailApp">
 
     <!-- ================================================================= -->
-    <!-- 1. Header & Breadcrumb                                            -->
+    <!-- 1. Header                                                         -->
     <!-- ================================================================= -->
     <section class="fin-welcome-banner fpd-header-banner mb-4">
         <div class="fin-welcome-glow"></div>
@@ -75,123 +74,98 @@
                 <nav aria-label="breadcrumb" class="mb-2">
                     <ol class="breadcrumb ft-breadcrumb mb-0">
                         <li class="breadcrumb-item">
-                            <a asp-controller="Finance" asp-action="Index">
-                                <i class="fa-solid fa-wallet me-1"></i>Finance Portal
-                            </a>
+                            <a asp-controller="Finance" asp-action="Index">Dashboard</a>
                         </li>
                         <li class="breadcrumb-item">
                             <a asp-controller="Finance" asp-action="PaymentApproval">Payment Approval</a>
                         </li>
-                        <li class="breadcrumb-item active" aria-current="page">Payment #@Model.PaymentId</li>
+                        <li class="breadcrumb-item active" aria-current="page">#@Model.PaymentId</li>
                     </ol>
                 </nav>
 
-                <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
+                <div class="d-flex align-items-center flex-wrap gap-2">
                     <h1 class="fin-welcome-title mb-0">
-                        ตรวจสอบสลิปการชำระเงิน <span class="text-cyber">#@Model.PaymentId</span>
+                        Payment <span class="text-cyber">#@Model.PaymentId</span>
                     </h1>
                     <span class="@statusBadgeClass">
                         <i class="@statusIcon me-1"></i>@statusText
                     </span>
+                    <span class="fin-date-badge">
+                        <i class="fa-solid fa-bookmark me-1"></i>@Model.BookingCode
+                    </span>
                 </div>
-                <p class="fin-welcome-subtitle mb-0">
-                    การจองรหัส <strong>@Model.BookingCode</strong> · ลูกค้า: <strong>@Model.ContactName</strong> · ตรวจสอบหลักฐานการโอนและเทียบยอดชำระตามหลัก Separation of Duties
-                </p>
             </div>
 
             <div class="col-lg-4 text-lg-end">
-                <div class="d-inline-flex flex-wrap gap-2 justify-content-lg-end">
-                    <a asp-controller="Finance" asp-action="PaymentApproval" class="btn ft-btn-export-csv">
-                        <i class="fa-solid fa-arrow-left me-2"></i>กลับไปหน้ารายการสลิป
-                    </a>
-                </div>
+                <a asp-controller="Finance" asp-action="PaymentApproval" class="btn fin-btn-refresh">
+                    <i class="fa-solid fa-arrow-left me-2"></i>กลับหน้ารายการ
+                </a>
             </div>
         </div>
     </section>
 
     <!-- ================================================================= -->
-    <!-- 2. TempData Alerts & Guard / BlockReason Banner                   -->
+    <!-- 2. Alerts (ตรงกับ TempData["SuccessMessage"] / ["ErrorMessage"])   -->
     <!-- ================================================================= -->
-    @if (TempData["Success"] != null)
+    @if (TempData["SuccessMessage"] != null)
     {
         <div class="alert alert-success d-flex align-items-center gap-2 rounded-4 shadow-sm mb-4" role="alert">
             <i class="fa-solid fa-circle-check fs-5"></i>
-            <div class="fw-medium">@TempData["Success"]</div>
+            <div class="fw-medium">@TempData["SuccessMessage"]</div>
         </div>
     }
-    @if (TempData["Error"] != null)
+    @if (TempData["ErrorMessage"] != null)
     {
         <div class="alert alert-danger d-flex align-items-center gap-2 rounded-4 shadow-sm mb-4" role="alert">
             <i class="fa-solid fa-circle-exclamation fs-5"></i>
-            <div class="fw-medium">@TempData["Error"]</div>
+            <div class="fw-medium">@TempData["ErrorMessage"]</div>
         </div>
     }
 
-    @if (!string.IsNullOrWhiteSpace(Model.BlockReason))
+    @if (isPending && !string.IsNullOrWhiteSpace(Model.BlockReason))
     {
-        <section class="fpd-guard-banner @(isPending ? "guard-warning" : "guard-info") mb-4" role="alert">
-            <div class="d-flex align-items-start align-items-md-center gap-3">
-                <div class="fpd-guard-icon">
-                    <i class="fa-solid @(isPending ? "fa-shield-halved" : "fa-circle-info")"></i>
-                </div>
-                <div>
-                    <h2 class="fpd-guard-title mb-1">
-                        @(isPending ? "ระบบป้องกันการอนุมัติรายการ (Verification Guard Active)" : "สถานะการตรวจสอบรายการ")
-                    </h2>
-                    <p class="fpd-guard-desc mb-0">@Model.BlockReason</p>
-                </div>
-            </div>
-        </section>
+        <div class="alert alert-warning d-flex align-items-center gap-3 rounded-4 shadow-sm mb-4" role="alert">
+            <i class="fa-solid fa-shield-halved fs-4"></i>
+            <div class="fw-medium">@Model.BlockReason</div>
+        </div>
     }
 
     <!-- ================================================================= -->
-    <!-- 3. Amount Reconciliation Strip (เทียบยอดที่ต้องชำระ vs ยอดที่โอน)     -->
+    <!-- 3. Amount Comparison (3 ใบหลัก: ยอดที่ต้องชำระ / ยอดสลิป / ผลต่าง) -->
     <!-- ================================================================= -->
     <section class="row g-3 mb-4">
-        <div class="col-12 col-sm-6 col-xl-3">
+        <div class="col-12 col-md-4">
             <div class="fin-kpi-card kpi-revenue h-100">
-                <span class="fin-kpi-label">BOOKING TOTAL</span>
-                <h3 class="fin-kpi-thai-title">ยอดรวมใบจองสุทธิ</h3>
-                <div class="fin-kpi-amount mt-2">฿@Model.TotalAmount.ToString("N2")</div>
+                <span class="fin-kpi-label">AMOUNT DUE</span>
+                <h3 class="fin-kpi-thai-title">ยอดที่ต้องชำระ</h3>
+                <div class="fin-kpi-amount mt-2">฿@Model.AmountDue.ToString("N2")</div>
                 <div class="fin-kpi-footer mt-3 pt-2">
-                    <span class="fin-kpi-note">ชำระแล้วก่อนหน้า: <strong>฿@Model.AlreadyPaid.ToString("N2")</strong></span>
+                    <span class="fin-kpi-note">ยอดรวมจอง <strong>฿@Model.TotalAmount.ToString("N2")</strong></span>
                     <span class="fin-kpi-tag tag-blue">@Model.BookingStatus</span>
                 </div>
             </div>
         </div>
 
-        <div class="col-12 col-sm-6 col-xl-3">
-            <div class="fin-kpi-card kpi-pending h-100">
-                <span class="fin-kpi-label">AMOUNT DUE</span>
-                <h3 class="fin-kpi-thai-title">ยอดที่ต้องชำระในรอบนี้</h3>
-                <div class="fin-kpi-amount text-dark mt-2">฿@Model.AmountDue.ToString("N2")</div>
-                <div class="fin-kpi-footer mt-3 pt-2">
-                    <span class="fin-kpi-note">คำนวณจากยอดรวมหักยอดที่อนุมัติแล้ว</span>
-                    <span class="fin-kpi-tag tag-orange">Expected</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-12 col-sm-6 col-xl-3">
+        <div class="col-12 col-md-4">
             <div class="fin-kpi-card @(Model.AmountMatches ? "kpi-approved" : "kpi-rejected") h-100">
                 <span class="fin-kpi-label">SLIP AMOUNT</span>
-                <h3 class="fin-kpi-thai-title">ยอดเงินที่แจ้งโอนตามสลิป</h3>
+                <h3 class="fin-kpi-thai-title">ยอดเงินตามสลิป</h3>
                 <div class="fin-kpi-amount @(Model.AmountMatches ? "text-success-custom" : "text-danger-custom") mt-2">
                     ฿@Model.Amount.ToString("N2")
                 </div>
                 <div class="fin-kpi-footer mt-3 pt-2">
-                    <span class="fin-kpi-note">ช่องทาง: <strong>@methodDisplay</strong></span>
+                    <span class="fin-kpi-note">ช่องทาง <strong>@methodDisplay</strong></span>
                     <span class="fin-kpi-tag @(Model.AmountMatches ? "tag-green" : "tag-red")">
-                        @(Model.AmountMatches ? "Exact Match" : "Mismatch")
+                        @(Model.AmountMatches ? "ตรงยอด" : "ยอดไม่ตรง")
                     </span>
                 </div>
             </div>
         </div>
 
-        <div class="col-12 col-sm-6 col-xl-3">
+        <div class="col-12 col-md-4">
             <div class="fin-kpi-card @(Model.AmountMatches ? "kpi-approved" : "kpi-rejected") h-100">
-                <span class="fin-kpi-label">RECONCILIATION RESULT</span>
-                <h3 class="fin-kpi-thai-title">ผลต่างการเทียบยอด</h3>
+                <span class="fin-kpi-label">DIFFERENCE</span>
+                <h3 class="fin-kpi-thai-title">ผลต่างยอดเงิน</h3>
                 <div class="fin-kpi-amount @(Model.AmountMatches ? "text-success-custom" : "text-danger-custom") mt-2">
                     @(Model.Difference > 0 ? "+" : "")฿@Model.Difference.ToString("N2")
                 </div>
@@ -199,13 +173,13 @@
                     @if (Model.AmountMatches)
                     {
                         <span class="fin-kpi-note text-success fw-semibold">
-                            <i class="fa-solid fa-circle-check me-1"></i>ยอดเงินตรงกันทุกประการ
+                            <i class="fa-solid fa-circle-check me-1"></i>ยอดเงินตรงตามใบจอง
                         </span>
                     }
                     else
                     {
                         <span class="fin-kpi-note text-danger fw-semibold">
-                            <i class="fa-solid fa-triangle-exclamation me-1"></i>ยอดไม่ตรง ห้ามอนุมัติ
+                            <i class="fa-solid fa-triangle-exclamation me-1"></i>ยอดเงินไม่ตรงกัน
                         </span>
                     }
                 </div>
@@ -214,41 +188,37 @@
     </section>
 
     <!-- ================================================================= -->
-    <!-- 4. Main Content Grid (Slip Viewer + Booking/Customer Breakdown)    -->
+    <!-- 4. Main Content (ซ้าย: สลิป & ปุ่มดำเนินการ | ขวา: ข้อมูลการจอง)   -->
     <!-- ================================================================= -->
     <div class="row g-4">
-        <!-- คอลัมน์ซ้าย: ตรวจสอบรูปสลิป & ปุ่มดำเนินการอนุมัติ/ปฏิเสธ -->
+        <!-- คอลัมน์ซ้าย: รูปสลิป และปุ่ม Approve / Reject -->
         <div class="col-12 col-xl-5">
             <div class="fin-panel-card h-100 d-flex flex-column justify-content-between">
                 <div>
                     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3 pb-3 border-bottom">
                         <div>
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="fin-dot-indicator bg-cyber"></span>
-                                <h2 class="fin-panel-title mb-0">หลักฐานการโอนเงิน (Payment Slip)</h2>
-                            </div>
+                            <h2 class="fin-panel-title mb-0">Payment Slip</h2>
                             <p class="fin-panel-subtitle mb-0 mt-1">
-                                ส่งเมื่อ: @((Model.PaidAt ?? Model.CreatedAt).ToString("dd/MM/yyyy เวลา HH:mm น."))
+                                อัปโหลดเมื่อ @((Model.PaidAt ?? Model.CreatedAt).ToString("dd/MM/yyyy HH:mm"))
                             </p>
                         </div>
 
-                        <div class="btn-group btn-group-sm" role="group" aria-label="Slip Zoom Controls">
-                            <button type="button" class="btn btn-outline-secondary" id="fpdBtnZoomIn" title="ขยายรูปสลิป">
+                        <div class="btn-group btn-group-sm" role="group" aria-label="Slip Zoom">
+                            <button type="button" class="btn btn-outline-secondary" id="fpdBtnZoomIn" title="ขยาย">
                                 <i class="fa-solid fa-magnifying-glass-plus"></i>
                             </button>
-                            <button type="button" class="btn btn-outline-secondary" id="fpdBtnZoomOut" title="ย่อรูปสลิป">
+                            <button type="button" class="btn btn-outline-secondary" id="fpdBtnZoomOut" title="ย่อ">
                                 <i class="fa-solid fa-magnifying-glass-minus"></i>
                             </button>
-                            <button type="button" class="btn btn-outline-secondary" id="fpdBtnZoomReset" title="ขนาด 100%">
+                            <button type="button" class="btn btn-outline-secondary" id="fpdBtnZoomReset" title="100%">
                                 100%
                             </button>
-                            <button type="button" class="btn btn-outline-primary" id="fpdBtnFullscreen" title="ดูเต็มหน้าจอ">
+                            <button type="button" class="btn btn-outline-primary" id="fpdBtnFullscreen" title="เต็มหน้าจอ">
                                 <i class="fa-solid fa-expand"></i>
                             </button>
                         </div>
                     </div>
 
-                    <!-- พื้นที่แสดงรูปสลิป -->
                     <div class="fpd-slip-stage mb-3" id="fpdSlipStage">
                         @if (!string.IsNullOrWhiteSpace(slipWebUrl))
                         {
@@ -259,35 +229,33 @@
                                  onerror="this.classList.add('d-none'); document.getElementById('fpdSlipFallback').classList.remove('d-none');" />
                             <div id="fpdSlipFallback" class="fpd-no-slip d-none">
                                 <i class="fa-regular fa-file-excel fs-1 text-muted mb-2"></i>
-                                <h4 class="h6 fw-bold text-dark mb-1">ไม่พบไฟล์รูปภาพสลิปบนเซิร์ฟเวอร์</h4>
-                                <p class="text-muted extra-small mb-0">ไฟล์อาจถูกลบหรือยังไม่ได้อัปโหลด</p>
+                                <span class="fw-semibold text-dark">ไม่พบไฟล์รูปภาพสลิป</span>
                             </div>
                         }
                         else
                         {
                             <div class="fpd-no-slip">
                                 <i class="fa-regular fa-image fs-1 text-muted mb-2"></i>
-                                <h4 class="h6 fw-bold text-dark mb-1">ไม่มีหลักฐานการโอนเงินแนบมา</h4>
-                                <p class="text-muted extra-small mb-0">รายการชำระเงินนี้ไม่ได้แนบไฟล์รูปสลิป</p>
+                                <span class="fw-semibold text-dark">ไม่มีไฟล์สลิปแนบ</span>
                             </div>
                         }
                     </div>
                 </div>
 
-                <!-- ส่วนแสดงผลการตรวจสอบแล้ว หรือ ปุ่มอนุมัติ / ปฏิเสธ -->
+                <!-- Action / Audit Result -->
                 <div class="border-top pt-3">
                     @if (!isPending)
                     {
                         <div class="fpd-audit-result-box @(isApproved ? "audit-approved" : "audit-rejected")">
                             <div class="d-flex align-items-center justify-content-between mb-2">
-                                <span class="fw-bold small">
-                                    <i class="fa-solid fa-user-check me-1"></i>ประวัติการตรวจสอบรายการ
+                                <span class="fw-bold small">ผลการตรวจสอบ</span>
+                                <span class="@statusBadgeClass">
+                                    <i class="@statusIcon me-1"></i>@statusText
                                 </span>
-                                <span class="@statusBadgeClass">@statusText</span>
                             </div>
                             <div class="small text-muted">
-                                <div>ผู้ตรวจสอบ: <strong class="text-dark">@(Model.ReviewedByName ?? "Finance Officer")</strong></div>
-                                <div>เวลาที่ตรวจสอบ: <strong class="text-dark">@(Model.ReviewedAt?.ToString("dd/MM/yyyy HH:mm น.") ?? "-")</strong></div>
+                                <div>ผู้ดำเนินการ: <strong class="text-dark">@(Model.ReviewedByName ?? "-")</strong></div>
+                                <div>วันเวลา: <strong class="text-dark">@(Model.ReviewedAt?.ToString("dd/MM/yyyy HH:mm") ?? "-")</strong></div>
                                 @if (isRejected && !string.IsNullOrWhiteSpace(Model.RejectReason))
                                 {
                                     <div class="mt-2 p-2 rounded bg-white border border-danger-subtle text-danger">
@@ -300,7 +268,6 @@
                     else
                     {
                         <div class="d-flex flex-column gap-2">
-                            <!-- ฟอร์มอนุมัติสลิป (POST ไปยัง FinanceController.Approve) -->
                             <form asp-controller="Finance"
                                   asp-action="Approve"
                                   asp-route-id="@Model.PaymentId"
@@ -314,16 +281,15 @@
                                         data-booking-code="@Model.BookingCode"
                                         data-amount="@Model.Amount.ToString("N2")"
                                         disabled="@(!Model.CanApprove)">
-                                    <i class="fa-solid fa-circle-check me-2"></i>อนุมัติการชำระเงิน &amp; ออกใบเสร็จอัตโนมัติ (Approve)
+                                    <i class="fa-solid fa-circle-check me-2"></i>Approve (อนุมัติและออกใบเสร็จ)
                                 </button>
                             </form>
 
-                            <!-- ปุ่มเปิด Modal ปฏิเสธสลิป (POST ไปยัง FinanceController.Reject) -->
                             <button type="button"
                                     id="fpdBtnOpenRejectModal"
                                     class="btn fpd-btn-reject-lg w-100"
                                     disabled="@(!Model.CanReject)">
-                                <i class="fa-solid fa-circle-xmark me-2"></i>ปฏิเสธสลิปพร้อมระบุเหตุผล (Reject Payment)
+                                <i class="fa-solid fa-circle-xmark me-2"></i>Reject (ปฏิเสธรายการ)
                             </button>
                         </div>
                     }
@@ -331,65 +297,59 @@
             </div>
         </div>
 
-        <!-- คอลัมน์ขวา: ข้อมูลผู้จอง รายการห้องพัก โปรโมชั่น และสรุปยอดใบจอง -->
+        <!-- คอลัมน์ขวา: ข้อมูลผู้จอง + รายการห้องพักและยอดเงิน -->
         <div class="col-12 col-xl-7">
-            <!-- ข้อมูลลูกค้าและการจอง -->
+            <!-- ข้อมูลผู้จอง -->
             <div class="fin-panel-card mb-4">
                 <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="fin-dot-indicator bg-electric"></span>
-                        <h2 class="fin-panel-title mb-0">ข้อมูลผู้จองและรายละเอียดการเข้าพัก (Booking &amp; Guest Info)</h2>
-                    </div>
+                    <h2 class="fin-panel-title mb-0">Booking &amp; Guest Details</h2>
                     <span class="fin-booking-code">@Model.BookingCode (#@Model.BookingId)</span>
                 </div>
 
                 <div class="row g-3 small">
                     <div class="col-sm-6 col-md-4">
                         <div class="ft-detail-field">
-                            <span class="ft-field-label"><i class="fa-solid fa-user text-primary me-1"></i>ชื่อผู้ติดต่อ (Contact Name)</span>
+                            <span class="ft-field-label">ชื่อผู้จอง</span>
                             <span class="ft-field-value fw-bold">@Model.ContactName</span>
                         </div>
                     </div>
                     <div class="col-sm-6 col-md-4">
                         <div class="ft-detail-field">
-                            <span class="ft-field-label"><i class="fa-solid fa-envelope text-primary me-1"></i>อีเมล (Email)</span>
+                            <span class="ft-field-label">อีเมล</span>
                             <span class="ft-field-value">@Model.ContactEmail</span>
                         </div>
                     </div>
                     <div class="col-sm-6 col-md-4">
                         <div class="ft-detail-field">
-                            <span class="ft-field-label"><i class="fa-solid fa-phone text-primary me-1"></i>เบอร์โทรศัพท์ (Phone)</span>
+                            <span class="ft-field-label">เบอร์โทรศัพท์</span>
                             <span class="ft-field-value">@Model.ContactPhone</span>
                         </div>
                     </div>
                     <div class="col-sm-6 col-md-4">
                         <div class="ft-detail-field">
-                            <span class="ft-field-label"><i class="fa-regular fa-calendar-check text-primary me-1"></i>วันเช็คอิน - เช็คเอาท์</span>
+                            <span class="ft-field-label">เช็คอิน - เช็คเอาท์</span>
                             <span class="ft-field-value">@Model.CheckInDate.ToString("dd/MM/yyyy") - @Model.CheckOutDate.ToString("dd/MM/yyyy")</span>
                         </div>
                     </div>
                     <div class="col-sm-6 col-md-4">
                         <div class="ft-detail-field">
-                            <span class="ft-field-label"><i class="fa-solid fa-moon text-primary me-1"></i>จำนวนคืน / ผู้เข้าพัก</span>
+                            <span class="ft-field-label">ระยะเวลา / ผู้เข้าพัก</span>
                             <span class="ft-field-value">@Model.Nights คืน · @Model.NumGuests ท่าน</span>
                         </div>
                     </div>
                     <div class="col-sm-6 col-md-4">
                         <div class="ft-detail-field">
-                            <span class="ft-field-label"><i class="fa-solid fa-money-check-dollar text-primary me-1"></i>ช่องทางชำระเงิน</span>
+                            <span class="ft-field-label">วิธีชำระเงิน</span>
                             <span class="ft-field-value fw-semibold">@methodDisplay</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- ตารางรายการห้องพัก (Rooms) และโปรโมชั่น (Promotions) -->
+            <!-- รายการห้องพัก & สรุปค่าใช้จ่าย -->
             <div class="fin-panel-card">
                 <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="fin-dot-indicator bg-violet"></span>
-                        <h2 class="fin-panel-title mb-0">รายการห้องพักและสรุปยอดค่าใช้จ่าย (Room Lines &amp; Pricing)</h2>
-                    </div>
+                    <h2 class="fin-panel-title mb-0">Room &amp; Billing Summary</h2>
                     <span class="fin-total-pill">@Model.Rooms.Count ห้อง</span>
                 </div>
 
@@ -397,12 +357,12 @@
                     <table class="table fin-table align-middle mb-0">
                         <thead>
                             <tr>
-                                <th>ประเภทห้องพัก (Room Type)</th>
-                                <th class="text-center">หมายเลขห้อง</th>
+                                <th>ประเภทห้อง</th>
+                                <th class="text-center">เลขห้อง</th>
                                 <th class="text-end">ราคา/คืน</th>
-                                <th class="text-center">จำนวนคืน</th>
+                                <th class="text-center">คืน</th>
                                 <th class="text-end">เตียงเสริม</th>
-                                <th class="text-end">รวมเป็นเงิน</th>
+                                <th class="text-end">รวม</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -413,19 +373,12 @@
                                     <tr>
                                         <td class="fw-semibold text-dark">@r.RoomTypeName</td>
                                         <td class="text-center">
-                                            <span class="badge bg-light text-dark border">@(r.RoomNumber ?? "ยังไม่ระบุ")</span>
+                                            <span class="badge bg-light text-dark border">@(r.RoomNumber ?? "-")</span>
                                         </td>
                                         <td class="text-end">฿@r.PricePerNight.ToString("N2")</td>
                                         <td class="text-center">@r.Nights</td>
                                         <td class="text-end">
-                                            @if (r.ExtraBedQty > 0)
-                                            {
-                                                <span>@r.ExtraBedQty เตียง (฿@r.ExtraBedAmount.ToString("N2"))</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="text-muted">-</span>
-                                            }
+                                            @(r.ExtraBedQty > 0 ? $"{r.ExtraBedQty} (฿{r.ExtraBedAmount:N2})" : "-")
                                         </td>
                                         <td class="text-end fw-bold text-dark">฿@r.LineTotal.ToString("N2")</td>
                                     </tr>
@@ -434,7 +387,7 @@
                             else
                             {
                                 <tr>
-                                    <td colspan="6" class="text-center text-muted py-3">ไม่มีรายการห้องพักย่อย</td>
+                                    <td colspan="6" class="text-center text-muted py-3">ไม่มีรายการห้องพัก</td>
                                 </tr>
                             }
                         </tbody>
@@ -443,64 +396,50 @@
 
                 @if (Model.Promotions.Any())
                 {
-                    <div class="mb-3 p-3 rounded-3 bg-light border">
-                        <h3 class="h6 fw-bold text-dark mb-2">
-                            <i class="fa-solid fa-ticket text-violet me-1"></i>โปรโมชั่นส่วนลดที่ใช้ (Applied Promotions)
-                        </h3>
-                        <div class="table-responsive">
-                            <table class="table table-sm align-middle mb-0 small">
-                                <thead>
-                                    <tr class="text-muted">
-                                        <th>รหัสโปรโมชั่น</th>
-                                        <th>ชื่อโปรโมชั่น</th>
-                                        <th>ประเภท</th>
-                                        <th class="text-end">ส่วนลด (%)</th>
-                                        <th class="text-end">จำนวนเงินส่วนลด</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var p in Model.Promotions)
-                                    {
-                                        <tr>
-                                            <td><span class="fin-booking-code">@p.PromoCode</span></td>
-                                            <td class="fw-medium">@p.PromoName</td>
-                                            <td>@p.StackRole</td>
-                                            <td class="text-end">@p.AppliedPercent.ToString("N2")%</td>
-                                            <td class="text-end text-danger fw-semibold">-฿@p.AppliedAmount.ToString("N2")</td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="mb-3 p-3 rounded-3 bg-light border small">
+                        <div class="fw-bold text-dark mb-2">โปรโมชั่นที่ใช้</div>
+                        @foreach (var p in Model.Promotions)
+                        {
+                            <div class="d-flex justify-content-between py-1">
+                                <span>
+                                    <span class="fin-booking-code me-1">@p.PromoCode</span>
+                                    @p.PromoName (@p.AppliedPercent.ToString("N0")%)
+                                </span>
+                                <span class="text-danger fw-semibold">-฿@p.AppliedAmount.ToString("N2")</span>
+                            </div>
+                        }
                     </div>
                 }
 
-                <!-- กล่องสรุปยอดรวมสุทธิ -->
+                <!-- สรุปยอดเงิน -->
                 <div class="row justify-content-end">
                     <div class="col-md-7 col-lg-6">
                         <div class="fpd-summary-box p-3 rounded-3">
                             <div class="d-flex justify-content-between small mb-1">
-                                <span class="text-muted">รวมค่าห้องพัก (Room Amount):</span>
+                                <span class="text-muted">ค่าห้องพัก</span>
                                 <strong class="text-dark">฿@Model.RoomAmount.ToString("N2")</strong>
                             </div>
                             <div class="d-flex justify-content-between small mb-1 text-danger">
-                                <span>ส่วนลดรวม (@Model.DiscountPercent.ToString("N2")%):</span>
+                                <span>ส่วนลด (@Model.DiscountPercent.ToString("N0")%)</span>
                                 <strong>-฿@Model.DiscountAmount.ToString("N2")</strong>
                             </div>
                             <div class="d-flex justify-content-between small mb-2 pb-2 border-bottom">
-                                <span class="text-muted">ภาษีมูลค่าเพิ่ม (Tax Amount):</span>
+                                <span class="text-muted">ภาษี</span>
                                 <strong class="text-dark">฿@Model.TaxAmount.ToString("N2")</strong>
                             </div>
                             <div class="d-flex justify-content-between align-items-center mb-1">
-                                <span class="fw-bold text-dark">ยอดรวมสุทธิ (Total Amount):</span>
-                                <span class="fs-5 fw-bold text-dark">฿@Model.TotalAmount.ToString("N2")</span>
+                                <span class="fw-bold text-dark">ยอดรวมใบจอง</span>
+                                <span class="fw-bold text-dark">฿@Model.TotalAmount.ToString("N2")</span>
                             </div>
-                            <div class="d-flex justify-content-between small text-muted">
-                                <span>ชำระและอนุมัติแล้วก่อนหน้า:</span>
-                                <span>฿@Model.AlreadyPaid.ToString("N2")</span>
-                            </div>
+                            @if (Model.AlreadyPaid > 0)
+                            {
+                                <div class="d-flex justify-content-between small text-muted mb-1">
+                                    <span>ชำระแล้วก่อนหน้า</span>
+                                    <span>฿@Model.AlreadyPaid.ToString("N2")</span>
+                                </div>
+                            }
                             <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
-                                <span class="fw-bold text-electric">ยอดที่ต้องชำระในรอบนี้ (Amount Due):</span>
+                                <span class="fw-bold text-electric">ยอดที่ต้องชำระ</span>
                                 <span class="fs-5 fw-bold text-electric">฿@Model.AmountDue.ToString("N2")</span>
                             </div>
                         </div>
@@ -513,7 +452,7 @@
 </div>
 
 <!-- ===================================================================== -->
-<!-- Modal ปฏิเสธสลิป (POST ไปยัง FinanceController.Reject)                  -->
+<!-- Modal ปฏิเสธการชำระเงิน                                               -->
 <!-- ===================================================================== -->
 <div class="modal fade" id="fpdRejectModal" tabindex="-1" aria-labelledby="fpdRejectModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -531,50 +470,45 @@
                 <div class="modal-body p-4">
                     <div class="p-3 rounded-3 bg-light border mb-3 small">
                         <div class="d-flex justify-content-between mb-1">
-                            <span class="text-muted">Booking Code:</span>
-                            <strong class="text-dark">@Model.BookingCode (@Model.ContactName)</strong>
+                            <span class="text-muted">Booking:</span>
+                            <strong class="text-dark">@Model.BookingCode · @Model.ContactName</strong>
                         </div>
                         <div class="d-flex justify-content-between mb-1">
                             <span class="text-muted">ยอดที่ต้องชำระ:</span>
                             <strong class="text-dark">฿@Model.AmountDue.ToString("N2")</strong>
                         </div>
                         <div class="d-flex justify-content-between">
-                            <span class="text-muted">ยอดตามสลิปที่แจ้ง:</span>
+                            <span class="text-muted">ยอดตามสลิป:</span>
                             <strong class="text-danger">฿@Model.Amount.ToString("N2")</strong>
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label for="fpdRejectPreset" class="form-label fw-semibold small text-dark">
-                            เลือกเหตุผลมาตรฐาน <span class="text-danger">*</span>
-                        </label>
+                        <label for="fpdRejectPreset" class="form-label fw-semibold small text-dark">เหตุผลที่ปฏิเสธ</label>
                         <select id="fpdRejectPreset" class="form-select payment-approval-input mb-2">
-                            <option value="">-- เลือกเหตุผลการปฏิเสธ --</option>
+                            <option value="">-- เลือกเหตุผล --</option>
                             <option value="จำนวนเงินที่โอนไม่ตรงกับยอดที่ต้องชำระ">จำนวนเงินที่โอนไม่ตรงกับยอดที่ต้องชำระ</option>
                             <option value="รูปสลิปไม่ชัดเจน ไม่สามารถตรวจสอบข้อมูลได้">รูปสลิปไม่ชัดเจน ไม่สามารถตรวจสอบข้อมูลได้</option>
                             <option value="ไม่พบรายการโอนเงินเข้าบัญชีโรงแรม">ไม่พบรายการโอนเงินเข้าบัญชีโรงแรม</option>
                             <option value="สลิปซ้ำหรือเคยใช้กับรายการจองอื่นแล้ว">สลิปซ้ำหรือเคยใช้กับรายการจองอื่นแล้ว</option>
-                            <option value="OTHER">อื่น ๆ (ระบุรายละเอียดด้านล่าง)</option>
+                            <option value="OTHER">อื่น ๆ (ระบุรายละเอียด)</option>
                         </select>
 
-                        <label for="fpdRejectReasonInput" class="form-label fw-semibold small text-dark">
-                            รายละเอียดเหตุผล (สูงสุด 255 ตัวอักษร) <span class="text-danger">*</span>
-                        </label>
                         <textarea name="Reason"
                                   id="fpdRejectReasonInput"
                                   rows="3"
                                   maxlength="255"
                                   required
                                   class="form-control payment-approval-input"
-                                  placeholder="ระบุเหตุผลที่ปฏิเสธเพื่อให้ลูกค้าทราบและอัปโหลดสลิปใหม่..."></textarea>
-                        <div class="invalid-feedback">กรุณาระบุเหตุผลในการปฏิเสธการชำระเงิน</div>
+                                  placeholder="ระบุเหตุผลในการปฏิเสธ..."></textarea>
+                        <div class="invalid-feedback">กรุณาระบุเหตุผลในการปฏิเสธ</div>
                     </div>
                 </div>
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light border" data-bs-dismiss="modal">ยกเลิก</button>
                     <button type="submit" class="btn btn-danger fw-semibold">
-                        <i class="fa-solid fa-ban me-1"></i> ยืนยันการปฏิเสธสลิป
+                        ยืนยันการปฏิเสธ
                     </button>
                 </div>
             </form>

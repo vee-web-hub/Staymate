@@ -28,9 +28,13 @@ namespace StayMate_Kavinvee_0576.Controllers
     public class FinanceController : Controller
     {
         private readonly StayMateDbContext _db;
+        private readonly ILogger<FinanceController> _logger;
         private const int PageSize = 20;
 
         private static readonly string[] ReviewableBookingStatuses = { "pending_payment", "pending_approval" };
+
+        private static readonly string[] ChartPalette =
+            { "#2563EB", "#00E5FF", "#16A34A", "#F59E0B", "#8B5CF6", "#EC4899", "#64748B" };
 
         // รายรับสุทธิ = income - refund (expense ไม่นับเป็นรายรับ)
         private static readonly Expression<Func<FinancialTransaction, decimal>> NetIncomeExpr =
@@ -41,9 +45,10 @@ namespace StayMate_Kavinvee_0576.Controllers
             QuestPDF.Settings.License = LicenseType.Community;
         }
 
-        public FinanceController(StayMateDbContext db)
+        public FinanceController(StayMateDbContext db, ILogger<FinanceController> logger)
         {
             _db = db;
+            _logger = logger;
         }
 
         // =====================================================================
@@ -62,7 +67,11 @@ namespace StayMate_Kavinvee_0576.Controllers
             {
                 TotalIncome = await txns.SumAsync(NetIncomeExpr),
                 TodayIncome = await txns.Where(t => t.TxnDate == today).SumAsync(NetIncomeExpr),
-                MonthIncome = await txns.Where(t => t.TxnDate >= monthStart && t.TxnDate <= today).SumAsync(NetIncomeExpr)
+                MonthIncome = await txns.Where(t => t.TxnDate >= monthStart && t.TxnDate <= today).SumAsync(NetIncomeExpr),
+                // [เพิ่ม] รายจ่ายรวม / รายจ่ายเดือนนี้
+                TotalExpense = await txns.Where(t => t.TxnType == "expense").SumAsync(t => t.Amount),
+                MonthExpense = await txns.Where(t => t.TxnType == "expense" && t.TxnDate >= monthStart && t.TxnDate <= today)
+                                         .SumAsync(t => t.Amount)
             };
 
             // สรุป payment ตามสถานะ
@@ -110,9 +119,6 @@ namespace StayMate_Kavinvee_0576.Controllers
         // =====================================================================
         // 2. Payment Approval
         // =====================================================================
-                // =====================================================================
-        // 2. Payment Approval (อัปเดตให้ส่ง Summary Counts ผ่าน ViewBag + รองรับ JSON API)
-        // =====================================================================
         public async Task<IActionResult> PaymentApproval(string? keyword, string? status = "pending", int page = 1)
         {
             var q = PaymentListQuery();
@@ -132,7 +138,6 @@ namespace StayMate_Kavinvee_0576.Controllers
             // pending: เก่าสุดก่อน (FIFO) / อื่นๆ: ใหม่สุดก่อน
             q = status == "pending" ? q.OrderBy(p => p.CreatedAt) : q.OrderByDescending(p => p.CreatedAt);
 
-            // โหลดตัวเลข Summary Cards จริงจากฐานข้อมูล
             var statusCounts = await _db.Payments.AsNoTracking()
                 .GroupBy(p => p.Status)
                 .Select(g => new { Status = g.Key, Count = g.Count() })
@@ -156,8 +161,48 @@ namespace StayMate_Kavinvee_0576.Controllers
             return View(vm);
         }
 
+        // [เพิ่ม] หน้ารายละเอียดการชำระเงิน (finance.js ลิงก์ไป /Finance/PaymentDetail/{id})
+        [HttpGet]
+        public async Task<IActionResult> PaymentDetail(uint id)
+        {
+            var vm = await BuildReviewViewModelAsync(id);
+            if (vm == null) return NotFound();
+            return View(vm);
+        }
+
+        // [เพิ่ม] อนุมัติแบบ Form Post (ใช้โดย PaymentDetail.cshtml -> fpdApproveForm)
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> Approve(uint id)
+        {
+            var userId = CurrentUserId();
+            if (userId == null) return RedirectToAction("Login", "Account");
+
+            var r = await ApproveCoreAsync(id, userId.Value);
+            TempData[r.Success ? "SuccessMessage" : "ErrorMessage"] = r.Message;
+            return RedirectToAction(nameof(PaymentDetail), new { id });
+        }
+
+        // [เพิ่ม] ปฏิเสธแบบ Form Post (ใช้โดย PaymentDetail.cshtml -> fpdRejectForm)
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> Reject(RejectPaymentInput input)
+        {
+            var userId = CurrentUserId();
+            if (userId == null) return RedirectToAction("Login", "Account");
+
+            if (!ModelState.IsValid)
+            {
+                TempData["ErrorMessage"] = ModelState.Values.SelectMany(v => v.Errors).FirstOrDefault()?.ErrorMessage
+                                           ?? "กรุณาระบุเหตุผลในการปฏิเสธ";
+                return RedirectToAction(nameof(PaymentDetail), new { id = input.PaymentId });
+            }
+
+            var r = await RejectCoreAsync(input.PaymentId, input.Reason, userId.Value);
+            TempData[r.Success ? "SuccessMessage" : "ErrorMessage"] = r.Message;
+            return RedirectToAction(nameof(PaymentDetail), new { id = input.PaymentId });
+        }
+
         // ---------------------------------------------------------------------
-        // [เพิ่มใหม่ใน FinanceController] JSON API: โหลดรายการสลิป + ค้นหา + กรอง + ประวัติ + Summary
+        // JSON API: โหลดรายการสลิป + ค้นหา + กรอง + ประวัติ + Summary
         // ---------------------------------------------------------------------
         [HttpGet]
         public async Task<IActionResult> GetPaymentSlipsJson(
@@ -175,7 +220,6 @@ namespace StayMate_Kavinvee_0576.Controllers
 
             var baseQuery = _db.Payments.AsNoTracking();
 
-            // 1. Summary Cards (คำนวณจากข้อมูลจริงทั้งหมด)
             var stats = await baseQuery
                 .GroupBy(p => p.Status)
                 .Select(g => new { Status = g.Key, Count = g.Count(), Amount = g.Sum(p => p.Amount) })
@@ -186,7 +230,6 @@ namespace StayMate_Kavinvee_0576.Controllers
             int rejectedCount = stats.FirstOrDefault(x => x.Status == "rejected")?.Count ?? 0;
             int totalTransactions = pendingCount + approvedCount + rejectedCount;
 
-            // 2. กรองตามสถานะ
             var q = baseQuery.AsQueryable();
             if (!string.IsNullOrWhiteSpace(status) && status != "all")
             {
@@ -196,7 +239,6 @@ namespace StayMate_Kavinvee_0576.Controllers
                     q = q.Where(p => p.Status == status);
             }
 
-            // 3. ค้นหาจาก ชื่อ User, Email, Transaction ID (PaymentId), Booking ID / BookingCode
             if (!string.IsNullOrWhiteSpace(keyword))
             {
                 var k = keyword.Trim();
@@ -207,7 +249,6 @@ namespace StayMate_Kavinvee_0576.Controllers
                               || (isUint && (p.PaymentId == parsedId || p.BookingId == parsedId)));
             }
 
-            // 4. กรองตามวันที่ส่งสลิป (PaidAt หรือ CreatedAt)
             if (fromDate.HasValue)
             {
                 var startDt = fromDate.Value.Date;
@@ -219,7 +260,6 @@ namespace StayMate_Kavinvee_0576.Controllers
                 q = q.Where(p => (p.PaidAt ?? p.CreatedAt) < endDt);
             }
 
-            // 5. เรียงลำดับข้อมูล
             q = sortOrder switch
             {
                 "oldest" => q.OrderBy(p => p.CreatedAt),
@@ -279,13 +319,7 @@ namespace StayMate_Kavinvee_0576.Controllers
             return Json(new
             {
                 success = true,
-                summary = new
-                {
-                    pending = pendingCount,
-                    approved = approvedCount,
-                    rejected = rejectedCount,
-                    total = totalTransactions
-                },
+                summary = new { pending = pendingCount, approved = approvedCount, rejected = rejectedCount, total = totalTransactions },
                 pagination = new
                 {
                     page,
@@ -300,7 +334,7 @@ namespace StayMate_Kavinvee_0576.Controllers
         }
 
         // ---------------------------------------------------------------------
-        // [เพิ่มใหม่ใน FinanceController] JSON API: โหลดรายละเอียดสลิปสำหรับ Modal
+        // JSON API: รายละเอียดสลิปสำหรับ Modal
         // ---------------------------------------------------------------------
         [HttpGet]
         public async Task<IActionResult> GetPaymentSlipDetailJson(uint id)
@@ -352,7 +386,7 @@ namespace StayMate_Kavinvee_0576.Controllers
         }
 
         // ---------------------------------------------------------------------
-        // [เพิ่มใหม่ใน FinanceController] JSON API: อนุมัติสลิปแบบไม่ Reload หน้า
+        // JSON API: อนุมัติ / ปฏิเสธ (ไม่ Reload หน้า)
         // ---------------------------------------------------------------------
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> ApproveAjax(uint id)
@@ -361,20 +395,63 @@ namespace StayMate_Kavinvee_0576.Controllers
             if (userId == null)
                 return Unauthorized(new { success = false, message = "กรุณาเข้าสู่ระบบใหม่" });
 
+            var r = await ApproveCoreAsync(id, userId.Value);
+            if (!r.Success) return StatusCode(r.Status, new { success = false, message = r.Message });
+            return Json(new { success = true, message = r.Message, receiptNo = r.ReceiptNo });
+        }
+
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> RejectAjax([FromForm] RejectPaymentInput input)
+        {
+            var userId = CurrentUserId();
+            if (userId == null)
+                return Unauthorized(new { success = false, message = "กรุณาเข้าสู่ระบบใหม่" });
+
+            if (!ModelState.IsValid)
+            {
+                var err = ModelState.Values.SelectMany(v => v.Errors).FirstOrDefault()?.ErrorMessage ?? "กรุณาระบุเหตุผลในการปฏิเสธ";
+                return BadRequest(new { success = false, message = err });
+            }
+
+            var r = await RejectCoreAsync(input.PaymentId, input.Reason, userId.Value);
+            if (!r.Success) return StatusCode(r.Status, new { success = false, message = r.Message });
+            return Json(new { success = true, message = r.Message });
+        }
+
+        // ---------------------------------------------------------------------
+        // Core: อนุมัติ (ใช้ร่วมกันทั้ง Ajax และ Form)
+        // กันอนุมัติซ้ำแบบ atomic: UPDATE ... WHERE status='pending' ถ้า 0 แถว = มีคนตรวจสอบไปก่อนแล้ว
+        // ---------------------------------------------------------------------
+        private async Task<(bool Success, int Status, string Message, string? ReceiptNo)> ApproveCoreAsync(uint id, uint userId)
+        {
             var payment = await _db.Payments.Include(p => p.Booking).FirstOrDefaultAsync(p => p.PaymentId == id);
             if (payment == null)
-                return NotFound(new { success = false, message = "ไม่พบรายการชำระเงินนี้ในระบบ" });
+                return (false, 404, "ไม่พบรายการชำระเงินนี้ในระบบ", null);
 
             var due = await GetAmountDueAsync(payment);
             var block = GetBlockReason(payment, userId, forApprove: true, due);
             if (block != null)
-                return BadRequest(new { success = false, message = block });
+                return (false, 400, block, null);
 
             await using var tx = await _db.Database.BeginTransactionAsync();
             try
             {
                 var now = DateTime.Now;
-                var oldPayment = new { payment.Status, payment.ReviewedBy, payment.ReviewedAt };
+
+                var claimed = await _db.Payments
+                    .Where(p => p.PaymentId == id && p.Status == "pending")
+                    .ExecuteUpdateAsync(s => s
+                        .SetProperty(p => p.Status, "approved")
+                        .SetProperty(p => p.ReviewedBy, (uint?)userId)
+                        .SetProperty(p => p.ReviewedAt, (DateTime?)now));
+
+                if (claimed == 0)
+                {
+                    await tx.RollbackAsync();
+                    return (false, 409, "รายการนี้ถูกตรวจสอบไปแล้ว", null);
+                }
+
+                var oldPayment = new { Status = "pending", payment.ReviewedBy, payment.ReviewedAt };
                 var oldBookingStatus = payment.Booking.Status;
 
                 payment.Status = "approved";
@@ -382,7 +459,6 @@ namespace StayMate_Kavinvee_0576.Controllers
                 payment.ReviewedAt = now;
                 payment.RejectReason = null;
                 payment.PaidAt ??= now;
-
                 payment.Booking.Status = "confirmed";
 
                 _db.FinancialTransactions.Add(new FinancialTransaction
@@ -422,54 +498,56 @@ namespace StayMate_Kavinvee_0576.Controllers
                 await _db.SaveChangesAsync();
                 await tx.CommitAsync();
 
-                return Json(new
-                {
-                    success = true,
-                    message = $"อนุมัติการชำระเงินเรียบร้อย ออกใบเสร็จเลขที่ {receiptNo}",
-                    receiptNo
-                });
+                return (true, 200, $"อนุมัติการชำระเงินเรียบร้อย ออกใบเสร็จเลขที่ {receiptNo}", receiptNo);
             }
             catch (Exception ex)
             {
                 await tx.RollbackAsync();
-                return StatusCode(500, new { success = false, message = "ไม่สามารถอนุมัติรายการได้: " + ex.Message });
+                _logger.LogError(ex, "Approve payment {PaymentId} failed", id);
+                return (false, 500, "ไม่สามารถอนุมัติรายการได้ กรุณาลองใหม่อีกครั้ง", null);
             }
         }
 
-        // ---------------------------------------------------------------------
-        // [เพิ่มใหม่ใน FinanceController] JSON API: ปฏิเสธสลิปแบบไม่ Reload หน้า
-        // ---------------------------------------------------------------------
-        [HttpPost, ValidateAntiForgeryToken]
-        public async Task<IActionResult> RejectAjax([FromForm] RejectPaymentInput input)
+        private async Task<(bool Success, int Status, string Message)> RejectCoreAsync(uint id, string? reason, uint userId)
         {
-            var userId = CurrentUserId();
-            if (userId == null)
-                return Unauthorized(new { success = false, message = "กรุณาเข้าสู่ระบบใหม่" });
+            if (string.IsNullOrWhiteSpace(reason))
+                return (false, 400, "กรุณาระบุเหตุผลในการปฏิเสธ");
 
-            if (!ModelState.IsValid)
-            {
-                var err = ModelState.Values.SelectMany(v => v.Errors).FirstOrDefault()?.ErrorMessage ?? "กรุณาระบุเหตุผลในการปฏิเสธ";
-                return BadRequest(new { success = false, message = err });
-            }
+            var cleanReason = reason.Trim();
 
-            var payment = await _db.Payments.Include(p => p.Booking).FirstOrDefaultAsync(p => p.PaymentId == input.PaymentId);
+            var payment = await _db.Payments.Include(p => p.Booking).FirstOrDefaultAsync(p => p.PaymentId == id);
             if (payment == null)
-                return NotFound(new { success = false, message = "ไม่พบรายการชำระเงินนี้ในระบบ" });
+                return (false, 404, "ไม่พบรายการชำระเงินนี้ในระบบ");
 
             var block = GetBlockReason(payment, userId, forApprove: false, 0m);
             if (block != null)
-                return BadRequest(new { success = false, message = block });
+                return (false, 400, block);
 
             await using var tx = await _db.Database.BeginTransactionAsync();
             try
             {
                 var now = DateTime.Now;
+
+                var claimed = await _db.Payments
+                    .Where(p => p.PaymentId == id && p.Status == "pending")
+                    .ExecuteUpdateAsync(s => s
+                        .SetProperty(p => p.Status, "rejected")
+                        .SetProperty(p => p.ReviewedBy, (uint?)userId)
+                        .SetProperty(p => p.ReviewedAt, (DateTime?)now)
+                        .SetProperty(p => p.RejectReason, cleanReason));
+
+                if (claimed == 0)
+                {
+                    await tx.RollbackAsync();
+                    return (false, 409, "รายการนี้ถูกตรวจสอบไปแล้ว");
+                }
+
                 var oldBookingStatus = payment.Booking.Status;
 
                 payment.Status = "rejected";
                 payment.ReviewedBy = userId;
                 payment.ReviewedAt = now;
-                payment.RejectReason = input.Reason.Trim();
+                payment.RejectReason = cleanReason;
 
                 if (payment.Booking.Status == "pending_approval")
                     payment.Booking.Status = "pending_payment";
@@ -479,7 +557,7 @@ namespace StayMate_Kavinvee_0576.Controllers
                     new
                     {
                         Status = "rejected",
-                        Reason = payment.RejectReason,
+                        Reason = cleanReason,
                         ReviewedBy = userId,
                         ReviewedAt = now,
                         BookingStatusFrom = oldBookingStatus,
@@ -489,28 +567,22 @@ namespace StayMate_Kavinvee_0576.Controllers
                 await _db.SaveChangesAsync();
                 await tx.CommitAsync();
 
-                return Json(new
-                {
-                    success = true,
-                    message = "บันทึกการปฏิเสธสลิปเรียบร้อยแล้ว"
-                });
+                return (true, 200, "บันทึกการปฏิเสธสลิปเรียบร้อยแล้ว");
             }
             catch (Exception ex)
             {
                 await tx.RollbackAsync();
-                return StatusCode(500, new { success = false, message = "ไม่สามารถปฏิเสธรายการได้: " + ex.Message });
+                _logger.LogError(ex, "Reject payment {PaymentId} failed", id);
+                return (false, 500, "ไม่สามารถปฏิเสธรายการได้ กรุณาลองใหม่อีกครั้ง");
             }
         }
 
-        // ---------------------------------------------------------------------
-        // Helper: แปลงค่า SlipImagePath ให้เป็น Web Path (/uploads/slips/...) โดยไม่เปิดเผย Physical Path
-        // ---------------------------------------------------------------------
+        // Helper: แปลง SlipImagePath เป็น Web Path (/uploads/slips/...) ไม่เปิดเผย Physical Path
         private static string? NormalizeSlipWebPath(string? rawPath)
         {
             if (string.IsNullOrWhiteSpace(rawPath)) return null;
             var clean = rawPath.Replace("\\", "/").Trim();
 
-            // ตัด Physical Path ออกหากเคยถูกบันทึกติดมา
             var wwwrootIdx = clean.IndexOf("wwwroot/", StringComparison.OrdinalIgnoreCase);
             if (wwwrootIdx >= 0)
                 clean = clean.Substring(wwwrootIdx + 7);
@@ -528,17 +600,93 @@ namespace StayMate_Kavinvee_0576.Controllers
             return string.IsNullOrWhiteSpace(fileName) ? null : $"/uploads/slips/{fileName}";
         }
 
-
         // =====================================================================
         // 3. Transaction History
         // =====================================================================
         public async Task<IActionResult> Transactions(string? keyword, DateTime? from, DateTime? to, string? txnType, int page = 1)
         {
-            var q = FilterTransactions(keyword, from, to, txnType);
+            if (page < 1) page = 1;
 
-            var totals = await q.GroupBy(t => t.TxnType)
-                .Select(g => new { Type = g.Key, Sum = g.Sum(t => t.Amount) })
+            // 1. ดึงรายการจาก FinancialTransactions (income, refund, expense)
+            var ledgerRows = await FilterTransactions(keyword, from, to, txnType == "rejected" ? "__none__" : txnType)
+                .Select(TransactionRowExpr())
                 .ToListAsync();
+
+            // 2. ดึงรายการที่ถูกปฏิเสธ (Payments.Status == "rejected") มารวมด้วย
+            var rejectedRows = new List<TransactionRow>();
+            if (string.IsNullOrWhiteSpace(txnType) || txnType == "rejected")
+            {
+                var existingPaymentIds = ledgerRows
+                    .Where(x => x.PaymentId.HasValue)
+                    .Select(x => x.PaymentId!.Value)
+                    .ToHashSet();
+
+                var pq = _db.Payments.AsNoTracking()
+                    .Where(p => p.Status == "rejected" && !existingPaymentIds.Contains(p.PaymentId));
+
+                if (from.HasValue)
+                {
+                    var fDt = from.Value.Date;
+                    pq = pq.Where(p => (p.ReviewedAt ?? p.PaidAt ?? p.CreatedAt) >= fDt);
+                }
+                if (to.HasValue)
+                {
+                    var eDt = to.Value.Date.AddDays(1);
+                    pq = pq.Where(p => (p.ReviewedAt ?? p.PaidAt ?? p.CreatedAt) < eDt);
+                }
+                if (!string.IsNullOrWhiteSpace(keyword))
+                {
+                    var k = keyword.Trim();
+                    bool isUint = uint.TryParse(k, out uint parsedId);
+                    pq = pq.Where(p => p.Booking.BookingCode.Contains(k)
+                                    || p.Booking.ContactName.Contains(k)
+                                    || (p.RejectReason != null && p.RejectReason.Contains(k))
+                                    || (isUint && (p.PaymentId == parsedId || p.BookingId == parsedId)));
+                }
+
+                var rawRejected = await pq
+                    .Select(p => new
+                    {
+                        p.PaymentId,
+                        p.BookingId,
+                        BookingCode = p.Booking.BookingCode,
+                        p.Amount,
+                        p.Method,
+                        p.RejectReason,
+                        EventAt = p.ReviewedAt ?? p.PaidAt ?? p.CreatedAt,
+                        ReviewedByName = p.ReviewedByNavigation != null ? p.ReviewedByNavigation.FullName : null
+                    })
+                    .ToListAsync();
+
+                rejectedRows = rawRejected.Select(p => new TransactionRow
+                {
+                    TxnId = 0,
+                    TxnDate = DateOnly.FromDateTime(p.EventAt),
+                    CreatedAt = p.EventAt,
+                    TxnType = "rejected",
+                    Category = "Payment Rejected",
+                    Amount = p.Amount,
+                    Description = !string.IsNullOrWhiteSpace(p.RejectReason)
+                        ? $"ปฏิเสธสลิป ({p.BookingCode}): {p.RejectReason}"
+                        : $"Payment rejected for booking {p.BookingCode}",
+                    PaymentId = p.PaymentId,
+                    PaymentStatus = "rejected",
+                    Method = p.Method,
+                    BookingId = p.BookingId,
+                    BookingCode = p.BookingCode,
+                    RecordedByName = p.ReviewedByName ?? "Finance"
+                }).ToList();
+            }
+
+            // 3. รวมรายการทั้งหมดและเรียงตามวันที่/เวลาล่าสุด
+            var allRows = ledgerRows
+                .Concat(rejectedRows)
+                .OrderByDescending(x => x.TxnDate)
+                .ThenByDescending(x => x.CreatedAt)
+                .ToList();
+
+            ViewBag.TotalRejectedCount = allRows.Count(x => x.TxnType == "rejected");
+            ViewBag.TotalRejectedAmount = allRows.Where(x => x.TxnType == "rejected").Sum(x => x.Amount);
 
             var vm = new TransactionsViewModel
             {
@@ -546,23 +694,23 @@ namespace StayMate_Kavinvee_0576.Controllers
                 From = from,
                 To = to,
                 TxnType = txnType,
-                TotalIncome = totals.FirstOrDefault(x => x.Type == "income")?.Sum ?? 0,
-                TotalRefund = totals.FirstOrDefault(x => x.Type == "refund")?.Sum ?? 0,
-                TotalExpense = totals.FirstOrDefault(x => x.Type == "expense")?.Sum ?? 0
+                TotalIncome = allRows.Where(x => x.TxnType == "income").Sum(x => x.Amount),
+                TotalRefund = allRows.Where(x => x.TxnType == "refund").Sum(x => x.Amount),
+                TotalExpense = allRows.Where(x => x.TxnType == "expense").Sum(x => x.Amount),
+                Transactions = new PagedList<TransactionRow>
+                {
+                    Items = allRows.Skip((page - 1) * PageSize).Take(PageSize).ToList(),
+                    Page = page,
+                    PageSize = PageSize,
+                    TotalCount = allRows.Count
+                }
             };
-
-            var rows = q.OrderByDescending(t => t.TxnDate).ThenByDescending(t => t.CreatedAt)
-                .Select(TransactionRowExpr());
-            vm.Transactions = await ToPagedAsync(rows, page);
 
             return View(vm);
         }
 
         // =====================================================================
         // 4. Receipt Management
-        // =====================================================================
-                // =====================================================================
-        // 4. Receipt Management (อัปเดตส่ง Summary ViewBag + เพิ่ม JSON Endpoints)
         // =====================================================================
         public async Task<IActionResult> Receipts(string? keyword, DateTime? from, DateTime? to, int page = 1)
         {
@@ -594,18 +742,15 @@ namespace StayMate_Kavinvee_0576.Controllers
                 IssuedByName = r.IssuedByNavigation != null ? r.IssuedByNavigation.FullName : null
             });
 
-            // คำนวณข้อมูลจริงสำหรับ Summary Cards ทั้ง 4 ใบ
             var allReceiptsCount = await _db.Receipts.AsNoTracking().CountAsync();
             var allReceiptsSum = await _db.Receipts.AsNoTracking().SumAsync(r => (decimal?)r.Amount) ?? 0m;
 
-            // ตรวจสอบใบเสร็จที่เคยถูกยกเลิกใน AuditLogs (CANCEL_RECEIPT)
             var cancelledIds = await _db.AuditLogs.AsNoTracking()
                 .Where(a => a.Action == "CANCEL_RECEIPT" && a.TableName == "receipts")
                 .Select(a => a.RecordId)
                 .Distinct()
                 .ToListAsync();
 
-            // รายการชำระเงินที่ Approved แล้วแต่ยังไม่มีใบเสร็จ (Pending Receipts สำหรับปุ่ม Create Receipt)
             var unissuedPayments = await _db.Payments.AsNoTracking()
                 .Where(p => p.Status == "approved" && !_db.Receipts.Any(r => r.PaymentId == p.PaymentId))
                 .Select(p => new
@@ -632,7 +777,6 @@ namespace StayMate_Kavinvee_0576.Controllers
             ViewBag.CancelledReceiptIds = cancelledIds;
             ViewBag.UnissuedPaymentsJson = JsonSerializer.Serialize(unissuedPayments);
 
-            // ดึงค่าภาษีและยอดก่อนภาษีของใบเสร็จในหน้าปัจจุบันเพื่อแสดงในตารางอย่างแม่นยำ
             var pagedReceipts = await ToPagedAsync(rows, page);
             var bookingIdsOnPage = pagedReceipts.Items.Select(x => x.BookingId).Distinct().ToList();
             var bookingTaxMap = await _db.Bookings.AsNoTracking()
@@ -651,9 +795,24 @@ namespace StayMate_Kavinvee_0576.Controllers
             });
         }
 
-        // ---------------------------------------------------------------------
-        // [เพิ่มใน FinanceController] JSON API: ดึงข้อมูลใบเสร็จเต็มรูปแบบสำหรับ Preview & Print Modal
-        // ---------------------------------------------------------------------
+        // [เพิ่ม] หน้ารายละเอียดใบเสร็จ (finance.js ลิงก์ไป /Finance/ReceiptDetail/{id})
+        [HttpGet]
+        public async Task<IActionResult> ReceiptDetail(uint id)
+        {
+            var vm = await BuildReceiptDetailAsync(id);
+            if (vm == null) return NotFound();
+
+            var cancelAudit = await _db.AuditLogs.AsNoTracking()
+                .Where(a => a.Action == "CANCEL_RECEIPT" && a.TableName == "receipts" && a.RecordId == id.ToString())
+                .OrderByDescending(a => a.CreatedAt)
+                .FirstOrDefaultAsync();
+
+            ViewBag.IsCancelled = cancelAudit != null;
+            ViewBag.CancelNote = cancelAudit?.NewValue;
+            return View(vm);
+        }
+
+        // JSON API: ข้อมูลใบเสร็จเต็มรูปแบบสำหรับ Preview & Print Modal
         [HttpGet]
         public async Task<IActionResult> GetReceiptDetailJson(uint id)
         {
@@ -704,242 +863,145 @@ namespace StayMate_Kavinvee_0576.Controllers
                 }
             });
         }
-      
-// ---------------------------------------------------------------------
-// PDF: Preview / Print / Download ใบเสร็จรับเงิน
-// ---------------------------------------------------------------------
-[HttpGet]
-public async Task<IActionResult> ReceiptPdf(uint id)
-{
-    var vm = await BuildReceiptDetailAsync(id);
 
-    if (vm == null)
-        return NotFound("ไม่พบข้อมูลใบเสร็จรับเงินในระบบ");
-
-    // ตรวจสอบสถานะการยกเลิก
-    var cancelAudit = await _db.AuditLogs.AsNoTracking()
-        .Where(a => a.Action == "CANCEL_RECEIPT"
-                 && a.TableName == "receipts"
-                 && a.RecordId == id.ToString())
-        .OrderByDescending(a => a.CreatedAt)
-        .FirstOrDefaultAsync();
-
-    bool isCancelled = cancelAudit != null;
-
-    var pdfBytes = Document.Create(document =>
-    {
-        document.Page(page =>
+        // PDF: Preview / Print / Download ใบเสร็จรับเงิน
+        [HttpGet]
+        public async Task<IActionResult> ReceiptPdf(uint id)
         {
-            page.Size(PageSizes.A4);
-            page.Margin(40);
-            page.DefaultTextStyle(x => x.FontSize(11));
+            var vm = await BuildReceiptDetailAsync(id);
+            if (vm == null)
+                return NotFound("ไม่พบข้อมูลใบเสร็จรับเงินในระบบ");
 
-            // Header
-            page.Header().Column(header =>
+            var cancelAudit = await _db.AuditLogs.AsNoTracking()
+                .Where(a => a.Action == "CANCEL_RECEIPT" && a.TableName == "receipts" && a.RecordId == id.ToString())
+                .OrderByDescending(a => a.CreatedAt)
+                .FirstOrDefaultAsync();
+
+            bool isCancelled = cancelAudit != null;
+
+            var pdfBytes = Document.Create(document =>
             {
-                header.Item()
-                    .Text("STAYMATE")
-                    .FontSize(26)
-                    .Bold()
-                    .FontColor(Colors.Blue.Darken2);
-
-                header.Item()
-                    .Text("ใบเสร็จรับเงิน / RECEIPT")
-                    .FontSize(18)
-                    .Bold();
-
-                if (isCancelled)
+                document.Page(page =>
                 {
-                    header.Item()
-                        .PaddingTop(5)
-                        .Text("CANCELLED / ยกเลิกแล้ว")
-                        .Bold()
-                        .FontColor(Colors.Red.Medium);
-                }
+                    page.Size(PageSizes.A4);
+                    page.Margin(40);
+                    // [แก้] กำหนดฟอนต์ที่รองรับภาษาไทย (เดิมไม่ได้กำหนด ทำให้ภาษาไทยอาจเป็นกล่อง)
+                    page.DefaultTextStyle(x => x.FontSize(11).FontFamily("Tahoma"));
 
-                header.Item()
-                    .PaddingTop(5)
-                    .LineHorizontal(1)
-                    .LineColor(Colors.Grey.Lighten1);
-            });
-
-            // Content
-            page.Content()
-                .PaddingVertical(15)
-                .Column(col =>
-                {
-                    col.Spacing(8);
-
-                    col.Item().Text($"เลขที่ใบเสร็จ: {vm.ReceiptNo}");
-                    col.Item().Text($"วันที่ออกใบเสร็จ: {vm.IssuedAt:dd/MM/yyyy HH:mm}");
-                    col.Item().Text($"ผู้ออกใบเสร็จ: {vm.IssuedByName ?? "Finance Officer"}");
-
-                    col.Item().PaddingTop(12)
-                        .Text("ข้อมูลลูกค้า")
-                        .Bold()
-                        .FontSize(13);
-
-                    col.Item().Text($"ชื่อ: {vm.ContactName}");
-                    col.Item().Text($"อีเมล: {vm.ContactEmail}");
-                    col.Item().Text($"โทรศัพท์: {vm.ContactPhone}");
-
-                    col.Item().PaddingTop(12)
-                        .Text("ข้อมูลการจอง")
-                        .Bold()
-                        .FontSize(13);
-
-                    col.Item().Text($"Booking Code: {vm.BookingCode}");
-                    col.Item().Text($"วันที่เข้าพัก: {vm.CheckInDate:dd/MM/yyyy}");
-                    col.Item().Text($"วันที่ออก: {vm.CheckOutDate:dd/MM/yyyy}");
-                    col.Item().Text($"จำนวนคืน: {vm.Nights}");
-
-                    col.Item().PaddingTop(12)
-                        .Text("รายละเอียดห้องพัก")
-                        .Bold()
-                        .FontSize(13);
-
-                    col.Item().Table(table =>
+                    page.Header().Column(header =>
                     {
-                        table.ColumnsDefinition(columns =>
+                        header.Item().Text("STAYMATE").FontSize(26).Bold().FontColor(Colors.Blue.Darken2);
+                        header.Item().Text("ใบเสร็จรับเงิน / RECEIPT").FontSize(18).Bold();
+
+                        if (isCancelled)
                         {
-                            columns.RelativeColumn(3);
-                            columns.RelativeColumn(1);
-                            columns.RelativeColumn(1);
-                        });
-
-                        table.Header(header =>
-                        {
-                            ReceiptCell(header.Cell())
-                                .Text("รายการ").Bold();
-
-                            ReceiptCell(header.Cell())
-                                .AlignRight().Text("จำนวน").Bold();
-
-                            ReceiptCell(header.Cell())
-                                .AlignRight().Text("ราคา (บาท)").Bold();
-                        });
-
-                        foreach (var room in vm.Rooms)
-                        {
-                            ReceiptCell(table.Cell())
-                                .Text(room.RoomTypeName);
-
-                            ReceiptCell(table.Cell())
-                                .AlignRight()
-                                .Text($"{room.Nights} คืน");
-
-                            ReceiptCell(table.Cell())
-                                .AlignRight()
-                                .Text(room.LineTotal.ToString("N2"));
+                            header.Item().PaddingTop(5)
+                                .Text("CANCELLED / ยกเลิกแล้ว").Bold().FontColor(Colors.Red.Medium);
                         }
+
+                        header.Item().PaddingTop(5).LineHorizontal(1).LineColor(Colors.Grey.Lighten1);
                     });
 
-                    col.Item().PaddingTop(15)
-                        .Text("สรุปยอดชำระ")
-                        .Bold()
-                        .FontSize(13);
-
-                    ReceiptSummary(col, "ค่าห้องพัก", vm.RoomAmount);
-
-                    ReceiptSummary(col, "ส่วนลด", -vm.DiscountAmount);
-
-                    ReceiptSummary(col, "ยอดก่อนภาษี",
-                        Math.Max(0m, vm.Amount - vm.TaxAmount));
-
-                    ReceiptSummary(col, "ภาษี", vm.TaxAmount);
-
-                    col.Item()
-                        .PaddingTop(8)
-                        .BorderTop(1)
-                        .BorderColor(Colors.Grey.Medium)
-                        .PaddingTop(10)
-                        .AlignRight()
-                        .Text($"ยอดชำระจริง: {vm.Amount:N2} บาท")
-                        .FontSize(18)
-                        .Bold();
-
-                    col.Item().PaddingTop(12)
-                        .Text($"วิธีชำระเงิน: {vm.Method}");
-
-                    col.Item()
-                        .Text($"วันที่ชำระ: {vm.PaidAt?.ToString("dd/MM/yyyy HH:mm") ?? "-"}");
-
-                    // โปรโมชั่น
-                    if (vm.Promotions != null && vm.Promotions.Any())
+                    page.Content().PaddingVertical(15).Column(col =>
                     {
-                        col.Item().PaddingTop(12)
-                            .Text("โปรโมชั่นที่ได้รับ")
-                            .Bold()
-                            .FontSize(13);
+                        col.Spacing(8);
 
-                        foreach (var promo in vm.Promotions)
+                        col.Item().Text($"เลขที่ใบเสร็จ: {vm.ReceiptNo}");
+                        col.Item().Text($"วันที่ออกใบเสร็จ: {vm.IssuedAt:dd/MM/yyyy HH:mm}");
+                        col.Item().Text($"ผู้ออกใบเสร็จ: {vm.IssuedByName ?? "Finance Officer"}");
+
+                        col.Item().PaddingTop(12).Text("ข้อมูลลูกค้า").Bold().FontSize(13);
+                        col.Item().Text($"ชื่อ: {vm.ContactName}");
+                        col.Item().Text($"อีเมล: {vm.ContactEmail}");
+                        col.Item().Text($"โทรศัพท์: {vm.ContactPhone}");
+
+                        col.Item().PaddingTop(12).Text("ข้อมูลการจอง").Bold().FontSize(13);
+                        col.Item().Text($"Booking Code: {vm.BookingCode}");
+                        col.Item().Text($"วันที่เข้าพัก: {vm.CheckInDate:dd/MM/yyyy}");
+                        col.Item().Text($"วันที่ออก: {vm.CheckOutDate:dd/MM/yyyy}");
+                        col.Item().Text($"จำนวนคืน: {vm.Nights}");
+
+                        col.Item().PaddingTop(12).Text("รายละเอียดห้องพัก").Bold().FontSize(13);
+
+                        col.Item().Table(table =>
                         {
-                            col.Item().Text(
-                                $"{promo.PromoCode} - {promo.PromoName} " +
-                                $"({promo.AppliedAmount:N2} บาท)");
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.RelativeColumn(3);
+                                columns.RelativeColumn(1);
+                                columns.RelativeColumn(1);
+                            });
+
+                            table.Header(header =>
+                            {
+                                ReceiptCell(header.Cell()).Text("รายการ").Bold();
+                                ReceiptCell(header.Cell()).AlignRight().Text("จำนวน").Bold();
+                                ReceiptCell(header.Cell()).AlignRight().Text("ราคา (บาท)").Bold();
+                            });
+
+                            foreach (var room in vm.Rooms)
+                            {
+                                ReceiptCell(table.Cell()).Text(room.RoomTypeName);
+                                ReceiptCell(table.Cell()).AlignRight().Text($"{room.Nights} คืน");
+                                ReceiptCell(table.Cell()).AlignRight().Text(room.LineTotal.ToString("N2"));
+                            }
+                        });
+
+                        col.Item().PaddingTop(15).Text("สรุปยอดชำระ").Bold().FontSize(13);
+
+                        ReceiptSummary(col, "ค่าห้องพัก", vm.RoomAmount);
+                        ReceiptSummary(col, "ส่วนลด", -vm.DiscountAmount);
+                        ReceiptSummary(col, "ยอดก่อนภาษี", Math.Max(0m, vm.Amount - vm.TaxAmount));
+                        ReceiptSummary(col, "ภาษี", vm.TaxAmount);
+
+                        col.Item().PaddingTop(8).BorderTop(1).BorderColor(Colors.Grey.Medium)
+                            .PaddingTop(10).AlignRight()
+                            .Text($"ยอดชำระจริง: {vm.Amount:N2} บาท").FontSize(18).Bold();
+
+                        col.Item().PaddingTop(12).Text($"วิธีชำระเงิน: {vm.Method}");
+                        col.Item().Text($"วันที่ชำระ: {vm.PaidAt?.ToString("dd/MM/yyyy HH:mm") ?? "-"}");
+
+                        if (vm.Promotions != null && vm.Promotions.Any())
+                        {
+                            col.Item().PaddingTop(12).Text("โปรโมชั่นที่ได้รับ").Bold().FontSize(13);
+                            foreach (var promo in vm.Promotions)
+                            {
+                                col.Item().Text($"{promo.PromoCode} - {promo.PromoName} ({promo.AppliedAmount:N2} บาท)");
+                            }
                         }
-                    }
 
-                    // เหตุผลการยกเลิก
-                    if (isCancelled)
-                    {
-                        col.Item()
-                            .PaddingTop(15)
-                            .Text($"เหตุผลการยกเลิก: {cancelAudit?.NewValue ?? "-"}")
-                            .FontColor(Colors.Red.Darken1);
-                    }
+                        if (isCancelled)
+                        {
+                            col.Item().PaddingTop(15)
+                                .Text($"เหตุผลการยกเลิก: {cancelAudit?.NewValue ?? "-"}")
+                                .FontColor(Colors.Red.Darken1);
+                        }
 
-                    col.Item()
-                        .PaddingTop(35)
-                        .AlignCenter()
-                        .Text("ขอบคุณที่ใช้บริการ StayMate")
-                        .Italic();
+                        col.Item().PaddingTop(35).AlignCenter().Text("ขอบคุณที่ใช้บริการ StayMate").Italic();
+                    });
+
+                    page.Footer().AlignCenter()
+                        .Text("StayMate - Official Receipt").FontSize(9).FontColor(Colors.Grey.Darken1);
                 });
+            }).GeneratePdf();
 
-            page.Footer()
-                .AlignCenter()
-                .Text("StayMate - Official Receipt")
-                .FontSize(9)
-                .FontColor(Colors.Grey.Darken1);
-        });
-    }).GeneratePdf();
+            Response.Headers["Content-Disposition"] = $"inline; filename=\"Receipt_{vm.ReceiptNo}.pdf\"";
+            return File(pdfBytes, "application/pdf");
+        }
 
-    // Inline เพื่อให้ Browser เปิด Preview ได้
-    Response.Headers["Content-Disposition"] =
-        $"inline; filename=\"Receipt_{vm.ReceiptNo}.pdf\"";
+        private static IContainer ReceiptCell(IContainer container) =>
+            container.BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(6);
 
-    return File(pdfBytes, "application/pdf");
-}
+        private static void ReceiptSummary(ColumnDescriptor col, string label, decimal amount)
+        {
+            col.Item().Row(row =>
+            {
+                row.RelativeItem().Text(label);
+                row.ConstantItem(130).AlignRight().Text($"{amount:N2} บาท");
+            });
+        }
 
-// ---------------------------------------------------------------------
-// PDF Helpers
-// ---------------------------------------------------------------------
-private static IContainer ReceiptCell(IContainer container)
-{
-    return container
-        .BorderBottom(0.5f)
-        .BorderColor(Colors.Grey.Lighten2)
-        .Padding(6);
-}
-
-private static void ReceiptSummary(
-    ColumnDescriptor col,
-    string label,
-    decimal amount)
-{
-    col.Item().Row(row =>
-    {
-        row.RelativeItem().Text(label);
-
-        row.ConstantItem(130)
-            .AlignRight()
-            .Text($"{amount:N2} บาท");
-    });
-}
-
-        // ---------------------------------------------------------------------
-        // [เพิ่มใน FinanceController] JSON API: ออกใบเสร็จใหม่สำหรับ Payment ที่ Approved แล้วแต่ยังไม่มีใบเสร็จ
-        // ---------------------------------------------------------------------
+        // JSON API: ออกใบเสร็จใหม่สำหรับ Payment ที่ Approved แล้วแต่ยังไม่มีใบเสร็จ
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateReceiptAjax(uint paymentId)
         {
@@ -954,7 +1016,10 @@ private static void ReceiptSummary(
             if (payment.Status != "approved")
                 return BadRequest(new { success = false, message = "สามารถออกใบเสร็จได้เฉพาะรายการชำระเงินที่ได้รับการอนุมัติ (Approved) แล้วเท่านั้น" });
 
-            // ป้องกันการออกใบเสร็จซ้ำสำหรับการชำระเงินเดียวกัน
+            // [เพิ่ม] Separation of Duties เช่นเดียวกับการอนุมัติ
+            if (payment.Booking.UserId == userId)
+                return BadRequest(new { success = false, message = "ไม่สามารถออกใบเสร็จของ Booking ที่ตนเองเป็นผู้จองได้" });
+
             bool alreadyExists = await _db.Receipts.AnyAsync(r => r.PaymentId == paymentId);
             if (alreadyExists)
                 return BadRequest(new { success = false, message = "รายการชำระเงินนี้มีการออกใบเสร็จรับเงินไปแล้ว ไม่สามารถออกซ้ำได้" });
@@ -995,13 +1060,12 @@ private static void ReceiptSummary(
             catch (Exception ex)
             {
                 await tx.RollbackAsync();
-                return StatusCode(500, new { success = false, message = "ไม่สามารถสร้างใบเสร็จได้: " + ex.Message });
+                _logger.LogError(ex, "Create receipt for payment {PaymentId} failed", paymentId);
+                return StatusCode(500, new { success = false, message = "ไม่สามารถสร้างใบเสร็จได้ กรุณาลองใหม่อีกครั้ง" });
             }
         }
 
-        // ---------------------------------------------------------------------
-        // [เพิ่มใน FinanceController] JSON API: ยกเลิกใบเสร็จพร้อมระบุเหตุผล (ไม่ลบออกจากระบบถาวร)
-        // ---------------------------------------------------------------------
+        // JSON API: ยกเลิกใบเสร็จพร้อมระบุเหตุผล (ไม่ลบออกจากระบบถาวร)
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> CancelReceiptAjax(uint receiptId, string reason)
         {
@@ -1032,7 +1096,6 @@ private static void ReceiptSummary(
                 var now = DateTime.Now;
                 var cleanReason = reason.Trim();
 
-                // บันทึกรายการ Refund ใน FinancialTransactions เพื่อหักล้างยอดตามหลักบัญชี โดยไม่ลบใบเสร็จออกจากตาราง Receipts
                 _db.FinancialTransactions.Add(new FinancialTransaction
                 {
                     TxnType = "refund",
@@ -1045,7 +1108,6 @@ private static void ReceiptSummary(
                     CreatedAt = now
                 });
 
-                // บันทึกประวัติผู้ดำเนินการและวันเวลาลงใน AuditLogs
                 AddAudit(userId, "CANCEL_RECEIPT", "receipts", receipt.ReceiptId.ToString(),
                     new { Status = "Issued", receipt.ReceiptNo, receipt.Amount },
                     new { Status = "Cancelled", Reason = cleanReason, CancelledBy = userId, CancelledAt = now.ToString("dd/MM/yyyy HH:mm") });
@@ -1062,7 +1124,8 @@ private static void ReceiptSummary(
             catch (Exception ex)
             {
                 await tx.RollbackAsync();
-                return StatusCode(500, new { success = false, message = "ไม่สามารถยกเลิกใบเสร็จได้: " + ex.Message });
+                _logger.LogError(ex, "Cancel receipt {ReceiptId} failed", receiptId);
+                return StatusCode(500, new { success = false, message = "ไม่สามารถยกเลิกใบเสร็จได้ กรุณาลองใหม่อีกครั้ง" });
             }
         }
 
@@ -1115,9 +1178,12 @@ private static void ReceiptSummary(
             if (!string.IsNullOrWhiteSpace(keyword))
             {
                 var k = keyword.Trim();
+                // [เพิ่ม] ค้นหาด้วย Transaction ID ตาม spec
+                bool isUint = uint.TryParse(k, out uint parsedId);
                 q = q.Where(t => t.Category.Contains(k)
                               || (t.Description != null && t.Description.Contains(k))
-                              || (t.Payment != null && t.Payment.Booking.BookingCode.Contains(k)));
+                              || (t.Payment != null && t.Payment.Booking.BookingCode.Contains(k))
+                              || (isUint && t.TxnId == parsedId));
             }
             return q;
         }
@@ -1134,6 +1200,7 @@ private static void ReceiptSummary(
                 Description = t.Description,
                 PaymentId = t.PaymentId,
                 PaymentStatus = t.Payment != null ? t.Payment.Status : null,
+                Method = t.Payment != null ? t.Payment.Method : null,
                 BookingId = t.Payment != null ? t.Payment.BookingId : (uint?)null,
                 BookingCode = t.Payment != null ? t.Payment.Booking.BookingCode : null,
                 RecordedByName = t.RecordedByNavigation != null ? t.RecordedByNavigation.FullName : null
@@ -1200,7 +1267,6 @@ private static void ReceiptSummary(
             vm.CanReject = vm.BlockReason == null;
             var approveBlock = GetBlockReason(p, userId, forApprove: true, due);
             vm.CanApprove = approveBlock == null;
-            // แสดงเหตุผลของการอนุมัติ (ครอบคลุมกรณียอดไม่ตรง) ถ้ายังไม่ถูกบล็อกจากเหตุผลทั่วไป
             vm.BlockReason ??= approveBlock;
 
             return vm;
@@ -1302,14 +1368,23 @@ private static void ReceiptSummary(
             return null;
         }
 
-        // เลขที่ใบเสร็จ: RC + yyyyMMdd + ลำดับ 4 หลักของวัน  เช่น RC202611190001
+        // เลขที่ใบเสร็จ: RC + yyyyMMdd + ลำดับ 4 หลักของวัน เช่น RC202611190001
+        // [แก้] ใช้เลขล่าสุด + 1 แทนการนับจำนวน (ทนต่อกรณีมีการลบ/ข้ามเลขมากกว่า)
+        // unique index uq_receipt_no จะกันซ้ำกรณีออกพร้อมกัน (transaction จะ rollback)
         private async Task<string> GenerateReceiptNoAsync(DateTime now)
         {
-            var start = now.Date;
-            var end = start.AddDays(1);
-            var count = await _db.Receipts.CountAsync(r => r.IssuedAt >= start && r.IssuedAt < end);
-            // ถ้ามีการออกพร้อมกัน unique index uq_receipt_no จะกันซ้ำ (transaction จะ rollback)
-            return $"RC{now:yyyyMMdd}{count + 1:D4}";
+            var prefix = $"RC{now:yyyyMMdd}";
+            var last = await _db.Receipts
+                .Where(r => r.ReceiptNo.StartsWith(prefix))
+                .OrderByDescending(r => r.ReceiptNo)
+                .Select(r => r.ReceiptNo)
+                .FirstOrDefaultAsync();
+
+            var next = 1;
+            if (last != null && int.TryParse(last.Substring(prefix.Length), out var n))
+                next = n + 1;
+
+            return $"{prefix}{next:D4}";
         }
 
         private uint? CurrentUserId()
@@ -1348,6 +1423,18 @@ private static void ReceiptSummary(
             };
         }
 
+        private static WeeklyIncomeRow BuildWeekly(DateOnly weekStart, IEnumerable<(string Type, decimal Amount)> rows)
+        {
+            var list = rows.ToList();
+            return new WeeklyIncomeRow
+            {
+                WeekStart = weekStart,
+                Income = list.Where(x => x.Type == "income").Sum(x => x.Amount),
+                Refund = list.Where(x => x.Type == "refund").Sum(x => x.Amount),
+                Expense = list.Where(x => x.Type == "expense").Sum(x => x.Amount)
+            };
+        }
+
         private static MonthlyIncomeRow BuildMonthly(int year, int month, IEnumerable<(string Type, decimal Amount)> rows)
         {
             var list = rows.ToList();
@@ -1360,6 +1447,18 @@ private static void ReceiptSummary(
                 Expense = list.Where(x => x.Type == "expense").Sum(x => x.Amount)
             };
         }
+
+        private static List<BreakdownItem> BuildBreakdown(IEnumerable<(string Category, decimal Amount)> rows) =>
+            rows.GroupBy(x => string.IsNullOrWhiteSpace(x.Category) ? "อื่นๆ" : x.Category)
+                .Select(g => new { Label = g.Key, Amount = g.Sum(x => x.Amount) })
+                .OrderByDescending(x => x.Amount)
+                .Select((x, i) => new BreakdownItem
+                {
+                    Label = x.Label,
+                    Amount = x.Amount,
+                    Color = ChartPalette[i % ChartPalette.Length]
+                })
+                .ToList();
 
         private async Task<ReportsViewModel> BuildReportAsync(DateTime? from, DateTime? to)
         {
@@ -1375,11 +1474,10 @@ private static void ReceiptSummary(
 
             var vm = new ReportsViewModel { From = f, To = t };
 
-            // ธุรกรรมทั้งหมดในช่วงวันที่
             var txnQuery = _db.FinancialTransactions.AsNoTracking()
                 .Where(x => x.TxnDate >= fromD && x.TxnDate <= toD);
 
-            var raw = await txnQuery.Select(x => new { x.TxnDate, x.TxnType, x.Amount }).ToListAsync();
+            var raw = await txnQuery.Select(x => new { x.TxnDate, x.TxnType, x.Amount, x.Category }).ToListAsync();
 
             vm.TotalIncome = raw.Where(x => x.TxnType == "income").Sum(x => x.Amount);
             vm.TotalRefund = raw.Where(x => x.TxnType == "refund").Sum(x => x.Amount);
@@ -1389,13 +1487,21 @@ private static void ReceiptSummary(
             vm.Daily = raw.GroupBy(x => x.TxnDate).OrderBy(g => g.Key)
                 .Select(g => BuildDaily(g.Key, g.Select(x => (x.TxnType, x.Amount)))).ToList();
 
+            // [เพิ่ม] รายสัปดาห์ (เริ่มวันจันทร์)
+            vm.Weekly = raw.GroupBy(x => x.TxnDate.AddDays(-(((int)x.TxnDate.DayOfWeek + 6) % 7)))
+                .OrderBy(g => g.Key)
+                .Select(g => BuildWeekly(g.Key, g.Select(x => (x.TxnType, x.Amount)))).ToList();
+
             // รายเดือน
             vm.Monthly = raw.GroupBy(x => new { x.TxnDate.Year, x.TxnDate.Month })
                 .OrderBy(g => g.Key.Year).ThenBy(g => g.Key.Month)
                 .Select(g => BuildMonthly(g.Key.Year, g.Key.Month, g.Select(x => (x.TxnType, x.Amount)))).ToList();
 
+            // [เพิ่ม] สัดส่วนรายรับ / รายจ่ายตามหมวด (Donut)
+            vm.RevenueBreakdown = BuildBreakdown(raw.Where(x => x.TxnType == "income").Select(x => (x.Category, x.Amount)));
+            vm.ExpenseBreakdown = BuildBreakdown(raw.Where(x => x.TxnType == "expense").Select(x => (x.Category, x.Amount)));
+
             // รายรับตามประเภทห้อง (booking ที่มี payment approved ในช่วงวันที่)
-            // หมายเหตุ: ใช้ line_total เป็นรายได้ของห้อง (ถ้า line_total ยังไม่รวมเตียงเสริม ให้บวก ExtraBedAmount เพิ่ม)
             vm.RoomTypes = await _db.BookingRooms.AsNoTracking()
                 .Where(br => br.Booking.Payments.Any(p => p.Status == "approved"
                                                            && p.ReviewedAt >= fromDt && p.ReviewedAt < toDt))
@@ -1452,6 +1558,7 @@ private static void ReceiptSummary(
                 new object[] { "Total Refund", vm.TotalRefund },
                 new object[] { "Net Income", vm.NetIncome },
                 new object[] { "Total Expense", vm.TotalExpense },
+                new object[] { "Net Profit", vm.NetProfit },
                 new object[] { "Promotion Discount", vm.TotalDiscount }
             });
 
@@ -1539,6 +1646,7 @@ private static void ReceiptSummary(
                         new[] { "คืนเงิน", Money(vm.TotalRefund) },
                         new[] { "รายรับสุทธิ", Money(vm.NetIncome) },
                         new[] { "รายจ่าย", Money(vm.TotalExpense) },
+                        new[] { "ผลประกอบการสุทธิ", Money(vm.NetProfit) },
                         new[] { "ส่วนลดจากโปรโมชั่น", Money(vm.TotalDiscount) }
                     });
 
@@ -1587,167 +1695,121 @@ private static void ReceiptSummary(
             });
         }
 
-// ==========================================
-// 7. PROFILE (โปรไฟล์ของเจ้าหน้าที่การเงิน)
-// ==========================================
-
-[HttpGet]
-public async Task<IActionResult> Profile()
-{
-    var model = await LoadProfileAsync();
-
-    if (model == null)
-    {
-        return RedirectToAction("Login", "Account");
-    }
-
-    return View(model);
-}
-
-[HttpPost]
-[ValidateAntiForgeryToken]
-public async Task<IActionResult> UpdateProfile(string? fullName, string? phone)
-{
-    var userId = GetCurrentUserId();
-
-    if (userId == null)
-        return RedirectToAction("Login", "Account");
-
-    if (string.IsNullOrWhiteSpace(fullName))
-    {
-        TempData["ErrorMessage"] = "กรุณากรอกชื่อ-นามสกุล";
-        return RedirectToAction(nameof(Profile));
-    }
-
-    var user = await _db.Users
-        .FirstOrDefaultAsync(u => u.UserId == userId.Value);
-
-    if (user == null)
-        return RedirectToAction("Login", "Account");
-
-    user.FullName = fullName.Trim();
-    user.Phone = string.IsNullOrWhiteSpace(phone) ? null : phone.Trim();
-    user.UpdatedAt = DateTime.Now;
-
-    await _db.SaveChangesAsync();
-
-    TempData["SuccessMessage"] = "บันทึกข้อมูลโปรไฟล์เรียบร้อยแล้ว";
-
-    return RedirectToAction(nameof(Profile));
-}
-
-// ==========================================
-// GET CURRENT USER ID
-// ==========================================
-
-private uint? GetCurrentUserId()
-{
-    var value = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-    return uint.TryParse(value, out var id) ? id : null;
-}
-
-// ==========================================
-// LOAD FINANCE PROFILE
-// ==========================================
-
-private async Task<FinanceProfileViewModel?> LoadProfileAsync()
-{
-    var userId = GetCurrentUserId();
-
-    if (userId == null)
-        return null;
-
-    return await _db.Users
-        .AsNoTracking()
-        .Where(u => u.UserId == userId.Value)
-        .Select(u => new FinanceProfileViewModel
+        // ==========================================
+        // 7. PROFILE (โปรไฟล์ของเจ้าหน้าที่การเงิน)
+        // ==========================================
+        [HttpGet]
+        public async Task<IActionResult> Profile()
         {
-            UserId = u.UserId,
-            Username = u.Username,
-            FullName = u.FullName,
-            Email = u.Email,
-            Phone = u.Phone,
-            IsActive = u.IsActive ?? false,
-            CreatedAt = u.CreatedAt,
-            RoleName = u.UserRoles
-                .Select(ur => ur.Role.RoleName)
-                .FirstOrDefault() ?? ""
-        })
-        .FirstOrDefaultAsync();
-}
+            var model = await LoadProfileAsync();
+            if (model == null)
+                return RedirectToAction("Login", "Account");
 
-// ==========================================
-// CHANGE PASSWORD
-// ==========================================
-
-[HttpPost]
-[ValidateAntiForgeryToken]
-public async Task<IActionResult> ChangePassword(
-    string? oldPassword,
-    string? newPassword,
-    string? confirmPassword)
-{
-    var userId = GetCurrentUserId();
-
-    if (userId == null)
-        return RedirectToAction("Login", "Account");
-
-    string? error = null;
-
-    if (string.IsNullOrWhiteSpace(oldPassword) ||
-        string.IsNullOrWhiteSpace(newPassword) ||
-        string.IsNullOrWhiteSpace(confirmPassword))
-    {
-        error = "กรุณากรอกรหัสผ่านให้ครบถ้วนทุกช่อง";
-    }
-    else if (newPassword.Length < 6)
-    {
-        error = "รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร";
-    }
-    else if (newPassword != confirmPassword)
-    {
-        error = "รหัสผ่านใหม่และการยืนยันรหัสผ่านไม่ตรงกัน";
-    }
-
-    var user = await _db.Users
-        .FirstOrDefaultAsync(u => u.UserId == userId.Value);
-
-    if (user == null)
-        return RedirectToAction("Login", "Account");
-
-    var hasher = new PasswordHasher<User>();
-
-    if (error == null)
-    {
-        var verify = hasher.VerifyHashedPassword(
-            user,
-            user.PasswordHash,
-            oldPassword!);
-
-        if (verify == PasswordVerificationResult.Failed)
-        {
-            error = "รหัสผ่านเดิมไม่ถูกต้อง";
+            return View(model);
         }
-    }
 
-    if (error != null)
-    {
-        TempData["ErrorMessage"] = error;
-        TempData["OpenPasswordModal"] = true;
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateProfile(string? fullName, string? phone)
+        {
+            var userId = CurrentUserId();
+            if (userId == null)
+                return RedirectToAction("Login", "Account");
 
-        return RedirectToAction(nameof(Profile));
-    }
+            if (string.IsNullOrWhiteSpace(fullName))
+            {
+                TempData["ErrorMessage"] = "กรุณากรอกชื่อ-นามสกุล";
+                return RedirectToAction(nameof(Profile));
+            }
 
-    user.PasswordHash = hasher.HashPassword(user, newPassword!);
-    user.UpdatedAt = DateTime.Now;
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.UserId == userId.Value);
+            if (user == null)
+                return RedirectToAction("Login", "Account");
 
-    await _db.SaveChangesAsync();
+            user.FullName = fullName.Trim();
+            user.Phone = string.IsNullOrWhiteSpace(phone) ? null : phone.Trim();
+            user.UpdatedAt = DateTime.Now;
 
-    TempData["SuccessMessage"] = "เปลี่ยนรหัสผ่านเรียบร้อยแล้ว";
+            await _db.SaveChangesAsync();
 
-    return RedirectToAction(nameof(Profile));
-}
+            TempData["SuccessMessage"] = "บันทึกข้อมูลโปรไฟล์เรียบร้อยแล้ว";
+            return RedirectToAction(nameof(Profile));
+        }
+
+        private async Task<FinanceProfileViewModel?> LoadProfileAsync()
+        {
+            var userId = CurrentUserId();
+            if (userId == null)
+                return null;
+
+            return await _db.Users
+                .AsNoTracking()
+                .Where(u => u.UserId == userId.Value)
+                .Select(u => new FinanceProfileViewModel
+                {
+                    UserId = u.UserId,
+                    Username = u.Username,
+                    FullName = u.FullName,
+                    Email = u.Email,
+                    Phone = u.Phone,
+                    IsActive = u.IsActive ?? false,
+                    CreatedAt = u.CreatedAt,
+                    RoleName = u.UserRoles.Select(ur => ur.Role.RoleName).FirstOrDefault() ?? ""
+                })
+                .FirstOrDefaultAsync();
+        }
+
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(string? oldPassword, string? newPassword, string? confirmPassword)
+        {
+            var userId = CurrentUserId();
+            if (userId == null)
+                return RedirectToAction("Login", "Account");
+
+            string? error = null;
+
+            if (string.IsNullOrWhiteSpace(oldPassword) ||
+                string.IsNullOrWhiteSpace(newPassword) ||
+                string.IsNullOrWhiteSpace(confirmPassword))
+            {
+                error = "กรุณากรอกรหัสผ่านให้ครบถ้วนทุกช่อง";
+            }
+            else if (newPassword.Length < 6)
+            {
+                error = "รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร";
+            }
+            else if (newPassword != confirmPassword)
+            {
+                error = "รหัสผ่านใหม่และการยืนยันรหัสผ่านไม่ตรงกัน";
+            }
+
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.UserId == userId.Value);
+            if (user == null)
+                return RedirectToAction("Login", "Account");
+
+            var hasher = new PasswordHasher<User>();
+
+            if (error == null)
+            {
+                var verify = hasher.VerifyHashedPassword(user, user.PasswordHash, oldPassword!);
+                if (verify == PasswordVerificationResult.Failed)
+                    error = "รหัสผ่านเดิมไม่ถูกต้อง";
+            }
+
+            if (error != null)
+            {
+                TempData["ErrorMessage"] = error;
+                TempData["OpenPasswordModal"] = true;
+                return RedirectToAction(nameof(Profile));
+            }
+
+            user.PasswordHash = hasher.HashPassword(user, newPassword!);
+            user.UpdatedAt = DateTime.Now;
+
+            await _db.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "เปลี่ยนรหัสผ่านเรียบร้อยแล้ว";
+            return RedirectToAction(nameof(Profile));
+        }
 
         private static string Money(decimal v) => v.ToString("N2");
     }

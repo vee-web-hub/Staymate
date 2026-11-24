@@ -2,7 +2,7 @@
 
 @{
     Layout = "~/Views/Shared/_FinanceLayout.cshtml";
-    ViewData["Title"] = "อนุมัติสลิปโอนเงิน (Payment Slip Approval)";
+    ViewData["Title"] = "Payment Approval";
 
     int pendingCount = ViewBag.SummaryPending ?? 0;
     int approvedCount = ViewBag.SummaryApproved ?? 0;
@@ -21,38 +21,27 @@
      data-initial-status="@(Model.Status ?? "pending")"
      data-initial-keyword="@(Model.Keyword ?? "")">
 
-    <!-- Anti-Forgery Token สำหรับการส่ง POST Approve / Reject -->
     <form id="paymentApprovalCsrfForm" class="d-none">
         @Html.AntiForgeryToken()
     </form>
 
     <!-- ================================================================= -->
-    <!-- 1. Header Section                                                 -->
+    <!-- 1. Header                                                         -->
     <!-- ================================================================= -->
     <section class="fin-welcome-banner payment-approval-header mb-4">
         <div class="fin-welcome-glow"></div>
         <div class="row align-items-center position-relative z-1 g-3">
-            <div class="col-lg-8">
-                <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
-                    <span class="fin-chip-cyber">
-                        <i class="fa-solid fa-shield-halved"></i> FINANCIAL AUDIT &amp; SLIP VERIFICATION
-                    </span>
-                    <span class="fin-date-badge">
-                        <i class="fa-solid fa-scale-balanced me-1"></i> Separation of Duties Enforced
-                    </span>
-                </div>
-                <h1 class="fin-welcome-title mb-1">ระบบอนุมัติสลิปการเงิน (Payment Slip Approval)</h1>
-                <p class="fin-welcome-subtitle mb-0">
-                    ตรวจสอบหลักฐานการโอนเงิน เทียบยอดชำระจริงกับยอดจอง และบันทึกผลการอนุมัติพร้อมออกใบเสร็จอัตโนมัติ
-                </p>
+            <div class="col-lg-7">
+                <span class="fin-chip-cyber mb-2">PAYMENT VERIFICATION</span>
+                <h1 class="fin-welcome-title mb-0">Payment Approval</h1>
             </div>
-            <div class="col-lg-4 text-lg-end">
+            <div class="col-lg-5 text-lg-end">
                 <div class="d-inline-flex flex-wrap gap-2">
                     <button type="button" id="paBtnSwitchHistory" class="btn payment-approval-btn-history">
                         <i class="fa-solid fa-clock-rotate-left me-2"></i>ประวัติการตรวจสอบ
                     </button>
-                    <button type="button" id="paBtnReloadTable" class="btn fin-btn-refresh">
-                        <i class="fa-solid fa-arrows-rotate me-2" id="paReloadIcon"></i>รีเฟรชข้อมูล
+                    <button type="button" id="paBtnReloadTable" class="btn fin-btn-refresh" title="รีเฟรชข้อมูล">
+                        <i class="fa-solid fa-arrows-rotate" id="paReloadIcon"></i>
                     </button>
                 </div>
             </div>
@@ -60,19 +49,19 @@
     </section>
 
     <!-- ================================================================= -->
-    <!-- 2. Dashboard Summary Cards (4 รายการ อัปเดตแบบ Real-time)          -->
+    <!-- 2. Summary Cards (4 ใบหลัก)                                       -->
     <!-- ================================================================= -->
     <section class="row g-3 g-xl-4 mb-4">
-        <!-- Card 1: Pending Approval (สีส้ม) -->
+        <!-- Pending (ส้ม) -->
         <div class="col-12 col-sm-6 col-xl-3">
             <div class="fin-kpi-card kpi-pending payment-approval-summary-card h-100" data-filter-trigger="pending" role="button">
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <div>
-                        <span class="fin-kpi-label">PENDING APPROVAL</span>
-                        <h3 class="fin-kpi-thai-title">รอตรวจสอบสลิป</h3>
+                        <span class="fin-kpi-label">PENDING</span>
+                        <h3 class="fin-kpi-thai-title">รอตรวจสอบ</h3>
                     </div>
                     <div class="fin-kpi-icon-wrap icon-pending">
-                        <i class="fa-solid fa-hourglass-half"></i>
+                        <i class="fa-solid fa-clock"></i>
                     </div>
                 </div>
                 <div class="fin-kpi-amount text-warning-custom">
@@ -80,13 +69,13 @@
                     <small class="fin-kpi-unit">รายการ</small>
                 </div>
                 <div class="fin-kpi-footer mt-3 pt-2">
-                    <span class="fin-kpi-note">เรียงตามคิวส่งก่อน-หลัง (FIFO)</span>
+                    <span class="fin-kpi-note">เรียงตามคิว (FIFO)</span>
                     <span class="fin-kpi-tag tag-orange">Pending</span>
                 </div>
             </div>
         </div>
 
-        <!-- Card 2: Approved (สีเขียว) -->
+        <!-- Approved (เขียว) -->
         <div class="col-12 col-sm-6 col-xl-3">
             <div class="fin-kpi-card kpi-approved payment-approval-summary-card h-100" data-filter-trigger="approved" role="button">
                 <div class="d-flex justify-content-between align-items-start mb-2">
@@ -103,19 +92,19 @@
                     <small class="fin-kpi-unit">รายการ</small>
                 </div>
                 <div class="fin-kpi-footer mt-3 pt-2">
-                    <span class="fin-kpi-note">ยืนยันห้องพัก &amp; ออกใบเสร็จแล้ว</span>
+                    <span class="fin-kpi-note">ออกใบเสร็จแล้ว</span>
                     <span class="fin-kpi-tag tag-green">Approved</span>
                 </div>
             </div>
         </div>
 
-        <!-- Card 3: Rejected (สีแดง) -->
+        <!-- Rejected (แดง) -->
         <div class="col-12 col-sm-6 col-xl-3">
             <div class="fin-kpi-card kpi-rejected payment-approval-summary-card h-100" data-filter-trigger="rejected" role="button">
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <div>
                         <span class="fin-kpi-label">REJECTED</span>
-                        <h3 class="fin-kpi-thai-title">ปฏิเสธสลิป</h3>
+                        <h3 class="fin-kpi-thai-title">ปฏิเสธแล้ว</h3>
                     </div>
                     <div class="fin-kpi-icon-wrap icon-rejected">
                         <i class="fa-solid fa-circle-xmark"></i>
@@ -126,19 +115,19 @@
                     <small class="fin-kpi-unit">รายการ</small>
                 </div>
                 <div class="fin-kpi-footer mt-3 pt-2">
-                    <span class="fin-kpi-note">ส่งคืนสถานะให้ลูกค้าแนบสลิปใหม่</span>
+                    <span class="fin-kpi-note">รอลูกค้าส่งสลิปใหม่</span>
                     <span class="fin-kpi-tag tag-red">Rejected</span>
                 </div>
             </div>
         </div>
 
-        <!-- Card 4: Total Transactions -->
+        <!-- Total -->
         <div class="col-12 col-sm-6 col-xl-3">
             <div class="fin-kpi-card kpi-revenue payment-approval-summary-card h-100" data-filter-trigger="all" role="button">
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <div>
-                        <span class="fin-kpi-label">TOTAL TRANSACTIONS</span>
-                        <h3 class="fin-kpi-thai-title">รายการสลิปทั้งหมด</h3>
+                        <span class="fin-kpi-label">TOTAL</span>
+                        <h3 class="fin-kpi-thai-title">รายการทั้งหมด</h3>
                     </div>
                     <div class="fin-kpi-icon-wrap icon-revenue">
                         <i class="fa-solid fa-layer-group"></i>
@@ -149,30 +138,30 @@
                     <small class="fin-kpi-unit">รายการ</small>
                 </div>
                 <div class="fin-kpi-footer mt-3 pt-2">
-                    <span class="fin-kpi-note">ธุรกรรมการแจ้งชำระเงินทั้งหมด</span>
-                    <span class="fin-kpi-tag tag-blue">All Records</span>
+                    <span class="fin-kpi-note">รายการชำระเงินทั้งหมด</span>
+                    <span class="fin-kpi-tag tag-blue">All</span>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- ================================================================= -->
-    <!-- 3. Search & Filter Bar                                            -->
+    <!-- 3. Filter & Status Tabs                                           -->
     <!-- ================================================================= -->
     <section class="fin-panel-card payment-approval-filter-card mb-4">
         <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-3 pb-3 border-bottom">
             <div class="payment-approval-status-tabs" role="tablist">
                 <button type="button" class="payment-approval-tab active" data-status="pending">
-                    <span class="dot dot-pending"></span> Pending (รอตรวจสอบ)
+                    <span class="dot dot-pending"></span> Pending
                 </button>
                 <button type="button" class="payment-approval-tab" data-status="approved">
-                    <span class="dot dot-approved"></span> Approved (อนุมัติแล้ว)
+                    <span class="dot dot-approved"></span> Approved
                 </button>
                 <button type="button" class="payment-approval-tab" data-status="rejected">
-                    <span class="dot dot-rejected"></span> Rejected (ปฏิเสธ)
+                    <span class="dot dot-rejected"></span> Rejected
                 </button>
                 <button type="button" class="payment-approval-tab" data-status="history">
-                    <i class="fa-solid fa-clock-rotate-left me-1"></i> ประวัติการตรวจสอบแล้ว
+                    ตรวจสอบแล้ว
                 </button>
                 <button type="button" class="payment-approval-tab" data-status="all">
                     ทั้งหมด
@@ -180,7 +169,7 @@
             </div>
 
             <div class="d-flex align-items-center gap-2">
-                <label for="paPageSizeSelect" class="text-muted small text-nowrap mb-0">แสดงต่อหน้า:</label>
+                <label for="paPageSizeSelect" class="text-muted small text-nowrap mb-0">แสดง:</label>
                 <select id="paPageSizeSelect" class="form-select form-select-sm payment-approval-page-size">
                     <option value="10" selected>10 รายการ</option>
                     <option value="20">20 รายการ</option>
@@ -191,45 +180,37 @@
 
         <form id="paFilterForm" class="row g-3 align-items-end">
             <div class="col-12 col-md-6 col-xl-4">
-                <label for="paKeywordInput" class="form-label payment-approval-label">
-                    <i class="fa-solid fa-magnifying-glass me-1 text-primary"></i>ค้นหาข้อมูล
-                </label>
+                <label for="paKeywordInput" class="form-label payment-approval-label">ค้นหา</label>
                 <input type="text"
                        id="paKeywordInput"
                        class="form-control payment-approval-input"
                        value="@Model.Keyword"
-                       placeholder="ชื่อผู้ใช้, อีเมล, Transaction ID (#), Booking Code..." />
+                       placeholder="ชื่อลูกค้า, อีเมล, Payment ID, Booking Code..." />
             </div>
 
             <div class="col-6 col-md-3 col-xl-2">
-                <label for="paFromDateInput" class="form-label payment-approval-label">
-                    <i class="fa-regular fa-calendar me-1 text-primary"></i>ตั้งแต่วันที่ส่งสลิป
-                </label>
+                <label for="paFromDateInput" class="form-label payment-approval-label">ตั้งแต่วันที่</label>
                 <input type="date" id="paFromDateInput" class="form-control payment-approval-input" />
             </div>
 
             <div class="col-6 col-md-3 col-xl-2">
-                <label for="paToDateInput" class="form-label payment-approval-label">
-                    <i class="fa-regular fa-calendar-check me-1 text-primary"></i>ถึงวันที่
-                </label>
+                <label for="paToDateInput" class="form-label payment-approval-label">ถึงวันที่</label>
                 <input type="date" id="paToDateInput" class="form-control payment-approval-input" />
             </div>
 
             <div class="col-12 col-md-6 col-xl-2">
-                <label for="paSortSelect" class="form-label payment-approval-label">
-                    <i class="fa-solid fa-arrow-down-wide-short me-1 text-primary"></i>เรียงลำดับ
-                </label>
+                <label for="paSortSelect" class="form-label payment-approval-label">เรียงลำดับ</label>
                 <select id="paSortSelect" class="form-select payment-approval-input">
-                    <option value="fifo" selected>ตามสถานะ (Pending เก่าสุดก่อน)</option>
-                    <option value="newest">วันที่ส่งสลิป: ล่าสุดก่อน</option>
-                    <option value="oldest">วันที่ส่งสลิป: เก่าสุดก่อน</option>
-                    <option value="reviewed_desc">วันที่ตรวจสอบ: ล่าสุดก่อน</option>
+                    <option value="fifo" selected>ตามคิว (Pending เก่าสุดก่อน)</option>
+                    <option value="newest">วันที่ส่ง: ล่าสุดก่อน</option>
+                    <option value="oldest">วันที่ส่ง: เก่าสุดก่อน</option>
+                    <option value="reviewed_desc">วันที่ตรวจ: ล่าสุดก่อน</option>
                 </select>
             </div>
 
             <div class="col-12 col-md-6 col-xl-2 d-flex gap-2">
                 <button type="submit" class="btn fin-btn-primary-cyber flex-grow-1">
-                    <i class="fa-solid fa-filter me-1"></i> กรองข้อมูล
+                    <i class="fa-solid fa-magnifying-glass me-1"></i> ค้นหา
                 </button>
                 <button type="button" id="paBtnResetFilter" class="btn fin-btn-outline-slate" title="ล้างตัวกรอง">
                     <i class="fa-solid fa-rotate-left"></i>
@@ -239,43 +220,30 @@
     </section>
 
     <!-- ================================================================= -->
-    <!-- 4. Table & States (Loading / Empty / Data Table / Pagination)     -->
+    <!-- 4. Payment Slips Table                                            -->
     <!-- ================================================================= -->
     <section class="fin-panel-card payment-approval-table-card">
-        <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2 mb-3 pb-2 border-bottom">
-            <div>
-                <h2 class="fin-panel-title mb-0" id="paTableHeading">
-                    <i class="fa-solid fa-file-invoice-dollar text-primary me-2"></i>รายการสลิปการเงิน (Payment Slips)
-                </h2>
-                <p class="fin-panel-subtitle mb-0 mt-1" id="paTableSubheading">
-                    คลิกที่รูปสลิปเพื่อขยายดูขนาดใหญ่ หรือกด View Details เพื่อตรวจสอบข้อมูลการจองเทียบกับยอดโอน
-                </p>
-            </div>
-            <div class="text-muted small">
-                พบทั้งหมด <strong class="text-dark" id="paTotalRecordsBadge">@Model.Payments.TotalCount</strong> รายการ
-            </div>
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-3 pb-2 border-bottom">
+            <h2 class="fin-panel-title mb-0" id="paTableHeading">รายการชำระเงิน</h2>
+            <span class="text-muted small">
+                ทั้งหมด <strong class="text-dark" id="paTotalRecordsBadge">@Model.Payments.TotalCount</strong> รายการ
+            </span>
         </div>
 
-        <!-- Loading State -->
+        <!-- Loading -->
         <div id="paLoadingState" class="payment-approval-loading text-center py-5 d-none">
-            <div class="spinner-border text-primary mb-3" role="status">
-                <span class="visually-hidden">กำลังโหลด...</span>
-            </div>
-            <h4 class="h6 fw-semibold text-dark mb-1">กำลังโหลดรายการสลิปการเงิน...</h4>
-            <p class="text-muted small mb-0">กรุณารอสักครู่ ระบบกำลังดึงข้อมูลล่าสุดจากฐานข้อมูล StayMate</p>
+            <div class="spinner-border text-primary mb-2" role="status"></div>
+            <div class="text-muted small">กำลังโหลดข้อมูล...</div>
         </div>
 
-        <!-- Empty State -->
+        <!-- Empty -->
         <div id="paEmptyState" class="fin-empty-state text-center py-5 px-3 d-none">
             <div class="fin-empty-icon-ring mx-auto mb-3">
                 <i class="fa-solid fa-folder-open"></i>
             </div>
-            <h3 class="fin-empty-title">ไม่พบรายการสลิปการเงินตามเงื่อนไขที่เลือก</h3>
-            <p class="fin-empty-desc mx-auto mb-3">
-                ลองเปลี่ยนคำค้นหา ช่วงวันที่ หรือสลับแท็บสถานะเพื่อดูรายการอื่น ๆ ในระบบ
-            </p>
-            <button type="button" id="paEmptyResetBtn" class="btn fin-btn-outline-slate btn-sm">
-                <i class="fa-solid fa-arrows-rotate me-1"></i> แสดงรายการทั้งหมด
+            <h3 class="fin-empty-title">ไม่พบรายการชำระเงิน</h3>
+            <button type="button" id="paEmptyResetBtn" class="btn fin-btn-outline-slate btn-sm mt-2">
+                แสดงรายการทั้งหมด
             </button>
         </div>
 
@@ -284,31 +252,27 @@
             <table class="table fin-table payment-approval-table align-middle mb-0">
                 <thead>
                     <tr>
-                        <th class="text-center" style="width: 60px;">ลำดับ</th>
-                        <th>Transaction ID</th>
-                        <th>Booking ID</th>
-                        <th>ชื่อผู้ใช้ &amp; อีเมล</th>
-                        <th>วันที่ส่งสลิป</th>
+                        <th class="text-center" style="width: 56px;">#</th>
+                        <th>Payment ID</th>
+                        <th>Booking</th>
+                        <th>ลูกค้า</th>
+                        <th>วันที่ส่ง</th>
                         <th class="text-end">จำนวนเงิน</th>
-                        <th class="text-center">รูปภาพสลิป</th>
+                        <th class="text-center">สลิป</th>
                         <th class="text-center">สถานะ</th>
-                        <th>วันที่ตรวจสอบ</th>
-                        <th>ผู้ตรวจสอบ / เหตุผล</th>
-                        <th class="text-end">ปุ่มจัดการ</th>
+                        <th>วันที่ตรวจ</th>
+                        <th>ผู้ตรวจ / หมายเหตุ</th>
+                        <th class="text-end">จัดการ</th>
                     </tr>
                 </thead>
-                <tbody id="paTableBody">
-                    <!-- ข้อมูลจะถูกเรนเดอร์และอัปเดตผ่าน finance.js โดยดึงจาก FinanceController -->
-                </tbody>
+                <tbody id="paTableBody"></tbody>
             </table>
         </div>
 
-        <!-- Pagination Bar -->
+        <!-- Pagination -->
         <div id="paPaginationBar" class="d-flex flex-column flex-md-row align-items-center justify-content-between gap-3 mt-4 pt-3 border-top">
-            <div class="text-muted small" id="paPaginationInfo">
-                แสดงหน้า 1 จาก 1
-            </div>
-            <nav aria-label="Payment Approval Pagination">
+            <div class="text-muted small" id="paPaginationInfo"></div>
+            <nav aria-label="Pagination">
                 <ul class="pagination pagination-sm mb-0 payment-approval-pagination" id="paPaginationControls"></ul>
             </nav>
         </div>
@@ -317,158 +281,138 @@
 </div>
 
 <!-- ===================================================================== -->
-<!-- Modal 1: แสดงรายละเอียดสลิปและเทียบยอด (View Details Modal)            -->
+<!-- Modal 1: รายละเอียดการชำระเงิน (View Details)                         -->
 <!-- ===================================================================== -->
 <div class="modal fade" id="paDetailModal" tabindex="-1" aria-labelledby="paDetailModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content payment-approval-modal">
             <div class="modal-header payment-approval-modal-header">
-                <div class="d-flex align-items-center gap-2">
-                    <span class="fin-chip-cyber">
-                        <i class="fa-solid fa-magnifying-glass-dollar"></i> SLIP VERIFICATION
-                    </span>
-                    <h5 class="modal-title fw-bold text-white mb-0" id="paDetailModalLabel">
-                        รายละเอียดการชำระเงิน #<span id="paModalHeaderTxnId">-</span>
-                    </h5>
-                </div>
+                <h5 class="modal-title fw-bold text-white mb-0" id="paDetailModalLabel">
+                    Payment #<span id="paModalHeaderTxnId">-</span>
+                </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <div class="modal-body p-4">
-                <!-- Loading ภายใน Modal -->
                 <div id="paDetailModalLoading" class="text-center py-5">
                     <div class="spinner-border text-primary mb-2" role="status"></div>
-                    <p class="text-muted small mb-0">กำลังดึงรายละเอียดใบจองและสลิปโอนเงิน...</p>
+                    <div class="text-muted small">กำลังโหลดข้อมูล...</div>
                 </div>
 
-                <!-- เนื้อหาหลักภายใน Modal -->
                 <div id="paDetailModalContent" class="d-none">
-                    <!-- แจ้งเตือนกรณีติดเงื่อนไขห้ามอนุมัติ (เช่น ยอดไม่ตรง หรือเป็นเจ้าของ Booking เอง) -->
                     <div id="paModalBlockAlert" class="alert alert-warning d-flex align-items-center gap-2 mb-4 d-none" role="alert">
                         <i class="fa-solid fa-triangle-exclamation fs-5"></i>
                         <div id="paModalBlockReasonText" class="small fw-medium"></div>
                     </div>
 
                     <div class="row g-4">
-                        <!-- คอลัมน์ซ้าย: ข้อมูล User + ข้อมูลการชำระเงิน + รายการห้องพัก -->
+                        <!-- ซ้าย: ข้อมูลลูกค้า การจอง และเทียบยอด -->
                         <div class="col-12 col-lg-7">
-                            <!-- ข้อมูล User -->
                             <div class="payment-approval-info-box mb-3">
-                                <h6 class="payment-approval-box-title">
-                                    <i class="fa-solid fa-user-check text-primary me-2"></i>ข้อมูลผู้ใช้ (User Information)
-                                </h6>
+                                <h6 class="payment-approval-box-title">ข้อมูลลูกค้า</h6>
                                 <div class="row g-2 small">
                                     <div class="col-sm-6">
-                                        <span class="text-muted d-block">ชื่อผู้ใช้ (Customer Name):</span>
-                                        <strong class="text-dark fs-6" id="paDetUserName">-</strong>
+                                        <span class="text-muted d-block">ชื่อลูกค้า</span>
+                                        <strong class="text-dark" id="paDetUserName">-</strong>
                                     </div>
                                     <div class="col-sm-6">
-                                        <span class="text-muted d-block">User ID:</span>
+                                        <span class="text-muted d-block">User ID</span>
                                         <strong class="text-dark" id="paDetUserId">-</strong>
                                     </div>
                                     <div class="col-sm-6">
-                                        <span class="text-muted d-block">อีเมล (Email):</span>
+                                        <span class="text-muted d-block">อีเมล</span>
                                         <strong class="text-dark" id="paDetUserEmail">-</strong>
                                     </div>
                                     <div class="col-sm-6">
-                                        <span class="text-muted d-block">เบอร์โทรศัพท์:</span>
+                                        <span class="text-muted d-block">เบอร์โทรศัพท์</span>
                                         <strong class="text-dark" id="paDetUserPhone">-</strong>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- ข้อมูลการชำระเงินและเทียบยอด -->
                             <div class="payment-approval-info-box mb-3">
-                                <h6 class="payment-approval-box-title">
-                                    <i class="fa-solid fa-money-check-dollar text-primary me-2"></i>ข้อมูลการชำระเงิน (Payment &amp; Booking Comparison)
-                                </h6>
+                                <h6 class="payment-approval-box-title">ข้อมูลการจองและการชำระเงิน</h6>
                                 <div class="row g-3 small mb-3">
                                     <div class="col-6 col-sm-4">
-                                        <span class="text-muted d-block">Transaction ID:</span>
+                                        <span class="text-muted d-block">Payment ID</span>
                                         <strong class="text-dark" id="paDetTxnId">-</strong>
                                     </div>
                                     <div class="col-6 col-sm-4">
-                                        <span class="text-muted d-block">Booking ID / Code:</span>
+                                        <span class="text-muted d-block">Booking</span>
                                         <strong class="text-electric" id="paDetBookingCode">-</strong>
                                     </div>
                                     <div class="col-6 col-sm-4">
-                                        <span class="text-muted d-block">สถานะปัจจุบัน:</span>
+                                        <span class="text-muted d-block">สถานะ</span>
                                         <span id="paDetStatusBadge"></span>
                                     </div>
                                     <div class="col-6 col-sm-4">
-                                        <span class="text-muted d-block">วันที่ส่งสลิป:</span>
+                                        <span class="text-muted d-block">วันที่ส่งสลิป</span>
                                         <strong class="text-dark" id="paDetSubmittedAt">-</strong>
                                     </div>
                                     <div class="col-6 col-sm-4">
-                                        <span class="text-muted d-block">ช่องทางชำระเงิน:</span>
+                                        <span class="text-muted d-block">ช่องทางชำระเงิน</span>
                                         <strong class="text-dark" id="paDetMethod">-</strong>
                                     </div>
                                     <div class="col-6 col-sm-4">
-                                        <span class="text-muted d-block">วันเข้าพัก - เช็คเอาท์:</span>
+                                        <span class="text-muted d-block">วันเข้าพัก</span>
                                         <strong class="text-dark" id="paDetStayDates">-</strong>
                                     </div>
                                 </div>
 
-                                <!-- กล่องเปรียบเทียบยอดเงิน -->
                                 <div class="payment-approval-amount-compare p-3 rounded-3">
                                     <div class="row g-2 align-items-center text-center text-sm-start">
                                         <div class="col-sm-4">
-                                            <span class="text-muted extra-small d-block">จำนวนเงินที่ต้องชำระ (Amount Due)</span>
+                                            <span class="text-muted extra-small d-block">ยอดที่ต้องชำระ</span>
                                             <span class="fs-5 fw-bold text-dark" id="paDetAmountDue">฿0.00</span>
                                         </div>
                                         <div class="col-sm-4 border-start-sm ps-sm-3">
-                                            <span class="text-muted extra-small d-block">จำนวนเงินที่แจ้งชำระ (Slip Amount)</span>
+                                            <span class="text-muted extra-small d-block">ยอดตามสลิป</span>
                                             <span class="fs-5 fw-bold text-electric" id="paDetAmountPaid">฿0.00</span>
                                         </div>
                                         <div class="col-sm-4 border-start-sm ps-sm-3">
-                                            <span class="text-muted extra-small d-block">ผลการเทียบยอด</span>
+                                            <span class="text-muted extra-small d-block">ผลตรวจสอบยอด</span>
                                             <span id="paDetMatchStatus" class="fw-bold small">-</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- ข้อมูลผู้ตรวจสอบ (แสดงเมื่อตรวจสอบแล้ว) -->
                             <div id="paDetReviewAuditBox" class="payment-approval-info-box d-none">
-                                <h6 class="payment-approval-box-title">
-                                    <i class="fa-solid fa-user-shield text-primary me-2"></i>ข้อมูลการตรวจสอบ (Audit Trail)
-                                </h6>
+                                <h6 class="payment-approval-box-title">ผลการตรวจสอบ</h6>
                                 <div class="row g-2 small">
                                     <div class="col-sm-6">
-                                        <span class="text-muted d-block">ผู้ตรวจสอบ:</span>
+                                        <span class="text-muted d-block">ผู้ตรวจสอบ</span>
                                         <strong class="text-dark" id="paDetReviewedBy">-</strong>
                                     </div>
                                     <div class="col-sm-6">
-                                        <span class="text-muted d-block">วันที่ตรวจสอบ:</span>
+                                        <span class="text-muted d-block">วันที่ตรวจสอบ</span>
                                         <strong class="text-dark" id="paDetReviewedAt">-</strong>
                                     </div>
                                     <div class="col-12" id="paDetRejectReasonRow">
-                                        <span class="text-muted d-block">เหตุผลการปฏิเสธ:</span>
+                                        <span class="text-muted d-block">เหตุผลการปฏิเสธ</span>
                                         <strong class="text-danger" id="paDetRejectReason">-</strong>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- คอลัมน์ขวา: รูปภาพสลิป + ปุ่ม Zoom / Fullscreen -->
+                        <!-- ขวา: รูปสลิป -->
                         <div class="col-12 col-lg-5">
                             <div class="payment-approval-slip-viewer h-100 d-flex flex-column justify-content-between">
                                 <div class="d-flex align-items-center justify-content-between mb-2">
-                                    <span class="fw-semibold small text-dark">
-                                        <i class="fa-regular fa-image text-primary me-1"></i>หลักฐานการโอนเงิน (Slip Image)
-                                    </span>
+                                    <span class="fw-semibold small text-dark">หลักฐานการโอนเงิน</span>
                                     <div class="btn-group btn-group-sm" id="paModalSlipToolbar">
-                                        <button type="button" class="btn btn-outline-secondary" id="paBtnModalZoomIn" title="ขยายรูป">
+                                        <button type="button" class="btn btn-outline-secondary" id="paBtnModalZoomIn" title="ขยาย">
                                             <i class="fa-solid fa-magnifying-glass-plus"></i>
                                         </button>
-                                        <button type="button" class="btn btn-outline-secondary" id="paBtnModalZoomOut" title="ย่อรูป">
+                                        <button type="button" class="btn btn-outline-secondary" id="paBtnModalZoomOut" title="ย่อ">
                                             <i class="fa-solid fa-magnifying-glass-minus"></i>
                                         </button>
                                         <button type="button" class="btn btn-outline-secondary" id="paBtnModalZoomReset" title="ขนาดปกติ">
                                             <i class="fa-solid fa-compress"></i>
                                         </button>
-                                        <button type="button" class="btn btn-outline-primary" id="paBtnModalFullscreen" title="ดูเต็มจอ">
-                                            <i class="fa-solid fa-expand"></i> Fullscreen
+                                        <button type="button" class="btn btn-outline-primary" id="paBtnModalFullscreen" title="เต็มจอ">
+                                            <i class="fa-solid fa-expand"></i>
                                         </button>
                                     </div>
                                 </div>
@@ -478,14 +422,7 @@
                                     <div id="paDetSlipMissing" class="payment-approval-no-slip d-none">
                                         <i class="fa-regular fa-file-excel fs-1 text-muted mb-2"></i>
                                         <p class="fw-semibold text-dark mb-0">ไม่พบรูปภาพสลิป</p>
-                                        <span class="text-muted extra-small">รายการนี้ไม่มีไฟล์แนบหรือไฟล์ไม่พร้อมใช้งาน</span>
                                     </div>
-                                </div>
-
-                                <div class="text-center mt-2">
-                                    <small class="text-muted extra-small">
-                                        คลิกที่รูปภาพเพื่อเปิดโหมดดูรูปขนาดใหญ่ (Lightbox)
-                                    </small>
                                 </div>
                             </div>
                         </div>
@@ -495,15 +432,15 @@
 
             <div class="modal-footer payment-approval-modal-footer justify-content-between">
                 <a href="#" id="paModalFullPageLink" class="btn fin-btn-outline-slate btn-sm">
-                    <i class="fa-solid fa-up-right-from-square me-1"></i>เปิดหน้าตรวจสอบแบบเต็ม
+                    <i class="fa-solid fa-up-right-from-square me-1"></i>เปิดหน้าเต็ม
                 </a>
                 <div class="d-flex gap-2">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิดหน้าต่าง</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
                     <button type="button" id="paModalBtnReject" class="btn payment-approval-btn-reject d-none">
-                        <i class="fa-solid fa-xmark me-1"></i> Reject (ปฏิเสธ)
+                        <i class="fa-solid fa-xmark me-1"></i>Reject
                     </button>
                     <button type="button" id="paModalBtnApprove" class="btn payment-approval-btn-approve d-none">
-                        <i class="fa-solid fa-check me-1"></i> Approve (อนุมัติสลิป)
+                        <i class="fa-solid fa-check me-1"></i>Approve
                     </button>
                 </div>
             </div>
@@ -512,33 +449,29 @@
 </div>
 
 <!-- ===================================================================== -->
-<!-- Modal 2: ดูรูปสลิปขนาดใหญ่ (Zoom & Fullscreen Lightbox Modal)          -->
+<!-- Modal 2: Lightbox ดูรูปสลิปขนาดใหญ่                                   -->
 <!-- ===================================================================== -->
 <div class="modal fade" id="paSlipPreviewModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content payment-approval-lightbox">
             <div class="modal-header border-0 pb-2">
-                <h6 class="modal-title text-white fw-semibold" id="paPreviewModalTitle">
-                    <i class="fa-solid fa-receipt text-cyber me-2"></i>รูปภาพสลิปโอนเงิน
-                </h6>
+                <h6 class="modal-title text-white fw-semibold" id="paPreviewModalTitle">รูปภาพสลิปโอนเงิน</h6>
                 <div class="d-flex align-items-center gap-2">
-                    <button type="button" class="btn btn-sm btn-outline-light" id="paLightboxZoomIn" title="Zoom In">
+                    <button type="button" class="btn btn-sm btn-outline-light" id="paLightboxZoomIn" title="ขยาย">
                         <i class="fa-solid fa-plus"></i>
                     </button>
-                    <button type="button" class="btn btn-sm btn-outline-light" id="paLightboxZoomOut" title="Zoom Out">
+                    <button type="button" class="btn btn-sm btn-outline-light" id="paLightboxZoomOut" title="ย่อ">
                         <i class="fa-solid fa-minus"></i>
                     </button>
-                    <button type="button" class="btn btn-sm btn-outline-light" id="paLightboxZoomReset" title="Reset">
-                        100%
-                    </button>
-                    <button type="button" class="btn btn-sm btn-outline-info" id="paLightboxFullscreen" title="Fullscreen">
+                    <button type="button" class="btn btn-sm btn-outline-light" id="paLightboxZoomReset">100%</button>
+                    <button type="button" class="btn btn-sm btn-outline-info" id="paLightboxFullscreen" title="เต็มจอ">
                         <i class="fa-solid fa-expand"></i>
                     </button>
                     <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
             </div>
             <div class="modal-body text-center p-3 payment-approval-lightbox-body" id="paLightboxContainer">
-                <img id="paLightboxImg" src="" alt="Slip Full Preview" class="payment-approval-lightbox-img" />
+                <img id="paLightboxImg" src="" alt="Slip Preview" class="payment-approval-lightbox-img" />
                 <div id="paLightboxNoImg" class="text-white py-5 d-none">
                     <i class="fa-regular fa-image fs-1 mb-2 d-block"></i>
                     ไม่พบรูปภาพสลิป
@@ -549,14 +482,14 @@
 </div>
 
 <!-- ===================================================================== -->
-<!-- Modal 3: ปฏิเสธสลิปพร้อมระบุเหตุผล (Reject Slip Modal)                  -->
+<!-- Modal 3: ปฏิเสธสลิปพร้อมระบุเหตุผล (Reject)                           -->
 <!-- ===================================================================== -->
 <div class="modal fade" id="paRejectModal" tabindex="-1" aria-labelledby="paRejectModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content payment-approval-modal">
             <div class="modal-header bg-danger text-white">
                 <h5 class="modal-title fw-bold" id="paRejectModalLabel">
-                    <i class="fa-solid fa-circle-xmark me-2"></i>ปฏิเสธสลิปการชำระเงิน (Reject Payment)
+                    <i class="fa-solid fa-circle-xmark me-2"></i>ปฏิเสธสลิปการชำระเงิน
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -566,53 +499,48 @@
 
                     <div class="p-3 rounded-3 bg-light border mb-3 small">
                         <div class="d-flex justify-content-between mb-1">
-                            <span class="text-muted">Transaction ID:</span>
+                            <span class="text-muted">Payment ID:</span>
                             <strong class="text-dark" id="paRejectTxnDisplay">-</strong>
                         </div>
                         <div class="d-flex justify-content-between mb-1">
-                            <span class="text-muted">ผู้จอง / Booking:</span>
+                            <span class="text-muted">ลูกค้า / Booking:</span>
                             <strong class="text-dark" id="paRejectCustomerDisplay">-</strong>
                         </div>
                         <div class="d-flex justify-content-between">
-                            <span class="text-muted">จำนวนเงินที่แจ้งโอน:</span>
+                            <span class="text-muted">จำนวนเงินตามสลิป:</span>
                             <strong class="text-danger" id="paRejectAmountDisplay">-</strong>
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label for="paRejectReasonPreset" class="form-label fw-semibold small text-dark">
-                            เลือกหัวข้อเหตุผลมาตรฐาน <span class="text-danger">*</span>
-                        </label>
+                        <label for="paRejectReasonPreset" class="form-label fw-semibold small text-dark">เหตุผลการปฏิเสธ</label>
                         <select id="paRejectReasonPreset" class="form-select payment-approval-input">
-                            <option value="">-- เลือกเหตุผลการปฏิเสธ --</option>
+                            <option value="">-- เลือกเหตุผล --</option>
                             <option value="จำนวนเงินไม่ถูกต้อง">จำนวนเงินไม่ถูกต้อง</option>
                             <option value="รูปสลิปไม่ชัดเจน">รูปสลิปไม่ชัดเจน</option>
                             <option value="ไม่พบรายการโอนเงิน">ไม่พบรายการโอนเงิน</option>
                             <option value="สลิปไม่ตรงกับ Booking">สลิปไม่ตรงกับ Booking</option>
                             <option value="สลิปซ้ำ">สลิปซ้ำ</option>
                             <option value="หลักฐานการชำระเงินไม่ถูกต้อง">หลักฐานการชำระเงินไม่ถูกต้อง</option>
-                            <option value="OTHER">อื่น ๆ (ระบุรายละเอียดด้านล่าง)</option>
+                            <option value="OTHER">อื่น ๆ (ระบุรายละเอียด)</option>
                         </select>
                     </div>
 
                     <div class="mb-2">
-                        <label for="paRejectReasonText" class="form-label fw-semibold small text-dark">
-                            เหตุผลที่บันทึกในระบบ (สูงสุด 255 ตัวอักษร) <span class="text-danger">*</span>
-                        </label>
                         <textarea id="paRejectReasonText"
                                   name="Reason"
                                   rows="3"
                                   maxlength="255"
                                   required
                                   class="form-control payment-approval-input"
-                                  placeholder="ระบุเหตุผลที่ต้องการแจ้งให้ลูกค้าทราบเพื่ออัปโหลดสลิปใหม่..."></textarea>
-                        <div class="invalid-feedback">กรุณาระบุเหตุผลในการปฏิเสธสลิป</div>
+                                  placeholder="ระบุเหตุผลในการปฏิเสธ..."></textarea>
+                        <div class="invalid-feedback">กรุณาระบุเหตุผลในการปฏิเสธ</div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light border" data-bs-dismiss="modal">ยกเลิก</button>
                     <button type="submit" id="paBtnConfirmRejectSubmit" class="btn btn-danger fw-semibold">
-                        <i class="fa-solid fa-ban me-1"></i> ยืนยันการปฏิเสธสลิป
+                        ยืนยันการปฏิเสธ
                     </button>
                 </div>
             </form>

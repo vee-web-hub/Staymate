@@ -1,12 +1,21 @@
-
 //Models/ViewModels/FinanceViewModel.cs
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 
 namespace StayMate_Kavinvee_0576.Models.ViewModels;
 
 // ---------------------------------------------------------------
 // Shared
 // ---------------------------------------------------------------
+internal static class FinanceJson
+{
+    // camelCase เพื่อให้ตรงกับ finance.js (label, income, net ...)
+    public static readonly JsonSerializerOptions Options = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+}
+
 public class PagedList<T>
 {
     public List<T> Items { get; set; } = new();
@@ -41,6 +50,18 @@ public class BookingPromotionLine
 public class DailyIncomeRow
 {
     public DateOnly Date { get; set; }
+    public string Label => Date.ToString("dd/MM");           // [เพิ่ม] ให้ chart ใน JS ใช้
+    public decimal Income { get; set; }
+    public decimal Refund { get; set; }
+    public decimal Expense { get; set; }
+    public decimal Net => Income - Refund;
+}
+
+// [เพิ่ม] รายสัปดาห์ (ใช้กับกราฟหน้า Reports)
+public class WeeklyIncomeRow
+{
+    public DateOnly WeekStart { get; set; }
+    public string Label => $"{WeekStart:dd/MM}-{WeekStart.AddDays(6):dd/MM}";
     public decimal Income { get; set; }
     public decimal Refund { get; set; }
     public decimal Expense { get; set; }
@@ -58,6 +79,14 @@ public class MonthlyIncomeRow
     public decimal Net => Income - Refund;
 }
 
+// [เพิ่ม] ใช้กับ Donut chart (รายรับ/รายจ่ายตามหมวด)
+public class BreakdownItem
+{
+    public string Label { get; set; } = "";
+    public decimal Amount { get; set; }
+    public string Color { get; set; } = "#64748B";
+}
+
 // ---------------------------------------------------------------
 // 1. Dashboard
 // ---------------------------------------------------------------
@@ -66,6 +95,11 @@ public class FinanceDashboardViewModel
     public decimal TotalIncome { get; set; }      // รายรับสุทธิทั้งหมด (income - refund)
     public decimal TodayIncome { get; set; }
     public decimal MonthIncome { get; set; }
+
+    // [เพิ่ม] spec ระบุให้แสดง "สรุปรายจ่ายทั้งหมด"
+    public decimal TotalExpense { get; set; }
+    public decimal MonthExpense { get; set; }
+    public decimal NetProfit => TotalIncome - TotalExpense;
 
     public int PendingCount { get; set; }
     public decimal PendingAmount { get; set; }
@@ -79,6 +113,18 @@ public class FinanceDashboardViewModel
     public List<DailyIncomeRow> Last7Days { get; set; } = new();
     public List<MonthlyIncomeRow> Last6Months { get; set; } = new();
     public List<PaymentListItem> OldestPending { get; set; } = new();
+
+    /// <summary>[เพิ่ม] JSON สำหรับ &lt;script id="financeDashboardData"&gt; ใน Index.cshtml: @Html.Raw(Model.ChartDataJson)</summary>
+    public string ChartDataJson => JsonSerializer.Serialize(new
+    {
+        last7Days = Last7Days,
+        last6Months = Last6Months,
+        monthIncome = MonthIncome,
+        todayIncome = TodayIncome,
+        totalIncome = TotalIncome,
+        statusCounts = new { pending = PendingCount, approved = ApprovedCount, rejected = RejectedCount },
+        statusAmounts = new { pending = PendingAmount, approved = ApprovedAmount, rejected = RejectedAmount }
+    }, FinanceJson.Options);
 }
 
 // ---------------------------------------------------------------
@@ -175,6 +221,7 @@ public class TransactionRow
     public string? Description { get; set; }
     public uint? PaymentId { get; set; }
     public string? PaymentStatus { get; set; }
+    public string? Method { get; set; }            // [เพิ่ม] ช่องทางชำระเงิน (ใช้ใน Modal/CSV)
     public uint? BookingId { get; set; }
     public string? BookingCode { get; set; }
     public string? RecordedByName { get; set; }
@@ -182,7 +229,7 @@ public class TransactionRow
 
 public class TransactionsViewModel
 {
-    public string? Keyword { get; set; }           // Booking code / category / description
+    public string? Keyword { get; set; }           // Transaction ID / Booking code / category / description
     public DateTime? From { get; set; }
     public DateTime? To { get; set; }
     public string? TxnType { get; set; }           // income / expense / refund / null = all
@@ -279,11 +326,33 @@ public class ReportsViewModel
     public decimal TotalRefund { get; set; }
     public decimal TotalExpense { get; set; }
     public decimal NetIncome => TotalIncome - TotalRefund;
+    public decimal NetProfit => NetIncome - TotalExpense;   // [เพิ่ม] ผลประกอบการ
     public decimal TotalDiscount { get; set; }
 
     public List<DailyIncomeRow> Daily { get; set; } = new();
+    public List<WeeklyIncomeRow> Weekly { get; set; } = new();          // [เพิ่ม]
     public List<MonthlyIncomeRow> Monthly { get; set; } = new();
+    public List<BreakdownItem> RevenueBreakdown { get; set; } = new();  // [เพิ่ม]
+    public List<BreakdownItem> ExpenseBreakdown { get; set; } = new();  // [เพิ่ม]
     public List<RoomTypeRevenueRow> RoomTypes { get; set; } = new();
     public List<PromotionDiscountRow> Promotions { get; set; } = new();
     public List<TransactionRow> Transactions { get; set; } = new();
+
+    /// <summary>[เพิ่ม] JSON สำหรับ &lt;script id="frepChartDataJson"&gt; ใน Reports.cshtml: @Html.Raw(Model.ChartDataJson)</summary>
+    public string ChartDataJson => JsonSerializer.Serialize(new
+    {
+        daily = Daily.Select(d => new { label = d.Label, income = d.Net, expense = d.Expense }),
+        weekly = Weekly.Select(w => new { label = w.Label, income = w.Net, expense = w.Expense }),
+        monthly = Monthly.Select(m => new { label = m.Label, income = m.Net, expense = m.Expense }),
+        revenueBreakdown = RevenueBreakdown,
+        expenseBreakdown = ExpenseBreakdown,
+        totals = new
+        {
+            grossRevenue = TotalIncome,
+            totalRevenue = NetIncome,
+            totalExpenses = TotalExpense,
+            totalRefund = TotalRefund,
+            netProfit = NetProfit
+        }
+    }, FinanceJson.Options);
 }

@@ -2,17 +2,17 @@
 
 @{
     Layout = "~/Views/Shared/_FinanceLayout.cshtml";
-    ViewData["Title"] = $"ใบเสร็จรับเงิน {Model.ReceiptNo} - StayMate Finance";
+    ViewData["Title"] = $"Receipt {Model.ReceiptNo}";
 
     decimal subtotalBeforeTax = Math.Max(0m, Model.TotalAmount - Model.TaxAmount);
 
     string methodDisplay = (Model.Method ?? "").ToLowerInvariant() switch
     {
         "promptpay" => "PromptPay QR",
-        "bank_transfer" => "Bank Transfer (โอนผ่านบัญชีธนาคาร)",
+        "bank_transfer" => "Bank Transfer",
         "credit_card" => "Credit Card",
-        "cash" => "Cash (เงินสด)",
-        _ => string.IsNullOrWhiteSpace(Model.Method) ? "N/A" : Model.Method
+        "cash" => "Cash",
+        _ => string.IsNullOrWhiteSpace(Model.Method) ? "-" : Model.Method
     };
 }
 
@@ -21,7 +21,7 @@
 <div class="finance-dashboard-wrapper frd-page-wrapper" id="frdReceiptDetailApp">
 
     <!-- ================================================================= -->
-    <!-- 1. Action Header & Breadcrumb (ซ่อนอัตโนมัติเวลาสั่งพิมพ์)            -->
+    <!-- 1. Action Header (ซ่อนอัตโนมัติเวลาสั่งพิมพ์)                         -->
     <!-- ================================================================= -->
     <section class="fin-welcome-banner frd-header-banner mb-4 d-print-none">
         <div class="fin-welcome-glow"></div>
@@ -30,37 +30,32 @@
                 <nav aria-label="breadcrumb" class="mb-2">
                     <ol class="breadcrumb fr-breadcrumb mb-0">
                         <li class="breadcrumb-item">
-                            <a asp-controller="Finance" asp-action="Index">
-                                <i class="fa-solid fa-wallet me-1"></i>Finance Portal
-                            </a>
+                            <a asp-controller="Finance" asp-action="Index">Dashboard</a>
                         </li>
                         <li class="breadcrumb-item">
-                            <a asp-controller="Finance" asp-action="Receipts">Receipt Management</a>
+                            <a asp-controller="Finance" asp-action="Receipts">Receipts</a>
                         </li>
                         <li class="breadcrumb-item active" aria-current="page">@Model.ReceiptNo</li>
                     </ol>
                 </nav>
 
-                <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
+                <div class="d-flex align-items-center flex-wrap gap-2">
                     <h1 class="fin-welcome-title mb-0">
-                        ใบเสร็จรับเงินเลขที่ <span class="text-cyber">@Model.ReceiptNo</span>
+                        Receipt <span class="text-cyber">@Model.ReceiptNo</span>
                     </h1>
                     <span class="fr-badge status-issued">
-                        <i class="fa-solid fa-circle-check me-1"></i>Issued (ออกใบเสร็จแล้ว)
+                        <i class="fa-solid fa-circle-check me-1"></i>Issued
                     </span>
                 </div>
-                <p class="fin-welcome-subtitle mb-0">
-                    เอกสารใบเสร็จรับเงินอย่างเป็นทางการสำหรับการจองรหัส <strong>@Model.BookingCode</strong> ของคุณ <strong>@Model.ContactName</strong>
-                </p>
             </div>
 
             <div class="col-lg-5 text-lg-end">
                 <div class="d-inline-flex flex-wrap gap-2 justify-content-lg-end">
                     <a asp-controller="Finance" asp-action="Receipts" class="btn fr-btn-export">
-                        <i class="fa-solid fa-arrow-left me-2"></i>กลับไปหน้ารายการใบเสร็จ
+                        <i class="fa-solid fa-arrow-left me-2"></i>กลับหน้ารายการ
                     </a>
                     <button type="button" id="frdBtnPrintDocument" class="btn fin-btn-refresh">
-                        <i class="fa-solid fa-print me-2"></i>พิมพ์ใบเสร็จ (Print)
+                        <i class="fa-solid fa-print me-2"></i>พิมพ์
                     </button>
                     <a asp-controller="Finance"
                        asp-action="ReceiptPdf"
@@ -74,12 +69,12 @@
     </section>
 
     <!-- ================================================================= -->
-    <!-- 2. Official Hotel Receipt Paper (A4 Styled Document)              -->
+    <!-- 2. Official Receipt Paper                                         -->
     <!-- ================================================================= -->
     <section class="frd-document-container mx-auto" id="frdPrintableReceiptArea">
         <div class="fr-official-paper frd-paper-sheet">
 
-            <!-- Top Brand Header -->
+            <!-- Brand Header -->
             <div class="row align-items-start justify-content-between g-3 pb-4 mb-4 border-bottom">
                 <div class="col-sm-7">
                     <div class="d-flex align-items-center gap-3">
@@ -88,71 +83,67 @@
                              class="fr-paper-logo"
                              onerror="this.onerror=null; this.src='https://placehold.co/76x76/070D1E/00E5FF?text=SM';" />
                         <div>
-                            <h2 class="h4 fw-bold text-dark mb-1">STAYMATE FUTURE URBAN HOTEL</h2>
+                            <h2 class="h4 fw-bold text-dark mb-1">STAYMATE HOTEL</h2>
                             <p class="text-muted small mb-0">
-                                88 Cyber Sukhumvit Road, Khlong Toei, Bangkok 10110, Thailand
+                                88 Cyber Sukhumvit Road, Khlong Toei, Bangkok 10110
                             </p>
                             <p class="text-muted extra-small mb-0">
-                                เลขประจำตัวผู้เสียภาษี (Tax ID): 0105569000576 (สำนักงานใหญ่) · โทร. 02-000-0576
+                                Tax ID: 0105569000576 (สำนักงานใหญ่) · โทร. 02-000-0576
                             </p>
                         </div>
                     </div>
                 </div>
 
                 <div class="col-sm-5 text-sm-end">
-                    <span class="fr-doc-type-badge mb-2">ใบเสร็จรับเงิน / OFFICIAL RECEIPT</span>
+                    <span class="fr-doc-type-badge mb-2">ใบเสร็จรับเงิน / RECEIPT</span>
                     <div class="small mt-1">
                         <div>
-                            <span class="text-muted">เลขที่ใบเสร็จ (Receipt No.):</span>
+                            <span class="text-muted">เลขที่ใบเสร็จ:</span>
                             <strong class="text-electric fs-6">@Model.ReceiptNo</strong>
                         </div>
                         <div>
-                            <span class="text-muted">วันที่ออกเอกสาร (Issued Date):</span>
-                            <strong class="text-dark">@Model.IssuedAt.ToString("dd/MM/yyyy HH:mm") น.</strong>
+                            <span class="text-muted">วันที่ออก:</span>
+                            <strong class="text-dark">@Model.IssuedAt.ToString("dd/MM/yyyy HH:mm")</strong>
                         </div>
                         <div>
-                            <span class="text-muted">อ้างอิงการชำระเงิน (Payment ID):</span>
+                            <span class="text-muted">อ้างอิงการชำระเงิน:</span>
                             <strong class="text-dark">#@Model.PaymentId</strong>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Customer & Booking Metadata -->
+            <!-- Customer & Booking Info -->
             <div class="row g-3 mb-4 small">
                 <div class="col-md-6">
                     <div class="p-3 rounded-3 bg-light border h-100">
                         <span class="text-muted extra-small text-uppercase fw-bold d-block mb-1">
-                            <i class="fa-solid fa-user-tie text-primary me-1"></i>ข้อมูลผู้ชำระเงิน (Received From / Guest)
+                            ข้อมูลผู้ชำระเงิน (Billed To)
                         </span>
                         <div class="fw-bold text-dark fs-6 mb-1">@Model.ContactName</div>
-                        <div class="text-muted">
-                            <i class="fa-solid fa-phone me-1"></i>โทรศัพท์: <strong class="text-dark">@Model.ContactPhone</strong>
-                        </div>
-                        <div class="text-muted">
-                            <i class="fa-solid fa-envelope me-1"></i>อีเมล: <strong class="text-dark">@Model.ContactEmail</strong>
-                        </div>
+                        <div class="text-muted">โทรศัพท์: <strong class="text-dark">@Model.ContactPhone</strong></div>
+                        <div class="text-muted">อีเมล: <strong class="text-dark">@Model.ContactEmail</strong></div>
                     </div>
                 </div>
 
                 <div class="col-md-6">
                     <div class="p-3 rounded-3 bg-light border h-100">
                         <span class="text-muted extra-small text-uppercase fw-bold d-block mb-1">
-                            <i class="fa-solid fa-hotel text-primary me-1"></i>ข้อมูลการจองและการชำระเงิน (Booking &amp; Payment)
+                            ข้อมูลการจองและการชำระเงิน
                         </span>
                         <div class="mb-1">
-                            <span class="text-muted">รหัสการจอง (Booking Code):</span>
+                            <span class="text-muted">Booking:</span>
                             <strong class="text-electric">@Model.BookingCode</strong>
-                            <span class="text-muted extra-small">(ID: #@Model.BookingId)</span>
+                            <span class="text-muted extra-small">(#@Model.BookingId)</span>
                         </div>
                         <div class="mb-1">
-                            <span class="text-muted">วันที่เข้าพัก - เช็คเอาท์:</span>
+                            <span class="text-muted">เข้าพัก:</span>
                             <strong class="text-dark">@Model.CheckInDate.ToString("dd/MM/yyyy") - @Model.CheckOutDate.ToString("dd/MM/yyyy") (@Model.Nights คืน)</strong>
                         </div>
                         <div>
-                            <span class="text-muted">วิธีชำระเงิน:</span>
+                            <span class="text-muted">ชำระโดย:</span>
                             <strong class="text-dark">@methodDisplay</strong>
-                            <span class="text-muted extra-small">(เมื่อ @((Model.PaidAt ?? Model.IssuedAt).ToString("dd/MM/yyyy HH:mm")))</span>
+                            <span class="text-muted extra-small">(@((Model.PaidAt ?? Model.IssuedAt).ToString("dd/MM/yyyy HH:mm")))</span>
                         </div>
                     </div>
                 </div>
@@ -160,20 +151,17 @@
 
             <!-- Room Lines Table -->
             <div class="mb-4">
-                <h3 class="h6 fw-bold text-dark mb-2">
-                    <i class="fa-solid fa-bed text-primary me-2"></i>รายการห้องพักและบริการ (Room &amp; Service Breakdown)
-                </h3>
                 <div class="table-responsive">
                     <table class="table table-bordered align-middle small mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th style="width: 50px;" class="text-center">#</th>
-                                <th>ประเภทห้องพัก (Room Type)</th>
-                                <th class="text-center">หมายเลขห้อง</th>
-                                <th class="text-end">ราคา/คืน (THB)</th>
-                                <th class="text-center">จำนวนคืน</th>
-                                <th class="text-end">เตียงเสริม (THB)</th>
-                                <th class="text-end">จำนวนเงินรวม (THB)</th>
+                                <th style="width: 48px;" class="text-center">#</th>
+                                <th>รายการห้องพัก</th>
+                                <th class="text-center">เลขห้อง</th>
+                                <th class="text-end">ราคา/คืน</th>
+                                <th class="text-center">คืน</th>
+                                <th class="text-end">เตียงเสริม</th>
+                                <th class="text-end">จำนวนเงิน (THB)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -200,7 +188,7 @@
                             {
                                 <tr>
                                     <td class="text-center">1</td>
-                                    <td colspan="5">ค่าบริการห้องพักตามการจองเลขที่ @Model.BookingCode</td>
+                                    <td colspan="5">ค่าบริการห้องพัก (@Model.BookingCode)</td>
                                     <td class="text-end fw-bold text-dark">฿@Model.RoomAmount.ToString("N2")</td>
                                 </tr>
                             }
@@ -209,20 +197,16 @@
                 </div>
             </div>
 
-            <!-- Promotions Table (ถ้ามีการใช้โปรโมชั่น) -->
+            <!-- Promotions Table -->
             @if (Model.Promotions.Any())
             {
                 <div class="mb-4">
-                    <h3 class="h6 fw-bold text-dark mb-2">
-                        <i class="fa-solid fa-tags text-violet me-2"></i>โปรโมชั่นและส่วนลดที่ใช้ (Promotions Applied)
-                    </h3>
                     <div class="table-responsive">
                         <table class="table table-bordered table-sm align-middle small mb-0">
                             <thead class="table-light">
                                 <tr>
                                     <th>รหัสโปรโมชั่น</th>
-                                    <th>ชื่อรายการส่งเสริมการขาย</th>
-                                    <th>รูปแบบ</th>
+                                    <th>รายการส่วนลด</th>
                                     <th class="text-end">ส่วนลด (%)</th>
                                     <th class="text-end">จำนวนเงินที่ลด (THB)</th>
                                 </tr>
@@ -233,7 +217,6 @@
                                     <tr>
                                         <td class="fw-bold text-primary">@promo.PromoCode</td>
                                         <td>@promo.PromoName</td>
-                                        <td>@promo.StackRole</td>
                                         <td class="text-end">@promo.AppliedPercent.ToString("N2")%</td>
                                         <td class="text-end text-danger fw-semibold">-฿@promo.AppliedAmount.ToString("N2")</td>
                                     </tr>
@@ -244,19 +227,17 @@
                 </div>
             }
 
-            <!-- Summary Totals & Authorized Signature -->
+            <!-- Summary Totals & Sign-off -->
             <div class="row justify-content-between align-items-end g-4 pt-2">
                 <div class="col-md-6 small">
-                    <div class="p-3 rounded-3 bg-light border mb-3">
-                        <div class="fw-semibold text-dark mb-1">
-                            <i class="fa-solid fa-shield-check text-success me-1"></i>การรับรองเอกสาร (Document Certification)
+                    <div class="p-3 rounded-3 bg-light border">
+                        <div class="d-flex justify-content-between extra-small text-muted mb-1">
+                            <span>ผู้ออกใบเสร็จ:</span>
+                            <strong class="text-dark">@(Model.IssuedByName ?? "Finance Officer")</strong>
                         </div>
-                        <p class="text-muted extra-small mb-2">
-                            ใบเสร็จรับเงินฉบับนี้ออกโดยระบบบริหารการเงินของโรงแรม StayMate เมื่อได้รับการอนุมัติการชำระเงินเรียบร้อยแล้ว ข้อมูลถูกต้องตรงตามฐานข้อมูลทางการเงินและไม่สามารถแก้ไขยอดเงินย้อนหลังได้
-                        </p>
-                        <div class="d-flex justify-content-between extra-small text-muted border-top pt-2">
-                            <span>ผู้ออกใบเสร็จ (Issued By): <strong class="text-dark">@(Model.IssuedByName ?? "Finance Officer")</strong></span>
-                            <span>สถานะ: <strong class="text-success">PAID / VERIFIED</strong></span>
+                        <div class="d-flex justify-content-between extra-small text-muted">
+                            <span>สถานะการชำระเงิน:</span>
+                            <strong class="text-success"><i class="fa-solid fa-shield-halved me-1"></i>PAID / VERIFIED</strong>
                         </div>
                     </div>
                 </div>
@@ -264,36 +245,36 @@
                 <div class="col-md-6 col-lg-5">
                     <div class="fr-doc-summary-box p-3 rounded-3">
                         <div class="d-flex justify-content-between small mb-1">
-                            <span class="text-muted">รวมค่าห้องพัก (Room Subtotal):</span>
+                            <span class="text-muted">ค่าห้องพัก:</span>
                             <strong class="text-dark">฿@Model.RoomAmount.ToString("N2")</strong>
                         </div>
                         <div class="d-flex justify-content-between small mb-1 text-danger">
-                            <span>ส่วนลดรวม (@Model.DiscountPercent.ToString("N2")%):</span>
+                            <span>ส่วนลด (@Model.DiscountPercent.ToString("N0")%):</span>
                             <strong>-฿@Model.DiscountAmount.ToString("N2")</strong>
                         </div>
                         <div class="d-flex justify-content-between small mb-1">
-                            <span class="text-muted">ยอดก่อนภาษี (Subtotal before Tax):</span>
+                            <span class="text-muted">ยอดก่อนภาษี:</span>
                             <strong class="text-dark">฿@subtotalBeforeTax.ToString("N2")</strong>
                         </div>
                         <div class="d-flex justify-content-between small mb-2 pb-2 border-bottom">
-                            <span class="text-muted">ภาษีมูลค่าเพิ่ม (Tax / VAT):</span>
+                            <span class="text-muted">ภาษีมูลค่าเพิ่ม (VAT):</span>
                             <strong class="text-dark">฿@Model.TaxAmount.ToString("N2")</strong>
                         </div>
                         <div class="d-flex justify-content-between small mb-2">
-                            <span class="fw-semibold text-dark">ยอดรวมสุทธิตามใบจอง (Booking Total):</span>
+                            <span class="fw-semibold text-dark">ยอดรวมใบจอง:</span>
                             <strong class="text-dark">฿@Model.TotalAmount.ToString("N2")</strong>
                         </div>
                         <div class="d-flex justify-content-between align-items-center pt-2 border-top">
-                            <span class="fw-bold text-dark">ยอดที่ชำระตามใบเสร็จนี้:</span>
+                            <span class="fw-bold text-dark">ยอดที่ชำระตามใบเสร็จ:</span>
                             <span class="fs-4 fw-bold text-electric">฿@Model.Amount.ToString("N2")</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Footer Note -->
+            <!-- Footer -->
             <div class="text-center mt-4 pt-3 border-top text-muted extra-small">
-                ขอบคุณที่ใช้บริการ StayMate Hotel · Thank you for choosing StayMate Future Urban Hotel
+                ขอบคุณที่ใช้บริการ StayMate Hotel · Thank you for choosing StayMate
             </div>
 
         </div>

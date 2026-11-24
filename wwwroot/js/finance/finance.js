@@ -1,291 +1,316 @@
 /**
  * STAYMATE – FUTURE URBAN HOTEL
  * File: wwwroot/js/finance/finance.js
- * Description: Finance Portal Dashboard Charts & Interactive Controls
+ * Description: Finance Portal (Dashboard, Payment Approval, Transactions, Receipts, Detail pages, Reports)
+ *
+ * โครงสร้าง: ทุกโมดูลอยู่ระดับเดียวกัน และเริ่มทำงานผ่าน onReady() เท่านั้น
+ * (เดิมโมดูลถูกซ้อนอยู่ใน DOMContentLoaded ของ Dashboard ทำให้ Transactions / Receipts /
+ *  Detail / Reports ไม่เคยถูก init)
  */
-
-document.addEventListener("DOMContentLoaded", function () {
-    "use strict";
-
-    // ตั้งค่าฟอนต์เริ่มต้นของ Chart.js ให้เป็น Prompt
-    if (typeof Chart !== "undefined") {
-        Chart.defaults.font.family = "'Prompt', sans-serif";
-        Chart.defaults.color = "#64748B";
-    }
-
-    // 1. อ่านข้อมูล JSON ที่ส่งมาจาก FinanceDashboardViewModel
-    const dataElement = document.getElementById("financeDashboardData");
-    let dashboardData = {
-        last7Days: [],
-        last6Months: [],
-        monthIncome: 0,
-        todayIncome: 0,
-        totalIncome: 0,
-        statusCounts: { pending: 0, approved: 0, rejected: 0 },
-        statusAmounts: { pending: 0, approved: 0, rejected: 0 }
-    };
-
-    if (dataElement && dataElement.textContent) {
-        try {
-            dashboardData = JSON.parse(dataElement.textContent);
-        } catch (err) {
-            console.error("Failed to parse finance dashboard data:", err);
-        }
-    }
-
-    // ฟังก์ชันจัดรูปแบบสกุลเงินบาท
-    const formatTHB = (val) => {
-        const num = Number(val) || 0;
-        return "฿" + num.toLocaleString("th-TH", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
-    };
-
-    // =========================================================================
-    // 2. Revenue Analytics Chart (Section 3)
-    // =========================================================================
-    const revCanvas = document.getElementById("revenueAnalyticsChart");
-    let revenueChartInstance = null;
-
-    const buildRevenueDataset = (periodKey) => {
-        if (periodKey === "7d") {
-            const rows = dashboardData.last7Days || [];
-            return {
-                labels: rows.map(r => r.label),
-                grossData: rows.map(r => r.income),
-                netData: rows.map(r => r.net),
-                totalNet: rows.reduce((acc, cur) => acc + (Number(cur.net) || 0), 0),
-                periodTitle: "รายรับสุทธิ (7 วันล่าสุด)",
-                sourceNote: "แสดงข้อมูลจริงรายวัน (7 วันย้อนหลังจากฐานข้อมูล)"
-            };
-        }
-
-        if (periodKey === "30d") {
-            // เนื่องจาก FinanceDashboardViewModel ส่ง Last7Days และ Last6Months มาให้
-            // โหมด 30 วันจึงแสดงข้อมูลจริงของ 7 วันล่าสุดควบคู่กับยอดรวมเดือนปัจจุบันโดยไม่ปลอมแปลงตัวเลข
-            const rows = dashboardData.last7Days || [];
-            return {
-                labels: rows.map(r => r.label),
-                grossData: rows.map(r => r.income),
-                netData: rows.map(r => r.net),
-                totalNet: Number(dashboardData.monthIncome) || 0,
-                periodTitle: "รายรับสุทธิ (เดือนปัจจุบัน / 30 วัน)",
-                sourceNote: "แสดงยอดรวมสุทธิของเดือนปัจจุบัน พร้อมแนวโน้มรายวันล่าสุดจากฐานข้อมูลจริง"
-            };
-        }
-
-        // Default: 12m (ใช้ข้อมูลรายเดือนจาก Last6Months ใน ViewModel)
-        const rows = dashboardData.last6Months || [];
-        return {
-            labels: rows.map(r => r.label),
-            grossData: rows.map(r => r.income),
-            netData: rows.map(r => r.net),
-            totalNet: rows.reduce((acc, cur) => acc + (Number(cur.net) || 0), 0),
-            periodTitle: "รายรับสุทธิ (รายเดือนสะสม)",
-            sourceNote: "แสดงข้อมูลจริงจากฐานข้อมูลรายเดือน (6 เดือนล่าสุดจากระบบ)"
-        };
-    };
-
-    const initRevenueChart = (initialPeriod) => {
-        if (!revCanvas || typeof Chart === "undefined") return;
-
-        const ctx = revCanvas.getContext("2d");
-        const blueGrad = ctx.createLinearGradient(0, 0, 0, 280);
-        blueGrad.addColorStop(0, "rgba(37, 99, 235, 0.88)");
-        blueGrad.addColorStop(1, "rgba(37, 99, 235, 0.25)");
-
-        const cyanFill = ctx.createLinearGradient(0, 0, 0, 280);
-        cyanFill.addColorStop(0, "rgba(0, 229, 255, 0.22)");
-        cyanFill.addColorStop(1, "rgba(0, 229, 255, 0.0)");
-
-        const datasetInfo = buildRevenueDataset(initialPeriod);
-
-        revenueChartInstance = new Chart(ctx, {
-            data: {
-                labels: datasetInfo.labels,
-                datasets: [
-                    {
-                        type: "line",
-                        label: "รายรับสุทธิ (Net Income)",
-                        data: datasetInfo.netData,
-                        borderColor: "#00E5FF",
-                        backgroundColor: cyanFill,
-                        borderWidth: 3,
-                        pointBackgroundColor: "#070D1E",
-                        pointBorderColor: "#00E5FF",
-                        pointBorderWidth: 2,
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
-                        tension: 0.35,
-                        fill: true,
-                        order: 1
-                    },
-                    {
-                        type: "bar",
-                        label: "รายรับรวม (Gross Income)",
-                        data: datasetInfo.grossData,
-                        backgroundColor: blueGrad,
-                        borderColor: "#2563EB",
-                        borderWidth: 1,
-                        borderRadius: 8,
-                        maxBarThickness: 38,
-                        order: 2
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: {
-                    mode: "index",
-                    intersect: false
-                },
-                plugins: {
-                    legend: {
-                        position: "top",
-                        align: "end",
-                        labels: {
-                            usePointStyle: true,
-                            boxWidth: 8,
-                            font: { size: 12, weight: "500" }
-                        }
-                    },
-                    tooltip: {
-                        backgroundColor: "#070D1E",
-                        titleColor: "#00E5FF",
-                        bodyColor: "#FFFFFF",
-                        borderColor: "rgba(0, 229, 255, 0.3)",
-                        borderWidth: 1,
-                        padding: 12,
-                        callbacks: {
-                            label: function (context) {
-                                return ` ${context.dataset.label}: ${formatTHB(context.parsed.y)}`;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: { display: false },
-                        ticks: { font: { size: 11 } }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: "#F1F5F9" },
-                        ticks: {
-                            font: { size: 11 },
-                            callback: function (value) {
-                                return "฿" + Number(value).toLocaleString("th-TH");
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    };
-
-    const updateRevenueView = (periodKey) => {
-        const info = buildRevenueDataset(periodKey);
-        const labelEl = document.getElementById("chartPeriodLabel");
-        const totalEl = document.getElementById("chartPeriodNetTotal");
-        const noteEl = document.getElementById("chartDataSourceNote");
-
-        if (labelEl) labelEl.textContent = info.periodTitle;
-        if (totalEl) totalEl.textContent = formatTHB(info.totalNet);
-        if (noteEl) noteEl.textContent = info.sourceNote;
-
-        if (revenueChartInstance) {
-            revenueChartInstance.data.labels = info.labels;
-            revenueChartInstance.data.datasets[0].data = info.netData;
-            revenueChartInstance.data.datasets[1].data = info.grossData;
-            revenueChartInstance.update();
-        }
-    };
-
-    initRevenueChart("12m");
-
-    // ผูก Event ปุ่มสลับช่วงเวลา 7 วัน / 30 วัน / 12 เดือน
-    const periodButtons = document.querySelectorAll(".fin-period-btn");
-    periodButtons.forEach(btn => {
-        btn.addEventListener("click", function () {
-            periodButtons.forEach(b => b.classList.remove("active"));
-            this.classList.add("active");
-            const selectedPeriod = this.getAttribute("data-period");
-            updateRevenueView(selectedPeriod);
-        });
-    });
-
-    // =========================================================================
-    // 3. Payment Status Overview Donut Chart (Section 4)
-    // =========================================================================
-    const donutCanvas = document.getElementById("paymentStatusDonutChart");
-
-    if (donutCanvas && typeof Chart !== "undefined") {
-        const counts = dashboardData.statusCounts || { pending: 0, approved: 0, rejected: 0 };
-        const amounts = dashboardData.statusAmounts || { pending: 0, approved: 0, rejected: 0 };
-        const totalCount = (counts.pending || 0) + (counts.approved || 0) + (counts.rejected || 0);
-
-        const chartDataValues = totalCount > 0
-    ? [counts.pending, counts.approved, counts.rejected]
-    : [1, 1, 1]; // กรณีไม่มีข้อมูลเลย แสดงวงแหวนสีเทาจางๆ
-
-        const chartColors = totalCount > 0
-            ? ["#F59E0B", "#16A34A", "#DC2626"] // Pending=Orange, Approved=Green, Rejected=Red
-            : ["#E2E8F0", "#E2E8F0", "#E2E8F0"];
-
-        new Chart(donutCanvas.getContext("2d"), {
-            type: "doughnut",
-            data: {
-                labels: ["Pending (รอตรวจสอบ)", "Approved (อนุมัติแล้ว)", "Rejected (ปฏิเสธ)"],
-                datasets: [
-                    {
-                        data: chartDataValues,
-                        backgroundColor: chartColors,
-                        borderColor: "#FFFFFF",
-                        borderWidth: 3,
-                        hoverOffset: 6
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: "72%",
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        enabled: totalCount > 0,
-                        backgroundColor: "#070D1E",
-                        titleColor: "#00E5FF",
-                        bodyColor: "#FFFFFF",
-                        padding: 12,
-                        callbacks: {
-                            label: function (ctx) {
-                                const idx = ctx.dataIndex;
-                                const countVal = ctx.raw;
-                                const amtList = [amounts.pending, amounts.approved, amounts.rejected];
-                                const pct = totalCount > 0 ? ((countVal / totalCount) * 100).toFixed(1) : 0;
-                                return [
-                                    ` จำนวน: ${countVal} รายการ (${pct}%)`,
-                                    ` มูลค่ารวม: ${formatTHB(amtList[idx])}`
-                                ];
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    }
-    /* ==========================================================================
-   PAYMENT SLIP APPROVAL MODULE (ต่อท้ายไฟล์ wwwroot/js/finance/finance.js)
-   ========================================================================== */
 (function () {
     "use strict";
 
-    const initPaymentApproval = function () {
+    // ---------------------------------------------------------------------
+    // Shared helpers
+    // ---------------------------------------------------------------------
+    const onReady = (fn) => {
+        if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn);
+        else fn();
+    };
+
+    const escapeHtml = (unsafe) => {
+        if (unsafe === null || unsafe === undefined) return "";
+        return String(unsafe)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    };
+
+    const formatTHB = (val) => {
+        const num = Number(val) || 0;
+        return "฿" + num.toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
+
+    const setChartDefaults = () => {
+        if (typeof Chart !== "undefined") {
+            Chart.defaults.font.family = "'Prompt', sans-serif";
+            Chart.defaults.color = "#64748B";
+        }
+    };
+
+    const readJsonScript = (id, fallback) => {
+        const el = document.getElementById(id);
+        if (el && el.textContent) {
+            try { return JSON.parse(el.textContent); }
+            catch (err) { console.error(`Failed to parse #${id}:`, err); }
+        }
+        return fallback;
+    };
+
+    const downloadCsv = (lines, fileName) => {
+        // BOM (\uFEFF) ให้ Excel อ่านภาษาไทยไม่เพี้ยน
+        const blob = new Blob(["\uFEFF" + lines.join("\r\n")], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
+
+    const csvEsc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const todayStamp = () => new Date().toISOString().slice(0, 10).replace(/-/g, "");
+
+    const renderPager = (pg) => {
+        let html = `
+            <li class="page-item ${!pg.hasPrevious ? "disabled" : ""}">
+                <a class="page-link" href="#" data-page="${pg.page - 1}"><i class="fa-solid fa-chevron-left"></i></a>
+            </li>`;
+        const startPage = Math.max(1, pg.page - 2);
+        const endPage = Math.min(pg.totalPages, pg.page + 2);
+        for (let p = startPage; p <= endPage; p++) {
+            html += `
+                <li class="page-item ${p === pg.page ? "active" : ""}">
+                    <a class="page-link" href="#" data-page="${p}">${p}</a>
+                </li>`;
+        }
+        html += `
+            <li class="page-item ${!pg.hasNext ? "disabled" : ""}">
+                <a class="page-link" href="#" data-page="${pg.page + 1}"><i class="fa-solid fa-chevron-right"></i></a>
+            </li>`;
+        return html;
+    };
+
+    // =====================================================================
+    // 1. DASHBOARD
+    // =====================================================================
+    function initDashboard() {
+        const revCanvas = document.getElementById("revenueAnalyticsChart");
+        const donutCanvas = document.getElementById("paymentStatusDonutChart");
+        const refreshBtn = document.getElementById("btnRefreshDashboard");
+        const refreshIcon = document.getElementById("refreshIcon");
+
+        // ปุ่ม Refresh ใช้ได้ทุกหน้าที่มีปุ่มนี้
+        if (refreshBtn) {
+            refreshBtn.addEventListener("click", function () {
+                refreshIcon?.classList.add("fin-spin-anim");
+                refreshBtn.disabled = true;
+                window.location.reload();
+            });
+        }
+
+        if (!revCanvas && !donutCanvas) return;
+        setChartDefaults();
+
+        const dashboardData = Object.assign({
+            last7Days: [], last6Months: [], monthIncome: 0, todayIncome: 0, totalIncome: 0,
+            statusCounts: { pending: 0, approved: 0, rejected: 0 },
+            statusAmounts: { pending: 0, approved: 0, rejected: 0 }
+        }, readJsonScript("financeDashboardData", {}));
+
+        const rowLabel = (r) => r.label || r.date || "";
+
+        const buildRevenueDataset = (periodKey) => {
+            if (periodKey === "7d") {
+                const rows = dashboardData.last7Days || [];
+                return {
+                    labels: rows.map(rowLabel),
+                    grossData: rows.map(r => r.income),
+                    netData: rows.map(r => r.net),
+                    totalNet: rows.reduce((acc, cur) => acc + (Number(cur.net) || 0), 0),
+                    periodTitle: "รายรับสุทธิ (7 วันล่าสุด)",
+                    sourceNote: "แสดงข้อมูลจริงรายวัน (7 วันย้อนหลังจากฐานข้อมูล)"
+                };
+            }
+            if (periodKey === "30d") {
+                const rows = dashboardData.last7Days || [];
+                return {
+                    labels: rows.map(rowLabel),
+                    grossData: rows.map(r => r.income),
+                    netData: rows.map(r => r.net),
+                    totalNet: Number(dashboardData.monthIncome) || 0,
+                    periodTitle: "รายรับสุทธิ (เดือนปัจจุบัน / 30 วัน)",
+                    sourceNote: "แสดงยอดรวมสุทธิของเดือนปัจจุบัน พร้อมแนวโน้มรายวันล่าสุดจากฐานข้อมูลจริง"
+                };
+            }
+            const rows = dashboardData.last6Months || [];
+            return {
+                labels: rows.map(rowLabel),
+                grossData: rows.map(r => r.income),
+                netData: rows.map(r => r.net),
+                totalNet: rows.reduce((acc, cur) => acc + (Number(cur.net) || 0), 0),
+                periodTitle: "รายรับสุทธิ (รายเดือนสะสม)",
+                sourceNote: "แสดงข้อมูลจริงจากฐานข้อมูลรายเดือน (6 เดือนล่าสุดจากระบบ)"
+            };
+        };
+
+        let revenueChartInstance = null;
+
+        if (revCanvas && typeof Chart !== "undefined") {
+            const ctx = revCanvas.getContext("2d");
+            const blueGrad = ctx.createLinearGradient(0, 0, 0, 280);
+            blueGrad.addColorStop(0, "rgba(37, 99, 235, 0.88)");
+            blueGrad.addColorStop(1, "rgba(37, 99, 235, 0.25)");
+            const cyanFill = ctx.createLinearGradient(0, 0, 0, 280);
+            cyanFill.addColorStop(0, "rgba(0, 229, 255, 0.22)");
+            cyanFill.addColorStop(1, "rgba(0, 229, 255, 0.0)");
+
+            const info = buildRevenueDataset("12m");
+
+            revenueChartInstance = new Chart(ctx, {
+                data: {
+                    labels: info.labels,
+                    datasets: [
+                        {
+                            type: "line",
+                            label: "รายรับสุทธิ (Net Income)",
+                            data: info.netData,
+                            borderColor: "#00E5FF",
+                            backgroundColor: cyanFill,
+                            borderWidth: 3,
+                            pointBackgroundColor: "#070D1E",
+                            pointBorderColor: "#00E5FF",
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            tension: 0.35,
+                            fill: true,
+                            order: 1
+                        },
+                        {
+                            type: "bar",
+                            label: "รายรับรวม (Gross Income)",
+                            data: info.grossData,
+                            backgroundColor: blueGrad,
+                            borderColor: "#2563EB",
+                            borderWidth: 1,
+                            borderRadius: 8,
+                            maxBarThickness: 38,
+                            order: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: "index", intersect: false },
+                    plugins: {
+                        legend: {
+                            position: "top",
+                            align: "end",
+                            labels: { usePointStyle: true, boxWidth: 8, font: { size: 12, weight: "500" } }
+                        },
+                        tooltip: {
+                            backgroundColor: "#070D1E",
+                            titleColor: "#00E5FF",
+                            bodyColor: "#FFFFFF",
+                            borderColor: "rgba(0, 229, 255, 0.3)",
+                            borderWidth: 1,
+                            padding: 12,
+                            callbacks: {
+                                label: (c) => ` ${c.dataset.label}: ${formatTHB(c.parsed.y)}`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: "#F1F5F9" },
+                            ticks: {
+                                font: { size: 11 },
+                                callback: (v) => "฿" + Number(v).toLocaleString("th-TH")
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        const updateRevenueView = (periodKey) => {
+            const info = buildRevenueDataset(periodKey);
+            const labelEl = document.getElementById("chartPeriodLabel");
+            const totalEl = document.getElementById("chartPeriodNetTotal");
+            const noteEl = document.getElementById("chartDataSourceNote");
+
+            if (labelEl) labelEl.textContent = info.periodTitle;
+            if (totalEl) totalEl.textContent = formatTHB(info.totalNet);
+            if (noteEl) noteEl.textContent = info.sourceNote;
+
+            if (revenueChartInstance) {
+                revenueChartInstance.data.labels = info.labels;
+                revenueChartInstance.data.datasets[0].data = info.netData;
+                revenueChartInstance.data.datasets[1].data = info.grossData;
+                revenueChartInstance.update();
+            }
+        };
+
+        const periodButtons = document.querySelectorAll(".fin-period-btn");
+        periodButtons.forEach(btn => {
+            btn.addEventListener("click", function () {
+                periodButtons.forEach(b => b.classList.remove("active"));
+                this.classList.add("active");
+                updateRevenueView(this.getAttribute("data-period"));
+            });
+        });
+
+        // Payment Status Donut
+        if (donutCanvas && typeof Chart !== "undefined") {
+            const counts = dashboardData.statusCounts || { pending: 0, approved: 0, rejected: 0 };
+            const amounts = dashboardData.statusAmounts || { pending: 0, approved: 0, rejected: 0 };
+            const totalCount = (counts.pending || 0) + (counts.approved || 0) + (counts.rejected || 0);
+
+            const values = totalCount > 0 ? [counts.pending, counts.approved, counts.rejected] : [1, 1, 1];
+            const colors = totalCount > 0
+                ? ["#F59E0B", "#16A34A", "#DC2626"]   // Pending=Orange, Approved=Green, Rejected=Red
+                : ["#E2E8F0", "#E2E8F0", "#E2E8F0"];
+
+            new Chart(donutCanvas.getContext("2d"), {
+                type: "doughnut",
+                data: {
+                    labels: ["Pending (รอตรวจสอบ)", "Approved (อนุมัติแล้ว)", "Rejected (ปฏิเสธ)"],
+                    datasets: [{ data: values, backgroundColor: colors, borderColor: "#FFFFFF", borderWidth: 3, hoverOffset: 6 }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: "72%",
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            enabled: totalCount > 0,
+                            backgroundColor: "#070D1E",
+                            titleColor: "#00E5FF",
+                            bodyColor: "#FFFFFF",
+                            padding: 12,
+                            callbacks: {
+                                label: (ctx) => {
+                                    const countVal = ctx.raw;
+                                    const amtList = [amounts.pending, amounts.approved, amounts.rejected];
+                                    const pct = totalCount > 0 ? ((countVal / totalCount) * 100).toFixed(1) : 0;
+                                    return [
+                                        ` จำนวน: ${countVal} รายการ (${pct}%)`,
+                                        ` มูลค่ารวม: ${formatTHB(amtList[ctx.dataIndex])}`
+                                    ];
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    // =====================================================================
+    // 2. PAYMENT APPROVAL (Payment Slip Approval)
+    // =====================================================================
+    function initPaymentApproval() {
         const appContainer = document.getElementById("paymentApprovalApp");
-        if (!appContainer) return; // ทำงานเฉพาะเมื่อเปิดหน้า PaymentApproval.cshtml เท่านั้น
+        if (!appContainer) return;
 
         const apiUrls = {
             list: appContainer.getAttribute("data-api-list") || "/Finance/GetPaymentSlipsJson",
@@ -294,7 +319,6 @@ document.addEventListener("DOMContentLoaded", function () {
             reject: appContainer.getAttribute("data-api-reject") || "/Finance/RejectAjax"
         };
 
-        // State สำหรับตารางและการกรอง
         const state = {
             status: appContainer.getAttribute("data-initial-status") || "pending",
             keyword: appContainer.getAttribute("data-initial-keyword") || "",
@@ -308,63 +332,41 @@ document.addEventListener("DOMContentLoaded", function () {
             currentLightboxZoom: 1
         };
 
-        // DOM Elements
-        const elSummaryPending = document.getElementById("paSummaryPending");
-        const elSummaryApproved = document.getElementById("paSummaryApproved");
-        const elSummaryRejected = document.getElementById("paSummaryRejected");
-        const elSummaryTotal = document.getElementById("paSummaryTotal");
-        const elTotalBadge = document.getElementById("paTotalRecordsBadge");
+        const $ = (id) => document.getElementById(id);
 
-        const elTableBody = document.getElementById("paTableBody");
-        const elTableContainer = document.getElementById("paTableContainer");
-        const elLoadingState = document.getElementById("paLoadingState");
-        const elEmptyState = document.getElementById("paEmptyState");
-        const elPaginationBar = document.getElementById("paPaginationBar");
-        const elPaginationInfo = document.getElementById("paPaginationInfo");
-        const elPaginationControls = document.getElementById("paPaginationControls");
+        const elSummaryPending = $("paSummaryPending");
+        const elSummaryApproved = $("paSummaryApproved");
+        const elSummaryRejected = $("paSummaryRejected");
+        const elSummaryTotal = $("paSummaryTotal");
+        const elTotalBadge = $("paTotalRecordsBadge");
 
-        const elKeywordInput = document.getElementById("paKeywordInput");
-        const elFromDateInput = document.getElementById("paFromDateInput");
-        const elToDateInput = document.getElementById("paToDateInput");
-        const elSortSelect = document.getElementById("paSortSelect");
-        const elPageSizeSelect = document.getElementById("paPageSizeSelect");
+        const elTableBody = $("paTableBody");
+        const elTableContainer = $("paTableContainer");
+        const elLoadingState = $("paLoadingState");
+        const elEmptyState = $("paEmptyState");
+        const elPaginationBar = $("paPaginationBar");
+        const elPaginationInfo = $("paPaginationInfo");
+        const elPaginationControls = $("paPaginationControls");
 
-        // Modals
-        const detailModalEl = document.getElementById("paDetailModal");
-        const previewModalEl = document.getElementById("paSlipPreviewModal");
-        const rejectModalEl = document.getElementById("paRejectModal");
+        const elKeywordInput = $("paKeywordInput");
+        const elFromDateInput = $("paFromDateInput");
+        const elToDateInput = $("paToDateInput");
+        const elSortSelect = $("paSortSelect");
+        const elPageSizeSelect = $("paPageSizeSelect");
+
+        const detailModalEl = $("paDetailModal");
+        const previewModalEl = $("paSlipPreviewModal");
+        const rejectModalEl = $("paRejectModal");
 
         const bsDetailModal = detailModalEl ? new bootstrap.Modal(detailModalEl) : null;
         const bsPreviewModal = previewModalEl ? new bootstrap.Modal(previewModalEl) : null;
         const bsRejectModal = rejectModalEl ? new bootstrap.Modal(rejectModalEl) : null;
 
-        // ฟังก์ชันป้องกัน XSS
-        const escapeHtml = (unsafe) => {
-            if (unsafe === null || unsafe === undefined) return "";
-            return String(unsafe)
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        };
-
-        // ฟังก์ชันจัดรูปแบบเงินบาท
-        const formatMoney = (amount) => {
-            const n = Number(amount) || 0;
-            return "฿" + n.toLocaleString("th-TH", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
-        };
-
-        // ดึง Anti-Forgery Token สำหรับ CSRF
         const getCsrfToken = () => {
             const tokenInput = document.querySelector('#paymentApprovalCsrfForm input[name="__RequestVerificationToken"]');
             return tokenInput ? tokenInput.value : "";
         };
 
-        // แปลงชื่อช่องทางชำระเงิน
         const formatMethodLabel = (method) => {
             const m = (method || "").toLowerCase();
             if (m === "promptpay") return '<i class="fa-solid fa-qrcode text-primary me-1"></i>PromptPay QR';
@@ -374,19 +376,13 @@ document.addEventListener("DOMContentLoaded", function () {
             return escapeHtml(method || "N/A");
         };
 
-        // แปลง Badge สถานะ
         const renderStatusBadge = (status) => {
             const s = (status || "pending").toLowerCase();
-            if (s === "approved") {
-                return '<span class="fin-status-badge status-approved"><i class="fa-solid fa-circle-check me-1"></i>Approved</span>';
-            }
-            if (s === "rejected") {
-                return '<span class="fin-status-badge status-rejected"><i class="fa-solid fa-circle-xmark me-1"></i>Rejected</span>';
-            }
+            if (s === "approved") return '<span class="fin-status-badge status-approved"><i class="fa-solid fa-circle-check me-1"></i>Approved</span>';
+            if (s === "rejected") return '<span class="fin-status-badge status-rejected"><i class="fa-solid fa-circle-xmark me-1"></i>Rejected</span>';
             return '<span class="fin-status-badge status-pending"><i class="fa-solid fa-clock me-1"></i>Pending</span>';
         };
 
-        // อัปเดต UI ของแท็บสถานะและการ์ด Summary
         const syncActiveFilterUI = () => {
             document.querySelectorAll(".payment-approval-tab").forEach(tab => {
                 tab.classList.toggle("active", tab.getAttribute("data-status") === state.status);
@@ -396,9 +392,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         };
 
-        // =====================================================================
-        // 1. โหลดรายการสลิปและอัปเดต Summary Cards จาก FinanceController
-        // =====================================================================
+        // ---- 1. โหลดรายการ ----
         const loadPaymentSlips = async () => {
             syncActiveFilterUI();
 
@@ -418,26 +412,22 @@ document.addEventListener("DOMContentLoaded", function () {
             });
 
             try {
-                const res = await fetch(`${apiUrls.list}?${params.toString()}`, {
-                    headers: { "Accept": "application/json" }
-                });
-
+                const res = await fetch(`${apiUrls.list}?${params.toString()}`, { headers: { "Accept": "application/json" } });
                 if (!res.ok) throw new Error(`HTTP Error ${res.status}`);
                 const data = await res.json();
 
-                // อัปเดต Summary Cards ทั้ง 4 ใบทันที
                 if (data.summary) {
-                    if (elSummaryPending) elSummaryPending.textContent = Number(data.summary.pending || 0).toLocaleString("th-TH");
-                    if (elSummaryApproved) elSummaryApproved.textContent = Number(data.summary.approved || 0).toLocaleString("th-TH");
-                    if (elSummaryRejected) elSummaryRejected.textContent = Number(data.summary.rejected || 0).toLocaleString("th-TH");
-                    if (elSummaryTotal) elSummaryTotal.textContent = Number(data.summary.total || 0).toLocaleString("th-TH");
+                    const fmt = (n) => Number(n || 0).toLocaleString("th-TH");
+                    if (elSummaryPending) elSummaryPending.textContent = fmt(data.summary.pending);
+                    if (elSummaryApproved) elSummaryApproved.textContent = fmt(data.summary.approved);
+                    if (elSummaryRejected) elSummaryRejected.textContent = fmt(data.summary.rejected);
+                    if (elSummaryTotal) elSummaryTotal.textContent = fmt(data.summary.total);
                 }
 
                 const items = data.items || [];
                 const pg = data.pagination || { page: 1, pageSize: state.pageSize, totalCount: 0, totalPages: 0 };
 
                 if (elTotalBadge) elTotalBadge.textContent = Number(pg.totalCount || 0).toLocaleString("th-TH");
-
                 elLoadingState.classList.add("d-none");
 
                 if (items.length === 0) {
@@ -465,7 +455,6 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         };
 
-        // เรนเดอร์แถวในตาราง
         const renderTableRows = (items, currentPage, pageSize) => {
             const startNo = (currentPage - 1) * pageSize;
 
@@ -475,7 +464,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 const isPending = statusLower === "pending";
                 const amountMismatch = Number(item.amount) !== Number(item.bookingTotal);
 
-                // รูปสลิป Thumbnail (ดึงจาก /uploads/slips/...)
                 let slipCellHtml = `<span class="payment-approval-no-thumb"><i class="fa-regular fa-image me-1"></i>ไม่พบรูปภาพ</span>`;
                 if (item.slipUrl) {
                     const safeUrl = escapeHtml(item.slipUrl);
@@ -492,7 +480,6 @@ document.addEventListener("DOMContentLoaded", function () {
                         </div>`;
                 }
 
-                // ข้อมูลผู้ตรวจสอบ & เหตุผล
                 let reviewerHtml = `<span class="text-muted extra-small">รอการตรวจสอบ</span>`;
                 if (!isPending) {
                     reviewerHtml = `<div class="fw-semibold text-dark small">${escapeHtml(item.reviewedByName || "Admin / Finance")}</div>`;
@@ -501,28 +488,23 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                 }
 
-                // ปุ่มจัดการ (แสดงปุ่ม Approve / Reject เฉพาะรายการที่ยังเป็น Pending เท่านั้น)
                 let actionButtonsHtml = `
                     <div class="d-inline-flex align-items-center justify-content-end gap-1 flex-wrap">
-                        <button type="button"
-                                class="btn fin-btn-view js-btn-view-detail"
-                                data-id="${escapeHtml(item.paymentId)}"
-                                title="ดูรายละเอียดสลิป">
+                        <button type="button" class="btn fin-btn-view js-btn-view-detail"
+                                data-id="${escapeHtml(item.paymentId)}" title="ดูรายละเอียดสลิป">
                             <i class="fa-regular fa-eye me-1"></i>View Details
                         </button>`;
 
                 if (isPending) {
                     actionButtonsHtml += `
-                        <button type="button"
-                                class="btn payment-approval-btn-approve js-btn-approve"
+                        <button type="button" class="btn payment-approval-btn-approve js-btn-approve"
                                 data-id="${escapeHtml(item.paymentId)}"
                                 data-booking="${escapeHtml(item.bookingCode)}"
                                 data-amount="${escapeHtml(item.amount)}"
                                 title="อนุมัติสลิป">
                             <i class="fa-solid fa-check me-1"></i>Approve
                         </button>
-                        <button type="button"
-                                class="btn payment-approval-btn-reject js-btn-reject"
+                        <button type="button" class="btn payment-approval-btn-reject js-btn-reject"
                                 data-id="${escapeHtml(item.paymentId)}"
                                 data-booking="${escapeHtml(item.bookingCode)}"
                                 data-customer="${escapeHtml(item.contactName)}"
@@ -536,144 +518,101 @@ document.addEventListener("DOMContentLoaded", function () {
                 return `
                     <tr>
                         <td class="text-center text-muted fw-semibold">${rowNo}</td>
-                        <td>
-                            <span class="fw-bold text-dark">#${escapeHtml(item.paymentId)}</span>
-                        </td>
+                        <td><span class="fw-bold text-dark">#${escapeHtml(item.paymentId)}</span></td>
                         <td>
                             <span class="fin-booking-code">${escapeHtml(item.bookingCode)}</span>
                             <span class="d-block text-muted extra-small mt-1">ID: #${escapeHtml(item.bookingId)}</span>
                         </td>
                         <td>
                             <div class="fw-semibold text-dark">${escapeHtml(item.contactName)}</div>
-                            <div class="text-muted extra-small">
-                                <i class="fa-regular fa-envelope me-1"></i>${escapeHtml(item.contactEmail || "-")}
-                            </div>
+                            <div class="text-muted extra-small"><i class="fa-regular fa-envelope me-1"></i>${escapeHtml(item.contactEmail || "-")}</div>
                         </td>
                         <td>
                             <span class="text-dark fw-medium">${escapeHtml(item.submittedAt)}</span>
                             <span class="d-block extra-small text-muted">${formatMethodLabel(item.method)}</span>
                         </td>
                         <td class="text-end">
-                            <span class="fin-amount-cell">${formatMoney(item.amount)}</span>
-                            ${amountMismatch ? `<span class="d-block extra-small text-warning-custom"><i class="fa-solid fa-triangle-exclamation me-1"></i>ยอดจอง ${formatMoney(item.bookingTotal)}</span>` : ""}
+                            <span class="fin-amount-cell">${formatTHB(item.amount)}</span>
+                            ${amountMismatch ? `<span class="d-block extra-small text-warning-custom"><i class="fa-solid fa-triangle-exclamation me-1"></i>ยอดจอง ${formatTHB(item.bookingTotal)}</span>` : ""}
                         </td>
                         <td class="text-center">${slipCellHtml}</td>
                         <td class="text-center">${renderStatusBadge(item.status)}</td>
-                        <td>
-                            <span class="small text-dark">${escapeHtml(item.reviewedAt || "-")}</span>
-                        </td>
+                        <td><span class="small text-dark">${escapeHtml(item.reviewedAt || "-")}</span></td>
                         <td>${reviewerHtml}</td>
                         <td class="text-end">${actionButtonsHtml}</td>
                     </tr>`;
             }).join("");
         };
 
-        // เรนเดอร์ Pagination
         const renderPagination = (pg) => {
             elPaginationInfo.textContent = `แสดงหน้า ${pg.page} จาก ${pg.totalPages || 1} (ทั้งหมด ${pg.totalCount} รายการ)`;
-
-            if (!pg.totalPages || pg.totalPages <= 1) {
-                elPaginationControls.innerHTML = "";
-                return;
-            }
-
-            let html = `
-                <li class="page-item ${!pg.hasPrevious ? "disabled" : ""}">
-                    <a class="page-link" href="#" data-page="${pg.page - 1}"><i class="fa-solid fa-chevron-left"></i></a>
-                </li>`;
-
-            const startPage = Math.max(1, pg.page - 2);
-            const endPage = Math.min(pg.totalPages, pg.page + 2);
-
-            for (let p = startPage; p <= endPage; p++) {
-                html += `
-                    <li class="page-item ${p === pg.page ? "active" : ""}">
-                        <a class="page-link" href="#" data-page="${p}">${p}</a>
-                    </li>`;
-            }
-
-            html += `
-                <li class="page-item ${!pg.hasNext ? "disabled" : ""}">
-                    <a class="page-link" href="#" data-page="${pg.page + 1}"><i class="fa-solid fa-chevron-right"></i></a>
-                </li>`;
-
-            elPaginationControls.innerHTML = html;
+            elPaginationControls.innerHTML = (!pg.totalPages || pg.totalPages <= 1) ? "" : renderPager(pg);
         };
 
-        // =====================================================================
-        // 2. เปิด Modal ดูรายละเอียดสลิป (View Details)
-        // =====================================================================
+        // ---- 2. Modal รายละเอียด ----
         const openDetailModal = async (paymentId) => {
             if (!bsDetailModal) return;
 
-            document.getElementById("paModalHeaderTxnId").textContent = paymentId;
-            document.getElementById("paDetailModalLoading").classList.remove("d-none");
-            document.getElementById("paDetailModalContent").classList.add("d-none");
-            document.getElementById("paModalBtnApprove").classList.add("d-none");
-            document.getElementById("paModalBtnReject").classList.add("d-none");
-            document.getElementById("paModalFullPageLink").setAttribute("href", `/Finance/PaymentDetail/${encodeURIComponent(paymentId)}`);
+            $("paModalHeaderTxnId").textContent = paymentId;
+            $("paDetailModalLoading").classList.remove("d-none");
+            $("paDetailModalContent").classList.add("d-none");
+            $("paModalBtnApprove").classList.add("d-none");
+            $("paModalBtnReject").classList.add("d-none");
+            $("paModalFullPageLink").setAttribute("href", `/Finance/PaymentDetail/${encodeURIComponent(paymentId)}`);
 
             bsDetailModal.show();
 
             try {
-                const res = await fetch(`${apiUrls.detail}?id=${encodeURIComponent(paymentId)}`, {
-                    headers: { "Accept": "application/json" }
-                });
+                const res = await fetch(`${apiUrls.detail}?id=${encodeURIComponent(paymentId)}`, { headers: { "Accept": "application/json" } });
                 const json = await res.json();
-
-                if (!res.ok || !json.success) {
-                    throw new Error(json.message || "ไม่สามารถโหลดรายละเอียดสลิปได้");
-                }
+                if (!res.ok || !json.success) throw new Error(json.message || "ไม่สามารถโหลดรายละเอียดสลิปได้");
 
                 const d = json.data;
+                const statusLower = (d.status || "").toLowerCase();
 
-                // ข้อมูล User
-                document.getElementById("paDetUserName").textContent = d.contactName || "-";
-                document.getElementById("paDetUserId").textContent = d.userId ? `#${d.userId}` : "Guest / Walk-in";
-                document.getElementById("paDetUserEmail").textContent = d.contactEmail || "-";
-                document.getElementById("paDetUserPhone").textContent = d.contactPhone || "-";
+                $("paDetUserName").textContent = d.contactName || "-";
+                $("paDetUserId").textContent = d.userId ? `#${d.userId}` : "Guest / Walk-in";
+                $("paDetUserEmail").textContent = d.contactEmail || "-";
+                $("paDetUserPhone").textContent = d.contactPhone || "-";
 
-                // ข้อมูลการชำระเงิน
-                document.getElementById("paDetTxnId").textContent = `#${d.paymentId}`;
-                document.getElementById("paDetBookingCode").textContent = `${d.bookingCode} (#${d.bookingId})`;
-                document.getElementById("paDetStatusBadge").innerHTML = renderStatusBadge(d.status);
-                document.getElementById("paDetSubmittedAt").textContent = d.submittedAt || "-";
-                document.getElementById("paDetMethod").innerHTML = formatMethodLabel(d.method);
-                document.getElementById("paDetStayDates").textContent = `${d.checkInDate} - ${d.checkOutDate} (${d.nights} คืน)`;
+                $("paDetTxnId").textContent = `#${d.paymentId}`;
+                $("paDetBookingCode").textContent = `${d.bookingCode} (#${d.bookingId})`;
+                $("paDetStatusBadge").innerHTML = renderStatusBadge(d.status);
+                $("paDetSubmittedAt").textContent = d.submittedAt || "-";
+                $("paDetMethod").innerHTML = formatMethodLabel(d.method);
+                $("paDetStayDates").textContent = `${d.checkInDate} - ${d.checkOutDate} (${d.nights} คืน)`;
 
-                document.getElementById("paDetAmountDue").textContent = formatMoney(d.amountDue);
-                document.getElementById("paDetAmountPaid").textContent = formatMoney(d.amountPaid);
+                $("paDetAmountDue").textContent = formatTHB(d.amountDue);
+                $("paDetAmountPaid").textContent = formatTHB(d.amountPaid);
 
-                const matchEl = document.getElementById("paDetMatchStatus");
+                const matchEl = $("paDetMatchStatus");
                 if (d.amountMatches) {
                     matchEl.className = "fw-bold small text-success";
                     matchEl.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i>ยอดชำระตรงตามใบจอง';
                 } else {
                     const diffSign = Number(d.difference) > 0 ? "+" : "";
                     matchEl.className = "fw-bold small text-danger";
-                    matchEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation me-1"></i>ยอดต่าง ${diffSign}${formatMoney(d.difference)}`;
+                    matchEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation me-1"></i>ยอดต่าง ${diffSign}${formatTHB(d.difference)}`;
                 }
 
-                // แจ้งเตือน BlockReason (เช่น ยอดไม่ตรง หรือ Separation of Duties)
-                const blockAlert = document.getElementById("paModalBlockAlert");
-                const blockText = document.getElementById("paModalBlockReasonText");
-                if (d.blockReason && (d.status || "").toLowerCase() === "pending") {
+                const blockAlert = $("paModalBlockAlert");
+                const blockText = $("paModalBlockReasonText");
+                if (d.blockReason && statusLower === "pending") {
                     blockText.textContent = d.blockReason;
                     blockAlert.classList.remove("d-none");
                 } else {
                     blockAlert.classList.add("d-none");
                 }
 
-                // ข้อมูลผู้ตรวจสอบ
-                const auditBox = document.getElementById("paDetReviewAuditBox");
-                const rejectRow = document.getElementById("paDetRejectReasonRow");
-                if ((d.status || "").toLowerCase() !== "pending") {
+                const auditBox = $("paDetReviewAuditBox");
+                const rejectRow = $("paDetRejectReasonRow");
+                if (statusLower !== "pending") {
                     auditBox.classList.remove("d-none");
-                    document.getElementById("paDetReviewedBy").textContent = d.reviewedByName || "Admin / Finance";
-                    document.getElementById("paDetReviewedAt").textContent = d.reviewedAt || "-";
-                    if ((d.status || "").toLowerCase() === "rejected" && d.rejectReason) {
+                    $("paDetReviewedBy").textContent = d.reviewedByName || "Admin / Finance";
+                    $("paDetReviewedAt").textContent = d.reviewedAt || "-";
+                    if (statusLower === "rejected" && d.rejectReason) {
                         rejectRow.classList.remove("d-none");
-                        document.getElementById("paDetRejectReason").textContent = d.rejectReason;
+                        $("paDetRejectReason").textContent = d.rejectReason;
                     } else {
                         rejectRow.classList.add("d-none");
                     }
@@ -681,9 +620,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     auditBox.classList.add("d-none");
                 }
 
-                // รูปสลิป
-                const slipImg = document.getElementById("paDetSlipImg");
-                const slipMissing = document.getElementById("paDetSlipMissing");
+                const slipImg = $("paDetSlipImg");
+                const slipMissing = $("paDetSlipMissing");
                 state.currentDetailZoom = 1;
                 slipImg.style.transform = "scale(1)";
 
@@ -696,16 +634,15 @@ document.addEventListener("DOMContentLoaded", function () {
                         slipMissing.classList.remove("d-none");
                     };
                 } else {
-                    slipImg.src = "";
+                    slipImg.removeAttribute("src");
                     slipImg.classList.add("d-none");
                     slipMissing.classList.remove("d-none");
                 }
 
-                // ปุ่ม Approve / Reject ใน Modal (เฉพาะรายการที่ยัง Pending)
-                const btnApprove = document.getElementById("paModalBtnApprove");
-                const btnReject = document.getElementById("paModalBtnReject");
+                const btnApprove = $("paModalBtnApprove");
+                const btnReject = $("paModalBtnReject");
 
-                if ((d.status || "").toLowerCase() === "pending") {
+                if (statusLower === "pending") {
                     btnApprove.classList.remove("d-none");
                     btnReject.classList.remove("d-none");
                     btnApprove.disabled = !d.canApprove;
@@ -718,8 +655,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     };
                 }
 
-                document.getElementById("paDetailModalLoading").classList.add("d-none");
-                document.getElementById("paDetailModalContent").classList.remove("d-none");
+                $("paDetailModalLoading").classList.add("d-none");
+                $("paDetailModalContent").classList.remove("d-none");
             } catch (err) {
                 bsDetailModal.hide();
                 Swal.fire({
@@ -731,9 +668,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         };
 
-        // =====================================================================
-        // 3. ระบบอนุมัติสลิป (Approve) พร้อม SweetAlert2 ยืนยัน
-        // =====================================================================
+        // ---- 3. Approve ----
         const confirmAndApproveSlip = async (paymentId, bookingCode, amount, fromDetailModal = false) => {
             if (state.isSubmitting) return;
 
@@ -752,7 +687,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         </div>
                         <div class="d-flex justify-content-between">
                             <span class="text-muted">จำนวนเงินที่อนุมัติ:</span>
-                            <strong class="text-success fs-6">${formatMoney(amount)}</strong>
+                            <strong class="text-success fs-6">${formatTHB(amount)}</strong>
                         </div>
                     </div>
                     <p class="small text-muted mt-3 mb-0">
@@ -782,21 +717,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 const res = await fetch(apiUrls.approve, {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/x-www-form-urlencoded",
-                        "Accept": "application/json"
-                    },
+                    headers: { "Content-Type": "application/x-www-form-urlencoded", "Accept": "application/json" },
                     body: formData.toString()
                 });
 
                 const result = await res.json();
-                if (!res.ok || !result.success) {
-                    throw new Error(result.message || "ไม่สามารถอนุมัติสลิปได้");
-                }
+                if (!res.ok || !result.success) throw new Error(result.message || "ไม่สามารถอนุมัติสลิปได้");
 
-                if (fromDetailModal && bsDetailModal) {
-                    bsDetailModal.hide();
-                }
+                if (fromDetailModal && bsDetailModal) bsDetailModal.hide();
 
                 await Swal.fire({
                     icon: "success",
@@ -818,29 +746,25 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         };
 
-        // =====================================================================
-        // 4. ระบบปฏิเสธสลิป (Reject) พร้อมระบุเหตุผล
-        // =====================================================================
+        // ---- 4. Reject ----
         const openRejectModal = (paymentId, bookingCode, customerName, amount) => {
             if (!bsRejectModal) return;
 
-            document.getElementById("paRejectPaymentId").value = paymentId;
-            document.getElementById("paRejectTxnDisplay").textContent = `#${paymentId}`;
-            document.getElementById("paRejectCustomerDisplay").textContent = `${customerName} (${bookingCode})`;
-            document.getElementById("paRejectAmountDisplay").textContent = formatMoney(amount);
+            $("paRejectPaymentId").value = paymentId;
+            $("paRejectTxnDisplay").textContent = `#${paymentId}`;
+            $("paRejectCustomerDisplay").textContent = `${customerName} (${bookingCode})`;
+            $("paRejectAmountDisplay").textContent = formatTHB(amount);
 
-            const presetSelect = document.getElementById("paRejectReasonPreset");
-            const reasonTextarea = document.getElementById("paRejectReasonText");
-            presetSelect.value = "";
+            $("paRejectReasonPreset").value = "";
+            const reasonTextarea = $("paRejectReasonText");
             reasonTextarea.value = "";
             reasonTextarea.classList.remove("is-invalid");
 
             bsRejectModal.show();
         };
 
-        // เลือกหัวข้อเหตุผลมาตรฐานแล้วเติมลงใน Textarea อัตโนมัติ
-        const elReasonPreset = document.getElementById("paRejectReasonPreset");
-        const elReasonText = document.getElementById("paRejectReasonText");
+        const elReasonPreset = $("paRejectReasonPreset");
+        const elReasonText = $("paRejectReasonText");
         if (elReasonPreset && elReasonText) {
             elReasonPreset.addEventListener("change", function () {
                 if (this.value && this.value !== "OTHER") {
@@ -853,14 +777,13 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
 
-        // ส่งฟอร์มปฏิเสธสลิปไปยัง FinanceController
-        const elRejectForm = document.getElementById("paRejectForm");
+        const elRejectForm = $("paRejectForm");
         if (elRejectForm) {
             elRejectForm.addEventListener("submit", async function (e) {
                 e.preventDefault();
                 if (state.isSubmitting) return;
 
-                const paymentId = document.getElementById("paRejectPaymentId").value;
+                const paymentId = $("paRejectPaymentId").value;
                 const reason = (elReasonText.value || "").trim();
 
                 if (!reason) {
@@ -869,7 +792,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
                 elReasonText.classList.remove("is-invalid");
 
-                const btnSubmit = document.getElementById("paBtnConfirmRejectSubmit");
+                const btnSubmit = $("paBtnConfirmRejectSubmit");
                 state.isSubmitting = true;
                 if (btnSubmit) btnSubmit.disabled = true;
 
@@ -881,17 +804,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     const res = await fetch(apiUrls.reject, {
                         method: "POST",
-                        headers: {
-                            "Content-Type": "application/x-www-form-urlencoded",
-                            "Accept": "application/json"
-                        },
+                        headers: { "Content-Type": "application/x-www-form-urlencoded", "Accept": "application/json" },
                         body: formData.toString()
                     });
 
                     const result = await res.json();
-                    if (!res.ok || !result.success) {
-                        throw new Error(result.message || "ไม่สามารถปฏิเสธสลิปได้");
-                    }
+                    if (!res.ok || !result.success) throw new Error(result.message || "ไม่สามารถปฏิเสธสลิปได้");
 
                     if (bsRejectModal) bsRejectModal.hide();
 
@@ -917,15 +835,13 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
 
-        // =====================================================================
-        // 5. ระบบดูรูปสลิปขนาดใหญ่ (Zoom & Fullscreen Lightbox)
-        // =====================================================================
+        // ---- 5. Lightbox / Zoom ----
         const openSlipLightbox = (slipUrl, txnId) => {
             if (!bsPreviewModal) return;
 
-            const imgEl = document.getElementById("paLightboxImg");
-            const noImgEl = document.getElementById("paLightboxNoImg");
-            const titleEl = document.getElementById("paPreviewModalTitle");
+            const imgEl = $("paLightboxImg");
+            const noImgEl = $("paLightboxNoImg");
+            const titleEl = $("paPreviewModalTitle");
 
             state.currentLightboxZoom = 1;
             imgEl.style.transform = "scale(1)";
@@ -947,45 +863,41 @@ document.addEventListener("DOMContentLoaded", function () {
             bsPreviewModal.show();
         };
 
-        // ปุ่มควบคุม Zoom & Fullscreen ใน Detail Modal
         const applyDetailZoom = (delta, reset = false) => {
-            const img = document.getElementById("paDetSlipImg");
+            const img = $("paDetSlipImg");
             if (!img) return;
             state.currentDetailZoom = reset ? 1 : Math.min(3, Math.max(0.5, state.currentDetailZoom + delta));
             img.style.transform = `scale(${state.currentDetailZoom})`;
         };
 
-        document.getElementById("paBtnModalZoomIn")?.addEventListener("click", () => applyDetailZoom(0.25));
-        document.getElementById("paBtnModalZoomOut")?.addEventListener("click", () => applyDetailZoom(-0.25));
-        document.getElementById("paBtnModalZoomReset")?.addEventListener("click", () => applyDetailZoom(0, true));
-        document.getElementById("paBtnModalFullscreen")?.addEventListener("click", () => {
-            const stage = document.getElementById("paModalSlipStage");
+        $("paBtnModalZoomIn")?.addEventListener("click", () => applyDetailZoom(0.25));
+        $("paBtnModalZoomOut")?.addEventListener("click", () => applyDetailZoom(-0.25));
+        $("paBtnModalZoomReset")?.addEventListener("click", () => applyDetailZoom(0, true));
+        $("paBtnModalFullscreen")?.addEventListener("click", () => {
+            const stage = $("paModalSlipStage");
             if (stage && stage.requestFullscreen) stage.requestFullscreen();
         });
-        document.getElementById("paDetSlipImg")?.addEventListener("click", function () {
-            if (this.src) openSlipLightbox(this.src, document.getElementById("paModalHeaderTxnId")?.textContent);
+        $("paDetSlipImg")?.addEventListener("click", function () {
+            if (this.getAttribute("src")) openSlipLightbox(this.src, $("paModalHeaderTxnId")?.textContent);
         });
 
-        // ปุ่มควบคุม Zoom & Fullscreen ใน Lightbox Modal
         const applyLightboxZoom = (delta, reset = false) => {
-            const img = document.getElementById("paLightboxImg");
+            const img = $("paLightboxImg");
             if (!img) return;
             state.currentLightboxZoom = reset ? 1 : Math.min(3.5, Math.max(0.5, state.currentLightboxZoom + delta));
             img.style.transform = `scale(${state.currentLightboxZoom})`;
         };
 
-        document.getElementById("paLightboxZoomIn")?.addEventListener("click", () => applyLightboxZoom(0.25));
-        document.getElementById("paLightboxZoomOut")?.addEventListener("click", () => applyLightboxZoom(-0.25));
-        document.getElementById("paLightboxZoomReset")?.addEventListener("click", () => applyLightboxZoom(0, true));
-        document.getElementById("paLightboxFullscreen")?.addEventListener("click", () => {
-            const container = document.getElementById("paLightboxContainer");
+        $("paLightboxZoomIn")?.addEventListener("click", () => applyLightboxZoom(0.25));
+        $("paLightboxZoomOut")?.addEventListener("click", () => applyLightboxZoom(-0.25));
+        $("paLightboxZoomReset")?.addEventListener("click", () => applyLightboxZoom(0, true));
+        $("paLightboxFullscreen")?.addEventListener("click", () => {
+            const container = $("paLightboxContainer");
             if (container && container.requestFullscreen) container.requestFullscreen();
         });
 
-        // =====================================================================
-        // 6. Event Listeners สำหรับตาราง, การค้นหา, แท็บสถานะ และ Pagination
-        // =====================================================================
-        elTableBody.addEventListener("click", function (e) {
+        // ---- 6. Event listeners ----
+        elTableBody?.addEventListener("click", function (e) {
             const thumbBtn = e.target.closest(".js-open-lightbox");
             if (thumbBtn) {
                 openSlipLightbox(thumbBtn.getAttribute("data-slip-url"), thumbBtn.getAttribute("data-txn-id"));
@@ -1020,7 +932,6 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
 
-        // คลิกสลับแท็บสถานะ
         document.querySelectorAll(".payment-approval-tab").forEach(tab => {
             tab.addEventListener("click", function () {
                 state.status = this.getAttribute("data-status") || "pending";
@@ -1029,7 +940,6 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
 
-        // คลิกที่การ์ด Summary ด้านบนเพื่อกรองตามสถานะ
         document.querySelectorAll(".payment-approval-summary-card").forEach(card => {
             card.addEventListener("click", function () {
                 state.status = this.getAttribute("data-filter-trigger") || "all";
@@ -1038,8 +948,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
 
-        // ปุ่มทางลัด "ประวัติการตรวจสอบ" บนแบนเนอร์
-        document.getElementById("paBtnSwitchHistory")?.addEventListener("click", function () {
+        $("paBtnSwitchHistory")?.addEventListener("click", function () {
             state.status = "history";
             state.sortOrder = "reviewed_desc";
             if (elSortSelect) elSortSelect.value = "reviewed_desc";
@@ -1047,8 +956,7 @@ document.addEventListener("DOMContentLoaded", function () {
             loadPaymentSlips();
         });
 
-        // ฟอร์มค้นหาและกรอง
-        document.getElementById("paFilterForm")?.addEventListener("submit", function (e) {
+        $("paFilterForm")?.addEventListener("submit", function (e) {
             e.preventDefault();
             state.keyword = (elKeywordInput?.value || "").trim();
             state.fromDate = elFromDateInput?.value || "";
@@ -1058,7 +966,6 @@ document.addEventListener("DOMContentLoaded", function () {
             loadPaymentSlips();
         });
 
-        // เปลี่ยนการเรียงลำดับหรือจำนวนต่อหน้า
         elSortSelect?.addEventListener("change", function () {
             state.sortOrder = this.value;
             state.page = 1;
@@ -1071,7 +978,6 @@ document.addEventListener("DOMContentLoaded", function () {
             loadPaymentSlips();
         });
 
-        // ล้างตัวกรองทั้งหมด
         const resetAllFilters = () => {
             state.status = "all";
             state.keyword = "";
@@ -1086,19 +992,15 @@ document.addEventListener("DOMContentLoaded", function () {
             loadPaymentSlips();
         };
 
-        document.getElementById("paBtnResetFilter")?.addEventListener("click", resetAllFilters);
-        document.getElementById("paEmptyResetBtn")?.addEventListener("click", resetAllFilters);
+        $("paBtnResetFilter")?.addEventListener("click", resetAllFilters);
+        $("paEmptyResetBtn")?.addEventListener("click", resetAllFilters);
 
-        // ปุ่มรีเฟรชข้อมูล
-        document.getElementById("paBtnReloadTable")?.addEventListener("click", function () {
-            const icon = document.getElementById("paReloadIcon");
-            if (icon) icon.classList.add("fin-spin-anim");
-            loadPaymentSlips().finally(() => {
-                setTimeout(() => icon?.classList.remove("fin-spin-anim"), 400);
-            });
+        $("paBtnReloadTable")?.addEventListener("click", function () {
+            const icon = $("paReloadIcon");
+            icon?.classList.add("fin-spin-anim");
+            loadPaymentSlips().finally(() => setTimeout(() => icon?.classList.remove("fin-spin-anim"), 400));
         });
 
-        // คลิกเปลี่ยนหน้า Pagination
         elPaginationControls?.addEventListener("click", function (e) {
             e.preventDefault();
             const link = e.target.closest("a.page-link");
@@ -1110,86 +1012,52 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
 
-               // โหลดข้อมูลครั้งแรกเมื่อเปิดหน้า
         loadPaymentSlips();
-    };
-
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", initPaymentApproval);
-    } else {
-        initPaymentApproval();
     }
-})();
 
-    // =========================================================================
-    // 4. ปุ่ม Refresh Dashboard (Section 1)
-    // =========================================================================
-    const refreshBtn = document.getElementById("btnRefreshDashboard");
-    const refreshIcon = document.getElementById("refreshIcon");
-/* ==========================================================================
-   FINANCE TRANSACTIONS HISTORY MODULE (ต่อท้ายไฟล์ wwwroot/js/finance/finance.js)
-   Namespace: window.financeTransactions
-   ========================================================================== */
-window.financeTransactions = (function () {
-    "use strict";
-
-    const init = () => {
+    // =====================================================================
+    // 3. TRANSACTIONS HISTORY  (window.financeTransactions)
+    // =====================================================================
+    function initTransactions() {
         const appEl = document.getElementById("ftTransactionsApp");
-        if (!appEl) return; // ทำงานเฉพาะในหน้า Transactions.cshtml เท่านั้น
+        if (!appEl) return;
+
+        const $ = (id) => document.getElementById(id);
 
         const actionUrl = appEl.getAttribute("data-action-url") || "/Finance/Transactions";
         const paymentDetailApi = appEl.getAttribute("data-payment-detail-api") || "/Finance/GetPaymentSlipDetailJson";
 
-        // Form & Filter Inputs
-        const searchForm = document.getElementById("ftSearchForm");
-        const serverKeywordInput = document.getElementById("ftServerKeyword");
-        const serverTxnTypeInput = document.getElementById("ftServerTxnType");
+        const searchForm = $("ftSearchForm");
+        const serverKeywordInput = $("ftServerKeyword");
+        const serverTxnTypeInput = $("ftServerTxnType");
 
-        const inputTxnId = document.getElementById("ftInputTxnId");
-        const inputBookingId = document.getElementById("ftInputBookingId");
-        const inputCustomer = document.getElementById("ftInputCustomer");
-        const selectType = document.getElementById("ftSelectType");
-        const selectStatus = document.getElementById("ftSelectStatus");
-        const inputFromDate = document.getElementById("ftInputFromDate");
-        const inputToDate = document.getElementById("ftInputToDate");
-        const selectSort = document.getElementById("ftSelectSort");
+        const inputTxnId = $("ftInputTxnId");
+        const inputBookingId = $("ftInputBookingId");
+        const inputCustomer = $("ftInputCustomer");
+        const selectType = $("ftSelectType");
+        const selectStatus = $("ftSelectStatus");
+        const inputFromDate = $("ftInputFromDate");
+        const inputToDate = $("ftInputToDate");
+        const selectSort = $("ftSelectSort");
 
-        // Table & UI Elements
-        const tableWrapper = document.getElementById("ftTableWrapper");
-        const tableBody = document.getElementById("ftTableBody");
-        const emptyState = document.getElementById("ftEmptyState");
-        const loadingState = document.getElementById("ftLoadingState");
-        const visibleCountEl = document.getElementById("ftVisibleCount");
+        const tableWrapper = $("ftTableWrapper");
+        const tableBody = $("ftTableBody");
+        const emptyState = $("ftEmptyState");
+        const loadingState = $("ftLoadingState");
+        const visibleCountEl = $("ftVisibleCount");
 
-        // Detail Modal
-        const detailModalEl = document.getElementById("ftDetailModal");
+        const detailModalEl = $("ftDetailModal");
         const bsDetailModal = detailModalEl ? new bootstrap.Modal(detailModalEl) : null;
-
-        const formatTHB = (val) => {
-            const num = Number(val) || 0;
-            return "฿" + num.toLocaleString("th-TH", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
-        };
 
         const renderModalStatusBadge = (statusKey, statusLabel) => {
             const s = (statusKey || "approved").toLowerCase();
-            if (s === "pending") {
-                return `<span class="ft-badge status-pending"><i class="fa-solid fa-clock me-1"></i>${statusLabel || "Pending"}</span>`;
-            }
-            if (s === "rejected") {
-                return `<span class="ft-badge status-rejected"><i class="fa-solid fa-circle-xmark me-1"></i>${statusLabel || "Rejected"}</span>`;
-            }
-            if (s === "refunded") {
-                return `<span class="ft-badge status-refunded"><i class="fa-solid fa-rotate-left me-1"></i>${statusLabel || "Refunded"}</span>`;
-            }
-            return `<span class="ft-badge status-approved"><i class="fa-solid fa-circle-check me-1"></i>${statusLabel || "Approved"}</span>`;
+            if (s === "pending") return `<span class="ft-badge status-pending"><i class="fa-solid fa-clock me-1"></i>${escapeHtml(statusLabel || "Pending")}</span>`;
+            if (s === "rejected") return `<span class="ft-badge status-rejected"><i class="fa-solid fa-circle-xmark me-1"></i>${escapeHtml(statusLabel || "Rejected")}</span>`;
+            if (s === "refunded") return `<span class="ft-badge status-refunded"><i class="fa-solid fa-rotate-left me-1"></i>${escapeHtml(statusLabel || "Refunded")}</span>`;
+            return `<span class="ft-badge status-approved"><i class="fa-solid fa-circle-check me-1"></i>${escapeHtml(statusLabel || "Approved")}</span>`;
         };
 
-        // =====================================================================
-        // 1. ระบบกรองและเรียงลำดับตารางแบบ Real-time (Client + Server Hybrid)
-        // =====================================================================
+        // ---- 1. กรอง/เรียงในหน้า (Client) ----
         const applyClientFiltersAndSort = () => {
             if (!tableBody) return;
 
@@ -1203,7 +1071,7 @@ window.financeTransactions = (function () {
             const toDateVal = inputToDate?.value || "";
             const sortMode = selectSort?.value || "date_desc";
 
-            let visibleRows = [];
+            const visibleRows = [];
 
             rows.forEach(row => {
                 const rTxnId = (row.getAttribute("data-txn-id") || "").toLowerCase();
@@ -1215,7 +1083,6 @@ window.financeTransactions = (function () {
                 const rDate = row.getAttribute("data-date") || "";
 
                 let match = true;
-
                 if (txnQuery && !rTxnId.includes(txnQuery)) match = false;
                 if (bookingQuery && !rBookingCode.includes(bookingQuery) && !rBookingId.includes(bookingQuery)) match = false;
                 if (customerQuery && !rCustomer.includes(customerQuery)) match = false;
@@ -1224,15 +1091,10 @@ window.financeTransactions = (function () {
                 if (fromDateVal && rDate < fromDateVal) match = false;
                 if (toDateVal && rDate > toDateVal) match = false;
 
-                if (match) {
-                    row.classList.remove("d-none");
-                    visibleRows.push(row);
-                } else {
-                    row.classList.add("d-none");
-                }
+                row.classList.toggle("d-none", !match);
+                if (match) visibleRows.push(row);
             });
 
-            // เรียงลำดับแถวที่แสดง
             visibleRows.sort((a, b) => {
                 if (sortMode === "amount_desc" || sortMode === "amount_asc") {
                     const amtA = parseFloat(a.getAttribute("data-amount") || "0");
@@ -1241,35 +1103,21 @@ window.financeTransactions = (function () {
                 }
                 const timeA = a.getAttribute("data-timestamp") || "";
                 const timeB = b.getAttribute("data-timestamp") || "";
-                return sortMode === "date_asc"
-                    ? timeA.localeCompare(timeB)
-                    : timeB.localeCompare(timeA);
+                return sortMode === "date_asc" ? timeA.localeCompare(timeB) : timeB.localeCompare(timeA);
             });
 
             visibleRows.forEach(row => tableBody.appendChild(row));
 
-            if (visibleCountEl) {
-                visibleCountEl.textContent = visibleRows.length.toLocaleString("th-TH");
-            }
+            if (visibleCountEl) visibleCountEl.textContent = visibleRows.length.toLocaleString("th-TH");
 
-            if (visibleRows.length === 0) {
-                tableWrapper?.classList.add("d-none");
-                emptyState?.classList.remove("d-none");
-            } else {
-                tableWrapper?.classList.remove("d-none");
-                emptyState?.classList.add("d-none");
-            }
+            tableWrapper?.classList.toggle("d-none", visibleRows.length === 0);
+            emptyState?.classList.toggle("d-none", visibleRows.length !== 0);
         };
 
-        // ผูก Event กรองทันทีเมื่อพิมพ์หรือเปลี่ยน Dropdown
-        [inputTxnId, inputBookingId, inputCustomer].forEach(el => {
-            el?.addEventListener("input", applyClientFiltersAndSort);
-        });
-        [selectType, selectStatus, inputFromDate, inputToDate, selectSort].forEach(el => {
-            el?.addEventListener("change", applyClientFiltersAndSort);
-        });
+        [inputTxnId, inputBookingId, inputCustomer].forEach(el => el?.addEventListener("input", applyClientFiltersAndSort));
+        [selectType, selectStatus, inputFromDate, inputToDate, selectSort].forEach(el => el?.addEventListener("change", applyClientFiltersAndSort));
 
-        // เมื่อกดปุ่ม "ค้นหา" ให้ส่งค่าไปยัง FinanceController.Transactions เพื่อดึงข้อมูลจากฐานข้อมูลจริง
+        // ค้นหาจริงจากฐานข้อมูล (ส่งไป FinanceController.Transactions)
         searchForm?.addEventListener("submit", function () {
             if (loadingState && tableWrapper) {
                 loadingState.classList.remove("d-none");
@@ -1277,23 +1125,17 @@ window.financeTransactions = (function () {
                 emptyState?.classList.add("d-none");
             }
 
-            // รวมคำค้นหาส่งเข้าพารามิเตอร์ keyword ของ FinanceController.Transactions
-            const combinedKeyword = (
+            const combinedKeyword =
                 inputBookingId?.value?.trim() ||
                 inputCustomer?.value?.trim() ||
                 inputTxnId?.value?.replace(/[^0-9]/g, "")?.trim() ||
-                ""
-            );
+                "";
             if (serverKeywordInput) serverKeywordInput.value = combinedKeyword;
 
-            // แปลงค่าประเภทธุรกรรมให้ตรงกับที่ FinanceController รองรับ (income / refund / expense)
             const selectedType = selectType?.value || "";
-            if (serverTxnTypeInput) {
-                serverTxnTypeInput.value = selectedType === "receipt" ? "income" : selectedType;
-            }
+            if (serverTxnTypeInput) serverTxnTypeInput.value = selectedType === "receipt" ? "income" : selectedType;
         });
 
-        // ปุ่ม Reset Filters
         const resetFilters = () => {
             if (inputTxnId) inputTxnId.value = "";
             if (inputBookingId) inputBookingId.value = "";
@@ -1304,64 +1146,49 @@ window.financeTransactions = (function () {
             if (inputToDate) inputToDate.value = "";
             if (selectSort) selectSort.value = "date_desc";
 
-            // หากมี Query String ค้างอยู่จาก Server ให้โหลดหน้า Transactions ใหม่แบบไร้พารามิเตอร์
-            if (window.location.search) {
-                window.location.href = actionUrl;
-            } else {
-                applyClientFiltersAndSort();
-            }
+            if (window.location.search) window.location.href = actionUrl;
+            else applyClientFiltersAndSort();
         };
 
-        document.getElementById("ftBtnReset")?.addEventListener("click", resetFilters);
-        document.getElementById("ftBtnEmptyReset")?.addEventListener("click", resetFilters);
+        $("ftBtnReset")?.addEventListener("click", resetFilters);
+        $("ftBtnEmptyReset")?.addEventListener("click", resetFilters);
 
-        // =====================================================================
-        // 2. เปิด Transaction Detail Modal (พร้อมดึงชื่อลูกค้าจริงหากผูกกับ PaymentId)
-        // =====================================================================
+        // ---- 2. Detail Modal ----
         const openTransactionDetail = async (rowEl) => {
             if (!bsDetailModal || !rowEl) return;
 
-            const txnId = rowEl.getAttribute("data-txn-id") || "-";
-            const bookingCode = rowEl.getAttribute("data-booking-code") || "";
-            const bookingId = rowEl.getAttribute("data-booking-id") || "";
-            const paymentId = rowEl.getAttribute("data-payment-id") || "";
-            const typeLabel = rowEl.getAttribute("data-type-label") || "-";
-            const category = rowEl.getAttribute("data-category") || "-";
-            const method = rowEl.getAttribute("data-method") || "-";
-            const amount = rowEl.getAttribute("data-amount") || "0";
-            const dateTimeDisplay = rowEl.getAttribute("data-datetime-display") || "-";
-            const statusKey = rowEl.getAttribute("data-status") || "approved";
-            const statusLabel = rowEl.getAttribute("data-status-label") || "Approved";
-            const recordedBy = rowEl.getAttribute("data-recorded-by") || "-";
-            const description = rowEl.getAttribute("data-description") || "-";
+            const g = (k, d = "") => rowEl.getAttribute(k) || d;
+            const txnId = g("data-txn-id", "-");
+            const bookingCode = g("data-booking-code");
+            const bookingId = g("data-booking-id");
+            const paymentId = g("data-payment-id");
+            const typeLabel = g("data-type-label", "-");
+            const category = g("data-category", "-");
+            const txnCode = `#TXN-${String(txnId).padStart(5, "0")}`;
 
-            // แสดงข้อมูลพื้นฐานจากแถวทันที
-            document.getElementById("ftModalHeaderId").textContent = `#TXN-${String(txnId).padStart(5, "0")}`;
-            document.getElementById("ftModalTxnId").textContent = `#TXN-${String(txnId).padStart(5, "0")}`;
-            document.getElementById("ftModalAmount").textContent = formatTHB(amount);
-            document.getElementById("ftModalCategory").textContent = `หมวดหมู่บัญชี: ${category}`;
-            document.getElementById("ftModalStatusBadge").innerHTML = renderModalStatusBadge(statusKey, statusLabel);
+            $("ftModalHeaderId").textContent = txnCode;
+            $("ftModalTxnId").textContent = txnCode;
+            $("ftModalAmount").textContent = formatTHB(g("data-amount", "0"));
+            $("ftModalCategory").textContent = `หมวดหมู่บัญชี: ${category}`;
+            $("ftModalStatusBadge").innerHTML = renderModalStatusBadge(g("data-status", "approved"), g("data-status-label", "Approved"));
 
-            document.getElementById("ftModalBookingCode").textContent = bookingCode
+            $("ftModalBookingCode").textContent = bookingCode
                 ? `${bookingCode}${bookingId ? ` (Booking #${bookingId})` : ""}`
                 : (bookingId ? `Booking #${bookingId}` : "ไม่มีรหัสการจองอ้างอิง");
 
-            document.getElementById("ftModalCustomerName").textContent = bookingCode
-                ? `รายการของการจอง ${bookingCode}`
-                : "รายการบันทึกบัญชีภายใน";
+            $("ftModalCustomerName").textContent = bookingCode ? `รายการของการจอง ${bookingCode}` : "รายการบันทึกบัญชีภายใน";
+            $("ftModalType").textContent = `${typeLabel} (${category})`;
+            $("ftModalMethod").textContent = g("data-method", "-");
+            $("ftModalDateTime").textContent = g("data-datetime-display", "-");
+            $("ftModalReviewer").textContent = g("data-recorded-by", "-");
+            $("ftModalNote").textContent = g("data-description", "-");
 
-            document.getElementById("ftModalType").textContent = `${typeLabel} (${category})`;
-            document.getElementById("ftModalMethod").textContent = method;
-            document.getElementById("ftModalDateTime").textContent = dateTimeDisplay;
-            document.getElementById("ftModalReviewer").textContent = recordedBy;
-            document.getElementById("ftModalNote").textContent = description;
-
-            const paymentRefBox = document.getElementById("ftModalPaymentRefBox");
-            const paymentLink = document.getElementById("ftModalPaymentLink");
+            const paymentRefBox = $("ftModalPaymentRefBox");
+            const paymentLink = $("ftModalPaymentLink");
 
             if (paymentId) {
                 paymentRefBox?.classList.remove("d-none");
-                document.getElementById("ftModalPaymentId").textContent = `Payment #${paymentId}`;
+                $("ftModalPaymentId").textContent = `Payment #${paymentId}`;
                 if (paymentLink) {
                     paymentLink.href = `/Finance/PaymentDetail/${encodeURIComponent(paymentId)}`;
                     paymentLink.classList.remove("d-none");
@@ -1373,45 +1200,33 @@ window.financeTransactions = (function () {
 
             bsDetailModal.show();
 
-            // หากมี PaymentId และมี API GetPaymentSlipDetailJson ให้ดึงชื่อลูกค้าและช่องทางชำระเงินจริงมาอัปเดตใน Modal
+            // เติมชื่อลูกค้า/ช่องทางชำระเงินจริงจาก API
             if (paymentId) {
                 try {
-                    const res = await fetch(`${paymentDetailApi}?id=${encodeURIComponent(paymentId)}`, {
-                        headers: { "Accept": "application/json" }
-                    });
+                    const res = await fetch(`${paymentDetailApi}?id=${encodeURIComponent(paymentId)}`, { headers: { "Accept": "application/json" } });
                     if (res.ok) {
                         const json = await res.json();
                         if (json.success && json.data) {
                             const d = json.data;
                             if (d.contactName) {
-                                document.getElementById("ftModalCustomerName").textContent =
-                                    `${d.contactName}${d.contactPhone ? ` (${d.contactPhone})` : ""}`;
+                                $("ftModalCustomerName").textContent = `${d.contactName}${d.contactPhone ? ` (${d.contactPhone})` : ""}`;
                             }
-                            if (d.method) {
-                                document.getElementById("ftModalMethod").textContent = d.method.toUpperCase();
-                            }
-                            if (d.reviewedByName) {
-                                document.getElementById("ftModalReviewer").textContent = d.reviewedByName;
-                            }
+                            if (d.method) $("ftModalMethod").textContent = d.method.toUpperCase();
+                            if (d.reviewedByName) $("ftModalReviewer").textContent = d.reviewedByName;
                         }
                     }
-                } catch (_) {
-                    // กรณีไม่มี Endpoint เสริม ใช้ข้อมูลจาก TransactionRow ตามปกติโดยไม่เกิด Error
-                }
+                } catch (_) { /* ใช้ข้อมูลจากแถวตามเดิม */ }
             }
         };
 
         tableBody?.addEventListener("click", function (e) {
             const btn = e.target.closest(".ft-btn-view-detail");
             if (!btn) return;
-            const row = btn.closest("tr.ft-txn-row");
-            openTransactionDetail(row);
+            openTransactionDetail(btn.closest("tr.ft-txn-row"));
         });
 
-        // =====================================================================
-        // 3. ระบบส่งออกข้อมูลเป็นไฟล์ CSV (Export CSV ใช้งานได้จริง รองรับภาษาไทย)
-        // =====================================================================
-        const exportTableToCsv = () => {
+        // ---- 3. Export CSV ----
+        $("ftBtnExportCsv")?.addEventListener("click", () => {
             if (!tableBody) return;
 
             const visibleRows = Array.from(tableBody.querySelectorAll("tr.ft-txn-row:not(.d-none)"));
@@ -1421,27 +1236,13 @@ window.financeTransactions = (function () {
             }
 
             const headers = [
-                "Transaction ID",
-                "Booking Code",
-                "Category",
-                "Transaction Type",
-                "Payment Reference",
-                "Amount (THB)",
-                "Transaction Date",
-                "Status",
-                "Recorded By",
-                "Description"
+                "Transaction ID", "Booking Code", "Category", "Transaction Type", "Payment Reference",
+                "Amount (THB)", "Transaction Date", "Status", "Recorded By", "Description"
             ];
 
-            const escapeCsvField = (val) => {
-                const str = String(val ?? "").replace(/"/g, '""');
-                return `"${str}"`;
-            };
-
-            const csvLines = [headers.map(escapeCsvField).join(",")];
-
+            const lines = [headers.map(csvEsc).join(",")];
             visibleRows.forEach(row => {
-                const line = [
+                lines.push([
                     `TXN-${String(row.getAttribute("data-txn-id") || "").padStart(5, "0")}`,
                     row.getAttribute("data-booking-code") || "-",
                     row.getAttribute("data-category") || "-",
@@ -1452,53 +1253,21 @@ window.financeTransactions = (function () {
                     row.getAttribute("data-status-label") || "-",
                     row.getAttribute("data-recorded-by") || "-",
                     row.getAttribute("data-description") || "-"
-                ];
-                csvLines.push(line.map(escapeCsvField).join(","));
+                ].map(csvEsc).join(","));
             });
 
-            // ใส่ BOM (\uFEFF) เพื่อให้เปิดไฟล์ CSV ใน Microsoft Excel แล้วภาษาไทยไม่เพี้ยน
-            const csvContent = "\uFEFF" + csvLines.join("\r\n");
-            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-            const downloadUrl = URL.createObjectURL(blob);
-
-            const link = document.createElement("a");
-            const todayStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-            link.href = downloadUrl;
-            link.setAttribute("download", `staymate-transactions-${todayStr}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(downloadUrl);
-        };
-
-        document.getElementById("ftBtnExportCsv")?.addEventListener("click", exportTableToCsv);
-    };
-
-    document.addEventListener("DOMContentLoaded", init);
-
-    return { init };
-})();
-
-    if (refreshBtn) {
-        refreshBtn.addEventListener("click", function () {
-            if (refreshIcon) {
-                refreshIcon.classList.add("fin-spin-anim");
-            }
-            refreshBtn.disabled = true;
-            window.location.reload();
+            downloadCsv(lines, `staymate-transactions-${todayStamp()}.csv`);
         });
     }
 
-    /* ==========================================================================
-   RECEIPT MANAGEMENT MODULE (ต่อท้ายไฟล์ wwwroot/js/finance/finance.js)
-   Namespace: window.financeReceipts
-   ========================================================================== */
-window.financeReceipts = (function () {
-    "use strict";
-
-    const init = () => {
+    // =====================================================================
+    // 4. RECEIPT MANAGEMENT  (window.financeReceipts)
+    // =====================================================================
+    function initReceipts() {
         const appEl = document.getElementById("frReceiptsApp");
-        if (!appEl) return; // ทำงานเฉพาะเมื่ออยู่ในหน้า Receipts.cshtml
+        if (!appEl) return;
+
+        const $ = (id) => document.getElementById(id);
 
         const urls = {
             receipts: appEl.getAttribute("data-action-url") || "/Finance/Receipts",
@@ -1508,37 +1277,26 @@ window.financeReceipts = (function () {
             pdfBase: appEl.getAttribute("data-pdf-base-url") || "/Finance/ReceiptPdf"
         };
 
-        // ดึงรายการชำระเงินที่ Approved แล้วแต่ยังไม่มีใบเสร็จ (สำหรับ Create Receipt Modal)
-        let unissuedPayments = [];
-        const unissuedScript = document.getElementById("frUnissuedPaymentsData");
-        if (unissuedScript && unissuedScript.textContent) {
-            try {
-                unissuedPayments = JSON.parse(unissuedScript.textContent) || [];
-            } catch (e) {
-                console.error("Failed to parse unissued payments:", e);
-            }
-        }
+        const unissuedPayments = readJsonScript("frUnissuedPaymentsData", []) || [];
 
-        // Inputs & Elements
-        const filterForm = document.getElementById("frFilterForm");
-        const serverKeywordInput = document.getElementById("frServerKeyword");
-        const inputReceiptNo = document.getElementById("frInputReceiptNo");
-        const inputBookingCode = document.getElementById("frInputBookingCode");
-        const inputCustomerName = document.getElementById("frInputCustomerName");
-        const selectStatus = document.getElementById("frSelectStatus");
-        const inputFromDate = document.getElementById("frInputFromDate");
-        const inputToDate = document.getElementById("frInputToDate");
-        const selectSort = document.getElementById("frSelectSort");
+        const filterForm = $("frFilterForm");
+        const serverKeywordInput = $("frServerKeyword");
+        const inputReceiptNo = $("frInputReceiptNo");
+        const inputBookingCode = $("frInputBookingCode");
+        const inputCustomerName = $("frInputCustomerName");
+        const selectStatus = $("frSelectStatus");
+        const inputFromDate = $("frInputFromDate");
+        const inputToDate = $("frInputToDate");
+        const selectSort = $("frSelectSort");
 
-        const tableWrapper = document.getElementById("frTableWrapper");
-        const tableBody = document.getElementById("frTableBody");
-        const emptyState = document.getElementById("frEmptyState");
-        const visibleCountEl = document.getElementById("frVisibleRowCount");
+        const tableWrapper = $("frTableWrapper");
+        const tableBody = $("frTableBody");
+        const emptyState = $("frEmptyState");
+        const visibleCountEl = $("frVisibleRowCount");
 
-        // Modals
-        const previewModalEl = document.getElementById("frPreviewModal");
-        const createModalEl = document.getElementById("frCreateModal");
-        const cancelModalEl = document.getElementById("frCancelModal");
+        const previewModalEl = $("frPreviewModal");
+        const createModalEl = $("frCreateModal");
+        const cancelModalEl = $("frCancelModal");
 
         const bsPreviewModal = previewModalEl ? new bootstrap.Modal(previewModalEl) : null;
         const bsCreateModal = createModalEl ? new bootstrap.Modal(createModalEl) : null;
@@ -1546,32 +1304,12 @@ window.financeReceipts = (function () {
 
         let isProcessing = false;
 
-        const escapeHtml = (unsafe) => {
-            if (unsafe === null || unsafe === undefined) return "";
-            return String(unsafe)
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        };
-
-        const formatTHB = (val) => {
-            const num = Number(val) || 0;
-            return "฿" + num.toLocaleString("th-TH", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
-        };
-
         const getCsrfToken = () => {
             const tokenEl = document.querySelector('#frCsrfForm input[name="__RequestVerificationToken"]');
             return tokenEl ? tokenEl.value : "";
         };
 
-        // =====================================================================
-        // 1. ค้นหา กรองตามสถานะ/วันที่ และเรียงลำดับข้อมูล
-        // =====================================================================
+        // ---- 1. ค้นหา/กรอง/เรียง ----
         const applyFiltersAndSort = () => {
             if (!tableBody) return;
 
@@ -1583,9 +1321,8 @@ window.financeReceipts = (function () {
             const toDateVal = inputToDate?.value || "";
             const sortVal = selectSort?.value || "date_desc";
 
-            // หากผู้ใช้กรองสถานะ Pending (รอออกใบเสร็จ) ให้เปิดหน้าต่างสร้างใบเสร็จจากรายการค้างได้ทันที
             const rows = Array.from(tableBody.querySelectorAll("tr.fr-receipt-row"));
-            let visibleRows = [];
+            const visibleRows = [];
 
             rows.forEach(row => {
                 const rNo = (row.getAttribute("data-receipt-no") || "").toLowerCase();
@@ -1603,12 +1340,8 @@ window.financeReceipts = (function () {
                 if (fromDateVal && rDate < fromDateVal) match = false;
                 if (toDateVal && rDate > toDateVal) match = false;
 
-                if (match) {
-                    row.classList.remove("d-none");
-                    visibleRows.push(row);
-                } else {
-                    row.classList.add("d-none");
-                }
+                row.classList.toggle("d-none", !match);
+                if (match) visibleRows.push(row);
             });
 
             visibleRows.sort((a, b) => {
@@ -1625,42 +1358,26 @@ window.financeReceipts = (function () {
             visibleRows.forEach(r => tableBody.appendChild(r));
 
             if (visibleCountEl) visibleCountEl.textContent = visibleRows.length.toLocaleString("th-TH");
+            tableWrapper?.classList.toggle("d-none", visibleRows.length === 0);
+            emptyState?.classList.toggle("d-none", visibleRows.length !== 0);
 
-            if (visibleRows.length === 0) {
-                tableWrapper?.classList.add("d-none");
-                emptyState?.classList.remove("d-none");
-            } else {
-                tableWrapper?.classList.remove("d-none");
-                emptyState?.classList.add("d-none");
-            }
-
-            // ซิงค์ปุ่ม Pill
             document.querySelectorAll(".fr-pill-btn").forEach(btn => {
                 btn.classList.toggle("active", btn.getAttribute("data-status-pill") === statusFilter);
             });
         };
 
-        [inputReceiptNo, inputBookingCode, inputCustomerName].forEach(el => {
-            el?.addEventListener("input", applyFiltersAndSort);
-        });
-        [selectStatus, inputFromDate, inputToDate, selectSort].forEach(el => {
-            el?.addEventListener("change", applyFiltersAndSort);
-        });
+        [inputReceiptNo, inputBookingCode, inputCustomerName].forEach(el => el?.addEventListener("input", applyFiltersAndSort));
+        [selectStatus, inputFromDate, inputToDate, selectSort].forEach(el => el?.addEventListener("change", applyFiltersAndSort));
 
-        // คลิกปุ่ม Pill สถานะ
         document.querySelectorAll(".fr-pill-btn").forEach(btn => {
             btn.addEventListener("click", function () {
                 const status = this.getAttribute("data-status-pill") || "all";
                 if (selectStatus) selectStatus.value = status;
-                if (status === "pending" && unissuedPayments.length > 0) {
-                    openCreateReceiptModal();
-                } else {
-                    applyFiltersAndSort();
-                }
+                if (status === "pending" && unissuedPayments.length > 0) openCreateReceiptModal();
+                else applyFiltersAndSort();
             });
         });
 
-        // คลิกการ์ด Summary ด้านบน
         document.querySelectorAll(".fr-summary-card[data-filter-status]").forEach(card => {
             card.addEventListener("click", function () {
                 const status = this.getAttribute("data-filter-status") || "all";
@@ -1673,18 +1390,15 @@ window.financeReceipts = (function () {
             });
         });
 
-        // ส่งฟอร์มค้นหาไปยัง FinanceController.Receipts
         filterForm?.addEventListener("submit", function () {
-            const combined = (
+            const combined =
                 inputReceiptNo?.value?.trim() ||
                 inputBookingCode?.value?.trim() ||
                 inputCustomerName?.value?.trim() ||
-                ""
-            );
+                "";
             if (serverKeywordInput) serverKeywordInput.value = combined;
         });
 
-        // ปุ่ม Reset Filters
         const resetAllFilters = () => {
             if (inputReceiptNo) inputReceiptNo.value = "";
             if (inputBookingCode) inputBookingCode.value = "";
@@ -1694,34 +1408,26 @@ window.financeReceipts = (function () {
             if (inputToDate) inputToDate.value = "";
             if (selectSort) selectSort.value = "date_desc";
 
-            if (window.location.search) {
-                window.location.href = urls.receipts;
-            } else {
-                applyFiltersAndSort();
-            }
+            if (window.location.search) window.location.href = urls.receipts;
+            else applyFiltersAndSort();
         };
 
-        document.getElementById("frBtnResetFilters")?.addEventListener("click", resetAllFilters);
-        document.getElementById("frBtnEmptyReset")?.addEventListener("click", resetAllFilters);
+        $("frBtnResetFilters")?.addEventListener("click", resetAllFilters);
+        $("frBtnEmptyReset")?.addEventListener("click", resetAllFilters);
 
-        // =====================================================================
-        // 2. ระบบดูรายละเอียดใบเสร็จ (Receipt Preview) & Print ใบเสร็จ
-        // =====================================================================
+        // ---- 2. Preview & Print ----
         const openReceiptPreview = async (receiptId, autoPrint = false) => {
             if (!bsPreviewModal) return;
 
-            const loadingEl = document.getElementById("frPreviewLoading");
-            const paperEl = document.getElementById("frPrintableDocument");
+            const loadingEl = $("frPreviewLoading");
+            const paperEl = $("frPrintableDocument");
 
             loadingEl?.classList.remove("d-none");
             paperEl?.classList.add("d-none");
             bsPreviewModal.show();
 
             try {
-                const res = await fetch(`${urls.detailApi}?id=${encodeURIComponent(receiptId)}`, {
-                    headers: { "Accept": "application/json" }
-                });
-
+                const res = await fetch(`${urls.detailApi}?id=${encodeURIComponent(receiptId)}`, { headers: { "Accept": "application/json" } });
                 if (!res.ok) throw new Error("ไม่สามารถดึงข้อมูลใบเสร็จได้");
                 const json = await res.json();
                 if (!json.success || !json.data) throw new Error(json.message || "ไม่พบข้อมูลใบเสร็จ");
@@ -1729,22 +1435,18 @@ window.financeReceipts = (function () {
                 const d = json.data;
                 const isCancelled = (d.status || "").toLowerCase() === "cancelled";
 
-                document.getElementById("frPrevHeaderNo").textContent = d.receiptNo;
-                document.getElementById("frDocReceiptNo").textContent = d.receiptNo;
-                document.getElementById("frDocIssuedDate").textContent = d.issuedAt;
-                document.getElementById("frDocCustomerName").textContent = d.contactName || "-";
-                document.getElementById("frDocCustomerContact").textContent =
-                    `โทร: ${d.contactPhone || "-"} · อีเมล: ${d.contactEmail || "-"}`;
-                document.getElementById("frDocBookingCode").textContent = `${d.bookingCode} (#${d.bookingId})`;
-                document.getElementById("frDocStayPeriod").textContent =
-                    `${d.checkInDate} - ${d.checkOutDate} (${d.nights} คืน)`;
-                document.getElementById("frDocPayMethod").textContent =
-                    `${(d.method || "N/A").toUpperCase()} (ชำระเมื่อ ${d.paidAt})`;
-                document.getElementById("frDocIssuedBy").textContent = d.issuedByName || "Finance Officer";
+                $("frPrevHeaderNo").textContent = d.receiptNo;
+                $("frDocReceiptNo").textContent = d.receiptNo;
+                $("frDocIssuedDate").textContent = d.issuedAt;
+                $("frDocCustomerName").textContent = d.contactName || "-";
+                $("frDocCustomerContact").textContent = `โทร: ${d.contactPhone || "-"} · อีเมล: ${d.contactEmail || "-"}`;
+                $("frDocBookingCode").textContent = `${d.bookingCode} (#${d.bookingId})`;
+                $("frDocStayPeriod").textContent = `${d.checkInDate} - ${d.checkOutDate} (${d.nights} คืน)`;
+                $("frDocPayMethod").textContent = `${(d.method || "N/A").toUpperCase()} (ชำระเมื่อ ${d.paidAt})`;
+                $("frDocIssuedBy").textContent = d.issuedByName || "Finance Officer";
 
-                // สถานะและลายน้ำ
-                const watermarkEl = document.getElementById("frCancelledWatermark");
-                const statusBadgeEl = document.getElementById("frDocStatusBadge");
+                const watermarkEl = $("frCancelledWatermark");
+                const statusBadgeEl = $("frDocStatusBadge");
                 if (isCancelled) {
                     watermarkEl?.classList.remove("d-none");
                     statusBadgeEl.innerHTML = '<span class="fr-badge status-cancelled">Cancelled (ยกเลิกแล้ว)</span>';
@@ -1753,8 +1455,7 @@ window.financeReceipts = (function () {
                     statusBadgeEl.innerHTML = '<span class="fr-badge status-issued">Issued / Paid (ชำระเงินแล้ว)</span>';
                 }
 
-                // รายการห้องพัก
-                const roomsBody = document.getElementById("frDocRoomsBody");
+                const roomsBody = $("frDocRoomsBody");
                 if (d.rooms && d.rooms.length > 0) {
                     roomsBody.innerHTML = d.rooms.map(r => `
                         <tr>
@@ -1764,8 +1465,7 @@ window.financeReceipts = (function () {
                             <td class="text-center">${escapeHtml(r.nights)}</td>
                             <td class="text-end">${formatTHB(r.extraBedAmount)}</td>
                             <td class="text-end fw-semibold">${formatTHB(r.lineTotal)}</td>
-                        </tr>
-                    `).join("");
+                        </tr>`).join("");
                 } else {
                     roomsBody.innerHTML = `
                         <tr>
@@ -1774,9 +1474,8 @@ window.financeReceipts = (function () {
                         </tr>`;
                 }
 
-                // โปรโมชั่น
-                const promoBox = document.getElementById("frDocPromotionsBox");
-                const promoList = document.getElementById("frDocPromotionsList");
+                const promoBox = $("frDocPromotionsBox");
+                const promoList = $("frDocPromotionsList");
                 if (d.promotions && d.promotions.length > 0) {
                     promoBox?.classList.remove("d-none");
                     promoList.innerHTML = d.promotions.map(p =>
@@ -1786,33 +1485,27 @@ window.financeReceipts = (function () {
                     promoBox?.classList.add("d-none");
                 }
 
-                // สรุปยอดเงิน
-                document.getElementById("frDocRoomAmount").textContent = formatTHB(d.roomAmount);
-                document.getElementById("frDocDiscountAmount").textContent = `-${formatTHB(d.discountAmount)}`;
-                document.getElementById("frDocSubtotal").textContent = formatTHB(d.subtotal);
-                document.getElementById("frDocTaxAmount").textContent = formatTHB(d.taxAmount);
-                document.getElementById("frDocTotalPaid").textContent = formatTHB(d.amount);
+                $("frDocRoomAmount").textContent = formatTHB(d.roomAmount);
+                $("frDocDiscountAmount").textContent = `-${formatTHB(d.discountAmount)}`;
+                $("frDocSubtotal").textContent = formatTHB(d.subtotal);
+                $("frDocTaxAmount").textContent = formatTHB(d.taxAmount);
+                $("frDocTotalPaid").textContent = formatTHB(d.amount);
 
-                // ปุ่มลิงก์
-                document.getElementById("frModalFullDetailLink").setAttribute("href", `/Finance/ReceiptDetail/${encodeURIComponent(d.receiptId)}`);
-                document.getElementById("frModalBtnDownloadPdf").setAttribute("href", d.pdfUrl || `${urls.pdfBase}/${encodeURIComponent(d.receiptId)}`);
+                $("frModalFullDetailLink").setAttribute("href", `/Finance/ReceiptDetail/${encodeURIComponent(d.receiptId)}`);
+                $("frModalBtnDownloadPdf").setAttribute("href", d.pdfUrl || `${urls.pdfBase}/${encodeURIComponent(d.receiptId)}`);
 
                 loadingEl?.classList.add("d-none");
                 paperEl?.classList.remove("d-none");
 
-                if (autoPrint) {
-                    setTimeout(() => printReceiptPaper(), 350);
-                }
+                if (autoPrint) setTimeout(() => printReceiptPaper(), 350);
             } catch (err) {
                 bsPreviewModal.hide();
-                // Fallback เปิดหน้า ReceiptDetail เดิมหากยังไม่ได้เพิ่ม GetReceiptDetailJson
                 window.location.href = `/Finance/ReceiptDetail/${encodeURIComponent(receiptId)}`;
             }
         };
 
-        // พิมพ์เฉพาะส่วนใบเสร็จรับเงินอย่างเป็นทางการ
         const printReceiptPaper = () => {
-            const paperEl = document.getElementById("frPrintableDocument");
+            const paperEl = $("frPrintableDocument");
             if (!paperEl) return;
 
             const printWin = window.open("", "_blank", "width=900,height=700");
@@ -1842,25 +1535,22 @@ window.financeReceipts = (function () {
                         window.onload = function() { window.print(); window.onafterprint = function() { window.close(); }; };
                     <\/script>
                 </body>
-                </html>
-            `);
+                </html>`);
             printWin.document.close();
         };
 
-        document.getElementById("frModalBtnPrint")?.addEventListener("click", printReceiptPaper);
+        $("frModalBtnPrint")?.addEventListener("click", printReceiptPaper);
 
-        // =====================================================================
-        // 3. ระบบสร้างใบเสร็จใหม่ (Create Receipt Modal)
-        // =====================================================================
-        const selectApprovedPay = document.getElementById("frSelectApprovedPayment");
-        const createPreviewBox = document.getElementById("frCreatePreviewBox");
-        const btnConfirmCreate = document.getElementById("frBtnConfirmCreateReceipt");
+        // ---- 3. Create Receipt ----
+        const selectApprovedPay = $("frSelectApprovedPayment");
+        const createPreviewBox = $("frCreatePreviewBox");
+        const btnConfirmCreate = $("frBtnConfirmCreateReceipt");
 
-        const openCreateReceiptModal = () => {
+        function openCreateReceiptModal() {
             if (!bsCreateModal) return;
 
-            const formWrap = document.getElementById("frCreateFormWrap");
-            const emptyNotice = document.getElementById("frCreateEmptyNotice");
+            const formWrap = $("frCreateFormWrap");
+            const emptyNotice = $("frCreateEmptyNotice");
 
             if (!unissuedPayments || unissuedPayments.length === 0) {
                 formWrap?.classList.add("d-none");
@@ -1870,7 +1560,8 @@ window.financeReceipts = (function () {
                 formWrap?.classList.remove("d-none");
                 emptyNotice?.classList.add("d-none");
                 if (selectApprovedPay) {
-                    selectApprovedPay.innerHTML = `<option value="">-- เลือกรายการชำระเงินที่ได้รับการอนุมัติแล้ว (${unissuedPayments.length} รายการ) --</option>` +
+                    selectApprovedPay.innerHTML =
+                        `<option value="">-- เลือกรายการชำระเงินที่ได้รับการอนุมัติแล้ว (${unissuedPayments.length} รายการ) --</option>` +
                         unissuedPayments.map(p =>
                             `<option value="${escapeHtml(p.PaymentId)}">Booking ${escapeHtml(p.BookingCode)} - ${escapeHtml(p.ContactName)} (${formatTHB(p.Amount)})</option>`
                         ).join("");
@@ -1880,10 +1571,10 @@ window.financeReceipts = (function () {
             }
 
             bsCreateModal.show();
-        };
+        }
 
-        document.getElementById("frBtnOpenCreateModal")?.addEventListener("click", openCreateReceiptModal);
-        document.getElementById("frBtnEmptyCreate")?.addEventListener("click", openCreateReceiptModal);
+        $("frBtnOpenCreateModal")?.addEventListener("click", openCreateReceiptModal);
+        $("frBtnEmptyCreate")?.addEventListener("click", openCreateReceiptModal);
 
         selectApprovedPay?.addEventListener("change", function () {
             const selectedId = Number(this.value);
@@ -1895,14 +1586,14 @@ window.financeReceipts = (function () {
                 return;
             }
 
-            document.getElementById("frCrBookingCode").textContent = `${found.BookingCode} (#${found.BookingId})`;
-            document.getElementById("frCrCustomerName").textContent = found.ContactName || "-";
-            document.getElementById("frCrPaymentId").textContent = `#${found.PaymentId}`;
-            document.getElementById("frCrMethod").textContent = (found.Method || "N/A").toUpperCase();
-            document.getElementById("frCrRoomAmt").textContent = formatTHB(found.RoomAmount || found.Amount);
-            document.getElementById("frCrDiscountAmt").textContent = `-${formatTHB(found.DiscountAmount || 0)}`;
-            document.getElementById("frCrTaxAmt").textContent = formatTHB(found.TaxAmount || (found.Amount * 7 / 107));
-            document.getElementById("frCrNetAmt").textContent = formatTHB(found.Amount);
+            $("frCrBookingCode").textContent = `${found.BookingCode} (#${found.BookingId})`;
+            $("frCrCustomerName").textContent = found.ContactName || "-";
+            $("frCrPaymentId").textContent = `#${found.PaymentId}`;
+            $("frCrMethod").textContent = (found.Method || "N/A").toUpperCase();
+            $("frCrRoomAmt").textContent = formatTHB(found.RoomAmount || found.Amount);
+            $("frCrDiscountAmt").textContent = `-${formatTHB(found.DiscountAmount || 0)}`;
+            $("frCrTaxAmt").textContent = formatTHB(found.TaxAmount || (found.Amount * 7 / 107));
+            $("frCrNetAmt").textContent = formatTHB(found.Amount);
 
             createPreviewBox?.classList.remove("d-none");
             if (btnConfirmCreate) btnConfirmCreate.disabled = false;
@@ -1942,45 +1633,31 @@ window.financeReceipts = (function () {
                 });
 
                 const json = await res.json();
-                if (!res.ok || !json.success) {
-                    throw new Error(json.message || "ไม่สามารถสร้างใบเสร็จรับเงินได้");
-                }
+                if (!res.ok || !json.success) throw new Error(json.message || "ไม่สามารถสร้างใบเสร็จรับเงินได้");
 
                 bsCreateModal?.hide();
-                await Swal.fire({
-                    icon: "success",
-                    title: "ออกใบเสร็จสำเร็จ!",
-                    text: json.message,
-                    confirmButtonColor: "#16A34A"
-                });
+                await Swal.fire({ icon: "success", title: "ออกใบเสร็จสำเร็จ!", text: json.message, confirmButtonColor: "#16A34A" });
 
                 window.location.reload();
             } catch (err) {
-                Swal.fire({
-                    icon: "error",
-                    title: "ไม่สามารถออกใบเสร็จได้",
-                    text: err.message,
-                    confirmButtonColor: "#DC2626"
-                });
+                Swal.fire({ icon: "error", title: "ไม่สามารถออกใบเสร็จได้", text: err.message, confirmButtonColor: "#DC2626" });
             } finally {
                 isProcessing = false;
                 btnConfirmCreate.disabled = false;
             }
         });
 
-        // =====================================================================
-        // 4. ระบบยกเลิกใบเสร็จพร้อมระบุเหตุผล (Cancel Receipt Modal)
-        // =====================================================================
+        // ---- 4. Cancel Receipt ----
         const openCancelReceiptModal = (receiptId, receiptNo, bookingCode, customer, amount) => {
             if (!bsCancelModal) return;
 
-            document.getElementById("frCancelReceiptId").value = receiptId;
-            document.getElementById("frCancelDisplayNo").textContent = receiptNo;
-            document.getElementById("frCancelDisplayCustomer").textContent = `${customer} (${bookingCode})`;
-            document.getElementById("frCancelDisplayAmount").textContent = formatTHB(amount);
+            $("frCancelReceiptId").value = receiptId;
+            $("frCancelDisplayNo").textContent = receiptNo;
+            $("frCancelDisplayCustomer").textContent = `${customer} (${bookingCode})`;
+            $("frCancelDisplayAmount").textContent = formatTHB(amount);
 
-            const selectReason = document.getElementById("frCancelReasonSelect");
-            const inputReason = document.getElementById("frCancelReasonInput");
+            const selectReason = $("frCancelReasonSelect");
+            const inputReason = $("frCancelReasonInput");
             if (selectReason) selectReason.value = "";
             if (inputReason) {
                 inputReason.value = "";
@@ -1990,8 +1667,8 @@ window.financeReceipts = (function () {
             bsCancelModal.show();
         };
 
-        document.getElementById("frCancelReasonSelect")?.addEventListener("change", function () {
-            const inputReason = document.getElementById("frCancelReasonInput");
+        $("frCancelReasonSelect")?.addEventListener("change", function () {
+            const inputReason = $("frCancelReasonInput");
             if (!inputReason) return;
             if (this.value && this.value !== "OTHER") {
                 inputReason.value = this.value;
@@ -2002,12 +1679,12 @@ window.financeReceipts = (function () {
             }
         });
 
-        document.getElementById("frCancelReceiptForm")?.addEventListener("submit", async function (e) {
+        $("frCancelReceiptForm")?.addEventListener("submit", async function (e) {
             e.preventDefault();
             if (isProcessing) return;
 
-            const receiptId = document.getElementById("frCancelReceiptId").value;
-            const inputReason = document.getElementById("frCancelReasonInput");
+            const receiptId = $("frCancelReceiptId").value;
+            const inputReason = $("frCancelReasonInput");
             const reason = (inputReason?.value || "").trim();
 
             if (!reason) {
@@ -2017,7 +1694,7 @@ window.financeReceipts = (function () {
             inputReason?.classList.remove("is-invalid");
 
             isProcessing = true;
-            const submitBtn = document.getElementById("frBtnConfirmCancelSubmit");
+            const submitBtn = $("frBtnConfirmCancelSubmit");
             if (submitBtn) submitBtn.disabled = true;
 
             try {
@@ -2033,35 +1710,21 @@ window.financeReceipts = (function () {
                 });
 
                 const json = await res.json();
-                if (!res.ok || !json.success) {
-                    throw new Error(json.message || "ไม่สามารถยกเลิกใบเสร็จได้");
-                }
+                if (!res.ok || !json.success) throw new Error(json.message || "ไม่สามารถยกเลิกใบเสร็จได้");
 
                 bsCancelModal?.hide();
-                await Swal.fire({
-                    icon: "success",
-                    title: "ยกเลิกใบเสร็จเรียบร้อยแล้ว",
-                    text: json.message,
-                    confirmButtonColor: "#2563EB"
-                });
+                await Swal.fire({ icon: "success", title: "ยกเลิกใบเสร็จเรียบร้อยแล้ว", text: json.message, confirmButtonColor: "#2563EB" });
 
                 window.location.reload();
             } catch (err) {
-                Swal.fire({
-                    icon: "error",
-                    title: "เกิดข้อผิดพลาด",
-                    text: err.message,
-                    confirmButtonColor: "#DC2626"
-                });
+                Swal.fire({ icon: "error", title: "เกิดข้อผิดพลาด", text: err.message, confirmButtonColor: "#DC2626" });
             } finally {
                 isProcessing = false;
                 if (submitBtn) submitBtn.disabled = false;
             }
         });
 
-        // =====================================================================
-        // 5. Event Delegation สำหรับปุ่มในตาราง & ปุ่ม Export Report (CSV)
-        // =====================================================================
+        // ---- 5. Table actions & Export ----
         tableBody?.addEventListener("click", function (e) {
             const viewBtn = e.target.closest(".js-fr-view");
             if (viewBtn) {
@@ -2087,8 +1750,7 @@ window.financeReceipts = (function () {
             }
         });
 
-        // ส่งออกรายงานใบเสร็จรับเงินเป็น CSV (Export Report)
-        document.getElementById("frBtnExportReport")?.addEventListener("click", function () {
+        $("frBtnExportReport")?.addEventListener("click", function () {
             if (!tableBody) return;
             const visibleRows = Array.from(tableBody.querySelectorAll("tr.fr-receipt-row:not(.d-none)"));
             if (visibleRows.length === 0) {
@@ -2097,20 +1759,11 @@ window.financeReceipts = (function () {
             }
 
             const headers = [
-                "Receipt No",
-                "Booking Code",
-                "Customer Name",
-                "Receipt Date",
-                "Subtotal (THB)",
-                "VAT 7% (THB)",
-                "Total Amount (THB)",
-                "Status",
-                "Issued By"
+                "Receipt No", "Booking Code", "Customer Name", "Receipt Date", "Subtotal (THB)",
+                "VAT 7% (THB)", "Total Amount (THB)", "Status", "Issued By"
             ];
 
-            const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-            const lines = [headers.map(esc).join(",")];
-
+            const lines = [headers.map(csvEsc).join(",")];
             visibleRows.forEach(r => {
                 lines.push([
                     r.getAttribute("data-receipt-no"),
@@ -2122,35 +1775,18 @@ window.financeReceipts = (function () {
                     Number(r.getAttribute("data-total") || 0).toFixed(2),
                     r.getAttribute("data-status-label"),
                     r.getAttribute("data-issued-by")
-                ].map(esc).join(","));
+                ].map(csvEsc).join(","));
             });
 
-            const blob = new Blob(["\uFEFF" + lines.join("\r\n")], { type: "text/csv;charset=utf-8;" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `staymate-receipts-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}.csv`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            downloadCsv(lines, `staymate-receipts-${todayStamp()}.csv`);
         });
-    };
+    }
 
-    document.addEventListener("DOMContentLoaded", init);
-
-    return { init };
-})();
-/* ==========================================================================
-   PAYMENT DETAIL & RECEIPT DETAIL MODULE (ต่อท้ายไฟล์ wwwroot/js/finance/finance.js)
-   ========================================================================== */
-(function () {
-    "use strict";
-
-    document.addEventListener("DOMContentLoaded", function () {
-        // -----------------------------------------------------------------
-        // 1. หน้า PaymentDetail.cshtml
-        // -----------------------------------------------------------------
+    // =====================================================================
+    // 5. PAYMENT DETAIL & RECEIPT DETAIL PAGES
+    // =====================================================================
+    function initDetailPages() {
+        // ---- PaymentDetail.cshtml ----
         const fpdApp = document.getElementById("fpdPaymentDetailApp");
         if (fpdApp) {
             const slipImg = document.getElementById("fpdSlipImage");
@@ -2167,12 +1803,10 @@ window.financeReceipts = (function () {
             document.getElementById("fpdBtnZoomOut")?.addEventListener("click", () => updateZoom(-0.25));
             document.getElementById("fpdBtnZoomReset")?.addEventListener("click", () => updateZoom(0, true));
             document.getElementById("fpdBtnFullscreen")?.addEventListener("click", () => {
-                if (slipStage && slipStage.requestFullscreen) {
-                    slipStage.requestFullscreen();
-                }
+                if (slipStage && slipStage.requestFullscreen) slipStage.requestFullscreen();
             });
 
-            // ยืนยันการอนุมัติด้วย SweetAlert2 ก่อน Submit ฟอร์มไปยัง FinanceController.Approve
+            // ยืนยันการอนุมัติก่อน Submit ฟอร์มไป FinanceController.Approve
             const approveForm = document.getElementById("fpdApproveForm");
             const approveBtn = document.getElementById("fpdBtnApproveSubmit");
 
@@ -2181,9 +1815,9 @@ window.financeReceipts = (function () {
                     if (approveForm.dataset.confirmed === "true") return;
                     e.preventDefault();
 
-                    const payId = approveBtn.getAttribute("data-payment-id") || "";
-                    const bookingCode = approveBtn.getAttribute("data-booking-code") || "";
-                    const amount = approveBtn.getAttribute("data-amount") || "0.00";
+                    const payId = escapeHtml(approveBtn.getAttribute("data-payment-id") || "");
+                    const bookingCode = escapeHtml(approveBtn.getAttribute("data-booking-code") || "");
+                    const amount = escapeHtml(approveBtn.getAttribute("data-amount") || "0.00");
 
                     if (typeof Swal === "undefined") {
                         if (confirm(`ยืนยันการอนุมัติสลิป #${payId} ยอด ฿${amount} หรือไม่?`)) {
@@ -2212,13 +1846,10 @@ window.financeReceipts = (function () {
                 });
             }
 
-            // เปิด Modal ปฏิเสธสลิป
             const rejectModalEl = document.getElementById("fpdRejectModal");
             const bsRejectModal = rejectModalEl ? new bootstrap.Modal(rejectModalEl) : null;
 
-            document.getElementById("fpdBtnOpenRejectModal")?.addEventListener("click", function () {
-                bsRejectModal?.show();
-            });
+            document.getElementById("fpdBtnOpenRejectModal")?.addEventListener("click", () => bsRejectModal?.show());
 
             const presetSelect = document.getElementById("fpdRejectPreset");
             const reasonInput = document.getElementById("fpdRejectReasonInput");
@@ -2243,64 +1874,32 @@ window.financeReceipts = (function () {
             });
         }
 
-        // -----------------------------------------------------------------
-        // 2. หน้า ReceiptDetail.cshtml
-        // -----------------------------------------------------------------
-        const frdApp = document.getElementById("frdReceiptDetailApp");
-        if (frdApp) {
-            document.getElementById("frdBtnPrintDocument")?.addEventListener("click", function () {
-                window.print();
-            });
+        // ---- ReceiptDetail.cshtml ----
+        if (document.getElementById("frdReceiptDetailApp")) {
+            document.getElementById("frdBtnPrintDocument")?.addEventListener("click", () => window.print());
         }
-    });
-})();
-/* ==========================================================================
-   FINANCIAL REPORTS MODULE (ต่อท้ายไฟล์ wwwroot/js/finance/finance.js)
-   Namespace: window.financeReports
-   ========================================================================== */
-window.financeReports = (function () {
-    "use strict";
+    }
 
-    const init = () => {
+    // =====================================================================
+    // 6. FINANCIAL REPORTS  (window.financeReports)
+    // =====================================================================
+    function initReports() {
         const appEl = document.getElementById("frepReportsApp");
-        if (!appEl) return; // ทำงานเฉพาะเมื่ออยู่ในหน้า Reports.cshtml เท่านั้น
+        if (!appEl) return;
 
-        if (typeof Chart !== "undefined") {
-            Chart.defaults.font.family = "'Prompt', sans-serif";
-            Chart.defaults.color = "#64748B";
-        }
+        setChartDefaults();
+
+        const $ = (id) => document.getElementById(id);
 
         const reportsUrl = appEl.getAttribute("data-reports-url") || "/Finance/Reports";
-        const startDateInput = document.getElementById("frepStartDate");
-        const endDateInput = document.getElementById("frepEndDate");
-        const periodForm = document.getElementById("frepPeriodForm");
+        const startDateInput = $("frepStartDate");
+        const endDateInput = $("frepEndDate");
+        const periodForm = $("frepPeriodForm");
 
-        // อ่าน JSON ข้อมูลกราฟจาก ViewModel
-        let reportData = {
-            daily: [],
-            weekly: [],
-            monthly: [],
-            revenueBreakdown: [],
-            expenseBreakdown: [],
+        const reportData = Object.assign({
+            daily: [], weekly: [], monthly: [], revenueBreakdown: [], expenseBreakdown: [],
             totals: { grossRevenue: 0, totalRevenue: 0, totalExpenses: 0, totalRefund: 0, netProfit: 0 }
-        };
-
-        const jsonEl = document.getElementById("frepChartDataJson");
-        if (jsonEl && jsonEl.textContent) {
-            try {
-                reportData = JSON.parse(jsonEl.textContent);
-            } catch (e) {
-                console.error("Failed to parse report chart data:", e);
-            }
-        }
-
-        const formatTHB = (val) => {
-            const num = Number(val) || 0;
-            return "฿" + num.toLocaleString("th-TH", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
-        };
+        }, readJsonScript("frepChartDataJson", {}));
 
         const toIsoDateString = (dt) => {
             const y = dt.getFullYear();
@@ -2309,20 +1908,20 @@ window.financeReports = (function () {
             return `${y}-${m}-${d}`;
         };
 
-        // =====================================================================
-        // 1. ระบบเลือกช่วงเวลารายงาน (Today / This Week / This Month / This Year)
-        // =====================================================================
+        const getWeekStart = (now) => {
+            const day = now.getDay();
+            const diff = day === 0 ? -6 : 1 - day;
+            const ws = new Date(now);
+            ws.setDate(now.getDate() + diff);
+            return ws;
+        };
+
+        // ---- 1. Preset ช่วงเวลา ----
         const highlightMatchingPreset = () => {
             if (!startDateInput || !endDateInput) return;
             const now = new Date();
             const todayIso = toIsoDateString(now);
-
-            const dayOfWeek = now.getDay();
-            const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-            const weekStart = new Date(now);
-            weekStart.setDate(now.getDate() + diffToMonday);
-            const weekStartIso = toIsoDateString(weekStart);
-
+            const weekStartIso = toIsoDateString(getWeekStart(now));
             const monthStartIso = toIsoDateString(new Date(now.getFullYear(), now.getMonth(), 1));
             const yearStartIso = toIsoDateString(new Date(now.getFullYear(), 0, 1));
 
@@ -2356,17 +1955,9 @@ window.financeReports = (function () {
                 const now = new Date();
                 let fromDt = new Date(now);
 
-                if (range === "today") {
-                    fromDt = new Date(now);
-                } else if (range === "week") {
-                    const day = now.getDay();
-                    const diff = day === 0 ? -6 : 1 - day;
-                    fromDt.setDate(now.getDate() + diff);
-                } else if (range === "month") {
-                    fromDt = new Date(now.getFullYear(), now.getMonth(), 1);
-                } else if (range === "year") {
-                    fromDt = new Date(now.getFullYear(), 0, 1);
-                }
+                if (range === "week") fromDt = getWeekStart(now);
+                else if (range === "month") fromDt = new Date(now.getFullYear(), now.getMonth(), 1);
+                else if (range === "year") fromDt = new Date(now.getFullYear(), 0, 1);
 
                 if (startDateInput && endDateInput && periodForm) {
                     startDateInput.value = toIsoDateString(fromDt);
@@ -2376,14 +1967,10 @@ window.financeReports = (function () {
             });
         });
 
-        document.getElementById("frepBtnResetPeriod")?.addEventListener("click", function () {
-            window.location.href = reportsUrl;
-        });
+        $("frepBtnResetPeriod")?.addEventListener("click", () => { window.location.href = reportsUrl; });
 
-        // =====================================================================
-        // 2. กราฟเปรียบเทียบรายรับและรายจ่าย (Revenue & Expenses Chart)
-        // =====================================================================
-        const revExpCanvas = document.getElementById("frepRevExpChart");
+        // ---- 2. กราฟรายรับ-รายจ่าย ----
+        const revExpCanvas = $("frepRevExpChart");
         let revExpChartInstance = null;
 
         const getSeriesByMode = (mode) => {
@@ -2392,13 +1979,10 @@ window.financeReports = (function () {
             return reportData.daily || [];
         };
 
-        const initRevExpChart = (initialMode) => {
-            if (!revExpCanvas || typeof Chart === "undefined") return;
+        if (revExpCanvas && typeof Chart !== "undefined") {
+            const series = getSeriesByMode("daily");
 
-            const series = getSeriesByMode(initialMode);
-            const ctx = revExpCanvas.getContext("2d");
-
-            revExpChartInstance = new Chart(ctx, {
+            revExpChartInstance = new Chart(revExpCanvas.getContext("2d"), {
                 type: "bar",
                 data: {
                     labels: series.map(x => x.label),
@@ -2428,21 +2012,13 @@ window.financeReports = (function () {
                     maintainAspectRatio: false,
                     interaction: { mode: "index", intersect: false },
                     plugins: {
-                        legend: {
-                            position: "top",
-                            align: "end",
-                            labels: { usePointStyle: true, boxWidth: 8 }
-                        },
+                        legend: { position: "top", align: "end", labels: { usePointStyle: true, boxWidth: 8 } },
                         tooltip: {
                             backgroundColor: "#070D1E",
                             titleColor: "#00E5FF",
                             bodyColor: "#FFFFFF",
                             padding: 12,
-                            callbacks: {
-                                label: function (ctx) {
-                                    return ` ${ctx.dataset.label}: ${formatTHB(ctx.parsed.y)}`;
-                                }
-                            }
+                            callbacks: { label: (c) => ` ${c.dataset.label}: ${formatTHB(c.parsed.y)}` }
                         }
                     },
                     scales: {
@@ -2450,42 +2026,32 @@ window.financeReports = (function () {
                         y: {
                             beginAtZero: true,
                             grid: { color: "#F1F5F9" },
-                            ticks: {
-                                callback: function (val) {
-                                    return "฿" + Number(val).toLocaleString("th-TH");
-                                }
-                            }
+                            ticks: { callback: (v) => "฿" + Number(v).toLocaleString("th-TH") }
                         }
                     }
                 }
             });
-        };
+        }
 
-        initRevExpChart("daily");
-
-        // ปุ่มสลับมุมมองกราฟ รายวัน / รายสัปดาห์ / รายเดือน
         document.querySelectorAll("[data-chart-mode]").forEach(btn => {
             btn.addEventListener("click", function () {
                 document.querySelectorAll("[data-chart-mode]").forEach(b => b.classList.remove("active"));
                 this.classList.add("active");
 
-                const mode = this.getAttribute("data-chart-mode") || "daily";
-                const series = getSeriesByMode(mode);
+                const series = getSeriesByMode(this.getAttribute("data-chart-mode") || "daily");
 
                 if (revExpChartInstance) {
                     revExpChartInstance.data.labels = series.map(x => x.label);
                     revExpChartInstance.data.datasets[0].data = series.map(x => x.income);
-                    revExpChartInstance.data.datasets.data = series.map(x => x.expense);
+                    revExpChartInstance.data.datasets[1].data = series.map(x => x.expense); // [แก้] เดิมเขียน datasets.data ทำให้รายจ่ายไม่อัปเดต
                     revExpChartInstance.update();
                 }
             });
         });
 
-        // =====================================================================
-        // 3. Revenue Breakdown & Expense Breakdown Donut Charts
-        // =====================================================================
+        // ---- 3. Donut ----
         const initDonutChart = (canvasId, items) => {
-            const canvas = document.getElementById(canvasId);
+            const canvas = $(canvasId);
             if (!canvas || typeof Chart === "undefined") return;
 
             const activeItems = (items || []).filter(x => Number(x.amount) > 0);
@@ -2517,7 +2083,7 @@ window.financeReports = (function () {
                             bodyColor: "#FFFFFF",
                             padding: 10,
                             callbacks: {
-                                label: function (ctx) {
+                                label: (ctx) => {
                                     const val = Number(ctx.raw) || 0;
                                     const pct = total > 0 ? ((val / total) * 100).toFixed(1) : "0.0";
                                     return ` ${formatTHB(val)} (${pct}%)`;
@@ -2532,18 +2098,16 @@ window.financeReports = (function () {
         initDonutChart("frepRevenueDonutChart", reportData.revenueBreakdown);
         initDonutChart("frepExpenseDonutChart", reportData.expenseBreakdown);
 
-        // =====================================================================
-        // 4. ระบบค้นหา กรอง เรียงลำดับ และแบ่งหน้าในตารางธุรกรรม
-        // =====================================================================
-        const tableBody = document.getElementById("frepTableBody");
-        const tableContainer = document.getElementById("frepTableContainer");
-        const tableEmpty = document.getElementById("frepTableEmpty");
-        const searchInput = document.getElementById("frepTableSearch");
-        const typeSelect = document.getElementById("frepTableTypeFilter");
-        const sortSelect = document.getElementById("frepTableSort");
-        const pageSizeSelect = document.getElementById("frepTablePageSize");
-        const pgInfo = document.getElementById("frepPaginationInfo");
-        const pgControls = document.getElementById("frepPaginationControls");
+        // ---- 4. ตารางธุรกรรม ----
+        const tableBody = $("frepTableBody");
+        const tableContainer = $("frepTableContainer");
+        const tableEmpty = $("frepTableEmpty");
+        const searchInput = $("frepTableSearch");
+        const typeSelect = $("frepTableTypeFilter");
+        const sortSelect = $("frepTableSort");
+        const pageSizeSelect = $("frepTablePageSize");
+        const pgInfo = $("frepPaginationInfo");
+        const pgControls = $("frepPaginationControls");
 
         const allTableRows = tableBody ? Array.from(tableBody.querySelectorAll("tr.frep-txn-row")) : [];
         let currentPage = 1;
@@ -2556,17 +2120,14 @@ window.financeReports = (function () {
             const sortBy = sortSelect?.value || "date_desc";
             const pageSize = parseInt(pageSizeSelect?.value || "10", 10);
 
-            // 1. Filter
-            let filtered = allTableRows.filter(row => {
+            const filtered = allTableRows.filter(row => {
                 const rType = (row.getAttribute("data-type") || "").toLowerCase();
                 const rSearch = row.getAttribute("data-search") || "";
-
                 if (typeFilter !== "all" && rType !== typeFilter) return false;
                 if (keyword && !rSearch.includes(keyword)) return false;
                 return true;
             });
 
-            // 2. Sort
             filtered.sort((a, b) => {
                 if (sortBy === "amount_desc" || sortBy === "amount_asc") {
                     const amtA = parseFloat(a.getAttribute("data-amount") || "0");
@@ -2578,7 +2139,6 @@ window.financeReports = (function () {
                 return sortBy === "date_asc" ? tA.localeCompare(tB) : tB.localeCompare(tA);
             });
 
-            // 3. Pagination
             const totalFiltered = filtered.length;
             const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
             if (currentPage > totalPages) currentPage = 1;
@@ -2608,29 +2168,12 @@ window.financeReports = (function () {
             }
 
             if (pgControls) {
-                if (totalPages <= 1) {
-                    pgControls.innerHTML = "";
-                } else {
-                    let html = `
-                        <li class="page-item ${currentPage <= 1 ? "disabled" : ""}">
-                            <a class="page-link" href="#" data-page="${currentPage - 1}"><i class="fa-solid fa-chevron-left"></i></a>
-                        </li>`;
-
-                    const startP = Math.max(1, currentPage - 2);
-                    const endP = Math.min(totalPages, currentPage + 2);
-                    for (let p = startP; p <= endP; p++) {
-                        html += `
-                            <li class="page-item ${p === currentPage ? "active" : ""}">
-                                <a class="page-link" href="#" data-page="${p}">${p}</a>
-                            </li>`;
-                    }
-
-                    html += `
-                        <li class="page-item ${currentPage >= totalPages ? "disabled" : ""}">
-                            <a class="page-link" href="#" data-page="${currentPage + 1}"><i class="fa-solid fa-chevron-right"></i></a>
-                        </li>`;
-                    pgControls.innerHTML = html;
-                }
+                pgControls.innerHTML = totalPages <= 1 ? "" : renderPager({
+                    page: currentPage,
+                    totalPages,
+                    hasPrevious: currentPage > 1,
+                    hasNext: currentPage < totalPages
+                });
             }
         };
 
@@ -2652,30 +2195,19 @@ window.financeReports = (function () {
 
         renderTablePage();
 
-        // =====================================================================
-        // 5. ระบบ Export CSV & Print Report (A4 Document)
-        // =====================================================================
-        document.getElementById("frepBtnExportCsv")?.addEventListener("click", function () {
+        // ---- 5. Export CSV & Print ----
+        $("frepBtnExportCsv")?.addEventListener("click", function () {
             if (allTableRows.length === 0) {
                 alert("ไม่มีรายการธุรกรรมในช่วงเวลานี้สำหรับส่งออก CSV");
                 return;
             }
 
             const headers = [
-                "Date",
-                "Transaction ID",
-                "Description",
-                "Booking Code",
-                "Category",
-                "Type",
-                "Payment Method",
-                "Amount (THB)",
-                "Status"
+                "Date", "Transaction ID", "Description", "Booking Code", "Category",
+                "Type", "Payment Method", "Amount (THB)", "Status"
             ];
 
-            const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-            const lines = [headers.map(esc).join(",")];
-
+            const lines = [headers.map(csvEsc).join(",")];
             allTableRows.forEach(r => {
                 lines.push([
                     r.getAttribute("data-date"),
@@ -2687,40 +2219,46 @@ window.financeReports = (function () {
                     r.getAttribute("data-method"),
                     Number(r.getAttribute("data-signed-amount") || 0).toFixed(2),
                     r.getAttribute("data-status")
-                ].map(esc).join(","));
+                ].map(csvEsc).join(","));
             });
 
             const fromStr = appEl.getAttribute("data-from") || "";
             const toStr = appEl.getAttribute("data-to") || "";
-            const blob = new Blob(["\uFEFF" + lines.join("\r\n")], { type: "text/csv;charset=utf-8;" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `staymate-financial-report_${fromStr}_${toStr}.csv`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            downloadCsv(lines, `staymate-financial-report_${fromStr}_${toStr}.csv`);
         });
 
-        // สั่งพิมพ์รายงาน (แสดงทุกแถวในตารางก่อนพิมพ์ และคืนค่าหน้าเดิมหลังพิมพ์เสร็จ)
-        document.getElementById("frepBtnPrintReport")?.addEventListener("click", function () {
+        $("frepBtnPrintReport")?.addEventListener("click", function () {
             const prevPageSize = pageSizeSelect ? pageSizeSelect.value : "10";
+            const prevPage = currentPage;
             if (pageSizeSelect) {
+                // ใส่ option 9999 ชั่วคราวถ้ายังไม่มี เพื่อให้ select รับค่าได้
+                if (![...pageSizeSelect.options].some(o => o.value === "9999")) {
+                    pageSizeSelect.appendChild(new Option("All", "9999"));
+                }
                 pageSizeSelect.value = "9999";
+                currentPage = 1;
                 renderTablePage();
             }
             window.print();
             if (pageSizeSelect) {
                 pageSizeSelect.value = prevPageSize;
+                currentPage = prevPage;
                 renderTablePage();
             }
         });
-    };
+    }
 
-    document.addEventListener("DOMContentLoaded", init);
+    // ---------------------------------------------------------------------
+    // Bootstrap: namespaces (เผื่อ view เรียก init เอง) + เริ่มทำงานทุกโมดูล
+    // ---------------------------------------------------------------------
+    window.financeTransactions = { init: initTransactions };
+    window.financeReceipts = { init: initReceipts };
+    window.financeReports = { init: initReports };
 
-    return { init };
+    onReady(initDashboard);
+    onReady(initPaymentApproval);
+    onReady(initTransactions);
+    onReady(initReceipts);
+    onReady(initDetailPages);
+    onReady(initReports);
 })();
-
-});

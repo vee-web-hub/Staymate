@@ -1,9 +1,8 @@
 @model StayMate_Kavinvee_0576.Models.ViewModels.ReceiptsViewModel
-@using System.Globalization
 
 @{
     Layout = "~/Views/Shared/_FinanceLayout.cshtml";
-    ViewData["Title"] = "จัดการใบเสร็จรับเงิน (Receipt Management)";
+    ViewData["Title"] = "Receipt Management";
 
     var items = Model.Receipts?.Items ?? new List<StayMate_Kavinvee_0576.Models.ViewModels.ReceiptRow>();
     int totalCount = ViewBag.TotalReceiptsCount ?? (Model.Receipts?.TotalCount ?? 0);
@@ -28,48 +27,28 @@
      data-cancel-api="@Url.Action("CancelReceiptAjax", "Finance")"
      data-pdf-base-url="@Url.Action("ReceiptPdf", "Finance")">
 
-    <!-- Anti-Forgery Token สำหรับ Create & Cancel Receipt -->
     <form id="frCsrfForm" class="d-none">
         @Html.AntiForgeryToken()
     </form>
 
     <!-- ================================================================= -->
-    <!-- 1. Page Header & Breadcrumb                                       -->
+    <!-- 1. Header                                                         -->
     <!-- ================================================================= -->
     <section class="fin-welcome-banner fr-header-banner mb-4">
         <div class="fin-welcome-glow"></div>
         <div class="row align-items-center position-relative z-1 g-3">
             <div class="col-lg-7">
-                <!-- Breadcrumb -->
-                <nav aria-label="breadcrumb" class="mb-2">
-                    <ol class="breadcrumb fr-breadcrumb mb-0">
-                        <li class="breadcrumb-item">
-                            <a asp-controller="Finance" asp-action="Index">
-                                <i class="fa-solid fa-wallet me-1"></i>Finance Portal
-                            </a>
-                        </li>
-                        <li class="breadcrumb-item active" aria-current="page">Receipt Management</li>
-                    </ol>
-                </nav>
-
-                <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
-                    <h1 class="fin-welcome-title mb-0">จัดการใบเสร็จรับเงิน</h1>
-                    <span class="fin-chip-cyber">
-                        <i class="fa-solid fa-file-shield"></i> OFFICIAL TAX &amp; E-RECEIPT
-                    </span>
-                </div>
-                <p class="fin-welcome-subtitle mb-0">
-                    จัดการ ตรวจสอบ และติดตามใบเสร็จรับเงินของลูกค้า StayMate ตามมาตรฐานการเงินโรงแรม
-                </p>
+                <span class="fin-chip-cyber mb-2">E-RECEIPT &amp; TAX DOCUMENTS</span>
+                <h1 class="fin-welcome-title mb-0">Receipt Management</h1>
             </div>
 
             <div class="col-lg-5 text-lg-end">
                 <div class="d-inline-flex flex-wrap gap-2 justify-content-lg-end">
                     <button type="button" id="frBtnExportReport" class="btn fr-btn-export">
-                        <i class="fa-solid fa-file-csv me-2"></i>Export Report
+                        <i class="fa-solid fa-file-csv me-2"></i>Export CSV
                     </button>
                     <button type="button" id="frBtnOpenCreateModal" class="btn fr-btn-create-receipt">
-                        <i class="fa-solid fa-plus-circle me-2"></i>สร้างใบเสร็จใหม่ (Create Receipt)
+                        <i class="fa-solid fa-plus me-2"></i>สร้างใบเสร็จใหม่
                         @if (pendingCount > 0)
                         {
                             <span class="badge bg-warning text-dark ms-1">@pendingCount</span>
@@ -81,16 +60,16 @@
     </section>
 
     <!-- ================================================================= -->
-    <!-- 2. Summary Cards (4 ใบ)                                           -->
+    <!-- 2. Summary Cards (4 ใบหลัก)                                       -->
     <!-- ================================================================= -->
     <section class="row g-3 g-xl-4 mb-4">
-        <!-- Card 1: Total Receipts -->
+        <!-- Total Receipts -->
         <div class="col-12 col-sm-6 col-xl-3">
             <div class="fin-kpi-card kpi-revenue fr-summary-card h-100" data-filter-status="all" role="button">
-                <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="d-flex justify-content-between align-items-start mb-2">
                     <div>
                         <span class="fin-kpi-label">TOTAL RECEIPTS</span>
-                        <h3 class="fin-kpi-thai-title">จำนวนใบเสร็จทั้งหมด</h3>
+                        <h3 class="fin-kpi-thai-title">ใบเสร็จทั้งหมด</h3>
                     </div>
                     <div class="fin-kpi-icon-wrap icon-revenue">
                         <i class="fa-solid fa-receipt"></i>
@@ -101,19 +80,19 @@
                     <small class="fin-kpi-unit">ฉบับ</small>
                 </div>
                 <div class="fin-kpi-footer mt-3 pt-2">
-                    <span class="fin-kpi-note">เอกสารใบเสร็จในระบบทั้งหมด</span>
-                    <span class="fin-kpi-tag tag-blue">All Documents</span>
+                    <span class="fin-kpi-note">เอกสารในระบบทั้งหมด</span>
+                    <span class="fin-kpi-tag tag-blue">All</span>
                 </div>
             </div>
         </div>
 
-        <!-- Card 2: Issued Receipts -->
+        <!-- Issued Receipts -->
         <div class="col-12 col-sm-6 col-xl-3">
             <div class="fin-kpi-card kpi-approved fr-summary-card h-100" data-filter-status="issued" role="button">
-                <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="d-flex justify-content-between align-items-start mb-2">
                     <div>
-                        <span class="fin-kpi-label">ISSUED RECEIPTS</span>
-                        <h3 class="fin-kpi-thai-title">ใบเสร็จที่ออกแล้ว</h3>
+                        <span class="fin-kpi-label">ISSUED</span>
+                        <h3 class="fin-kpi-thai-title">ออกใบเสร็จแล้ว</h3>
                     </div>
                     <div class="fin-kpi-icon-wrap icon-approved">
                         <i class="fa-solid fa-file-circle-check"></i>
@@ -124,22 +103,22 @@
                     <small class="fin-kpi-unit">ฉบับ</small>
                 </div>
                 <div class="fin-kpi-footer mt-3 pt-2">
-                    <span class="fin-kpi-note">พร้อมดาวน์โหลด PDF &amp; พิมพ์</span>
+                    <span class="fin-kpi-note">ดาวน์โหลด PDF / พิมพ์ได้</span>
                     <span class="fin-kpi-tag tag-green">Issued</span>
                 </div>
             </div>
         </div>
 
-        <!-- Card 3: Pending Receipts -->
+        <!-- Pending Receipts -->
         <div class="col-12 col-sm-6 col-xl-3">
             <div class="fin-kpi-card kpi-pending fr-summary-card h-100" data-filter-status="pending" role="button">
-                <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="d-flex justify-content-between align-items-start mb-2">
                     <div>
-                        <span class="fin-kpi-label">PENDING RECEIPTS</span>
-                        <h3 class="fin-kpi-thai-title">ใบเสร็จที่รอดำเนินการ</h3>
+                        <span class="fin-kpi-label">PENDING ISSUE</span>
+                        <h3 class="fin-kpi-thai-title">รอออกใบเสร็จ</h3>
                     </div>
                     <div class="fin-kpi-icon-wrap icon-pending">
-                        <i class="fa-solid fa-file-Signature"></i>
+                        <i class="fa-solid fa-file-signature"></i>
                     </div>
                 </div>
                 <div class="fin-kpi-amount text-warning-custom">
@@ -147,18 +126,18 @@
                     <small class="fin-kpi-unit">รายการ</small>
                 </div>
                 <div class="fin-kpi-footer mt-3 pt-2">
-                    <span class="fin-kpi-note">ชำระเงินสำเร็จ รอออกใบเสร็จ</span>
-                    <span class="fin-kpi-tag tag-orange">Ready to Issue</span>
+                    <span class="fin-kpi-note">อนุมัติแล้ว รอออกเอกสาร</span>
+                    <span class="fin-kpi-tag tag-orange">Pending</span>
                 </div>
             </div>
         </div>
 
-        <!-- Card 4: Total Receipt Value -->
+        <!-- Total Receipt Value -->
         <div class="col-12 col-sm-6 col-xl-3">
             <div class="fin-kpi-card fr-kpi-violet fr-summary-card h-100">
-                <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="d-flex justify-content-between align-items-start mb-2">
                     <div>
-                        <span class="fin-kpi-label">TOTAL RECEIPT VALUE</span>
+                        <span class="fin-kpi-label">TOTAL VALUE</span>
                         <h3 class="fin-kpi-thai-title">มูลค่าใบเสร็จรวม</h3>
                     </div>
                     <div class="fin-kpi-icon-wrap fr-icon-violet">
@@ -169,27 +148,24 @@
                     ฿<span id="frSummaryTotalValue">@totalReceiptValue.ToString("N2")</span>
                 </div>
                 <div class="fin-kpi-footer mt-3 pt-2">
-                    <span class="fin-kpi-note">ยอดรวมสุทธิของใบเสร็จทั้งหมด</span>
-                    <span class="fin-kpi-tag fr-tag-violet">Total Value</span>
+                    <span class="fin-kpi-note">ยอดรวมสุทธิทั้งหมด</span>
+                    <span class="fin-kpi-tag fr-tag-violet">THB</span>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- ================================================================= -->
-    <!-- 3. Search & Filters Panel                                         -->
+    <!-- 3. Search & Filters                                               -->
     <!-- ================================================================= -->
     <section class="fin-panel-card fr-filter-panel mb-4">
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3 pb-2 border-bottom">
-            <div class="d-flex align-items-center gap-2">
-                <span class="fin-dot-indicator bg-electric"></span>
-                <h2 class="fin-panel-title mb-0">ค้นหาและตัวกรองใบเสร็จรับเงิน (Search &amp; Receipt Filters)</h2>
-            </div>
+            <h2 class="fin-panel-title mb-0">ค้นหาใบเสร็จรับเงิน</h2>
             <div class="fr-status-pills d-flex flex-wrap gap-1">
                 <button type="button" class="fr-pill-btn active" data-status-pill="all">ทั้งหมด</button>
-                <button type="button" class="fr-pill-btn" data-status-pill="issued">Issued (ออกแล้ว)</button>
-                <button type="button" class="fr-pill-btn" data-status-pill="pending">Pending (รอออกใบเสร็จ)</button>
-                <button type="button" class="fr-pill-btn" data-status-pill="cancelled">Cancelled (ยกเลิกแล้ว)</button>
+                <button type="button" class="fr-pill-btn" data-status-pill="issued">Issued</button>
+                <button type="button" class="fr-pill-btn" data-status-pill="pending">Pending</button>
+                <button type="button" class="fr-pill-btn" data-status-pill="cancelled">Cancelled</button>
             </div>
         </div>
 
@@ -198,60 +174,45 @@
             <input type="hidden" name="page" value="1" />
 
             <div class="row g-3">
-                <!-- ค้นหาด้วย Receipt ID -->
                 <div class="col-12 col-sm-6 col-lg-3">
-                    <label for="frInputReceiptNo" class="form-label fr-form-label">
-                        <i class="fa-solid fa-receipt text-primary me-1"></i>Receipt ID (เลขที่ใบเสร็จ)
-                    </label>
+                    <label for="frInputReceiptNo" class="form-label fr-form-label">เลขที่ใบเสร็จ</label>
                     <input type="text"
                            id="frInputReceiptNo"
                            class="form-control fr-form-control"
                            value="@(Model.Keyword != null && Model.Keyword.StartsWith("RC", StringComparison.OrdinalIgnoreCase) ? Model.Keyword : "")"
-                           placeholder="เช่น RC202611190001..." />
+                           placeholder="เช่น RC2026..." />
                 </div>
 
-                <!-- ค้นหาด้วย Booking ID -->
                 <div class="col-12 col-sm-6 col-lg-3">
-                    <label for="frInputBookingCode" class="form-label fr-form-label">
-                        <i class="fa-solid fa-bookmark text-primary me-1"></i>Booking ID (รหัสการจอง)
-                    </label>
+                    <label for="frInputBookingCode" class="form-label fr-form-label">Booking Code</label>
                     <input type="text"
                            id="frInputBookingCode"
                            class="form-control fr-form-control"
                            value="@(Model.Keyword != null && Model.Keyword.StartsWith("BK", StringComparison.OrdinalIgnoreCase) ? Model.Keyword : "")"
-                           placeholder="เช่น BK2026... หรือ #ID" />
+                           placeholder="เช่น BK2026..." />
                 </div>
 
-                <!-- ค้นหาชื่อลูกค้า -->
                 <div class="col-12 col-sm-6 col-lg-3">
-                    <label for="frInputCustomerName" class="form-label fr-form-label">
-                        <i class="fa-solid fa-user text-primary me-1"></i>ชื่อลูกค้า (Customer Name)
-                    </label>
+                    <label for="frInputCustomerName" class="form-label fr-form-label">ชื่อลูกค้า</label>
                     <input type="text"
                            id="frInputCustomerName"
                            class="form-control fr-form-control"
                            value="@(Model.Keyword != null && !Model.Keyword.StartsWith("RC", StringComparison.OrdinalIgnoreCase) && !Model.Keyword.StartsWith("BK", StringComparison.OrdinalIgnoreCase) ? Model.Keyword : "")"
-                           placeholder="ค้นหาชื่อ-นามสกุลผู้ชำระเงิน..." />
+                           placeholder="ค้นหาชื่อลูกค้า..." />
                 </div>
 
-                <!-- เลือกสถานะใบเสร็จ -->
                 <div class="col-12 col-sm-6 col-lg-3">
-                    <label for="frSelectStatus" class="form-label fr-form-label">
-                        <i class="fa-solid fa-circle-check text-primary me-1"></i>สถานะใบเสร็จ (Receipt Status)
-                    </label>
+                    <label for="frSelectStatus" class="form-label fr-form-label">สถานะ</label>
                     <select id="frSelectStatus" class="form-select fr-form-control">
-                        <option value="all" selected>ทุกสถานะ (All Statuses)</option>
-                        <option value="issued">Issued – ออกใบเสร็จแล้ว</option>
-                        <option value="pending">Pending – รอดำเนินการออกใบเสร็จ</option>
-                        <option value="cancelled">Cancelled – ยกเลิกแล้ว</option>
+                        <option value="all" selected>ทุกสถานะ</option>
+                        <option value="issued">Issued (ออกแล้ว)</option>
+                        <option value="pending">Pending (รอออกใบเสร็จ)</option>
+                        <option value="cancelled">Cancelled (ยกเลิกแล้ว)</option>
                     </select>
                 </div>
 
-                <!-- วันที่ออกใบเสร็จ (เริ่มต้น) -->
                 <div class="col-6 col-sm-6 col-lg-3">
-                    <label for="frInputFromDate" class="form-label fr-form-label">
-                        <i class="fa-regular fa-calendar text-primary me-1"></i>ตั้งแต่วันที่ออกใบเสร็จ
-                    </label>
+                    <label for="frInputFromDate" class="form-label fr-form-label">ตั้งแต่วันที่</label>
                     <input type="date"
                            name="from"
                            id="frInputFromDate"
@@ -259,11 +220,8 @@
                            value="@(Model.From?.ToString("yyyy-MM-dd"))" />
                 </div>
 
-                <!-- วันที่ออกใบเสร็จ (สิ้นสุด) -->
                 <div class="col-6 col-sm-6 col-lg-3">
-                    <label for="frInputToDate" class="form-label fr-form-label">
-                        <i class="fa-regular fa-calendar-check text-primary me-1"></i>ถึงวันที่
-                    </label>
+                    <label for="frInputToDate" class="form-label fr-form-label">ถึงวันที่</label>
                     <input type="date"
                            name="to"
                            id="frInputToDate"
@@ -271,26 +229,22 @@
                            value="@(Model.To?.ToString("yyyy-MM-dd"))" />
                 </div>
 
-                <!-- เรียงลำดับวันที่ออกใบเสร็จ -->
                 <div class="col-12 col-sm-6 col-lg-3">
-                    <label for="frSelectSort" class="form-label fr-form-label">
-                        <i class="fa-solid fa-arrow-down-wide-short text-primary me-1"></i>เรียงลำดับข้อมูล
-                    </label>
+                    <label for="frSelectSort" class="form-label fr-form-label">เรียงลำดับ</label>
                     <select id="frSelectSort" class="form-select fr-form-control">
-                        <option value="date_desc" selected>วันที่ออกใบเสร็จ: ล่าสุดไปเก่าสุด</option>
-                        <option value="date_asc">วันที่ออกใบเสร็จ: เก่าสุดไปล่าสุด</option>
-                        <option value="amount_desc">ยอดรวมสุทธิ: มากไปน้อย</option>
-                        <option value="amount_asc">ยอดรวมสุทธิ: น้อยไปมาก</option>
+                        <option value="date_desc" selected>วันที่ออก: ล่าสุดก่อน</option>
+                        <option value="date_asc">วันที่ออก: เก่าสุดก่อน</option>
+                        <option value="amount_desc">ยอดเงิน: มากไปน้อย</option>
+                        <option value="amount_asc">ยอดเงิน: น้อยไปมาก</option>
                     </select>
                 </div>
 
-                <!-- ปุ่ม Search & Reset Filters -->
                 <div class="col-12 col-sm-6 col-lg-3 d-flex align-items-end gap-2">
                     <button type="submit" class="btn fr-btn-search flex-grow-1">
-                        <i class="fa-solid fa-magnifying-glass me-2"></i>Search
+                        <i class="fa-solid fa-magnifying-glass me-1"></i> ค้นหา
                     </button>
-                    <button type="button" id="frBtnResetFilters" class="btn fr-btn-reset">
-                        <i class="fa-solid fa-rotate-left me-1"></i>Reset Filters
+                    <button type="button" id="frBtnResetFilters" class="btn fr-btn-reset" title="ล้างตัวกรอง">
+                        <i class="fa-solid fa-rotate-left"></i>
                     </button>
                 </div>
             </div>
@@ -298,24 +252,14 @@
     </section>
 
     <!-- ================================================================= -->
-    <!-- 4. Receipt Table Section                                          -->
+    <!-- 4. Receipts Table                                                 -->
     <!-- ================================================================= -->
     <section class="fin-panel-card fr-table-panel">
-        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-3 pb-3 border-bottom">
-            <div>
-                <div class="d-flex align-items-center gap-2">
-                    <span class="fin-dot-indicator bg-cyber"></span>
-                    <h2 class="fin-panel-title mb-0">ตารางรายการใบเสร็จรับเงิน (Official Receipts Ledger)</h2>
-                </div>
-                <p class="fin-panel-subtitle mb-0 mt-1">
-                    ใบเสร็จที่ออกแล้วไม่สามารถแก้ไขยอดเงินย้อนหลังได้ หากต้องการยกเลิกต้องระบุเหตุผลเพื่อบันทึกใน Audit Log
-                </p>
-            </div>
-            <div>
-                <span class="fr-visible-pill">
-                    แสดง <strong id="frVisibleRowCount">@items.Count</strong> รายการ
-                </span>
-            </div>
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-3 pb-3 border-bottom">
+            <h2 class="fin-panel-title mb-0">รายการใบเสร็จรับเงิน</h2>
+            <span class="fr-visible-pill">
+                แสดง <strong id="frVisibleRowCount">@items.Count</strong> รายการ
+            </span>
         </div>
 
         <!-- Empty State -->
@@ -323,34 +267,31 @@
             <div class="fin-empty-icon-ring fr-empty-icon mx-auto mb-3">
                 <i class="fa-solid fa-receipt"></i>
             </div>
-            <h3 class="fin-empty-title">ไม่พบข้อมูลใบเสร็จรับเงินตามเงื่อนไขที่ค้นหา</h3>
-            <p class="fin-empty-desc mx-auto mb-4">
-                ยังไม่มีใบเสร็จในช่วงวันที่หรือสถานะที่เลือก คุณสามารถล้างตัวกรองเพื่อดูใบเสร็จทั้งหมด หรือกดปุ่มสร้างใบเสร็จใหม่จากรายการชำระเงินที่อนุมัติแล้ว
-            </p>
-            <div class="d-flex justify-content-center gap-2 flex-wrap">
-                <button type="button" id="frBtnEmptyReset" class="btn fin-btn-outline-slate">
-                    <i class="fa-solid fa-rotate-left me-1"></i> Reset Filters
+            <h3 class="fin-empty-title">ไม่พบข้อมูลใบเสร็จรับเงิน</h3>
+            <div class="d-flex justify-content-center gap-2 flex-wrap mt-3">
+                <button type="button" id="frBtnEmptyReset" class="btn fin-btn-outline-slate btn-sm">
+                    ล้างตัวกรอง
                 </button>
-                <button type="button" id="frBtnEmptyCreate" class="btn fin-btn-primary-cyber">
+                <button type="button" id="frBtnEmptyCreate" class="btn fin-btn-primary-cyber btn-sm">
                     <i class="fa-solid fa-plus me-1"></i> สร้างใบเสร็จใหม่
                 </button>
             </div>
         </div>
 
-        <!-- ตารางใบเสร็จรับเงิน -->
+        <!-- Data Table -->
         <div id="frTableWrapper" class="table-responsive @(items.Any() ? "" : "d-none")">
             <table class="table fin-table fr-receipt-table align-middle mb-0" id="frReceiptsTable">
                 <thead>
                     <tr>
-                        <th>Receipt ID</th>
-                        <th>Booking ID</th>
-                        <th>Customer Name</th>
-                        <th>Receipt Date</th>
-                        <th class="text-end">Subtotal</th>
+                        <th>เลขที่ใบเสร็จ</th>
+                        <th>Booking</th>
+                        <th>ลูกค้า</th>
+                        <th>วันที่ออก</th>
+                        <th class="text-end">ก่อนภาษี</th>
                         <th class="text-end">VAT (7%)</th>
-                        <th class="text-end">Total Amount</th>
-                        <th class="text-center">Status</th>
-                        <th class="text-end">Actions</th>
+                        <th class="text-end">ยอดสุทธิ</th>
+                        <th class="text-center">สถานะ</th>
+                        <th class="text-end">จัดการ</th>
                     </tr>
                 </thead>
                 <tbody id="frTableBody">
@@ -362,7 +303,6 @@
                         string badgeClass = isCancelled ? "fr-badge status-cancelled" : "fr-badge status-issued";
                         string badgeIcon = isCancelled ? "fa-solid fa-ban" : "fa-solid fa-circle-check";
 
-                        // คำนวณยอดก่อนภาษี (Subtotal) และภาษีมูลค่าเพิ่ม (VAT) จากข้อมูลจริงของ Booking หรือถอด VAT 7% มาตรฐานโรงแรม
                         decimal totalAmt = row.Amount;
                         decimal vatAmt = Math.Round(totalAmt * 7m / 107m, 2);
                         decimal subtotalAmt = totalAmt - vatAmt;
@@ -371,12 +311,9 @@
                         if (taxDict != null && taxDict.Contains(row.BookingId))
                         {
                             dynamic? bInfo = taxDict[row.BookingId];
-
-                            if (bInfo != null &&
-                                bInfo?.TotalAmount == totalAmt &&
-                                bInfo?.TaxAmount > 0)
+                            if (bInfo != null && bInfo?.TotalAmount == totalAmt && bInfo?.TaxAmount > 0)
                             {
-                            vatAmt = (decimal)bInfo!.TaxAmount;
+                                vatAmt = (decimal)bInfo!.TaxAmount;
                                 subtotalAmt = totalAmt - vatAmt;
                             }
                         }
@@ -396,7 +333,7 @@
                             data-method="@row.Method"
                             data-issued-by="@(row.IssuedByName ?? "Finance Officer")"
                             data-date="@isoDate"
-                            data-datetime-display="@formattedDate เวลา @formattedTime น."
+                            data-datetime-display="@formattedDate @formattedTime"
                             data-timestamp="@sortTimestamp"
                             data-subtotal="@subtotalAmt"
                             data-vat="@vatAmt"
@@ -404,88 +341,62 @@
                             data-status="@statusKey"
                             data-status-label="@statusLabel">
 
-                            <!-- 1. Receipt ID -->
                             <td>
-                                <span class="fr-receipt-no-badge">
-                                    <i class="fa-solid fa-file-invoice me-1"></i>@row.ReceiptNo
-                                </span>
+                                <span class="fr-receipt-no-badge">@row.ReceiptNo</span>
                             </td>
 
-                            <!-- 2. Booking ID -->
                             <td>
                                 <span class="fin-booking-code">@row.BookingCode</span>
-                                <span class="d-block text-muted extra-small mt-1">Booking #@row.BookingId</span>
+                                <span class="d-block text-muted extra-small">#@row.BookingId</span>
                             </td>
 
-                            <!-- 3. Customer Name -->
                             <td>
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="fin-avatar-circle">
-                                        @(string.IsNullOrEmpty(row.ContactName) ? "C" : row.ContactName.Substring(0, 1).ToUpper())
-                                    </div>
-                                    <div>
-                                        <div class="fw-semibold text-dark">@row.ContactName</div>
-                                        <div class="text-muted extra-small">
-                                            ออกโดย: @(row.IssuedByName ?? "Finance Officer")
-                                        </div>
-                                    </div>
-                                </div>
+                                <div class="fw-semibold text-dark">@row.ContactName</div>
+                                <div class="text-muted extra-small">ออกโดย: @(row.IssuedByName ?? "Finance Officer")</div>
                             </td>
 
-                            <!-- 4. Receipt Date -->
                             <td>
                                 <span class="d-block fw-medium text-dark">@formattedDate</span>
-                                <span class="text-muted extra-small">
-                                    <i class="fa-regular fa-clock me-1"></i>@formattedTime น.
-                                </span>
+                                <span class="text-muted extra-small">@formattedTime</span>
                             </td>
 
-                            <!-- 5. Subtotal -->
-                            <td class="text-end text-muted fw-medium">
-                                ฿@subtotalAmt.ToString("N2")
-                            </td>
+                            <td class="text-end text-muted fw-medium">฿@subtotalAmt.ToString("N2")</td>
 
-                            <!-- 6. VAT -->
-                            <td class="text-end text-muted">
-                                ฿@vatAmt.ToString("N2")
-                            </td>
+                            <td class="text-end text-muted">฿@vatAmt.ToString("N2")</td>
 
-                            <!-- 7. Total Amount -->
                             <td class="text-end">
                                 <span class="fin-amount-cell @(isCancelled ? "text-decoration-line-through text-muted" : "text-electric")">
                                     ฿@totalAmt.ToString("N2")
                                 </span>
                             </td>
 
-                            <!-- 8. Status -->
                             <td class="text-center">
                                 <span class="@badgeClass">
                                     <i class="@badgeIcon me-1"></i>@statusLabel
                                 </span>
                             </td>
 
-                            <!-- 9. Actions (View, Download PDF, Print, Cancel) -->
                             <td class="text-end">
                                 <div class="d-inline-flex align-items-center justify-content-end gap-1 flex-wrap">
                                     <button type="button"
                                             class="btn fin-btn-view js-fr-view"
                                             data-id="@row.ReceiptId"
-                                            title="ดูตัวอย่างใบเสร็จ (Preview)">
-                                        <i class="fa-regular fa-eye"></i> View
+                                            title="ดูใบเสร็จ">
+                                        <i class="fa-regular fa-eye"></i>
                                     </button>
 
                                     <a asp-controller="Finance"
                                        asp-action="ReceiptPdf"
                                        asp-route-id="@row.ReceiptId"
                                        class="btn fr-btn-action-pdf"
-                                       title="ดาวน์โหลดใบเสร็จ PDF">
-                                        <i class="fa-solid fa-file-pdf"></i> PDF
+                                       title="ดาวน์โหลด PDF">
+                                        <i class="fa-solid fa-file-pdf"></i>
                                     </a>
 
                                     <button type="button"
                                             class="btn fr-btn-action-print js-fr-print"
                                             data-id="@row.ReceiptId"
-                                            title="พิมพ์ใบเสร็จรับเงิน">
+                                            title="พิมพ์">
                                         <i class="fa-solid fa-print"></i>
                                     </button>
 
@@ -498,7 +409,7 @@
                                                 data-booking="@row.BookingCode"
                                                 data-customer="@row.ContactName"
                                                 data-amount="@totalAmt"
-                                                title="ยกเลิกใบเสร็จรับเงิน">
+                                                title="ยกเลิกใบเสร็จ">
                                             <i class="fa-solid fa-ban"></i>
                                         </button>
                                     }
@@ -515,10 +426,10 @@
         {
             <div class="d-flex flex-column flex-md-row align-items-center justify-content-between gap-3 mt-4 pt-3 border-top">
                 <div class="text-muted small">
-                    แสดงหน้า <strong>@currentPage</strong> จาก <strong>@totalPages</strong> (ทั้งหมด <strong>@(Model.Receipts?.TotalCount ?? 0)</strong> ฉบับ)
+                    หน้า <strong>@currentPage</strong> จาก <strong>@totalPages</strong> (ทั้งหมด <strong>@(Model.Receipts?.TotalCount ?? 0)</strong> ฉบับ)
                 </div>
 
-                <nav aria-label="Receipt Pagination">
+                <nav aria-label="Pagination">
                     <ul class="pagination pagination-sm mb-0 payment-approval-pagination">
                         <li class="page-item @((Model.Receipts?.HasPrevious ?? false) ? "" : "disabled")">
                             <a class="page-link"
@@ -528,7 +439,7 @@
                                asp-route-from="@(Model.From?.ToString("yyyy-MM-dd"))"
                                asp-route-to="@(Model.To?.ToString("yyyy-MM-dd"))"
                                asp-route-page="@(currentPage - 1)">
-                                <i class="fa-solid fa-chevron-left"></i> ก่อนหน้า
+                                <i class="fa-solid fa-chevron-left"></i>
                             </a>
                         </li>
 
@@ -557,7 +468,7 @@
                                asp-route-from="@(Model.From?.ToString("yyyy-MM-dd"))"
                                asp-route-to="@(Model.To?.ToString("yyyy-MM-dd"))"
                                asp-route-page="@(currentPage + 1)">
-                                ถัดไป <i class="fa-solid fa-chevron-right"></i>
+                                <i class="fa-solid fa-chevron-right"></i>
                             </a>
                         </li>
                     </ul>
@@ -569,36 +480,28 @@
 </div>
 
 <!-- ===================================================================== -->
-<!-- Modal 1: ระบบดูรายละเอียดใบเสร็จทางการ (Official Receipt Preview)     -->
+<!-- Modal 1: ดูใบเสร็จรับเงิน (Official Receipt Preview)                  -->
 <!-- ===================================================================== -->
 <div class="modal fade" id="frPreviewModal" tabindex="-1" aria-labelledby="frPreviewModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content payment-approval-modal">
             <div class="modal-header payment-approval-modal-header">
-                <div class="d-flex align-items-center gap-2">
-                    <span class="fin-chip-cyber">
-                        <i class="fa-solid fa-file-invoice"></i> OFFICIAL HOTEL RECEIPT
-                    </span>
-                    <h5 class="modal-title fw-bold text-white mb-0" id="frPreviewModalLabel">
-                        ใบเสร็จรับเงิน <span id="frPrevHeaderNo" class="text-cyber">-</span>
-                    </h5>
-                </div>
+                <h5 class="modal-title fw-bold text-white mb-0" id="frPreviewModalLabel">
+                    ใบเสร็จรับเงิน <span id="frPrevHeaderNo" class="text-cyber">-</span>
+                </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <div class="modal-body p-3 p-md-4 bg-light">
-                <!-- Loading State -->
                 <div id="frPreviewLoading" class="text-center py-5">
                     <div class="spinner-border text-primary mb-2" role="status"></div>
-                    <p class="text-muted small mb-0">กำลังจัดเตรียมเอกสารใบเสร็จรับเงินอย่างเป็นทางการ...</p>
+                    <div class="text-muted small">กำลังโหลดใบเสร็จ...</div>
                 </div>
 
-                <!-- เอกสารใบเสร็จรับเงินทางการ (สำหรับ Preview & Print) -->
                 <div id="frPrintableDocument" class="fr-official-paper d-none">
-                    <!-- Watermark กรณีใบเสร็จถูกยกเลิก -->
-                    <div id="frCancelledWatermark" class="fr-cancelled-stamp d-none">CANCELLED / ยกเลิกแล้ว</div>
+                    <div id="frCancelledWatermark" class="fr-cancelled-stamp d-none">CANCELLED</div>
 
-                    <!-- ส่วนหัวใบเสร็จโรงแรม StayMate -->
+                    <!-- หัวกระดาษ -->
                     <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start gap-3 pb-3 mb-3 border-bottom">
                         <div class="d-flex align-items-center gap-3">
                             <img src="~/images/Logo/LogoStayMate.jpg"
@@ -606,99 +509,92 @@
                                  class="fr-paper-logo"
                                  onerror="this.onerror=null; this.src='https://placehold.co/72x72/070D1E/00E5FF?text=SM';" />
                             <div>
-                                <h4 class="fw-bold text-dark mb-0">STAYMATE FUTURE URBAN HOTEL</h4>
-                                <p class="text-muted extra-small mb-0">
-                                    88 Cyber Sukhumvit Road, Khlong Toei, Bangkok 10110, Thailand
-                                </p>
-                                <p class="text-muted extra-small mb-0">
-                                    Tax ID: 0105569000576 (Head Office) · Tel: 02-000-0576 · finance@staymatehotel.com
-                                </p>
+                                <h4 class="fw-bold text-dark mb-0">STAYMATE HOTEL</h4>
+                                <p class="text-muted extra-small mb-0">88 Cyber Sukhumvit Road, Bangkok 10110</p>
+                                <p class="text-muted extra-small mb-0">Tax ID: 0105569000576 · Tel: 02-000-0576</p>
                             </div>
                         </div>
                         <div class="text-sm-end">
-                            <span class="fr-doc-type-badge">ใบเสร็จรับเงิน / 정식 영수증 / RECEIPT</span>
+                            <span class="fr-doc-type-badge">ใบเสร็จรับเงิน / RECEIPT</span>
                             <div class="mt-2 small">
-                                <div><span class="text-muted">เลขที่ใบเสร็จ:</span> <strong class="text-electric" id="frDocReceiptNo">-</strong></div>
-                                <div><span class="text-muted">วันที่ออก:</span> <strong class="text-dark" id="frDocIssuedDate">-</strong></div>
+                                <div><span class="text-muted">เลขที่:</span> <strong class="text-electric" id="frDocReceiptNo">-</strong></div>
+                                <div><span class="text-muted">วันที่:</span> <strong class="text-dark" id="frDocIssuedDate">-</strong></div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- ข้อมูลลูกค้าและการจอง -->
+                    <!-- ข้อมูลลูกค้าและการเข้าพัก -->
                     <div class="row g-3 mb-3 small">
                         <div class="col-sm-6">
                             <div class="p-3 rounded-3 bg-light border h-100">
-                                <span class="text-muted extra-small text-uppercase fw-bold d-block mb-1">ข้อมูลผู้ชำระเงิน (Billed To)</span>
+                                <span class="text-muted extra-small fw-bold d-block mb-1">ลูกค้า (Billed To)</span>
                                 <div class="fw-bold text-dark fs-6" id="frDocCustomerName">-</div>
                                 <div class="text-muted" id="frDocCustomerContact">-</div>
                                 <div class="mt-1">
-                                    <span class="text-muted">รหัสการจอง (Booking ID):</span>
+                                    <span class="text-muted">Booking:</span>
                                     <strong class="text-primary" id="frDocBookingCode">-</strong>
                                 </div>
                             </div>
                         </div>
                         <div class="col-sm-6">
                             <div class="p-3 rounded-3 bg-light border h-100">
-                                <span class="text-muted extra-small text-uppercase fw-bold d-block mb-1">ข้อมูลการเข้าพักและชำระเงิน (Stay &amp; Payment Info)</span>
-                                <div><span class="text-muted">เช็คอิน - เช็คเอาท์:</span> <strong class="text-dark" id="frDocStayPeriod">-</strong></div>
-                                <div><span class="text-muted">ช่องทางชำระเงิน:</span> <strong class="text-dark" id="frDocPayMethod">-</strong></div>
-                                <div><span class="text-muted">สถานะเอกสาร:</span> <span id="frDocStatusBadge"></span></div>
+                                <span class="text-muted extra-small fw-bold d-block mb-1">รายละเอียดการเข้าพัก</span>
+                                <div><span class="text-muted">เข้าพัก:</span> <strong class="text-dark" id="frDocStayPeriod">-</strong></div>
+                                <div><span class="text-muted">ชำระโดย:</span> <strong class="text-dark" id="frDocPayMethod">-</strong></div>
+                                <div><span class="text-muted">สถานะ:</span> <span id="frDocStatusBadge"></span></div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- ตารางรายการห้องพักและบริการ -->
+                    <!-- รายการห้องพัก -->
                     <div class="table-responsive mb-3">
                         <table class="table table-bordered table-sm align-middle small mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th>รายการห้องพัก / บริการ (Description)</th>
-                                    <th class="text-center">หมายเลขห้อง</th>
+                                    <th>รายการห้องพัก</th>
+                                    <th class="text-center">เลขห้อง</th>
                                     <th class="text-end">ราคา/คืน</th>
-                                    <th class="text-center">จำนวนคืน</th>
+                                    <th class="text-center">คืน</th>
                                     <th class="text-end">เตียงเสริม</th>
-                                    <th class="text-end">จำนวนเงิน (THB)</th>
+                                    <th class="text-end">รวม (THB)</th>
                                 </tr>
                             </thead>
-                            <tbody id="frDocRoomsBody">
-                                <!-- เติมจาก JSON API -->
-                            </tbody>
+                            <tbody id="frDocRoomsBody"></tbody>
                         </table>
                     </div>
 
-                    <!-- สรุปยอดเงิน ส่วนลด ภาษี และยอดสุทธิ -->
+                    <!-- สรุปยอดเงิน -->
                     <div class="row justify-content-between align-items-end g-3 mt-2">
                         <div class="col-sm-6 small">
                             <div id="frDocPromotionsBox" class="p-2 rounded bg-light border mb-2 d-none">
-                                <strong class="d-block extra-small text-muted">โปรโมชั่นส่วนลดที่ใช้:</strong>
+                                <strong class="d-block extra-small text-muted">ส่วนลดโปรโมชั่น:</strong>
                                 <div id="frDocPromotionsList" class="extra-small text-dark"></div>
                             </div>
                             <div class="text-muted extra-small">
-                                <div>ผู้ออกใบเสร็จ (Authorized Officer): <strong class="text-dark" id="frDocIssuedBy">-</strong></div>
-                                <div>เอกสารนี้ออกโดยระบบอิเล็กทรอนิกส์ของโรงแรม StayMate</div>
+                                ผู้ออกใบเสร็จ: <strong class="text-dark" id="frDocIssuedBy">-</strong>
                             </div>
                         </div>
 
                         <div class="col-sm-6 col-md-5">
                             <div class="fr-doc-summary-box p-3 rounded-3">
                                 <div class="d-flex justify-content-between small mb-1">
-                                    <span class="text-muted">รวมค่าห้องพัก (Room Subtotal):</span>
+                                    <span class="text-muted">ค่าห้องพัก:</span>
                                     <strong id="frDocRoomAmount">฿0.00</strong>
                                 </div>
                                 <div class="d-flex justify-content-between small mb-1 text-danger">
-                                    <span>หักส่วนลด (Discount):</span>
+                                    <span>ส่วนลด:</span>
                                     <strong id="frDocDiscountAmount">-฿0.00</strong>
                                 </div>
                                 <div class="d-flex justify-content-between small mb-1">
-                                    <span class="text-muted">ยอดก่อนภาษี (Subtotal):</span>
+                                    <span class="text-muted">ยอดก่อนภาษี:</span>
                                     <strong id="frDocSubtotal">฿0.00</strong>
                                 </div>
                                 <div class="d-flex justify-content-between small mb-2 pb-2 border-bottom">
-                                    <span class="text-muted">ภาษีมูลค่าเพิ่ม (VAT 7%):</span>
+                                    <span class="text-muted">VAT 7%:</span>
                                     <strong id="frDocTaxAmount">฿0.00</strong>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <span class="fw-bold text-dark">ยอดชำระสุทธิ (Total Paid):</span>
+                                    <span class="fw-bold text-dark">ยอดชำระสุทธิ:</span>
                                     <span class="fs-5 fw-bold text-electric" id="frDocTotalPaid">฿0.00</span>
                                 </div>
                             </div>
@@ -709,15 +605,15 @@
 
             <div class="modal-footer payment-approval-modal-footer justify-content-between">
                 <a href="#" id="frModalFullDetailLink" class="btn fin-btn-outline-slate btn-sm">
-                    <i class="fa-solid fa-up-right-from-square me-1"></i>เปิดหน้าใบเสร็จแบบเต็ม
+                    <i class="fa-solid fa-up-right-from-square me-1"></i>เปิดหน้าเต็ม
                 </a>
                 <div class="d-flex flex-wrap gap-2">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิดหน้าต่าง</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
                     <button type="button" id="frModalBtnPrint" class="btn fr-btn-action-print px-3">
-                        <i class="fa-solid fa-print me-1"></i> Print ใบเสร็จ
+                        <i class="fa-solid fa-print me-1"></i> พิมพ์
                     </button>
                     <a href="#" id="frModalBtnDownloadPdf" class="btn fin-btn-primary-cyber px-3">
-                        <i class="fa-solid fa-file-pdf me-1"></i> Download PDF
+                        <i class="fa-solid fa-file-pdf me-1"></i> PDF
                     </a>
                 </div>
             </div>
@@ -726,83 +622,69 @@
 </div>
 
 <!-- ===================================================================== -->
-<!-- Modal 2: ระบบสร้างใบเสร็จใหม่ (Create Receipt Modal)                  -->
+<!-- Modal 2: สร้างใบเสร็จใหม่ (Create Receipt)                            -->
 <!-- ===================================================================== -->
 <div class="modal fade" id="frCreateModal" tabindex="-1" aria-labelledby="frCreateModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content payment-approval-modal">
             <div class="modal-header payment-approval-modal-header">
-                <div class="d-flex align-items-center gap-2">
-                    <span class="fin-chip-cyber">
-                        <i class="fa-solid fa-plus-circle"></i> ISSUE OFFICIAL RECEIPT
-                    </span>
-                    <h5 class="modal-title fw-bold text-white mb-0" id="frCreateModalLabel">
-                        สร้างใบเสร็จรับเงินใหม่ (Create Receipt)
-                    </h5>
-                </div>
+                <h5 class="modal-title fw-bold text-white mb-0" id="frCreateModalLabel">
+                    สร้างใบเสร็จรับเงินใหม่
+                </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <div class="modal-body p-4">
-                <div class="alert alert-info d-flex align-items-start gap-2 small mb-3">
-                    <i class="fa-solid fa-shield-halved fs-5 mt-1 text-primary"></i>
-                    <div>
-                        <strong>กฎความปลอดภัยทางการเงิน:</strong> เลือกได้เฉพาะรายการจองที่ชำระเงินและได้รับการอนุมัติ (Approved) แล้วแต่ยังไม่มีใบเสร็จ ระบบดึงยอดเงินจริงจากฐานข้อมูลโดยไม่อนุญาตให้แก้ไขตัวเลขด้วยตนเอง และป้องกันการออกใบเสร็จซ้ำอัตโนมัติ
-                    </div>
-                </div>
-
-                <!-- กรณีมีรายการชำระเงินที่รอออกใบเสร็จ -->
                 <div id="frCreateFormWrap">
                     <div class="mb-3">
                         <label for="frSelectApprovedPayment" class="form-label fw-bold small text-dark">
-                            เลือกรายการชำระเงินที่อนุมัติแล้วและยังไม่มีใบเสร็จ <span class="text-danger">*</span>
+                            เลือกรายการชำระเงินที่อนุมัติแล้ว <span class="text-danger">*</span>
                         </label>
                         <select id="frSelectApprovedPayment" class="form-select fr-form-control">
-                            <option value="">-- เลือกรายการ Booking / Payment ที่ต้องการออกใบเสร็จ --</option>
+                            <option value="">-- เลือกรายการ Booking / Payment --</option>
                         </select>
                     </div>
 
-                    <!-- กล่องแสดงข้อมูลอัตโนมัติ (Read-only ห้ามแก้ไขยอดเงินเอง) -->
                     <div id="frCreatePreviewBox" class="p-3 rounded-3 bg-light border d-none">
                         <div class="row g-3 small mb-3">
                             <div class="col-sm-6">
-                                <span class="text-muted d-block">รหัสการจอง (Booking ID):</span>
+                                <span class="text-muted d-block">Booking Code</span>
                                 <strong class="text-electric fs-6" id="frCrBookingCode">-</strong>
                             </div>
                             <div class="col-sm-6">
-                                <span class="text-muted d-block">ชื่อลูกค้า (Customer Name):</span>
+                                <span class="text-muted d-block">ชื่อลูกค้า</span>
                                 <strong class="text-dark fs-6" id="frCrCustomerName">-</strong>
                             </div>
                             <div class="col-sm-4">
-                                <span class="text-muted d-block">รหัสการชำระเงิน:</span>
+                                <span class="text-muted d-block">Payment ID</span>
                                 <strong class="text-dark" id="frCrPaymentId">-</strong>
                             </div>
                             <div class="col-sm-4">
-                                <span class="text-muted d-block">ช่องทางชำระเงิน:</span>
+                                <span class="text-muted d-block">ช่องทางชำระเงิน</span>
                                 <strong class="text-dark" id="frCrMethod">-</strong>
                             </div>
                             <div class="col-sm-4">
-                                <span class="text-muted d-block">วันที่ออกใบเสร็จ:</span>
-                                <strong class="text-dark">@DateTime.Now.ToString("dd/MM/yyyy") (วันนี้)</strong>
+                                <span class="text-muted d-block">วันที่ออกใบเสร็จ</span>
+                                <strong class="text-dark">@DateTime.Now.ToString("dd/MM/yyyy")</strong>
                             </div>
                         </div>
 
                         <div class="border-top pt-3">
                             <div class="row g-2 text-center">
                                 <div class="col-6 col-sm-3">
-                                    <span class="text-muted extra-small d-block">ค่าห้องพักรวม</span>
+                                    <span class="text-muted extra-small d-block">ค่าห้องพัก</span>
                                     <strong class="text-dark" id="frCrRoomAmt">฿0.00</strong>
                                 </div>
                                 <div class="col-6 col-sm-3">
-                                    <span class="text-muted extra-small d-block">ส่วนลดโปรโมชั่น</span>
+                                    <span class="text-muted extra-small d-block">ส่วนลด</span>
                                     <strong class="text-danger" id="frCrDiscountAmt">-฿0.00</strong>
                                 </div>
                                 <div class="col-6 col-sm-3">
-                                    <span class="text-muted extra-small d-block">ยอดก่อนภาษี / VAT</span>
+                                    <span class="text-muted extra-small d-block">VAT</span>
                                     <strong class="text-dark" id="frCrTaxAmt">฿0.00</strong>
                                 </div>
                                 <div class="col-6 col-sm-3">
-                                    <span class="text-muted extra-small d-block">ยอดสุทธิ (ล็อกตามจริง)</span>
+                                    <span class="text-muted extra-small d-block">ยอดสุทธิ</span>
                                     <strong class="text-success fs-6" id="frCrNetAmt">฿0.00</strong>
                                 </div>
                             </div>
@@ -810,25 +692,21 @@
                     </div>
                 </div>
 
-                <!-- กรณีทุกรายการที่อนุมัติแล้วมีใบเสร็จครบทั้งหมด -->
                 <div id="frCreateEmptyNotice" class="text-center py-4 d-none">
                     <div class="fin-empty-icon-ring mx-auto mb-3">
                         <i class="fa-solid fa-circle-check"></i>
                     </div>
-                    <h6 class="fw-bold text-dark">รายการชำระเงินที่อนุมัติแล้วทั้งหมดได้รับการออกใบเสร็จครบถ้วนแล้ว</h6>
-                    <p class="text-muted small mb-3">
-                        ระบบ StayMate ออกใบเสร็จรับเงินให้อัตโนมัติทันทีเมื่ออนุมัติสลิปโอนเงิน หากมีสลิปใหม่ที่รอการอนุมัติ กรุณาไปที่หน้าอนุมัติสลิปโอนเงิน
-                    </p>
-                    <a asp-controller="Finance" asp-action="PaymentApproval" class="btn fin-btn-primary-cyber btn-sm">
-                        <i class="fa-solid fa-file-invoice-dollar me-1"></i> ไปหน้าอนุมัติสลิปโอนเงิน
+                    <h6 class="fw-bold text-dark">ไม่มีรายการค้างออกใบเสร็จ</h6>
+                    <a asp-controller="Finance" asp-action="PaymentApproval" class="btn fin-btn-primary-cyber btn-sm mt-2">
+                        ไปหน้า Payment Approval
                     </a>
                 </div>
             </div>
 
             <div class="modal-footer payment-approval-modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิดหน้าต่าง</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
                 <button type="button" id="frBtnConfirmCreateReceipt" class="btn fin-btn-primary-cyber" disabled>
-                    <i class="fa-solid fa-check-circle me-1"></i> ยืนยันการออกใบเสร็จรับเงิน
+                    ยืนยันการออกใบเสร็จ
                 </button>
             </div>
         </div>
@@ -836,14 +714,14 @@
 </div>
 
 <!-- ===================================================================== -->
-<!-- Modal 3: ระบบยกเลิกใบเสร็จพร้อมระบุเหตุผล (Cancel Receipt Modal)       -->
+<!-- Modal 3: ยกเลิกใบเสร็จรับเงิน (Cancel Receipt)                        -->
 <!-- ===================================================================== -->
 <div class="modal fade" id="frCancelModal" tabindex="-1" aria-labelledby="frCancelModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content payment-approval-modal">
             <div class="modal-header bg-danger text-white">
                 <h5 class="modal-title fw-bold" id="frCancelModalLabel">
-                    <i class="fa-solid fa-ban me-2"></i>ยืนยันการยกเลิกใบเสร็จรับเงิน (Cancel Receipt)
+                    <i class="fa-solid fa-ban me-2"></i>ยกเลิกใบเสร็จรับเงิน
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -857,44 +735,37 @@
                             <strong class="text-dark" id="frCancelDisplayNo">-</strong>
                         </div>
                         <div class="d-flex justify-content-between mb-1">
-                            <span class="text-muted">ลูกค้า / การจอง:</span>
+                            <span class="text-muted">ลูกค้า / Booking:</span>
                             <strong class="text-dark" id="frCancelDisplayCustomer">-</strong>
                         </div>
                         <div class="d-flex justify-content-between">
-                            <span class="text-muted">จำนวนเงินตามใบเสร็จ:</span>
+                            <span class="text-muted">จำนวนเงิน:</span>
                             <strong class="text-danger" id="frCancelDisplayAmount">฿0.00</strong>
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="frCancelReasonSelect" class="form-label fw-semibold small text-dark">
-                            สาเหตุการยกเลิกใบเสร็จ <span class="text-danger">*</span>
-                        </label>
+                    <div class="mb-2">
+                        <label for="frCancelReasonSelect" class="form-label fw-semibold small text-dark">เหตุผลการยกเลิก</label>
                         <select id="frCancelReasonSelect" class="form-select fr-form-control mb-2">
-                            <option value="">-- เลือกสาเหตุมาตรฐาน --</option>
-                            <option value="ลูกค้าขอยกเลิกการจองและคืนเงิน (Booking Refund)">ลูกค้าขอยกเลิกการจองและคืนเงิน (Booking Refund)</option>
-                            <option value="ข้อมูลผู้เสียภาษี/ชื่อลูกค้าในใบเสร็จไม่ถูกต้อง ต้องออกใบใหม่">ข้อมูลผู้เสียภาษี/ชื่อลูกค้าไม่ถูกต้อง</option>
-                            <option value="รายการชำระเงินถูกดึงคืนจากธนาคาร (Chargeback/Reversal)">รายการชำระเงินถูกดึงคืนจากธนาคาร</option>
-                            <option value="OTHER">อื่น ๆ (ระบุรายละเอียดด้านล่าง)</option>
+                            <option value="">-- เลือกเหตุผล --</option>
+                            <option value="ลูกค้าขอยกเลิกการจองและคืนเงิน">ลูกค้าขอยกเลิกการจองและคืนเงิน</option>
+                            <option value="ข้อมูลลูกค้าในใบเสร็จไม่ถูกต้อง">ข้อมูลลูกค้าในใบเสร็จไม่ถูกต้อง</option>
+                            <option value="รายการชำระเงินถูกดึงคืนจากธนาคาร">รายการชำระเงินถูกดึงคืนจากธนาคาร</option>
+                            <option value="OTHER">อื่น ๆ (ระบุรายละเอียด)</option>
                         </select>
                         <textarea id="frCancelReasonInput"
                                   class="form-control fr-form-control"
                                   rows="3"
                                   maxlength="255"
                                   required
-                                  placeholder="ระบุเหตุผลในการยกเลิกใบเสร็จเพื่อบันทึกใน Audit Log..."></textarea>
-                        <div class="invalid-feedback">กรุณาระบุเหตุผลในการยกเลิกใบเสร็จ</div>
-                    </div>
-
-                    <div class="extra-small text-muted">
-                        <i class="fa-solid fa-circle-info text-danger me-1"></i>
-                        ใบเสร็จที่ถูกยกเลิกจะยังคงอยู่ในประวัติระบบเพื่อการตรวจสอบทางบัญชี และจะไม่ถูกลบออกจากฐานข้อมูลถาวร
+                                  placeholder="ระบุเหตุผลในการยกเลิก..."></textarea>
+                        <div class="invalid-feedback">กรุณาระบุเหตุผลในการยกเลิก</div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light border" data-bs-dismiss="modal">ปิด</button>
                     <button type="submit" id="frBtnConfirmCancelSubmit" class="btn btn-danger fw-semibold">
-                        <i class="fa-solid fa-ban me-1"></i> ยืนยันยกเลิกใบเสร็จ
+                        ยืนยันยกเลิกใบเสร็จ
                     </button>
                 </div>
             </form>
@@ -902,7 +773,6 @@
     </div>
 </div>
 
-<!-- ส่งข้อมูลรายการชำระเงินที่ Approved แล้วแต่ยังไม่มีใบเสร็จให้ JavaScript -->
 <script id="frUnissuedPaymentsData" type="application/json">
     @Html.Raw(unissuedPaymentsJson)
 </script>
