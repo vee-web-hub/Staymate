@@ -14,6 +14,12 @@ namespace StayMate_Kavinvee_0576.Models.ViewModels
         public const string StatusInProgress = "in_progress";
         public const string StatusDone = "done";
 
+        /// <summary>
+        /// เครื่องหมายที่ Controller เติมลงใน Note ของงาน เมื่อผ่าน Checklist ตรวจห้องครบ 4 ข้อจริง
+        /// ใช้เป็นหลักฐานเดียวที่บอกว่า "ผ่าน Checklist" (ไม่เดาจากสถานะงานอีกต่อไป)
+        /// </summary>
+        public const string ChecklistPassedMarker = "[ตรวจห้องผ่าน]";
+
         public static string ToStatusLabel(string? status) => status switch
         {
             StatusPending => "Pending",
@@ -65,6 +71,17 @@ namespace StayMate_Kavinvee_0576.Models.ViewModels
             _ => "ปกติ"
         };
 
+        /// <summary>
+        /// กติกาตรวจ "มีปัญหา" ต้องตรงกับเงื่อนไขใน Controller (BuildDashboard / History / ApplyHistoryFilters)
+        /// คำที่ใช้: แจ้งซ่อม, ชำรุด, เสีย  (ตัดคำว่า "ปัญหา" ออก เพราะ Controller ไม่ได้นับด้วย ทำให้ตัวเลขไม่ตรงกัน)
+        /// </summary>
+        private static bool NoteIndicatesIssue(string? note) =>
+            !string.IsNullOrWhiteSpace(note) &&
+            (note.Contains("แจ้งซ่อม") || note.Contains("ชำรุด") || note.Contains("เสีย"));
+
+        private static bool NoteHasChecklistMarker(string? note) =>
+            !string.IsNullOrWhiteSpace(note) && note.Contains(ChecklistPassedMarker);
+
         // =====================================
         // USER & WELCOME SECTION
         // =====================================
@@ -92,7 +109,8 @@ namespace StayMate_Kavinvee_0576.Models.ViewModels
         public List<ActivityItem> RecentActivities { get; set; } = new();
 
         // =====================================
-        // DASHBOARD SUMMARY (คงเดิมทั้งหมด)
+        // DASHBOARD SUMMARY
+        // (ใช้ MaintenanceRooms ในส่วน Room Status ด้านล่างเป็น "จำนวนห้องที่แจ้งปัญหา" บน Dashboard ด้วย)
         // =====================================
         public int TotalTasks { get; set; }
         public int PendingTasks { get; set; }
@@ -125,7 +143,7 @@ namespace StayMate_Kavinvee_0576.Models.ViewModels
         public TaskDetailItem? Detail { get; set; }
 
         // =====================================
-        // ROOM STATUS MANAGEMENT (5 Summary Cards + Filters + History)
+        // ROOM STATUS MANAGEMENT (Summary Cards + Filters + History)
         // =====================================
         public int TotalRooms { get; set; }
         public int AvailableRooms { get; set; }
@@ -139,7 +157,7 @@ namespace StayMate_Kavinvee_0576.Models.ViewModels
         public List<RoomHistoryItem> RoomStatusHistories { get; set; } = new();
 
         // =====================================
-        // TASK HISTORY (อัปเกรดสำหรับหน้า Cleaning History Management)
+        // TASK HISTORY (หน้า Cleaning History Management)
         // =====================================
         public List<TaskItem> HistoryTasks { get; set; } = new();
 
@@ -261,13 +279,11 @@ namespace StayMate_Kavinvee_0576.Models.ViewModels
             public string DurationText =>
                 DurationMinutes.HasValue ? $"{DurationMinutes.Value} นาที" : "-";
 
-            public bool HasIssue =>
-                RoomStatus == "maintenance" ||
-                (!string.IsNullOrWhiteSpace(Note) &&
-                 (Note.Contains("แจ้งซ่อม") || Note.Contains("ชำรุด") || Note.Contains("เสีย") || Note.Contains("ปัญหา")));
+            public bool HasIssue => RoomStatus == "maintenance" || NoteIndicatesIssue(Note);
 
+            /// <summary>ผ่าน Checklist จริง = งานเสร็จ และมีเครื่องหมาย [ตรวจห้องผ่าน] ที่ระบบบันทึกไว้</summary>
             public bool IsCompletedPassedChecklist =>
-                Status == StatusDone && !HasIssue;
+                Status == StatusDone && NoteHasChecklistMarker(Note);
         }
 
         public class TaskDetailItem
@@ -302,19 +318,15 @@ namespace StayMate_Kavinvee_0576.Models.ViewModels
             public bool CanReportMaintenance => RoomStatus != "occupied" && RoomStatus != "maintenance";
 
             public int? DurationMinutes =>
-                StartedAt.HasValue && CompletedAt.HasValue
+                StartedAt.HasValue && CompletedAt.HasValue && CompletedAt.Value >= StartedAt.Value
                     ? (int)Math.Round((CompletedAt.Value - StartedAt.Value).TotalMinutes)
                     : null;
 
             // --- สำหรับหน้า Cleaning History / Task Details ---
-            public bool HasIssue =>
-                RoomStatus == "maintenance" ||
-                (!string.IsNullOrWhiteSpace(Note) &&
-                 (Note.Contains("แจ้งซ่อม") || Note.Contains("ชำรุด") || Note.Contains("เสีย") || Note.Contains("ปัญหา")));
+            public bool HasIssue => RoomStatus == "maintenance" || NoteIndicatesIssue(Note);
 
             public bool PassedChecklist =>
-                Status == StatusDone &&
-                (string.IsNullOrWhiteSpace(Note) || Note.Contains("[ตรวจห้องผ่าน]") || !HasIssue);
+                Status == StatusDone && NoteHasChecklistMarker(Note);
 
             public List<TaskTimelineEvent> TimelineEvents { get; set; } = new();
         }
@@ -388,7 +400,7 @@ namespace StayMate_Kavinvee_0576.Models.ViewModels
                 _ => 6
             };
 
-            // สำหรับหน้า Dashboard เดิม
+            // สำหรับหน้า Dashboard
             public string CardVisualState
             {
                 get

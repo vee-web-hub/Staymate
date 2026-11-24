@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using StayMate_Kavinvee_0576.Models;
 using StayMate_Kavinvee_0576.Models.ViewModels;
 
@@ -20,12 +22,15 @@ namespace StayMate_Kavinvee_0576.Controllers
         private const string StatusPending = HousekeepingViewModel.StatusPending;
         private const string StatusInProgress = HousekeepingViewModel.StatusInProgress;
         private const string StatusDone = HousekeepingViewModel.StatusDone;
+        private const string ChecklistPassedMarker = HousekeepingViewModel.ChecklistPassedMarker;
 
         private readonly StayMateDbContext _context;
+        private readonly ILogger<HousekeepingController> _logger;
 
-        public HousekeepingController(StayMateDbContext context)
+        public HousekeepingController(StayMateDbContext context, ILogger<HousekeepingController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         // ==========================================
@@ -42,8 +47,9 @@ namespace StayMate_Kavinvee_0576.Controllers
                 var model = await BuildDashboardViewModelAsync(userInfo.Value.UserId, userInfo.Value.FullName);
                 return View(model);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Housekeeping Index failed");
                 TempData["ErrorMessage"] = "เกิดข้อผิดพลาดในการโหลดข้อมูล Dashboard กรุณาลองใหม่อีกครั้ง";
                 return View(new HousekeepingViewModel
                 {
@@ -72,6 +78,7 @@ namespace StayMate_Kavinvee_0576.Controllers
                         pendingRooms = model.PendingRooms,
                         inProgressRooms = model.InProgressRooms,
                         completedToday = model.CompletedToday,
+                        maintenanceRooms = model.MaintenanceRooms,
                         cleaningProgress = model.CleaningProgress,
                         remainingTasksCount = model.RemainingTasksCount,
                         unassignedPendingTasks = model.UnassignedPendingTasks,
@@ -81,8 +88,9 @@ namespace StayMate_Kavinvee_0576.Controllers
                     }
                 });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "GetDashboardData failed");
                 return StatusCode(500, new { success = false, message = "เกิดข้อผิดพลาดในการดึงข้อมูลสรุป Dashboard" });
             }
         }
@@ -118,8 +126,9 @@ namespace StayMate_Kavinvee_0576.Controllers
                 var tasks = await ProjectTasks(query.Take(50), uid).ToListAsync();
                 return Json(new { success = true, data = tasks });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "GetCleaningTasks failed");
                 return StatusCode(500, new { success = false, message = "เกิดข้อผิดพลาดในการโหลดรายการงานทำความสะอาด" });
             }
         }
@@ -135,8 +144,9 @@ namespace StayMate_Kavinvee_0576.Controllers
                 var activities = await BuildRecentActivitiesAsync(12);
                 return Json(new { success = true, data = activities });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "GetRecentActivities failed");
                 return StatusCode(500, new { success = false, message = "เกิดข้อผิดพลาดในการโหลดประวัติการทำงานล่าสุด" });
             }
         }
@@ -415,8 +425,8 @@ namespace StayMate_Kavinvee_0576.Controllers
             });
         }
 
-                // ==========================================
-        // 4. ROOM STATUS (อัปเดตสถานะห้องพัก + Summary 5 การ์ด + ประวัติจริง)
+        // ==========================================
+        // 4. ROOM STATUS (อัปเดตสถานะห้องพัก + Summary การ์ด + ประวัติจริง)
         // ==========================================
 
         public async Task<IActionResult> RoomStatus()
@@ -479,7 +489,7 @@ namespace StayMate_Kavinvee_0576.Controllers
         }
 
         // ==========================================
-        // 11. UPDATE ROOM STATUS WORKFLOW (ควบคุมเงื่อนไขทั้ง 8 ข้อ + Checklist)
+        // 5. UPDATE ROOM STATUS WORKFLOW (ควบคุมเงื่อนไขทั้ง 8 ข้อ + Checklist)
         // ==========================================
 
         [HttpPost]
@@ -577,9 +587,7 @@ namespace StayMate_Kavinvee_0576.Controllers
                         openTask.StartedAt ??= now;
                         if (!string.IsNullOrWhiteSpace(cleanNote))
                         {
-                            openTask.Note = string.IsNullOrWhiteSpace(openTask.Note)
-                                ? cleanNote
-                                : $"{openTask.Note} | {cleanNote}";
+                            openTask.Note = AppendNote(openTask.Note, cleanNote);
                         }
                     }
 
@@ -631,7 +639,7 @@ namespace StayMate_Kavinvee_0576.Controllers
                         return Respond(false, "คุณไม่ใช่ผู้รับผิดชอบงานทำความสะอาดของห้องนี้");
                     }
 
-                    // ตรวจสอบ Checklist ความพร้อมทั้ง 4 ข้อตามข้อกำหนดข้อ 8
+                    // ตรวจสอบ Checklist ความพร้อมทั้ง 4 ข้อ
                     if (!checkBedLinens || !checkBathroom || !checkAmenities || !checkAppliances)
                     {
                         await tx.RollbackAsync();
@@ -641,12 +649,12 @@ namespace StayMate_Kavinvee_0576.Controllers
                     openTask.AssignedTo = uid;
                     openTask.Status = StatusDone;
                     openTask.CompletedAt = now;
-                    if (!string.IsNullOrWhiteSpace(cleanNote))
-                    {
-                        openTask.Note = string.IsNullOrWhiteSpace(openTask.Note)
-                            ? $"[ตรวจห้องผ่าน] {cleanNote}"
-                            : $"{openTask.Note} | [ตรวจห้องผ่าน] {cleanNote}";
-                    }
+
+                    // เติมเครื่องหมาย [ตรวจห้องผ่าน] เสมอ เพื่อใช้เป็นหลักฐานว่าผ่าน Checklist จริง (แม้ไม่ได้กรอกหมายเหตุ)
+                    var passNote = string.IsNullOrWhiteSpace(cleanNote)
+                        ? ChecklistPassedMarker
+                        : $"{ChecklistPassedMarker} {cleanNote}";
+                    openTask.Note = AppendNote(openTask.Note, passNote);
 
                     // ตรวจสอบว่าไม่มีงานอื่นค้างในห้องเดียวกัน
                     var hasOtherOpen = await _context.HousekeepingTasks
@@ -673,14 +681,18 @@ namespace StayMate_Kavinvee_0576.Controllers
                     await _context.SaveChangesAsync();
                     await tx.CommitAsync();
 
-                    return Respond(true, $"ทำความสะอาดห้อง {room.RoomNumber} เสร็จสิ้น และเปลี่ยนสถานะห้องเป็น Available พร้อมให้บริการแล้ว", new
-                    {
-                        roomId = room.RoomId,
-                        roomNumber = room.RoomNumber,
-                        managementState = "available",
-                        updatedBy = actorName,
-                        updatedAt = now.ToString("dd MMM yyyy HH:mm")
-                    });
+                    return Respond(true,
+                        hasOtherOpen
+                            ? $"ปิดงานห้อง {room.RoomNumber} เรียบร้อย แต่ยังมีงานอื่นค้างในห้องนี้ จึงยังไม่เปลี่ยนเป็น Available"
+                            : $"ทำความสะอาดห้อง {room.RoomNumber} เสร็จสิ้น และเปลี่ยนสถานะห้องเป็น Available พร้อมให้บริการแล้ว",
+                        new
+                        {
+                            roomId = room.RoomId,
+                            roomNumber = room.RoomNumber,
+                            managementState = hasOtherOpen ? "pending_cleaning" : "available",
+                            updatedBy = actorName,
+                            updatedAt = now.ToString("dd MMM yyyy HH:mm")
+                        });
                 }
 
                 // ---------------------------------------------------------
@@ -692,6 +704,12 @@ namespace StayMate_Kavinvee_0576.Controllers
                     {
                         await tx.RollbackAsync();
                         return Respond(false, "กรุณาระบุรายละเอียดปัญหาหรืออุปกรณ์ที่ชำรุดในช่องหมายเหตุ");
+                    }
+
+                    if (room.Status == "maintenance")
+                    {
+                        await tx.RollbackAsync();
+                        return Respond(false, $"ห้อง {room.RoomNumber} อยู่ในสถานะซ่อมบำรุงอยู่แล้ว");
                     }
 
                     var oldStatus = room.Status;
@@ -709,10 +727,7 @@ namespace StayMate_Kavinvee_0576.Controllers
 
                     if (openTask != null)
                     {
-                        var appended = string.IsNullOrWhiteSpace(openTask.Note)
-                            ? $"[แจ้งซ่อม: {cleanNote}]"
-                            : $"{openTask.Note} | [แจ้งซ่อม: {cleanNote}]";
-                        openTask.Note = appended.Length > 255 ? appended.Substring(0, 255) : appended;
+                        openTask.Note = AppendNote(openTask.Note, $"[แจ้งซ่อม: {cleanNote}]");
                     }
 
                     await _context.SaveChangesAsync();
@@ -786,14 +801,15 @@ namespace StayMate_Kavinvee_0576.Controllers
                 await tx.RollbackAsync();
                 return Respond(false, "ไม่พบรูปแบบคำสั่งเปลี่ยนสถานะที่ระบุ");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "UpdateRoomStatusWorkflow failed (roomId={RoomId}, action={Action})", roomId, targetAction);
                 return Respond(false, "เกิดข้อผิดพลาดในการอัปเดตสถานะห้องพัก กรุณาลองใหม่อีกครั้ง");
             }
         }
 
-       // ==========================================
-        // 5. CLEANING HISTORY MANAGEMENT (ประวัติงานทำความสะอาด + KPI + Performance)
+        // ==========================================
+        // 6. CLEANING HISTORY MANAGEMENT (ประวัติงานทำความสะอาด + KPI + Performance)
         // ==========================================
 
         [HttpGet]
@@ -998,8 +1014,70 @@ namespace StayMate_Kavinvee_0576.Controllers
 
             return View(model);
         }
+
         // ==========================================
-        // 6. PROFILE
+        // 6.1 EXPORT CLEANING HISTORY (CSV เปิดใน Excel ได้)
+        // เดิม JS เรียก /ExportCleaningHistory แต่ Controller ไม่มี action นี้ -> 404
+        // ==========================================
+
+        [HttpGet]
+        public async Task<IActionResult> ExportCleaningHistory(
+            string? search, byte? floor, uint? employeeId, string? status,
+            DateOnly? singleDate, DateOnly? dateFrom, DateOnly? dateTo, string? issueType)
+        {
+            try
+            {
+                var userInfo = await GetValidHousekeeperAsync();
+                if (userInfo == null) return Denied();
+
+                var query = ApplyHistoryFilters(
+                    _context.HousekeepingTasks.AsNoTracking(),
+                    search, floor, employeeId, status, singleDate, dateFrom, dateTo, issueType);
+
+                var rows = await ProjectTasks(
+                        query.OrderByDescending(t => t.CompletedAt ?? t.StartedAt ?? t.CreatedAt).Take(5000),
+                        userInfo.Value.UserId)
+                    .ToListAsync();
+
+                var sb = new StringBuilder();
+                sb.AppendLine("TaskId,Room,Floor,RoomType,TaskStatus,AssignedTo,CreatedAt,StartedAt,CompletedAt,DurationMinutes,HasIssue,PassedChecklist,Note");
+                foreach (var r in rows)
+                {
+                    sb.AppendLine(string.Join(",", new[]
+                    {
+                        Csv(r.TaskId.ToString()),
+                        Csv(r.RoomNumber),
+                        Csv(r.FloorNo.ToString()),
+                        Csv(r.RoomTypeName),
+                        Csv(r.StatusLabel),
+                        Csv(r.AssignedToName),
+                        Csv(r.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")),
+                        Csv(r.StartedAt?.ToString("yyyy-MM-dd HH:mm:ss")),
+                        Csv(r.CompletedAt?.ToString("yyyy-MM-dd HH:mm:ss")),
+                        Csv(r.DurationMinutes?.ToString()),
+                        Csv(r.HasIssue ? "Y" : "N"),
+                        Csv(r.IsCompletedPassedChecklist ? "Y" : "N"),
+                        Csv(r.Note)
+                    }));
+                }
+
+                // UTF-8 BOM เพื่อให้ Excel อ่านภาษาไทยถูกต้อง
+                var bytes = new UTF8Encoding(true).GetPreamble()
+                    .Concat(Encoding.UTF8.GetBytes(sb.ToString()))
+                    .ToArray();
+
+                return File(bytes, "text/csv; charset=utf-8", $"cleaning-history-{DateTime.Now:yyyyMMdd-HHmm}.csv");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "ExportCleaningHistory failed");
+                TempData["ErrorMessage"] = "ไม่สามารถส่งออกรายงานได้ กรุณาลองใหม่อีกครั้ง";
+                return RedirectToAction(nameof(History));
+            }
+        }
+
+        // ==========================================
+        // 7. PROFILE
         // ==========================================
 
         public async Task<IActionResult> Profile()
@@ -1038,118 +1116,111 @@ namespace StayMate_Kavinvee_0576.Controllers
                 Employee = employee
             });
         }
-// =====================================================================
-// วางใน HousekeepingController (ต่อจาก action Profile())
-// หน้า Profile.cshtml โพสต์ไปที่ 2 action นี้ ซึ่งยังไม่มีใน Controller เดิม
-// =====================================================================
 
-// ==========================================
-// 6.1 UPDATE PROFILE (แก้ไขได้เฉพาะชื่อ และเบอร์โทร)
-// ==========================================
-
-[HttpPost]
-[ValidateAntiForgeryToken]
-public async Task<IActionResult> UpdateProfile(string fullName, string? phone)
-{
-    try
-    {
-        var userInfo = await GetValidHousekeeperAsync();
-        if (userInfo == null) return Denied();
-        var uid = userInfo.Value.UserId;
-
-        var cleanName = (fullName ?? "").Trim();
-        var cleanPhone = string.IsNullOrWhiteSpace(phone) ? null : phone.Trim();
-
-        if (cleanName.Length == 0)
+        // 7.1 UPDATE PROFILE (แก้ไขได้เฉพาะชื่อ และเบอร์โทร)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateProfile(string fullName, string? phone)
         {
-            TempData["ErrorMessage"] = "กรุณากรอกชื่อ";
-            return RedirectToAction(nameof(Profile));
-        }
-        if (cleanName.Length > 120) cleanName = cleanName.Substring(0, 120);
+            try
+            {
+                var userInfo = await GetValidHousekeeperAsync();
+                if (userInfo == null) return Denied();
+                var uid = userInfo.Value.UserId;
 
-        if (cleanPhone != null &&
-            !System.Text.RegularExpressions.Regex.IsMatch(cleanPhone, @"^[0-9+\-\s]{6,20}$"))
-        {
-            TempData["ErrorMessage"] = "รูปแบบเบอร์โทรศัพท์ไม่ถูกต้อง";
-            return RedirectToAction(nameof(Profile));
-        }
+                var cleanName = (fullName ?? "").Trim();
+                var cleanPhone = string.IsNullOrWhiteSpace(phone) ? null : phone.Trim();
 
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == uid);
-        if (user == null) return Denied();
+                if (cleanName.Length == 0)
+                {
+                    TempData["ErrorMessage"] = "กรุณากรอกชื่อ";
+                    return RedirectToAction(nameof(Profile));
+                }
+                if (cleanName.Length > 120) cleanName = cleanName.Substring(0, 120);
 
-        user.FullName = cleanName;
-        user.Phone = cleanPhone;
-        await _context.SaveChangesAsync();
+                if (cleanPhone != null &&
+                    !System.Text.RegularExpressions.Regex.IsMatch(cleanPhone, @"^[0-9+\-\s]{6,20}$"))
+                {
+                    TempData["ErrorMessage"] = "รูปแบบเบอร์โทรศัพท์ไม่ถูกต้อง";
+                    return RedirectToAction(nameof(Profile));
+                }
 
-        TempData["SuccessMessage"] = "บันทึกข้อมูลส่วนตัวเรียบร้อยแล้ว";
-    }
-    catch (Exception)
-    {
-        TempData["ErrorMessage"] = "เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง";
-    }
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == uid);
+                if (user == null) return Denied();
 
-    return RedirectToAction(nameof(Profile));
-}
+                user.FullName = cleanName;
+                user.Phone = cleanPhone;
+                await _context.SaveChangesAsync();
 
-// ==========================================
-// 6.2 CHANGE PASSWORD
-// *** สมมติว่า Users มี property PasswordHash และใช้ BCrypt.Net-Next ***
-// *** ถ้าโปรเจกต์ใช้วิธี hash อื่น (เช่น PasswordHasher<T>) ให้แก้ 2 จุดที่มีคอมเมนต์ ***
-// ==========================================
+                TempData["SuccessMessage"] = "บันทึกข้อมูลส่วนตัวเรียบร้อยแล้ว";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "UpdateProfile failed");
+                TempData["ErrorMessage"] = "เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง";
+            }
 
-[HttpPost]
-[ValidateAntiForgeryToken]
-public async Task<IActionResult> ChangePassword(string oldPassword, string newPassword, string confirmPassword)
-{
-    try
-    {
-        var userInfo = await GetValidHousekeeperAsync();
-        if (userInfo == null) return Denied();
-        var uid = userInfo.Value.UserId;
-
-        if (string.IsNullOrWhiteSpace(oldPassword) ||
-            string.IsNullOrWhiteSpace(newPassword) ||
-            newPassword.Length < 6)
-        {
-            TempData["ErrorMessage"] = "กรุณากรอกข้อมูลให้ครบ และรหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร";
-            TempData["OpenPasswordModal"] = true;
             return RedirectToAction(nameof(Profile));
         }
 
-        if (newPassword != confirmPassword)
+        // 7.2 CHANGE PASSWORD
+        // *** สมมติว่า Users มี property PasswordHash และใช้ BCrypt.Net-Next ***
+        // *** ถ้าโปรเจกต์ใช้วิธี hash อื่น (เช่น PasswordHasher<T>) ให้แก้ 2 จุดที่มีคอมเมนต์ ***
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(string oldPassword, string newPassword, string confirmPassword)
         {
-            TempData["ErrorMessage"] = "รหัสผ่านใหม่และการยืนยันรหัสผ่านไม่ตรงกัน";
-            TempData["OpenPasswordModal"] = true;
+            try
+            {
+                var userInfo = await GetValidHousekeeperAsync();
+                if (userInfo == null) return Denied();
+                var uid = userInfo.Value.UserId;
+
+                if (string.IsNullOrWhiteSpace(oldPassword) ||
+                    string.IsNullOrWhiteSpace(newPassword) ||
+                    newPassword.Length < 6)
+                {
+                    TempData["ErrorMessage"] = "กรุณากรอกข้อมูลให้ครบ และรหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร";
+                    TempData["OpenPasswordModal"] = true;
+                    return RedirectToAction(nameof(Profile));
+                }
+
+                if (newPassword != confirmPassword)
+                {
+                    TempData["ErrorMessage"] = "รหัสผ่านใหม่และการยืนยันรหัสผ่านไม่ตรงกัน";
+                    TempData["OpenPasswordModal"] = true;
+                    return RedirectToAction(nameof(Profile));
+                }
+
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == uid);
+                if (user == null) return Denied();
+
+                // (1) ตรวจรหัสผ่านเดิม — แก้ตามวิธี hash ที่ใช้ใน AccountController
+                if (!BCrypt.Net.BCrypt.Verify(oldPassword, user.PasswordHash))
+                {
+                    TempData["ErrorMessage"] = "รหัสผ่านเดิมไม่ถูกต้อง";
+                    TempData["OpenPasswordModal"] = true;
+                    return RedirectToAction(nameof(Profile));
+                }
+
+                // (2) บันทึกรหัสผ่านใหม่
+                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = "เปลี่ยนรหัสผ่านเรียบร้อยแล้ว";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "ChangePassword failed");
+                TempData["ErrorMessage"] = "เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน กรุณาลองใหม่อีกครั้ง";
+                TempData["OpenPasswordModal"] = true;
+            }
+
             return RedirectToAction(nameof(Profile));
         }
 
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == uid);
-        if (user == null) return Denied();
-
-        // (1) ตรวจรหัสผ่านเดิม — แก้ตามวิธี hash ที่ใช้ใน AccountController
-        if (!BCrypt.Net.BCrypt.Verify(oldPassword, user.PasswordHash))
-        {
-            TempData["ErrorMessage"] = "รหัสผ่านเดิมไม่ถูกต้อง";
-            TempData["OpenPasswordModal"] = true;
-            return RedirectToAction(nameof(Profile));
-        }
-
-        // (2) บันทึกรหัสผ่านใหม่
-        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
-        await _context.SaveChangesAsync();
-
-        TempData["SuccessMessage"] = "เปลี่ยนรหัสผ่านเรียบร้อยแล้ว";
-    }
-    catch (Exception)
-    {
-        TempData["ErrorMessage"] = "เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน กรุณาลองใหม่อีกครั้ง";
-        TempData["OpenPasswordModal"] = true;
-    }
-
-    return RedirectToAction(nameof(Profile));
-}
         // ==========================================
-        // 7. ACCEPT TASK (Pending, ยังไม่มีผู้รับ -> บันทึก AssignedTo)
+        // 8. ACCEPT TASK (Pending, ยังไม่มีผู้รับ -> บันทึก AssignedTo)
         // ==========================================
 
         [HttpPost]
@@ -1176,14 +1247,15 @@ public async Task<IActionResult> ChangePassword(string oldPassword, string newPa
 
                 return Respond(true, $"รับงานห้อง {check.RoomNumber} เรียบร้อยแล้ว", new { taskId, status = StatusPending });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "AcceptTask failed (taskId={TaskId})", taskId);
                 return Respond(false, "เกิดข้อผิดพลาดขณะบันทึกการรับงาน กรุณาลองใหม่อีกครั้ง");
             }
         }
 
         // ==========================================
-        // 8. START TASK (Pending -> In Progress, รองรับ Auto-Assign หากยังไม่มีผู้รับ)
+        // 9. START TASK (Pending -> In Progress, รองรับ Auto-Assign หากยังไม่มีผู้รับ)
         // ==========================================
 
         [HttpPost]
@@ -1199,7 +1271,7 @@ public async Task<IActionResult> ChangePassword(string oldPassword, string newPa
                 var taskSnap = await _context.HousekeepingTasks
                     .AsNoTracking()
                     .Where(x => x.TaskId == taskId)
-                    .Select(x => new { x.Status, x.AssignedTo, RoomNumber = x.Room.RoomNumber })
+                    .Select(x => new { x.Status, x.AssignedTo, RoomNumber = x.Room.RoomNumber, RoomStatus = x.Room.Status })
                     .FirstOrDefaultAsync();
 
                 if (taskSnap == null) return Respond(false, "ไม่พบงานแม่บ้านที่ระบุ");
@@ -1211,6 +1283,11 @@ public async Task<IActionResult> ChangePassword(string oldPassword, string newPa
                 if (taskSnap.AssignedTo != null && taskSnap.AssignedTo != uid)
                 {
                     return Respond(false, "งานนี้มีพนักงานท่านอื่นรับผิดชอบอยู่แล้ว");
+                }
+                // ห้องที่อยู่ระหว่างซ่อมบำรุงต้องซ่อมให้เสร็จก่อน จึงจะเริ่มทำความสะอาดได้ (ตรงกับ CASE A ใน UpdateRoomStatusWorkflow)
+                if (taskSnap.RoomStatus == "maintenance")
+                {
+                    return Respond(false, $"ห้อง {taskSnap.RoomNumber} อยู่ในสถานะซ่อมบำรุง ต้องยืนยันการซ่อมเสร็จก่อนเริ่มทำความสะอาด");
                 }
 
                 var now = DateTime.Now;
@@ -1239,14 +1316,17 @@ public async Task<IActionResult> ChangePassword(string oldPassword, string newPa
                         startedAt = now.ToString("yyyy-MM-ddTHH:mm:ss")
                     });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "StartTask failed (taskId={TaskId})", taskId);
                 return Respond(false, "เกิดข้อผิดพลาดขณะเริ่มงานทำความสะอาด กรุณาลองใหม่อีกครั้ง");
             }
         }
 
         // ==========================================
-        // 9. COMPLETE TASK (In Progress -> Done + ตรวจเงื่อนไขก่อนปล่อยห้อง)
+        // 10. COMPLETE TASK (In Progress -> Done + ตรวจเงื่อนไขก่อนปล่อยห้อง)
+        // หมายเหตุ: Action นี้ "ไม่ผ่าน Checklist" (ใช้จากปุ่มในหน้า Cleaning Tasks)
+        //           ถ้าต้องการบังคับ Checklist ให้ใช้ UpdateRoomStatusWorkflow(complete_cleaning) จากหน้า Task Details / Room Status
         // ==========================================
 
         [HttpPost]
@@ -1343,14 +1423,15 @@ public async Task<IActionResult> ChangePassword(string oldPassword, string newPa
                 return Respond(true, $"ปิดงานห้อง {check.RoomNumber} สำเร็จ — {roomMessage}",
                     new { taskId, status = StatusDone, completedAt = now, roomReleased });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "CompleteTask failed (taskId={TaskId})", taskId);
                 return Respond(false, "เกิดข้อผิดพลาดขณะบันทึกปิดงาน กรุณาลองใหม่อีกครั้ง");
             }
         }
 
         // ==========================================
-        // 10. REPORT MAINTENANCE (แจ้งอุปกรณ์ชำรุด / ระงับการขายห้องตาม Business Logic ข้อ 4 & 5)
+        // 11. REPORT MAINTENANCE (แจ้งอุปกรณ์ชำรุด / ระงับการขายห้อง)
         // ==========================================
 
         [HttpPost]
@@ -1369,7 +1450,7 @@ public async Task<IActionResult> ChangePassword(string oldPassword, string newPa
                 }
 
                 var cleanNote = issueNote.Trim();
-                if (cleanNote.Length > 250) cleanNote = cleanNote.Substring(0, 250);
+                if (cleanNote.Length > 220) cleanNote = cleanNote.Substring(0, 220);
 
                 await using var tx = await _context.Database.BeginTransactionAsync();
 
@@ -1388,6 +1469,12 @@ public async Task<IActionResult> ChangePassword(string oldPassword, string newPa
                 {
                     await tx.RollbackAsync();
                     return Respond(false, $"ห้อง {room.RoomNumber} มีลูกค้าเข้าพักอยู่ ไม่สามารถเปลี่ยนสถานะเป็นซ่อมบำรุงได้โดยตรง");
+                }
+
+                if (room.Status == "maintenance")
+                {
+                    await tx.RollbackAsync();
+                    return Respond(false, $"ห้อง {room.RoomNumber} อยู่ในสถานะซ่อมบำรุงอยู่แล้ว");
                 }
 
                 var now = DateTime.Now;
@@ -1409,10 +1496,7 @@ public async Task<IActionResult> ChangePassword(string oldPassword, string newPa
                     var task = await _context.HousekeepingTasks.FirstOrDefaultAsync(t => t.TaskId == taskId.Value && t.RoomId == roomId);
                     if (task != null)
                     {
-                        var appended = string.IsNullOrWhiteSpace(task.Note)
-                            ? $"[แจ้งซ่อม: {cleanNote}]"
-                            : $"{task.Note} | [แจ้งซ่อม: {cleanNote}]";
-                        task.Note = appended.Length > 255 ? appended.Substring(0, 255) : appended;
+                        task.Note = AppendNote(task.Note, $"[แจ้งซ่อม: {cleanNote}]");
                     }
                 }
 
@@ -1422,8 +1506,9 @@ public async Task<IActionResult> ChangePassword(string oldPassword, string newPa
                 return Respond(true, $"แจ้งซ่อมบำรุงห้อง {room.RoomNumber} และระงับการขายชั่วคราวเรียบร้อยแล้ว",
                     new { roomId = room.RoomId, roomNumber = room.RoomNumber, status = "maintenance" });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "ReportMaintenance failed (roomId={RoomId})", roomId);
                 return Respond(false, "เกิดข้อผิดพลาดในการบันทึกแจ้งซ่อมบำรุง กรุณาลองใหม่อีกครั้ง");
             }
         }
@@ -1448,14 +1533,21 @@ public async Task<IActionResult> ChangePassword(string oldPassword, string newPa
                 t.CompletedAt.Value >= todayStart &&
                 t.CompletedAt.Value < tomorrowStart);
 
+            var totalTasksCount = await tasksQuery.CountAsync();
             var totalCompletedAllTime = await tasksQuery.CountAsync(t => t.Status == StatusDone);
             var totalAssignedTodayOrActive = pendingCount + inProgressCount + completedTodayCount;
 
             var unassignedPending = await tasksQuery.CountAsync(t => t.Status == StatusPending && t.AssignedTo == null);
             var myActive = await tasksQuery.CountAsync(t => t.AssignedTo == uid && t.Status != StatusDone);
+
             var roomsNeedingCleaning = await _context.Rooms
                 .AsNoTracking()
                 .CountAsync(r => r.IsActive == true && r.Status == "needs_cleaning");
+
+            // จำนวนห้องที่แจ้งปัญหา (Maintenance) — เป็นหนึ่งใน 4 ตัวเลขหลักของ Dashboard ตามเอกสารสรุประบบ
+            var maintenanceRoomsCount = await _context.Rooms
+                .AsNoTracking()
+                .CountAsync(r => r.IsActive == true && r.Status == "maintenance");
 
             // งานล่าสุดและงานที่กำลังดำเนินการสำหรับตาราง Cleaning Tasks Table
             var roomTasks = await ProjectTasks(
@@ -1493,6 +1585,11 @@ public async Task<IActionResult> ChangePassword(string oldPassword, string newPa
                 summaryText = $"วันนี้มีห้องรอดำเนินการ {pendingCount} ห้อง, กำลังทำความสะอาด {inProgressCount} ห้อง และเสร็จแล้ว {completedTodayCount} ห้อง";
             }
 
+            if (maintenanceRoomsCount > 0)
+            {
+                summaryText += $" (มีห้องแจ้งซ่อมบำรุง {maintenanceRoomsCount} ห้อง)";
+            }
+
             return new HousekeepingViewModel
             {
                 CurrentUserId = uid,
@@ -1500,14 +1597,15 @@ public async Task<IActionResult> ChangePassword(string oldPassword, string newPa
                 CurrentDate = DateTime.Now,
                 DailyStatusSummary = summaryText,
 
-                // KPI Cards (ข้อ 2B)
+                // KPI Cards
                 TotalAssignedRooms = totalAssignedTodayOrActive,
                 PendingRooms = pendingCount,
                 InProgressRooms = inProgressCount,
                 CompletedToday = completedTodayCount,
+                MaintenanceRooms = maintenanceRoomsCount,
 
-                // Legacy Summary Properties (รักษาไว้ให้ครบถ้วน)
-                TotalTasks = await tasksQuery.CountAsync(),
+                // Summary Properties
+                TotalTasks = totalTasksCount,
                 PendingTasks = pendingCount,
                 InProgressTasks = inProgressCount,
                 CompletedTasks = totalCompletedAllTime,
@@ -1575,10 +1673,11 @@ public async Task<IActionResult> ChangePassword(string oldPassword, string newPa
                 }
             }
 
-            // 2. ประวัติการเปลี่ยนสถานะห้อง/แจ้งซ่อมจาก RoomStatusHistories
+            // 2. ประวัติการแจ้งซ่อม / ส่งงานทำความสะอาด จาก RoomStatusHistories
+            // (เดิมดึง "available" มาด้วยแต่ไม่ได้ใช้ ทำให้แถวที่ไม่ใช้ไปแย่งโควตา Take ของแถวที่ใช้จริง จึงตัดออก)
             var statusHistories = await _context.RoomStatusHistories
                 .AsNoTracking()
-                .Where(h => h.NewStatus == "maintenance" || h.NewStatus == "needs_cleaning" || h.NewStatus == "available")
+                .Where(h => h.NewStatus == "maintenance" || h.NewStatus == "needs_cleaning")
                 .OrderByDescending(h => h.ChangedAt)
                 .Take(takeCount)
                 .Select(h => new
@@ -1606,7 +1705,7 @@ public async Task<IActionResult> ChangePassword(string oldPassword, string newPa
                         Timestamp = h.ChangedAt
                     });
                 }
-                else if (h.NewStatus == "needs_cleaning")
+                else
                 {
                     list.Add(new HousekeepingViewModel.ActivityItem
                     {
@@ -1703,6 +1802,11 @@ public async Task<IActionResult> ChangePassword(string oldPassword, string newPa
                 LastUpdatedBy = r.RoomStatusHistories
                     .OrderByDescending(h => h.ChangedAt)
                     .Select(h => h.ChangedByNavigation != null ? h.ChangedByNavigation.FullName : null)
+                    .FirstOrDefault(),
+                // เดิมมี property นี้ใน ViewModel แต่ไม่เคยถูกเติมค่า
+                LastStatusNote = r.RoomStatusHistories
+                    .OrderByDescending(h => h.ChangedAt)
+                    .Select(h => h.Note)
                     .FirstOrDefault()
             });
         }
@@ -1717,113 +1821,143 @@ public async Task<IActionResult> ChangePassword(string oldPassword, string newPa
                 _ => null
             };
         }
-private IQueryable<HousekeepingTask> ApplyHistoryFilters(
-    IQueryable<HousekeepingTask> query,
-    string? search,
-    byte? floor,
-    uint? employeeId,
-    string? status,
-    DateOnly? singleDate,
-    DateOnly? dateFrom,
-    DateOnly? dateTo,
-    string? issueType)
-{
-    // 1. ค้นหาจากเลขห้อง หรือหมายเลขงาน
-    if (!string.IsNullOrWhiteSpace(search))
-    {
-        var keyword = search.Trim().TrimStart('#');
-        var isId = uint.TryParse(keyword, out var searchId);
 
-        query = query.Where(t =>
-            t.Room.RoomNumber.Contains(keyword) ||
-            (isId && t.TaskId == searchId));
-    }
-
-    // 2. กรองตามชั้น
-    if (floor.HasValue)
-    {
-        query = query.Where(t => t.Room.FloorNo == floor.Value);
-    }
-
-    // 3. กรองตามพนักงานแม่บ้าน
-    if (employeeId.HasValue)
-    {
-        query = query.Where(t => t.AssignedTo == employeeId.Value);
-    }
-
-    // 4. กรองตามสถานะ
-    if (!string.IsNullOrWhiteSpace(status))
-    {
-        var normalizedStatus = NormalizeStatus(status);
-
-        if (normalizedStatus != null)
+        private static IQueryable<HousekeepingTask> ApplyHistoryFilters(
+            IQueryable<HousekeepingTask> query,
+            string? search,
+            byte? floor,
+            uint? employeeId,
+            string? status,
+            DateOnly? singleDate,
+            DateOnly? dateFrom,
+            DateOnly? dateTo,
+            string? issueType)
         {
-            query = query.Where(t => t.Status == normalizedStatus);
-        }
-        else if (status.Equals("maintenance", StringComparison.OrdinalIgnoreCase))
-        {
-            query = query.Where(t => t.Room.Status == "maintenance");
-        }
-    }
+            // 1. ค้นหาจากเลขห้อง หรือหมายเลขงาน
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var keyword = search.Trim().TrimStart('#');
+                var isId = uint.TryParse(keyword, out var searchId);
 
-    // 5. กรองวันที่เดียว
-    if (singleDate.HasValue)
-    {
-        var start = singleDate.Value.ToDateTime(TimeOnly.MinValue);
-        var end = singleDate.Value.AddDays(1).ToDateTime(TimeOnly.MinValue);
-
-        query = query.Where(t =>
-            (t.CompletedAt ?? t.CreatedAt) >= start &&
-            (t.CompletedAt ?? t.CreatedAt) < end);
-    }
-    else
-    {
-        // 6. กรองวันที่เริ่มต้น
-        if (dateFrom.HasValue)
-        {
-            var from = dateFrom.Value.ToDateTime(TimeOnly.MinValue);
-
-            query = query.Where(t =>
-                (t.CompletedAt ?? t.CreatedAt) >= from);
-        }
-
-        // 7. กรองวันที่สิ้นสุด
-        if (dateTo.HasValue)
-        {
-            var to = dateTo.Value.AddDays(1).ToDateTime(TimeOnly.MinValue);
-
-            query = query.Where(t =>
-                (t.CompletedAt ?? t.CreatedAt) < to);
-        }
-    }
-
-    // 8. กรองประเภทปัญหา
-    if (!string.IsNullOrWhiteSpace(issueType))
-    {
-        switch (issueType.Trim().ToLowerInvariant())
-        {
-            case "maintenance":
                 query = query.Where(t =>
-                    t.Room.Status == "maintenance" ||
-                    (t.Note != null &&
-                     (t.Note.Contains("แจ้งซ่อม") ||
-                      t.Note.Contains("ชำรุด") ||
-                      t.Note.Contains("เสีย"))));
-                break;
+                    t.Room.RoomNumber.Contains(keyword) ||
+                    (isId && t.TaskId == searchId));
+            }
 
-            case "normal":
+            // 2. กรองตามชั้น
+            if (floor.HasValue)
+            {
+                query = query.Where(t => t.Room.FloorNo == floor.Value);
+            }
+
+            // 3. กรองตามพนักงานแม่บ้าน
+            if (employeeId.HasValue)
+            {
+                query = query.Where(t => t.AssignedTo == employeeId.Value);
+            }
+
+            // 4. กรองตามสถานะ
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                var normalizedStatus = NormalizeStatus(status);
+
+                if (normalizedStatus != null)
+                {
+                    query = query.Where(t => t.Status == normalizedStatus);
+                }
+                else if (status.Equals("maintenance", StringComparison.OrdinalIgnoreCase))
+                {
+                    query = query.Where(t => t.Room.Status == "maintenance");
+                }
+            }
+
+            // 5. กรองวันที่เดียว
+            if (singleDate.HasValue)
+            {
+                var start = singleDate.Value.ToDateTime(TimeOnly.MinValue);
+                var end = singleDate.Value.AddDays(1).ToDateTime(TimeOnly.MinValue);
+
                 query = query.Where(t =>
-                    t.Room.Status != "maintenance" &&
-                    (t.Note == null ||
-                     (!t.Note.Contains("แจ้งซ่อม") &&
-                      !t.Note.Contains("ชำรุด") &&
-                      !t.Note.Contains("เสีย"))));
-                break;
-        }
-    }
+                    (t.CompletedAt ?? t.CreatedAt) >= start &&
+                    (t.CompletedAt ?? t.CreatedAt) < end);
+            }
+            else
+            {
+                // 6. กรองวันที่เริ่มต้น
+                if (dateFrom.HasValue)
+                {
+                    var from = dateFrom.Value.ToDateTime(TimeOnly.MinValue);
+                    query = query.Where(t => (t.CompletedAt ?? t.CreatedAt) >= from);
+                }
 
-    return query;
-}
+                // 7. กรองวันที่สิ้นสุด
+                if (dateTo.HasValue)
+                {
+                    var to = dateTo.Value.AddDays(1).ToDateTime(TimeOnly.MinValue);
+                    query = query.Where(t => (t.CompletedAt ?? t.CreatedAt) < to);
+                }
+            }
+
+            // 8. กรองประเภทปัญหา
+            // เดิม Controller รับแค่ "maintenance"/"normal" แต่ JS + ViewModel ใช้ "issue_only"/"normal_only"
+            // ทำให้ตัวกรองฝั่ง Server ไม่ทำงาน -> รองรับทั้งสองชุดค่า
+            if (!string.IsNullOrWhiteSpace(issueType))
+            {
+                switch (issueType.Trim().ToLowerInvariant())
+                {
+                    case "issue_only":
+                    case "maintenance":
+                        query = query.Where(t =>
+                            t.Room.Status == "maintenance" ||
+                            (t.Note != null &&
+                             (t.Note.Contains("แจ้งซ่อม") ||
+                              t.Note.Contains("ชำรุด") ||
+                              t.Note.Contains("เสีย"))));
+                        break;
+
+                    case "normal_only":
+                    case "normal":
+                        query = query.Where(t =>
+                            t.Room.Status != "maintenance" &&
+                            (t.Note == null ||
+                             (!t.Note.Contains("แจ้งซ่อม") &&
+                              !t.Note.Contains("ชำรุด") &&
+                              !t.Note.Contains("เสีย"))));
+                        break;
+                }
+            }
+
+            return query;
+        }
+
+        /// <summary>
+        /// ต่อท้าย Note โดยไม่เกิน 255 ตัวอักษร (ตามขนาดคอลัมน์) และรักษาข้อความใหม่ไว้เสมอ
+        /// (ตัดส่วนเก่าแทน เพื่อไม่ให้เครื่องหมาย [ตรวจห้องผ่าน] / [แจ้งซ่อม] ถูกตัดหาย)
+        /// </summary>
+        private static string AppendNote(string? existing, string addition)
+        {
+            const int max = 255;
+            if (addition.Length >= max) return addition.Substring(0, max);
+            if (string.IsNullOrWhiteSpace(existing)) return addition;
+
+            var room = max - addition.Length - 3;
+            var head = room <= 0 ? string.Empty
+                : existing.Length > room ? existing.Substring(0, room) : existing;
+            return string.IsNullOrEmpty(head) ? addition : $"{head} | {addition}";
+        }
+
+        /// <summary>Escape ค่าสำหรับ CSV และกัน CSV/Formula Injection (ค่าที่ขึ้นต้นด้วย = + - @)</summary>
+        private static string Csv(string? value)
+        {
+            if (string.IsNullOrEmpty(value)) return "\"\"";
+            var v = value.Replace("\r", " ").Replace("\n", " ");
+            if (v.Length > 0 && (v[0] == '=' || v[0] == '+' || v[0] == '-' || v[0] == '@'))
+            {
+                v = "'" + v;
+            }
+            return "\"" + v.Replace("\"", "\"\"") + "\"";
+        }
+
         private uint? GetCurrentUserId()
         {
             var value = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -1846,12 +1980,6 @@ private IQueryable<HousekeepingTask> ApplyHistoryFilters(
 
             if (user == null) return null;
             return (user.UserId, user.FullName);
-        }
-
-        private async Task<uint?> GetValidHousekeeperIdAsync()
-        {
-            var info = await GetValidHousekeeperAsync();
-            return info?.UserId;
         }
 
         private bool IsAjaxRequest()

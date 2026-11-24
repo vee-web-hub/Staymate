@@ -1,7 +1,7 @@
 @model StayMate_Kavinvee_0576.Models.ViewModels.HousekeepingViewModel
 @using System.Globalization
 @{
-    ViewData["Title"] = "รายการห้องที่ได้รับมอบหมาย - Cleaning Tasks";
+    ViewData["Title"] = "รายการงานทำความสะอาด - Cleaning Tasks";
     Layout = "~/Views/Shared/_HousekeepingLayout.cshtml";
     var thaiCulture = new CultureInfo("th-TH");
     var formattedDate = Model.CurrentDate.ToString("วันddddที่ d MMMM yyyy", thaiCulture);
@@ -18,25 +18,24 @@
      class="hk-dashboard-wrapper hk-tasks-page"
      data-page="cleaning-tasks"
      data-base-url="@Url.Content("~/Housekeeping")"
-     data-tasks-url="@Url.Action("CleaningTasks", "Housekeeping")"
-     data-maintenance-url="@Url.Action("ReportMaintenance", "Housekeeping")">
+     data-tasks-url="@Url.Action("CleaningTasks", "Housekeeping")">
 
     @Html.AntiForgeryToken()
 
     <!-- =========================================================
-         2. PAGE HEADER
+         1. PAGE HEADER
          ========================================================= -->
     <header class="hk-page-header hk-fade-in">
         <div class="hk-page-header-left">
             <nav aria-label="breadcrumb" class="hk-breadcrumb-nav">
                 <ol class="hk-breadcrumb">
-                    <li><a asp-controller="Housekeeping" asp-action="Index">Housekeeping</a></li>
+                    <li><a asp-controller="Housekeeping" asp-action="Index">ภาพรวมระบบ</a></li>
                     <li class="hk-breadcrumb-sep">/</li>
-                    <li class="active" aria-current="page">Cleaning Tasks</li>
+                    <li class="active" aria-current="page">รายการงานทำความสะอาด</li>
                 </ol>
             </nav>
-            <h1 class="hk-page-main-title">รายการห้องที่ได้รับมอบหมาย</h1>
-            <p class="hk-page-description">จัดการและติดตามงานทำความสะอาดห้องพัก</p>
+            <h1 class="hk-page-main-title">รายการงานทำความสะอาด (Cleaning Tasks)</h1>
+            <p class="hk-page-description">รับงาน เริ่มทำความสะอาด และอัปเดตสถานะห้องพัก</p>
         </div>
 
         <div class="hk-page-header-right">
@@ -56,16 +55,15 @@
                     <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
                     <path d="M16 21h5v-5" />
                 </svg>
-                <span>Refresh</span>
+                <span>รีเฟรช</span>
             </button>
         </div>
     </header>
 
     <!-- =========================================================
-         3. SUMMARY CARDS (4 ใบ ดึงจาก Backend จริง)
+         2. SUMMARY CARDS (4 ตัวเลขหลัก)
          ========================================================= -->
     <section class="hk-kpi-grid hk-fade-in" aria-label="สรุปจำนวนงานทำความสะอาด">
-        <!-- 1. งานทั้งหมด -->
         <article class="hk-kpi-card hk-kpi-navy">
             <div class="hk-kpi-icon-wrap hk-icon-navy">
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -74,13 +72,12 @@
                 </svg>
             </div>
             <div class="hk-kpi-info">
-                <span class="hk-kpi-label">งานทั้งหมด (Total Tasks)</span>
+                <span class="hk-kpi-label">งานทั้งหมด (Total)</span>
                 <h2 id="summaryTotalTasks" class="hk-kpi-number" data-hk-counter="@Model.TotalTasks">@Model.TotalTasks</h2>
-                <span class="hk-kpi-sub">รายการงานทำความสะอาดทั้งหมดในระบบ</span>
+                <span class="hk-kpi-sub">รายการงานทั้งหมดในระบบ</span>
             </div>
         </article>
 
-        <!-- 2. รอทำความสะอาด -->
         <article class="hk-kpi-card hk-kpi-warning">
             <div class="hk-kpi-icon-wrap hk-icon-warning">
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -89,13 +86,12 @@
                 </svg>
             </div>
             <div class="hk-kpi-info">
-                <span class="hk-kpi-label">รอทำความสะอาด (Pending)</span>
+                <span class="hk-kpi-label">รอรับงาน / รอทำ (Pending)</span>
                 <h2 id="summaryPendingTasks" class="hk-kpi-number" data-hk-counter="@Model.PendingTasks">@Model.PendingTasks</h2>
-                <span class="hk-kpi-sub">ห้องพักที่รอเริ่มทำความสะอาด</span>
+                <span class="hk-kpi-sub">ห้องที่รอทำความสะอาด</span>
             </div>
         </article>
 
-        <!-- 3. กำลังทำความสะอาด -->
         <article class="hk-kpi-card hk-kpi-info">
             <div class="hk-kpi-icon-wrap hk-icon-info">
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -105,11 +101,10 @@
             <div class="hk-kpi-info">
                 <span class="hk-kpi-label">กำลังทำความสะอาด (In Progress)</span>
                 <h2 id="summaryInProgressTasks" class="hk-kpi-number" data-hk-counter="@Model.InProgressTasks">@Model.InProgressTasks</h2>
-                <span class="hk-kpi-sub">กำลังปฏิบัติงานทำความสะอาด</span>
+                <span class="hk-kpi-sub">อยู่ระหว่างดำเนินการ</span>
             </div>
         </article>
 
-        <!-- 4. ทำความสะอาดเสร็จแล้ว -->
         <article class="hk-kpi-card hk-kpi-success">
             <div class="hk-kpi-icon-wrap hk-icon-success">
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -118,37 +113,37 @@
                 </svg>
             </div>
             <div class="hk-kpi-info">
-                <span class="hk-kpi-label">ทำความสะอาดเสร็จแล้ว (Completed)</span>
+                <span class="hk-kpi-label">เสร็จสิ้นแล้ว (Completed)</span>
                 <h2 id="summaryCompletedTasks" class="hk-kpi-number" data-hk-counter="@Model.CompletedTasks">@Model.CompletedTasks</h2>
-                <span class="hk-kpi-sub">ตรวจสอบและปิดงานเรียบร้อยแล้ว</span>
+                <span class="hk-kpi-sub">ทำความสะอาดเรียบร้อยแล้ว</span>
             </div>
         </article>
     </section>
 
     <!-- =========================================================
-         4. SEARCH & FILTER SECTION + 6. VIEW MODES TOGGLE
+         3. SEARCH & FILTER + VIEW MODE SWITCHER
          ========================================================= -->
     <section class="hk-section-card hk-filter-section-card hk-fade-in" aria-label="ค้นหาและกรองงานทำความสะอาด">
         <div class="hk-filter-top-bar">
             <div class="hk-filter-title-group">
-                <h2 class="hk-section-title">ค้นหาและตัวกรองงาน (Search & Filter)</h2>
+                <h2 class="hk-section-title">ค้นหาและกรองรายการงาน</h2>
                 <button type="button" id="btnToggleMobileFilter" class="hk-btn hk-btn-outline hk-btn-sm hk-mobile-only">
-                    <span>พับ/เปิด ตัวกรอง</span>
+                    <span>ตัวกรอง</span>
                 </button>
             </div>
 
-            <!-- 6. View Modes Switcher (Card View / Table View) -->
+            <!-- สลับมุมมองการ์ด / ตาราง -->
             <div class="hk-view-switcher" role="group" aria-label="เลือกรูปแบบการแสดงผล">
-                <button type="button" class="hk-view-btn is-active" data-hk-view-mode="card" title="แสดงแบบการ์ด">
+                <button type="button" class="hk-view-btn is-active" data-hk-view-mode="card">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="3" width="7" height="7"></rect>
                         <rect x="14" y="3" width="7" height="7"></rect>
                         <rect x="14" y="14" width="7" height="7"></rect>
                         <rect x="3" y="14" width="7" height="7"></rect>
                     </svg>
-                    <span>Card View</span>
+                    <span>แบบการ์ด</span>
                 </button>
-                <button type="button" class="hk-view-btn" data-hk-view-mode="table" title="แสดงแบบตาราง">
+                <button type="button" class="hk-view-btn" data-hk-view-mode="table">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="8" y1="6" x2="21" y2="6"></line>
                         <line x1="8" y1="12" x2="21" y2="12"></line>
@@ -157,28 +152,26 @@
                         <line x1="3" y1="12" x2="3.01" y2="12"></line>
                         <line x1="3" y1="18" x2="3.01" y2="18"></line>
                     </svg>
-                    <span>Table View</span>
+                    <span>แบบตาราง</span>
                 </button>
             </div>
         </div>
 
         <div id="hkFilterCollapsible" class="hk-tasks-filter-grid">
-            <!-- Search Room Number -->
             <div class="hk-filter-group">
-                <label for="searchRoom" class="hk-label">Search Room Number</label>
+                <label for="searchRoom" class="hk-label">ค้นหาเลขห้อง / เลขงาน</label>
                 <input type="search"
                        id="searchRoom"
                        class="hk-input"
                        value="@Model.SearchKeyword"
-                       placeholder="ค้นหาเลขห้อง เช่น 101, 204..."
+                       placeholder="เช่น 101, 204 หรือ #12..."
                        autocomplete="off" />
             </div>
 
-            <!-- Filter by Floor -->
             <div class="hk-filter-group">
-                <label for="floorFilter" class="hk-label">Filter by Floor</label>
+                <label for="floorFilter" class="hk-label">ชั้น</label>
                 <select id="floorFilter" class="hk-select">
-                    <option value="">ทุกชั้น (All Floors)</option>
+                    <option value="">ทุกชั้น</option>
                     @foreach (var fl in Model.AvailableFloors)
                     {
                         <option value="@fl" selected="@(Model.FloorFilter == fl ? "selected" : null)">ชั้น @fl</option>
@@ -186,59 +179,54 @@
                 </select>
             </div>
 
-            <!-- Filter by Cleaning Status -->
             <div class="hk-filter-group">
-                <label for="statusFilter" class="hk-label">Filter by Cleaning Status</label>
+                <label for="statusFilter" class="hk-label">สถานะงาน</label>
                 <select id="statusFilter" class="hk-select">
-                    <option value="">ทุกสถานะ (All Status)</option>
-                    <option value="pending">Pending (สีส้ม - รอทำความสะอาด)</option>
-                    <option value="in_progress">In Progress (สีน้ำเงิน - กำลังทำ)</option>
-                    <option value="done">Completed (สีเขียว - เสร็จแล้ว)</option>
-                    <option value="maintenance">Maintenance (สีแดง - ซ่อมบำรุง)</option>
+                    <option value="">ทุกสถานะ</option>
+                    <option value="pending">Pending (รอทำความสะอาด)</option>
+                    <option value="in_progress">In Progress (กำลังทำ)</option>
+                    <option value="done">Completed (เสร็จแล้ว)</option>
+                    <option value="maintenance">Maintenance (ซ่อมบำรุง)</option>
                 </select>
             </div>
 
-            <!-- Filter by Priority -->
             <div class="hk-filter-group">
-                <label for="priorityFilter" class="hk-label">Filter by Priority</label>
+                <label for="priorityFilter" class="hk-label">ความเร่งด่วน</label>
                 <select id="priorityFilter" class="hk-select">
-                    <option value="">ทุกระดับความเร่งด่วน</option>
+                    <option value="">ทุกระดับ</option>
                     <option value="High">ด่วนมาก (High)</option>
                     <option value="Medium">ปานกลาง (Medium)</option>
                     <option value="Normal">ปกติ (Normal)</option>
                 </select>
             </div>
 
-            <!-- Filter by Assigned Date -->
             <div class="hk-filter-group">
-                <label for="assignedDateFilter" class="hk-label">Filter by Assigned Date</label>
+                <label for="assignedDateFilter" class="hk-label">วันที่ได้รับงาน</label>
                 <input type="date"
                        id="assignedDateFilter"
                        class="hk-input"
                        value="@(Model.DateFrom?.ToString("yyyy-MM-dd"))" />
             </div>
 
-            <!-- Reset Filter Button -->
             <div class="hk-filter-group hk-filter-reset">
                 <button type="button" id="btnClearFilters" class="hk-btn hk-btn-light w-100">
-                    Reset Filter
+                    ล้างตัวกรอง
                 </button>
             </div>
         </div>
     </section>
 
     <!-- =========================================================
-         5. ROOM TASK DISPLAY (Card View & Table View)
+         4. TASK LIST (Card View & Table View)
          ========================================================= -->
     <section class="hk-section-card hk-fade-in" aria-label="รายการห้องพักที่ได้รับมอบหมาย">
-        <!-- Toolbar แสดงจำนวนรายการและตัวเลือกจำนวนต่อหน้า -->
         <div class="hk-list-meta-bar">
             <div class="hk-list-count-text">
                 แสดง <strong id="hkShowingStart">0</strong> - <strong id="hkShowingEnd">0</strong>
                 จากทั้งหมด <strong id="hkTotalFilteredCount">@Model.AllCleaningTasks.Count</strong> รายการ
             </div>
             <div class="hk-page-size-wrap">
-                <label for="hkPageSizeSelect" class="hk-page-size-label">จำนวนต่อหน้า:</label>
+                <label for="hkPageSizeSelect" class="hk-page-size-label">แสดงหน้าละ:</label>
                 <select id="hkPageSizeSelect" class="hk-select hk-select-sm">
                     <option value="8">8 รายการ</option>
                     <option value="12" selected>12 รายการ</option>
@@ -248,7 +236,7 @@
             </div>
         </div>
 
-        <!-- VIEW MODE 1: CARD VIEW -->
+        <!-- VIEW 1: CARD VIEW -->
         <div id="hkCardViewContainer" class="hk-task-cards-grid">
             @foreach (var task in Model.AllCleaningTasks)
             {
@@ -293,7 +281,7 @@
 
                     <div class="hk-mtc-header">
                         <div class="hk-mtc-room-block">
-                            <span class="hk-mtc-room-label">ROOM</span>
+                            <span class="hk-mtc-room-label">ห้องพัก</span>
                             <h3 class="hk-mtc-room-number">@task.RoomNumber</h3>
                             <span class="hk-mtc-floor-badge">ชั้น @task.FloorNo</span>
                         </div>
@@ -310,10 +298,10 @@
                     <div class="hk-mtc-body">
                         <div class="hk-mtc-info-row">
                             <span class="hk-mtc-label">ประเภทห้อง:</span>
-                            <strong class="hk-mtc-value">@(task.RoomTypeName ?? "Standard Room")</strong>
+                            <strong class="hk-mtc-value">@(task.RoomTypeName ?? "Standard")</strong>
                         </div>
                         <div class="hk-mtc-info-row">
-                            <span class="hk-mtc-label">วันที่ได้รับมอบหมาย:</span>
+                            <span class="hk-mtc-label">เวลาที่ได้รับงาน:</span>
                             <span class="hk-mtc-value">@task.CreatedAt.ToString("dd MMM yyyy • HH:mm น.", thaiCulture)</span>
                         </div>
                         <div class="hk-mtc-info-row">
@@ -330,74 +318,89 @@
                         }
                     </div>
 
-                    <!-- 7. TASK ACTIONS ตามสถานะ -->
+                    <!-- ปุ่มจัดการตามสถานะ -->
                     <div class="hk-mtc-footer" data-role="action-container">
                         @if (visualStatus == "maintenance")
                         {
-                            <button type="button"
-                                    class="hk-btn hk-btn-danger hk-btn-block"
-                                    data-hk-action="details"
-                                    data-task-id="@task.TaskId">
+                            <a asp-controller="Housekeeping"
+                               asp-action="TaskDetails"
+                               asp-route-id="@task.TaskId"
+                               class="hk-btn hk-btn-danger hk-btn-block">
                                 ดูปัญหาห้องพัก
-                            </button>
+                            </a>
                         }
                         else if (task.Status == HousekeepingViewModel.StatusPending)
                         {
-                            <button type="button"
-                                    class="hk-btn hk-btn-warning-solid hk-btn-flex"
-                                    data-hk-action="start"
-                                    data-task-id="@task.TaskId">
-                                เริ่มทำความสะอาด
-                            </button>
-                            <button type="button"
-                                    class="hk-btn hk-btn-outline"
-                                    data-hk-action="details"
-                                    data-task-id="@task.TaskId">
-                                ดูรายละเอียด
-                            </button>
+                            if (task.CanAccept)
+                            {
+                                <button type="button"
+                                        class="hk-btn hk-btn-primary"
+                                        data-hk-action="accept"
+                                        data-task-id="@task.TaskId">
+                                    รับงาน
+                                </button>
+                            }
+                            if (task.CanStart)
+                            {
+                                <button type="button"
+                                        class="hk-btn hk-btn-warning-solid hk-btn-flex"
+                                        data-hk-action="start"
+                                        data-task-id="@task.TaskId">
+                                    เริ่มทำความสะอาด
+                                </button>
+                            }
+                            <a asp-controller="Housekeeping"
+                               asp-action="TaskDetails"
+                               asp-route-id="@task.TaskId"
+                               class="hk-btn hk-btn-outline">
+                                รายละเอียด
+                            </a>
                         }
                         else if (task.Status == HousekeepingViewModel.StatusInProgress)
                         {
-                            <button type="button"
-                                    class="hk-btn hk-btn-outline"
-                                    data-hk-action="details"
-                                    data-task-id="@task.TaskId">
-                                ดูรายละเอียด
-                            </button>
-                            <button type="button"
-                                    class="hk-btn hk-btn-success hk-btn-flex"
-                                    data-hk-action="complete"
-                                    data-task-id="@task.TaskId">
-                                ทำความสะอาดเสร็จแล้ว
-                            </button>
+                            <a asp-controller="Housekeeping"
+                               asp-action="TaskDetails"
+                               asp-route-id="@task.TaskId"
+                               class="hk-btn hk-btn-outline">
+                                รายละเอียด
+                            </a>
+                            @if (task.CanComplete)
+                            {
+                                <button type="button"
+                                        class="hk-btn hk-btn-success hk-btn-flex"
+                                        data-hk-action="complete"
+                                        data-task-id="@task.TaskId">
+                                    ทำความสะอาดเสร็จแล้ว
+                                </button>
+                            }
                         }
                         else
                         {
-                            <button type="button"
-                                    class="hk-btn hk-btn-outline hk-btn-block"
-                                    data-hk-action="details"
-                                    data-task-id="@task.TaskId">
+                            <a asp-controller="Housekeeping"
+                               asp-action="TaskDetails"
+                               asp-route-id="@task.TaskId"
+                               class="hk-btn hk-btn-outline hk-btn-block">
                                 ดูรายละเอียด
-                            </button>
+                            </a>
                         }
                     </div>
                 </article>
             }
         </div>
 
-        <!-- VIEW MODE 2: TABLE VIEW -->
+        <!-- VIEW 2: TABLE VIEW -->
         <div id="hkTableViewContainer" class="hk-table-responsive" hidden>
             <table class="hk-table">
                 <thead>
                     <tr>
-                        <th>หมายเลขห้อง</th>
+                        <th>ห้องพัก</th>
                         <th>ชั้น</th>
                         <th>ประเภทห้อง</th>
-                        <th>วันที่ได้รับมอบหมาย</th>
+                        <th>เวลาที่ได้รับงาน</th>
                         <th>ผู้รับผิดชอบ</th>
                         <th>สถานะงาน</th>
                         <th>ความเร่งด่วน</th>
-                        <th class="text-end">การดำเนินการ</th>
+                        <th class="text-end">จัดการงาน</th>
                     </tr>
                 </thead>
                 <tbody id="hkTasksTableBody">
@@ -433,15 +436,15 @@
                             data-sort-status="@task.SortStatusOrder"
                             data-sort-priority="@task.SortPriorityOrder"
                             data-timestamp="@unixSeconds">
-                            <td data-label="หมายเลขห้อง">
+                            <td data-label="ห้องพัก">
                                 <div class="hk-cell-room">
-                                    <span class="hk-room-pill">@task.RoomNumber</span>
+                                    <span class="hk-room-pill">ห้อง @task.RoomNumber</span>
                                     <span class="hk-task-id-sub">#@task.TaskId</span>
                                 </div>
                             </td>
                             <td data-label="ชั้น">ชั้น @task.FloorNo</td>
-                            <td data-label="ประเภทห้อง">@(task.RoomTypeName ?? "Standard Room")</td>
-                            <td data-label="วันที่ได้รับมอบหมาย">
+                            <td data-label="ประเภทห้อง">@(task.RoomTypeName ?? "Standard")</td>
+                            <td data-label="เวลาที่ได้รับงาน">
                                 <div class="hk-cell-date">
                                     <span>@task.CreatedAt.ToString("dd MMM yyyy", thaiCulture)</span>
                                     <small>@task.CreatedAt.ToString("HH:mm น.")</small>
@@ -458,37 +461,61 @@
                             <td data-label="ความเร่งด่วน">
                                 <span class="hk-priority-badge @prioClass">@task.PriorityLabel</span>
                             </td>
-                            <td data-label="การดำเนินการ" class="hk-cell-actions">
+                            <td data-label="จัดการงาน" class="hk-cell-actions">
                                 <div class="hk-action-btn-group" data-role="action-container">
                                     @if (visualStatus == "maintenance")
                                     {
-                                        <button type="button" class="hk-btn hk-btn-danger hk-btn-sm" data-hk-action="details" data-task-id="@task.TaskId">
+                                        <a asp-controller="Housekeeping"
+                                           asp-action="TaskDetails"
+                                           asp-route-id="@task.TaskId"
+                                           class="hk-btn hk-btn-danger hk-btn-sm">
                                             ดูปัญหาห้องพัก
-                                        </button>
+                                        </a>
                                     }
                                     else if (task.Status == HousekeepingViewModel.StatusPending)
                                     {
-                                        <button type="button" class="hk-btn hk-btn-warning-solid hk-btn-sm" data-hk-action="start" data-task-id="@task.TaskId">
-                                            เริ่มทำความสะอาด
-                                        </button>
-                                        <button type="button" class="hk-btn hk-btn-outline hk-btn-sm" data-hk-action="details" data-task-id="@task.TaskId">
-                                            ดูรายละเอียด
-                                        </button>
+                                        if (task.CanAccept)
+                                        {
+                                            <button type="button" class="hk-btn hk-btn-primary hk-btn-sm" data-hk-action="accept" data-task-id="@task.TaskId">
+                                                รับงาน
+                                            </button>
+                                        }
+                                        if (task.CanStart)
+                                        {
+                                            <button type="button" class="hk-btn hk-btn-warning-solid hk-btn-sm" data-hk-action="start" data-task-id="@task.TaskId">
+                                                เริ่มทำ
+                                            </button>
+                                        }
+                                        <a asp-controller="Housekeeping"
+                                           asp-action="TaskDetails"
+                                           asp-route-id="@task.TaskId"
+                                           class="hk-btn hk-btn-outline hk-btn-sm">
+                                            รายละเอียด
+                                        </a>
                                     }
                                     else if (task.Status == HousekeepingViewModel.StatusInProgress)
                                     {
-                                        <button type="button" class="hk-btn hk-btn-outline hk-btn-sm" data-hk-action="details" data-task-id="@task.TaskId">
-                                            ดูรายละเอียด
-                                        </button>
-                                        <button type="button" class="hk-btn hk-btn-success hk-btn-sm" data-hk-action="complete" data-task-id="@task.TaskId">
-                                            ทำความสะอาดเสร็จแล้ว
-                                        </button>
+                                        <a asp-controller="Housekeeping"
+                                           asp-action="TaskDetails"
+                                           asp-route-id="@task.TaskId"
+                                           class="hk-btn hk-btn-outline hk-btn-sm">
+                                            รายละเอียด
+                                        </a>
+                                        @if (task.CanComplete)
+                                        {
+                                            <button type="button" class="hk-btn hk-btn-success hk-btn-sm" data-hk-action="complete" data-task-id="@task.TaskId">
+                                                เสร็จสิ้น
+                                            </button>
+                                        }
                                     }
                                     else
                                     {
-                                        <button type="button" class="hk-btn hk-btn-outline hk-btn-sm" data-hk-action="details" data-task-id="@task.TaskId">
-                                            ดูรายละเอียด
-                                        </button>
+                                        <a asp-controller="Housekeeping"
+                                           asp-action="TaskDetails"
+                                           asp-route-id="@task.TaskId"
+                                           class="hk-btn hk-btn-outline hk-btn-sm">
+                                            รายละเอียด
+                                        </a>
                                     }
                                 </div>
                             </td>
@@ -499,7 +526,7 @@
         </div>
 
         <!-- =========================================================
-             8. EMPTY STATE
+             5. EMPTY STATE
              ========================================================= -->
         <div id="hkTasksEmptyState" class="hk-empty hk-empty-modern" @(Model.AllCleaningTasks.Any() ? "hidden" : "")>
             <div class="hk-empty-icon-circle">
@@ -509,59 +536,28 @@
                 </svg>
             </div>
             <h3 class="hk-empty-title">ไม่มีรายการห้องที่ต้องทำความสะอาด</h3>
-            <p class="hk-empty-subtitle">ขณะนี้คุณไม่มีงานที่ได้รับมอบหมาย</p>
+            <p class="hk-empty-subtitle">ไม่พบงานตามเงื่อนไขที่เลือก หรือยังไม่มีงานเข้าใหม่</p>
         </div>
 
         <!-- =========================================================
-             9. PAGINATION
+             6. PAGINATION
              ========================================================= -->
         <nav id="hkPaginationWrapper" class="hk-pagination-bar" aria-label="การแบ่งหน้า" @(Model.AllCleaningTasks.Any() ? "" : "hidden")>
             <button type="button" id="hkPrevPageBtn" class="hk-btn hk-btn-outline hk-btn-sm">
-                &laquo; Previous
+                &laquo; ก่อนหน้า
             </button>
             <div id="hkPageNumbers" class="hk-page-numbers"></div>
             <button type="button" id="hkNextPageBtn" class="hk-btn hk-btn-outline hk-btn-sm">
-                Next &raquo;
+                ถัดไป &raquo;
             </button>
         </nav>
     </section>
 
-    <!-- =========================================================
-         MODALS: TASK DETAILS & MAINTENANCE REPORT
-         ========================================================= -->
+    <!-- Modal แสดงรายละเอียดด่วน (รองรับกรณี JS อัปเดต DOM แบบทันที) -->
     <div id="taskModal" class="hk-modal" hidden>
         <div class="hk-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="taskModalBody">
             <button type="button" class="hk-modal-close" aria-label="ปิดหน้าต่าง">&times;</button>
             <div id="taskModalBody"></div>
-        </div>
-    </div>
-
-    <div id="maintenanceModal" class="hk-modal" hidden>
-        <div class="hk-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="maintModalTitle">
-            <button type="button" class="hk-modal-close hk-maint-close" aria-label="ปิดหน้าต่าง">&times;</button>
-            <h3 id="maintModalTitle" class="hk-modal-title">แจ้งปัญหาอุปกรณ์ / ซ่อมบำรุงห้อง <span id="maintRoomNumberLabel">-</span></h3>
-            <p class="hk-modal-subtitle">ห้องจะถูกเปลี่ยนสถานะเป็น Maintenance (ระงับการขายชั่วคราว) และบันทึกประวัติทันที</p>
-
-            <form id="maintenanceForm" class="hk-maint-form">
-                <input type="hidden" id="maintRoomId" name="roomId" />
-                <input type="hidden" id="maintTaskId" name="taskId" />
-
-                <div class="hk-form-group">
-                    <label for="maintIssueNote" class="hk-label">รายละเอียดอุปกรณ์ที่ชำรุดหรือปัญหาที่พบ <span class="text-danger">*</span></label>
-                    <textarea id="maintIssueNote"
-                              name="issueNote"
-                              rows="4"
-                              class="hk-textarea"
-                              placeholder="เช่น แอร์ไม่เย็น, หลอดไฟห้องน้ำขาด, ท่อน้ำรั่ว..."
-                              required
-                              maxlength="250"></textarea>
-                </div>
-
-                <div class="hk-modal-actions">
-                    <button type="button" class="hk-btn hk-btn-light hk-maint-close">ยกเลิก</button>
-                    <button type="submit" class="hk-btn hk-btn-danger">ยืนยันแจ้งซ่อมบำรุง</button>
-                </div>
-            </form>
         </div>
     </div>
 </div>

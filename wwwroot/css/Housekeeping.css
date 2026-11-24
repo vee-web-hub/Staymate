@@ -1,7 +1,7 @@
 /* =====================================================================
- * StayMate Housekeeping Portal Stylesheet (wwwroot/css/Housekeeping.css)
- * Design Concept: Simple Smart Operations
- * ===================================================================== */
+   StayMate Housekeeping Portal Stylesheet (wwwroot/css/Housekeeping.css)
+   Design Concept: Simple Smart Operations — Clean, Modern & Touch-Friendly
+   ===================================================================== */
 
 :root {
     --hk-navy: #070D1E;
@@ -9,38 +9,57 @@
     --hk-blue: #2563EB;
     --hk-blue-hover: #1D4ED8;
     --hk-cyan: #00E5FF;
-    --hk-bg: #F5F7FB;
+    --hk-bg: #F4F6FA;
+    --hk-surface-subtle: #F8FAFC;
     --hk-white: #FFFFFF;
     --hk-success: #16A34A;
     --hk-success-bg: #DCFCE7;
-    --hk-warning: #F59E0B;
+    --hk-warning: #D97706;
+    --hk-warning-accent: #F59E0B;
     --hk-warning-bg: #FEF3C7;
     --hk-danger: #DC2626;
     --hk-danger-bg: #FEE2E2;
     --hk-info-bg: #DBEAFE;
+    --hk-purple: #7C3AED;
+    --hk-purple-bg: #EDE9FE;
     --hk-text-main: #0F172A;
-    --hk-text-muted: #475569;
+    --hk-text-muted: #64748B;
     --hk-border: #E2E8F0;
-    --hk-radius-lg: 18px;
+    --hk-border-strong: #CBD5E1;
+    --hk-radius-lg: 16px;
     --hk-radius-md: 12px;
     --hk-radius-sm: 8px;
-    --hk-shadow-sm: 0 4px 14px rgba(7, 13, 30, 0.05);
-    --hk-shadow-md: 0 10px 25px rgba(7, 13, 30, 0.08);
+    --hk-shadow-xs: 0 1px 3px rgba(7, 13, 30, 0.04);
+    --hk-shadow-sm: 0 4px 12px rgba(7, 13, 30, 0.05);
+    --hk-shadow-md: 0 12px 28px rgba(7, 13, 30, 0.09);
 }
 
+/* ---------- Base & Layout Wrapper ---------- */
 .hk-dashboard-wrapper {
     font-family: 'Prompt', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     background-color: var(--hk-bg);
     color: var(--hk-text-main);
-    padding: 1.5rem;
+    padding: 1.5rem 1.75rem 2.5rem;
     min-height: calc(100vh - 70px);
+    max-width: 1520px;
+    margin: 0 auto;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+}
+
+.hk-kpi-number,
+.hk-progress-pct,
+.hk-mtc-room-number,
+.hk-rs-room-no,
+.hk-room-pill {
+    font-variant-numeric: tabular-nums;
 }
 
 /* ---------- Animations ---------- */
 @keyframes hkFadeInUp {
     from {
         opacity: 0;
-        transform: translateY(10px);
+        transform: translateY(8px);
     }
     to {
         opacity: 1;
@@ -49,15 +68,17 @@
 }
 
 .hk-fade-in {
-    animation: hkFadeInUp 0.4s ease-out forwards;
+    animation: hkFadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* ---------- Alerts ---------- */
 .hk-alert {
-    padding: 1rem 1.25rem;
+    padding: 0.95rem 1.25rem;
     border-radius: var(--hk-radius-md);
     margin-bottom: 1.25rem;
     font-weight: 500;
+    font-size: 0.94rem;
+    box-shadow: var(--hk-shadow-xs);
 }
 
 .hk-alert-success {
@@ -72,91 +93,169 @@
     border: 1px solid #FCA5A5;
 }
 
-/* ---------- A. Welcome Banner ---------- */
-.hk-welcome-banner {
-    background: linear-gradient(135deg, var(--hk-navy) 0%, var(--hk-navy-soft) 65%, #1E3A8A 100%);
+/* ---------- Welcome Banner & Page Header ---------- */
+.hk-welcome-banner,
+.hk-page-header {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--hk-navy) 0%, var(--hk-navy-soft) 60%, #1E3A8A 100%);
     color: var(--hk-white);
     border-radius: var(--hk-radius-lg);
-    padding: 1.75rem 2rem;
+    padding: 1.65rem 2rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
     gap: 1.5rem;
     box-shadow: var(--hk-shadow-md);
     margin-bottom: 1.5rem;
+}
+
+.hk-welcome-banner::after,
+.hk-page-header::after {
+    content: "";
+    position: absolute;
+    right: -60px;
+    top: -80px;
+    width: 260px;
+    height: 260px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0, 229, 255, 0.16) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.hk-welcome-content,
+.hk-page-header-left {
+    position: relative;
+    z-index: 1;
 }
 
 .hk-welcome-badge {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(0, 229, 255, 0.1);
     border: 1px solid rgba(0, 229, 255, 0.3);
-    padding: 0.35rem 0.85rem;
+    padding: 0.3rem 0.85rem;
     border-radius: 999px;
-    font-size: 0.78rem;
-    letter-spacing: 0.04em;
+    font-size: 0.74rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
     color: var(--hk-cyan);
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.65rem;
 }
 
 .hk-pulse-dot {
-    width: 8px;
-    height: 8px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
     background-color: var(--hk-cyan);
+    box-shadow: 0 0 8px var(--hk-cyan);
 }
 
-.hk-welcome-title {
-    font-size: 1.65rem;
+.hk-welcome-title,
+.hk-page-main-title {
+    font-size: 1.6rem;
     font-weight: 700;
-    margin: 0 0 0.4rem;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.3rem;
     color: var(--hk-white);
 }
 
-.hk-welcome-user {
-    font-size: 1rem;
+.hk-welcome-user,
+.hk-page-description {
+    font-size: 0.94rem;
     color: #CBD5E1;
-    margin: 0 0 0.45rem;
+    margin: 0 0 0.5rem;
+}
+
+.hk-page-description {
+    margin-bottom: 0;
 }
 
 .hk-divider {
     margin: 0 0.5rem;
-    opacity: 0.5;
+    opacity: 0.45;
 }
 
 .hk-welcome-summary {
     margin: 0;
-    font-size: 0.96rem;
-    color: #E2E8F0;
-    background: rgba(255, 255, 255, 0.08);
+    font-size: 0.9rem;
+    color: #F1F5F9;
+    background: rgba(255, 255, 255, 0.09);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     display: inline-block;
-    padding: 0.4rem 0.9rem;
+    padding: 0.4rem 0.95rem;
     border-radius: var(--hk-radius-sm);
 }
 
-.hk-welcome-actions {
+.hk-welcome-actions,
+.hk-page-header-right {
+    position: relative;
+    z-index: 1;
     display: flex;
+    align-items: center;
     flex-wrap: wrap;
-    gap: 0.75rem;
+    gap: 0.65rem;
     flex-shrink: 0;
 }
 
-/* ---------- B. KPI Summary Cards ---------- */
+.hk-breadcrumb {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 0.45rem;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.82rem;
+    color: #94A3B8;
+}
+
+.hk-breadcrumb a {
+    color: var(--hk-cyan);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.hk-breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.hk-breadcrumb .active {
+    color: #E2E8F0;
+}
+
+.hk-date-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0.55rem 1rem;
+    border-radius: var(--hk-radius-sm);
+    font-size: 0.88rem;
+    color: var(--hk-white);
+}
+
+/* ---------- KPI Summary Cards ---------- */
 .hk-kpi-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 1.25rem;
+    gap: 1.15rem;
     margin-bottom: 1.5rem;
+}
+
+.hk-history-page .hk-kpi-grid {
+    grid-template-columns: repeat(3, 1fr);
 }
 
 .hk-kpi-card {
     background: var(--hk-white);
     border-radius: var(--hk-radius-lg);
-    padding: 1.35rem 1.5rem;
+    padding: 1.25rem 1.4rem;
     display: flex;
-    align-items: flex-start;
-    gap: 1.1rem;
+    align-items: center;
+    gap: 1.05rem;
     box-shadow: var(--hk-shadow-sm);
     border: 1px solid var(--hk-border);
     border-left-width: 5px;
@@ -164,18 +263,24 @@
 }
 
 .hk-kpi-card:hover {
-    transform: translateY(-3px);
+    transform: translateY(-2px);
     box-shadow: var(--hk-shadow-md);
 }
 
 .hk-kpi-navy { border-left-color: var(--hk-navy); }
-.hk-kpi-warning { border-left-color: var(--hk-warning); }
-.hk-kpi-info { border-left-color: var(--hk-blue); }
-.hk-kpi-success { border-left-color: var(--hk-success); }
+.hk-kpi-warning,
+.hk-summary-pending { border-left-color: var(--hk-warning-accent); }
+.hk-kpi-info,
+.hk-summary-occupied { border-left-color: var(--hk-blue); }
+.hk-kpi-success,
+.hk-summary-available { border-left-color: var(--hk-success); }
+.hk-kpi-danger,
+.hk-summary-maintenance { border-left-color: var(--hk-danger); }
+.hk-summary-inprogress { border-left-color: var(--hk-purple); }
 
 .hk-kpi-icon-wrap {
-    width: 54px;
-    height: 54px;
+    width: 52px;
+    height: 52px;
     border-radius: 14px;
     display: flex;
     align-items: center;
@@ -184,32 +289,38 @@
 }
 
 .hk-icon-navy { background: #E2E8F0; color: var(--hk-navy); }
-.hk-icon-warning { background: var(--hk-warning-bg); color: #B45309; }
+.hk-icon-warning { background: var(--hk-warning-bg); color: var(--hk-warning); }
 .hk-icon-info { background: var(--hk-info-bg); color: var(--hk-blue); }
 .hk-icon-success { background: var(--hk-success-bg); color: var(--hk-success); }
+.hk-icon-danger { background: var(--hk-danger-bg); color: var(--hk-danger); }
+.hk-icon-purple { background: var(--hk-purple-bg); color: var(--hk-purple); }
 
 .hk-kpi-info {
     display: flex;
     flex-direction: column;
+    min-width: 0;
 }
 
 .hk-kpi-label {
-    font-size: 0.9rem;
+    font-size: 0.86rem;
     font-weight: 600;
     color: var(--hk-text-muted);
 }
 
 .hk-kpi-number {
-    font-size: 2rem;
+    font-size: 1.9rem;
     font-weight: 700;
-    line-height: 1.2;
-    margin: 0.2rem 0;
+    line-height: 1.15;
+    margin: 0.15rem 0;
     color: var(--hk-navy);
 }
 
 .hk-kpi-sub {
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     color: var(--hk-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* ---------- Section Card Wrapper ---------- */
@@ -228,55 +339,64 @@
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 1rem;
-    margin-bottom: 1.25rem;
+    margin-bottom: 1.2rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid #F1F5F9;
 }
 
 .hk-section-title {
-    font-size: 1.2rem;
+    font-size: 1.14rem;
     font-weight: 700;
     color: var(--hk-navy);
-    margin: 0 0 0.25rem;
+    margin: 0;
+    display: flex;
+    align-items: center;
 }
 
 .hk-section-subtitle {
-    font-size: 0.9rem;
+    font-size: 0.86rem;
     color: var(--hk-text-muted);
-    margin: 0;
+    margin: 0.2rem 0 0;
 }
 
-/* ---------- C. Cleaning Progress ---------- */
+/* ---------- Daily Cleaning Progress ---------- */
+.hk-progress-card {
+    padding: 1.35rem 1.5rem;
+}
+
 .hk-progress-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.85rem;
 }
 
 .hk-progress-badge {
-    text-align: right;
+    display: flex;
+    align-items: baseline;
+    gap: 0.65rem;
 }
 
 .hk-progress-pct {
-    font-size: 1.8rem;
+    font-size: 1.65rem;
     font-weight: 700;
     color: var(--hk-blue);
-    display: block;
     line-height: 1;
 }
 
 .hk-progress-pct-label {
-    font-size: 0.82rem;
+    font-size: 0.86rem;
+    font-weight: 500;
     color: var(--hk-text-muted);
 }
 
 .hk-progress-track {
     width: 100%;
-    height: 16px;
+    height: 12px;
     background: #E2E8F0;
     border-radius: 999px;
     overflow: hidden;
-    margin-bottom: 1rem;
 }
 
 .hk-progress-fill {
@@ -286,176 +406,82 @@
     transition: width 0.65s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.hk-progress-stats {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1.25rem;
-}
-
-.hk-stat-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.95rem;
-    background: var(--hk-bg);
-    padding: 0.5rem 1rem;
-    border-radius: var(--hk-radius-sm);
-}
-
 .hk-dot {
-    width: 10px;
-    height: 10px;
+    width: 9px;
+    height: 9px;
     border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
 }
 
-.hk-dot-success { background: var(--hk-success); }
-.hk-dot-warning { background: var(--hk-warning); }
-.hk-dot-blue { background: var(--hk-blue); }
+.hk-dot-success,
+.hk-dot-available { background: var(--hk-success); }
+.hk-dot-warning,
+.hk-dot-pending { background: var(--hk-warning-accent); }
+.hk-dot-blue,
+.hk-dot-occupied { background: var(--hk-blue); }
+.hk-dot-purple { background: var(--hk-purple); }
+.hk-dot-maintenance { background: var(--hk-danger); }
 
-/* ---------- D. Room Cleaning Status Cards ---------- */
-.hk-pill-filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-}
-
-.hk-filter-Chip {
-    border: 1px solid var(--hk-border);
-    background: var(--hk-bg);
-    color: var(--hk-text-main);
-    padding: 0.5rem 1rem;
-    border-radius: 999px;
-    font-size: 0.88rem;
-    font-weight: 500;
-    cursor: pointer;
-    min-height: 40px;
-    transition: all 0.2s ease;
-}
-
-.hk-filter-Chip.is-active {
-    background: var(--hk-navy);
-    color: var(--hk-white);
-    border-color: var(--hk-navy);
-}
-
-.hk-room-cards-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
-    gap: 1.15rem;
-}
-
-.hk-room-card {
-    background: var(--hk-white);
-    border-radius: var(--hk-radius-md);
-    border: 1px solid var(--hk-border);
-    border-top-width: 5px;
-    padding: 1.2rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 1rem;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.hk-room-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--hk-shadow-md);
-}
-
-/* สีสถานะตามข้อกำหนด: Pending = Orange, In Progress = Blue, Completed = Green, Maintenance = Red */
-.hk-room-pending { border-top-color: var(--hk-warning); }
-.hk-room-inprogress { border-top-color: var(--hk-blue); }
-.hk-room-completed { border-top-color: var(--hk-success); }
-.hk-room-maintenance { border-top-color: var(--hk-danger); }
-
-.hk-room-card-top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 0.5rem;
-}
-
-.hk-room-floor {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--hk-text-muted);
-    text-transform: uppercase;
-}
-
-.hk-room-number {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: var(--hk-navy);
-    margin: 0.1rem 0 0;
-}
-
-.hk-room-card-body {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    font-size: 0.92rem;
-}
-
-.hk-room-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.hk-meta-label {
-    color: var(--hk-text-muted);
-}
-
-.hk-meta-val {
-    font-weight: 600;
-    text-align: right;
-}
-
-.hk-room-card-footer {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    padding-top: 0.75rem;
-    border-top: 1px solid var(--hk-border);
-}
-
-/* ---------- Badges ---------- */
-.hk-status-badge {
+/* ---------- Status & Priority Badges ---------- */
+.hk-status-badge,
+.hk-rs-status-pill {
     display: inline-flex;
     align-items: center;
+    gap: 0.4rem;
     padding: 0.3rem 0.75rem;
     border-radius: 999px;
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     font-weight: 600;
+    white-space: nowrap;
 }
 
-.hk-badge-pending {
+.hk-status-badge::before,
+.hk-rs-status-pill::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: currentColor;
+}
+
+.hk-badge-pending,
+.hk-rs-badge-pending {
     background: var(--hk-warning-bg);
     color: #B45309;
 }
 
-.hk-badge-in_progress {
+.hk-badge-in_progress,
+.hk-rs-badge-occupied {
     background: var(--hk-info-bg);
     color: var(--hk-blue);
 }
 
-.hk-badge-completed {
+.hk-badge-completed,
+.hk-rs-badge-available {
     background: var(--hk-success-bg);
     color: var(--hk-success);
 }
 
-.hk-badge-maintenance {
+.hk-badge-maintenance,
+.hk-rs-badge-maintenance {
     background: var(--hk-danger-bg);
     color: var(--hk-danger);
 }
 
+.hk-rs-badge-inprogress {
+    background: var(--hk-purple-bg);
+    color: var(--hk-purple);
+}
+
 .hk-priority-badge {
-    display: inline-block;
-    padding: 0.25rem 0.65rem;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.24rem 0.65rem;
     border-radius: 6px;
     font-size: 0.78rem;
     font-weight: 600;
+    white-space: nowrap;
 }
 
 .hk-priority-high {
@@ -473,20 +499,36 @@
     color: #475569;
 }
 
-/* ---------- E & F. Main Grid (Tasks Table + Recent Activities) ---------- */
+/* ---------- Dashboard Grid & Filters ---------- */
 .hk-main-grid {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: 2.15fr 1fr;
     gap: 1.5rem;
     align-items: start;
 }
 
+.hk-filter-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.hk-filter-title-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
 .hk-filter-bar {
     display: grid;
-    grid-template-columns: 1.4fr 1fr 1fr 1fr auto;
+    grid-template-columns: 1.4fr 1fr 1fr auto;
     gap: 0.85rem;
     align-items: end;
-    background: var(--hk-bg);
+    background: var(--hk-surface-subtle);
+    border: 1px solid var(--hk-border);
     padding: 1rem;
     border-radius: var(--hk-radius-md);
     margin-bottom: 1.25rem;
@@ -494,7 +536,7 @@
 
 .hk-label {
     display: block;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     font-weight: 600;
     margin-bottom: 0.35rem;
     color: var(--hk-navy);
@@ -504,13 +546,15 @@
 .hk-select,
 .hk-textarea {
     width: 100%;
-    padding: 0.6rem 0.85rem;
+    padding: 0.55rem 0.85rem;
     border-radius: var(--hk-radius-sm);
-    border: 1px solid #CBD5E1;
+    border: 1px solid var(--hk-border-strong);
     background: var(--hk-white);
-    font-size: 0.95rem;
+    font-family: inherit;
+    font-size: 0.92rem;
     min-height: 42px;
     color: var(--hk-text-main);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .hk-input:focus,
@@ -518,34 +562,52 @@
 .hk-textarea:focus {
     outline: none;
     border-color: var(--hk-blue);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
 }
 
-/* ---------- Table ---------- */
+.hk-mobile-only {
+    display: none;
+}
+
+/* ---------- Tables ---------- */
 .hk-table-responsive {
     overflow-x: auto;
+    border: 1px solid var(--hk-border);
+    border-radius: var(--hk-radius-md);
 }
 
 .hk-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.95rem;
+    font-size: 0.92rem;
+    background: var(--hk-white);
 }
 
 .hk-table thead th {
-    background: #F8FAFC;
-    color: var(--hk-navy);
-    font-weight: 600;
-    padding: 0.9rem 1rem;
-    border-bottom: 2px solid var(--hk-border);
+    background: var(--hk-surface-subtle);
+    color: var(--hk-text-muted);
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--hk-border);
     text-align: left;
     white-space: nowrap;
 }
 
 .hk-table tbody td {
-    padding: 0.95rem 1rem;
-    border-bottom: 1px solid var(--hk-border);
+    padding: 0.9rem 1rem;
+    border-bottom: 1px solid #F1F5F9;
     vertical-align: middle;
+}
+
+.hk-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.hk-table tbody tr {
+    transition: background-color 0.15s ease;
 }
 
 .hk-table tbody tr:hover {
@@ -562,47 +624,58 @@
     background: var(--hk-navy);
     color: var(--hk-white);
     font-weight: 700;
+    font-size: 0.86rem;
     padding: 0.25rem 0.65rem;
     border-radius: 6px;
+    white-space: nowrap;
 }
 
 .hk-task-id-sub {
     color: var(--hk-text-muted);
-    font-size: 0.85rem;
+    font-size: 0.82rem;
 }
 
 .hk-cell-date {
     display: flex;
     flex-direction: column;
+    line-height: 1.35;
 }
 
 .hk-cell-date small {
     color: var(--hk-text-muted);
+    font-size: 0.8rem;
 }
 
 .hk-action-btn-group {
     display: flex;
     justify-content: flex-end;
+    align-items: center;
     flex-wrap: wrap;
     gap: 0.45rem;
 }
 
-/* ---------- F. Recent Activities Timeline ---------- */
+/* ---------- Recent Activities & Timeline ---------- */
 .hk-activity-timeline {
     list-style: none;
     padding: 0;
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.95rem;
+}
+
+.hk-scrollable-timeline {
+    max-height: 360px;
+    overflow-y: auto;
+    padding-right: 0.4rem;
 }
 
 .hk-activity-item {
     display: flex;
-    gap: 0.9rem;
+    gap: 0.85rem;
     align-items: flex-start;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--hk-border);
+    padding-bottom: 0.95rem;
+    border-bottom: 1px solid #F1F5F9;
 }
 
 .hk-activity-item:last-child {
@@ -611,8 +684,8 @@
 }
 
 .hk-activity-marker {
-    width: 12px;
-    height: 12px;
+    width: 11px;
+    height: 11px;
     border-radius: 50%;
     margin-top: 0.35rem;
     flex-shrink: 0;
@@ -621,10 +694,11 @@
 .hk-act-success { background: var(--hk-success); box-shadow: 0 0 0 4px var(--hk-success-bg); }
 .hk-act-info { background: var(--hk-blue); box-shadow: 0 0 0 4px var(--hk-info-bg); }
 .hk-act-danger { background: var(--hk-danger); box-shadow: 0 0 0 4px var(--hk-danger-bg); }
-.hk-act-warning { background: var(--hk-warning); box-shadow: 0 0 0 4px var(--hk-warning-bg); }
+.hk-act-warning { background: var(--hk-warning-accent); box-shadow: 0 0 0 4px var(--hk-warning-bg); }
 
 .hk-activity-body {
     flex: 1;
+    min-width: 0;
 }
 
 .hk-activity-top {
@@ -635,58 +709,73 @@
 }
 
 .hk-activity-title {
-    font-size: 0.95rem;
+    font-size: 0.92rem;
     color: var(--hk-navy);
 }
 
 .hk-activity-time {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     color: var(--hk-text-muted);
 }
 
 .hk-activity-note {
-    font-size: 0.86rem;
+    font-size: 0.85rem;
     color: var(--hk-text-muted);
     margin: 0.25rem 0;
 }
 
 .hk-activity-actor {
-    font-size: 0.8rem;
-    color: #64748B;
+    font-size: 0.78rem;
+    color: var(--hk-text-muted);
 }
 
-/* ---------- Buttons (Large Touch-Friendly) ---------- */
+/* ---------- Buttons (Touch-Friendly & Consistent) ---------- */
 .hk-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.45rem;
     min-height: 42px;
-    padding: 0.55rem 1.1rem;
+    padding: 0.5rem 1.1rem;
     border-radius: var(--hk-radius-sm);
+    font-family: inherit;
     font-weight: 600;
-    font-size: 0.92rem;
+    font-size: 0.9rem;
     border: 1px solid transparent;
     cursor: pointer;
     text-decoration: none;
-    transition: all 0.18s ease;
+    white-space: nowrap;
+    transition: all 0.16s ease;
+}
+
+.hk-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
 }
 
 .hk-btn:disabled {
-    opacity: 0.6;
+    opacity: 0.65;
     cursor: not-allowed;
 }
 
 .hk-btn-sm {
-    min-height: 38px;
-    padding: 0.4rem 0.85rem;
-    font-size: 0.86rem;
+    min-height: 36px;
+    padding: 0.35rem 0.8rem;
+    font-size: 0.84rem;
+}
+
+.hk-btn-flex {
+    flex: 1;
+}
+
+.hk-btn-block {
+    width: 100%;
 }
 
 .hk-btn-primary,
 .hk-btn-accept {
     background: var(--hk-blue);
     color: var(--hk-white);
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.22);
 }
 
 .hk-btn-primary:hover {
@@ -700,9 +789,31 @@
     color: var(--hk-white);
 }
 
+.hk-btn-info:hover {
+    background: #0369A1;
+    color: var(--hk-white);
+}
+
+.hk-btn-warning-solid {
+    background: var(--hk-warning-accent);
+    color: #FFFFFF;
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.24);
+}
+
+.hk-btn-warning-solid:hover {
+    background: var(--hk-warning);
+    color: #FFFFFF;
+}
+
 .hk-btn-success,
 .hk-btn-complete {
     background: var(--hk-success);
+    color: var(--hk-white);
+    box-shadow: 0 2px 6px rgba(22, 163, 74, 0.22);
+}
+
+.hk-btn-success:hover {
+    background: #15803D;
     color: var(--hk-white);
 }
 
@@ -711,45 +822,66 @@
     color: var(--hk-white);
 }
 
+.hk-btn-danger:hover {
+    background: #B91C1C;
+    color: var(--hk-white);
+}
+
 .hk-btn-danger-outline,
 .hk-btn-danger-ghost {
-    background: transparent;
+    background: var(--hk-white);
     border-color: #FCA5A5;
     color: var(--hk-danger);
 }
 
+.hk-btn-danger-outline:hover,
 .hk-btn-danger-ghost:hover {
     background: var(--hk-danger-bg);
+    color: var(--hk-danger);
 }
 
 .hk-btn-cyan {
     background: var(--hk-cyan);
     color: var(--hk-navy);
+    box-shadow: 0 4px 12px rgba(0, 229, 255, 0.25);
+}
+
+.hk-btn-cyan:hover {
+    background: #26EBFF;
+    color: var(--hk-navy);
 }
 
 .hk-btn-glass {
-    background: rgba(255, 255, 255, 0.14);
-    border-color: rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.24);
     color: var(--hk-white);
+    backdrop-filter: blur(4px);
 }
 
 .hk-btn-glass:hover {
-    background: rgba(255, 255, 255, 0.24);
+    background: rgba(255, 255, 255, 0.22);
+    color: var(--hk-white);
 }
 
 .hk-btn-outline {
     background: var(--hk-white);
-    border-color: #CBD5E1;
+    border-color: var(--hk-border-strong);
     color: var(--hk-navy);
 }
 
 .hk-btn-outline:hover {
     background: #F1F5F9;
+    border-color: #94A3B8;
+    color: var(--hk-navy);
 }
 
 .hk-btn-light {
     background: #E2E8F0;
     color: var(--hk-navy);
+}
+
+.hk-btn-light:hover {
+    background: #CBD5E1;
 }
 
 /* ---------- Modal, Loading & Toast ---------- */
@@ -761,6 +893,7 @@
     align-items: center;
     justify-content: center;
     background: rgba(7, 13, 30, 0.6);
+    backdrop-filter: blur(3px);
     padding: 1rem;
 }
 
@@ -780,31 +913,47 @@
     box-shadow: var(--hk-shadow-md);
 }
 
+.hk-rs-modal-dialog {
+    width: min(620px, 100%);
+}
+
+.hk-hist-modal-dialog {
+    width: min(650px, 100%);
+}
+
 .hk-modal-close {
     position: absolute;
-    top: 1rem;
-    right: 1.2rem;
+    top: 1.1rem;
+    right: 1.1rem;
     border: 0;
     background: #F1F5F9;
-    width: 36px;
-    height: 36px;
+    color: var(--hk-text-muted);
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
-    font-size: 1.4rem;
+    font-size: 1.3rem;
     line-height: 1;
     cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.hk-modal-close:hover {
+    background: #E2E8F0;
+    color: var(--hk-navy);
 }
 
 .hk-modal-title {
-    font-size: 1.25rem;
+    font-size: 1.22rem;
     font-weight: 700;
     color: var(--hk-navy);
     margin: 0 0 0.25rem;
+    padding-right: 2rem;
 }
 
 .hk-modal-subtitle {
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     color: var(--hk-text-muted);
-    margin: 0 0 1.25rem;
+    margin: 0 0 1.2rem;
 }
 
 .hk-detail-row {
@@ -812,8 +961,8 @@
     justify-content: space-between;
     gap: 1rem;
     padding: 0.65rem 0;
-    border-bottom: 1px solid var(--hk-border);
-    font-size: 0.95rem;
+    border-bottom: 1px solid #F1F5F9;
+    font-size: 0.92rem;
 }
 
 .hk-detail-label {
@@ -832,7 +981,9 @@
     flex-wrap: wrap;
     justify-content: flex-end;
     gap: 0.65rem;
-    margin-top: 1.5rem;
+    margin-top: 1.4rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--hk-border);
 }
 
 .hk-loading-overlay {
@@ -843,6 +994,7 @@
     align-items: center;
     justify-content: center;
     background: rgba(7, 13, 30, 0.55);
+    backdrop-filter: blur(2px);
 }
 
 .hk-loading-overlay.is-open {
@@ -852,7 +1004,7 @@
 .hk-loading-box {
     background: var(--hk-navy);
     color: var(--hk-white);
-    padding: 1.25rem 1.75rem;
+    padding: 1.2rem 1.75rem;
     border-radius: var(--hk-radius-md);
     display: flex;
     align-items: center;
@@ -885,10 +1037,11 @@
 }
 
 .hk-toast {
-    padding: 0.9rem 1.2rem;
+    padding: 0.85rem 1.15rem;
     border-radius: var(--hk-radius-sm);
     color: var(--hk-white);
     font-weight: 500;
+    font-size: 0.92rem;
     box-shadow: var(--hk-shadow-md);
     background: var(--hk-blue);
 }
@@ -900,172 +1053,19 @@
     text-align: center;
     padding: 2.25rem 1rem;
     color: var(--hk-text-muted);
-    background: #F8FAFC;
+    background: var(--hk-surface-subtle);
     border-radius: var(--hk-radius-md);
-    border: 1px dashed #CBD5E1;
+    border: 1px dashed var(--hk-border-strong);
 }
 
-/* ---------- 7. Responsive Design (Desktop / Tablet / Smartphone) ---------- */
-@media (max-width: 1199px) {
-    .hk-kpi-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    .hk-main-grid {
-        grid-template-columns: 1fr;
-    }
-    .hk-filter-bar {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 768px) {
-    .hk-dashboard-wrapper {
-        padding: 1rem;
-    }
-    .hk-welcome-banner {
-        flex-direction: column;
-        align-items: flex-start;
-        padding: 1.35rem;
-    }
-    .hk-filter-bar {
-        grid-template-columns: 1fr;
-    }
-    /* แปลงตารางเป็นรูปแบบ Card บนมือถืออัตโนมัติ */
-    .hk-table thead {
-        display: none;
-    }
-    .hk-table,
-    .hk-table tbody,
-    .hk-table tr,
-    .hk-table td {
-        display: block;
-        width: 100%;
-    }
-    .hk-table tbody tr {
-        background: var(--hk-white);
-        border: 1px solid var(--hk-border);
-        border-radius: var(--hk-radius-md);
-        margin-bottom: 1rem;
-        padding: 0.75rem;
-        box-shadow: var(--hk-shadow-sm);
-    }
-    .hk-table tbody td {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.55rem 0.5rem;
-        border-bottom: 1px solid #F1F5F9;
-        text-align: right;
-    }
-    .hk-table tbody td::before {
-        content: attr(data-label);
-        font-weight: 600;
-        color: var(--hk-text-muted);
-        text-align: left;
-    }
-    .hk-table tbody td:last-child {
-        border-bottom: 0;
-        padding-top: 0.75rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .hk-kpi-grid {
-        grid-template-columns: 1fr;
-    }
-}
 /* =====================================================================
- * CLEANING TASKS PAGE ADDITIONS (ต่อท้ายไฟล์ wwwroot/css/Housekeeping.css)
- * ===================================================================== */
-
-/* ---------- 2. Page Header & Breadcrumb ---------- */
-.hk-page-header {
-    background: linear-gradient(135deg, var(--hk-navy) 0%, var(--hk-navy-soft) 70%, #1E3A8A 100%);
-    color: var(--hk-white);
-    border-radius: var(--hk-radius-lg);
-    padding: 1.6rem 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 1.25rem;
-    margin-bottom: 1.5rem;
-    box-shadow: var(--hk-shadow-md);
-}
-
-.hk-breadcrumb {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 0.45rem;
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    font-size: 0.85rem;
-    color: #94A3B8;
-}
-
-.hk-breadcrumb a {
-    color: var(--hk-cyan);
-    text-decoration: none;
-    font-weight: 500;
-}
-
-.hk-breadcrumb .active {
-    color: #E2E8F0;
-}
-
-.hk-page-main-title {
-    font-size: 1.65rem;
-    font-weight: 700;
-    margin: 0 0 0.25rem;
-    color: var(--hk-white);
-}
-
-.hk-page-description {
-    margin: 0;
-    font-size: 0.95rem;
-    color: #CBD5E1;
-}
-
-.hk-page-header-right {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-}
-
-.hk-date-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    padding: 0.55rem 1rem;
-    border-radius: var(--hk-radius-sm);
-    font-size: 0.9rem;
-    color: var(--hk-white);
-}
-
-/* ---------- 4. Search & Filter Grid + 6. View Switcher ---------- */
-.hk-filter-top-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 1rem;
-    margin-bottom: 1.15rem;
-}
-
-.hk-filter-title-group {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
+   CLEANING TASKS PAGE STYLES
+   ===================================================================== */
 
 .hk-view-switcher {
     display: inline-flex;
     background: var(--hk-bg);
-    padding: 0.28rem;
+    padding: 0.25rem;
     border-radius: var(--hk-radius-sm);
     border: 1px solid var(--hk-border);
 }
@@ -1077,18 +1077,19 @@
     border: 0;
     background: transparent;
     color: var(--hk-text-muted);
-    padding: 0.45rem 0.95rem;
+    padding: 0.42rem 0.9rem;
     border-radius: 6px;
-    font-size: 0.88rem;
+    font-family: inherit;
+    font-size: 0.86rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.18s ease;
+    transition: all 0.16s ease;
 }
 
 .hk-view-btn.is-active {
     background: var(--hk-navy);
     color: var(--hk-white);
-    box-shadow: var(--hk-shadow-sm);
+    box-shadow: var(--hk-shadow-xs);
 }
 
 .hk-tasks-filter-grid {
@@ -1096,16 +1097,12 @@
     grid-template-columns: 1.3fr 0.9fr 1.1fr 1fr 1fr auto;
     gap: 0.85rem;
     align-items: end;
-    background: var(--hk-bg);
-    padding: 1.1rem;
+    background: var(--hk-surface-subtle);
+    border: 1px solid var(--hk-border);
+    padding: 1rem 1.1rem;
     border-radius: var(--hk-radius-md);
 }
 
-.hk-mobile-only {
-    display: none;
-}
-
-/* ---------- 5. Modern Room Task Cards Grid (Desktop 3-4, Tablet 2, Mobile 1) ---------- */
 .hk-list-meta-bar {
     display: flex;
     align-items: center;
@@ -1114,19 +1111,27 @@
     gap: 0.75rem;
     margin-bottom: 1.25rem;
     padding-bottom: 0.85rem;
-    border-bottom: 1px solid var(--hk-border);
+    border-bottom: 1px solid #F1F5F9;
+}
+
+.hk-list-count-text {
+    font-size: 0.92rem;
+    color: var(--hk-text-muted);
 }
 
 .hk-page-size-wrap {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
+    font-size: 0.88rem;
+    color: var(--hk-text-muted);
 }
 
 .hk-select-sm {
     width: auto;
     min-height: 36px;
-    padding: 0.35rem 0.75rem;
+    padding: 0.3rem 0.75rem;
+    font-size: 0.86rem;
 }
 
 .hk-task-cards-grid {
@@ -1139,23 +1144,22 @@
     background: var(--hk-white);
     border-radius: var(--hk-radius-md);
     border: 1px solid var(--hk-border);
-    border-top-width: 6px;
-    padding: 1.25rem;
+    border-top-width: 5px;
+    padding: 1.2rem;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    gap: 1rem;
+    gap: 0.95rem;
     box-shadow: var(--hk-shadow-sm);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .hk-modern-task-card:hover {
-    transform: translateY(-4px);
+    transform: translateY(-3px);
     box-shadow: var(--hk-shadow-md);
 }
 
-/* สีแถบสถานะบนการ์ด: Pending = ส้ม, In Progress = น้ำเงิน, Completed = เขียว, Maintenance = แดง */
-.hk-task-card-pending { border-top-color: var(--hk-warning); }
+.hk-task-card-pending { border-top-color: var(--hk-warning-accent); }
 .hk-task-card-inprogress { border-top-color: var(--hk-blue); }
 .hk-task-card-completed { border-top-color: var(--hk-success); }
 .hk-task-card-maintenance { border-top-color: var(--hk-danger); }
@@ -1168,18 +1172,17 @@
 }
 
 .hk-mtc-room-label {
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
+    font-size: 0.74rem;
+    font-weight: 600;
     color: var(--hk-text-muted);
     display: block;
 }
 
 .hk-mtc-room-number {
-    font-size: 1.85rem;
+    font-size: 1.75rem;
     font-weight: 700;
     color: var(--hk-navy);
-    line-height: 1.1;
+    line-height: 1.15;
     margin: 0.1rem 0 0.3rem;
 }
 
@@ -1189,7 +1192,7 @@
     color: var(--hk-navy);
     font-size: 0.78rem;
     font-weight: 600;
-    padding: 0.2rem 0.6rem;
+    padding: 0.18rem 0.6rem;
     border-radius: 6px;
 }
 
@@ -1204,10 +1207,11 @@
     display: flex;
     flex-direction: column;
     gap: 0.45rem;
-    padding: 0.75rem 0;
-    border-top: 1px dashed var(--hk-border);
-    border-bottom: 1px dashed var(--hk-border);
-    font-size: 0.9rem;
+    background: var(--hk-surface-subtle);
+    border: 1px solid #F1F5F9;
+    padding: 0.75rem 0.85rem;
+    border-radius: var(--hk-radius-sm);
+    font-size: 0.88rem;
 }
 
 .hk-mtc-info-row {
@@ -1223,11 +1227,11 @@
 .hk-mtc-value {
     color: var(--hk-navy);
     text-align: right;
-    font-weight: 500;
+    font-weight: 600;
 }
 
 .hk-mtc-note-box {
-    margin-top: 0.35rem;
+    margin-top: 0.3rem;
     background: #FFFBEB;
     border: 1px solid #FDE68A;
     color: #92400E;
@@ -1238,41 +1242,22 @@
 
 .hk-mtc-footer {
     display: flex;
-    gap: 0.55rem;
+    gap: 0.5rem;
     flex-wrap: wrap;
 }
 
-.hk-btn-flex {
-    flex: 1;
-}
-
-.hk-btn-block {
-    width: 100%;
-}
-
-.hk-btn-warning-solid {
-    background: var(--hk-warning);
-    color: #FFFFFF;
-}
-
-.hk-btn-warning-solid:hover {
-    background: #D97706;
-    color: #FFFFFF;
-}
-
-/* ---------- 8. Empty State ---------- */
 .hk-empty-modern {
     text-align: center;
-    padding: 3.5rem 1.5rem;
-    background: #F8FAFC;
+    padding: 3.25rem 1.5rem;
+    background: var(--hk-surface-subtle);
     border-radius: var(--hk-radius-lg);
-    border: 1px dashed #CBD5E1;
+    border: 1px dashed var(--hk-border-strong);
 }
 
 .hk-empty-icon-circle {
-    width: 84px;
-    height: 84px;
-    margin: 0 auto 1.15rem;
+    width: 76px;
+    height: 76px;
+    margin: 0 auto 1rem;
     border-radius: 50%;
     background: #E0E7FF;
     color: var(--hk-blue);
@@ -1282,27 +1267,26 @@
 }
 
 .hk-empty-title {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     font-weight: 700;
     color: var(--hk-navy);
     margin: 0 0 0.35rem;
 }
 
 .hk-empty-subtitle {
-    font-size: 0.98rem;
+    font-size: 0.92rem;
     color: var(--hk-text-muted);
     margin: 0;
 }
 
-/* ---------- 9. Pagination ---------- */
 .hk-pagination-bar {
     display: flex;
     align-items: center;
     justify-content: center;
     flex-wrap: wrap;
     gap: 0.5rem;
-    margin-top: 1.75rem;
-    padding-top: 1.25rem;
+    margin-top: 1.6rem;
+    padding-top: 1.2rem;
     border-top: 1px solid var(--hk-border);
 }
 
@@ -1313,14 +1297,19 @@
 }
 
 .hk-page-num-btn {
-    min-width: 38px;
-    height: 38px;
+    min-width: 36px;
+    height: 36px;
     border-radius: var(--hk-radius-sm);
     border: 1px solid var(--hk-border);
     background: var(--hk-white);
     color: var(--hk-navy);
     font-weight: 600;
     cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.hk-page-num-btn:hover {
+    background: #F1F5F9;
 }
 
 .hk-page-num-btn.is-active {
@@ -1329,87 +1318,17 @@
     color: var(--hk-white);
 }
 
-/* ---------- 12. Responsive Breakpoints ---------- */
-@media (max-width: 1399px) {
-    .hk-task-cards-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-    .hk-tasks-filter-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-@media (max-width: 991px) {
-    /* Tablet: 2 ใบต่อแถว */
-    .hk-task-cards-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    .hk-tasks-filter-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 767px) {
-    /* Mobile: 1 ใบต่อแถว + Filter พับเก็บได้ + ปุ่มขนาดใหญ่ */
-    .hk-task-cards-grid {
-        grid-template-columns: 1fr;
-    }
-    .hk-tasks-filter-grid {
-        grid-template-columns: 1fr;
-    }
-    .hk-tasks-filter-grid.is-collapsed-mobile {
-        display: none;
-    }
-    .hk-mobile-only {
-        display: inline-flex;
-    }
-    .hk-mtc-footer .hk-btn {
-        width: 100%;
-        min-height: 46px;
-        font-size: 1rem;
-    }
-}
 /* =====================================================================
- * ROOM STATUS MANAGEMENT ADDITIONS (ต่อท้ายไฟล์ wwwroot/css/Housekeeping.css)
- * Color Palette: Available=Green, Occupied=Blue, Pending=Orange, InProgress=Purple, Maintenance=Red
- * ===================================================================== */
+   ROOM STATUS MANAGEMENT PAGE STYLES
+   ===================================================================== */
 
-:root {
-    --hk-purple: #7C3AED;
-    --hk-purple-bg: #EDE9FE;
-}
-
-/* ---------- 3. 5 Summary Cards Grid ---------- */
-.hk-status-summary-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 1.1rem;
-    margin-bottom: 1.5rem;
-}
-
-.hk-summary-available { border-left-color: var(--hk-success); }
-.hk-summary-occupied { border-left-color: var(--hk-blue); }
-.hk-summary-pending { border-left-color: var(--hk-warning); }
-.hk-summary-inprogress { border-left-color: var(--hk-purple); }
-.hk-summary-maintenance { border-left-color: var(--hk-danger); }
-
-.hk-icon-purple {
-    background: var(--hk-purple-bg);
-    color: var(--hk-purple);
-}
-
-.hk-icon-danger {
-    background: var(--hk-danger-bg);
-    color: var(--hk-danger);
-}
-
-/* ---------- 4. Legend & Filter Grid ---------- */
 .hk-legend-pills {
     display: flex;
     flex-wrap: wrap;
     gap: 0.85rem;
-    font-size: 0.85rem;
+    font-size: 0.84rem;
     font-weight: 500;
+    color: var(--hk-text-muted);
 }
 
 .hk-legend-item {
@@ -1418,27 +1337,21 @@
     gap: 0.4rem;
 }
 
-.hk-dot-available { background: var(--hk-success); }
-.hk-dot-occupied { background: var(--hk-blue); }
-.hk-dot-pending { background: var(--hk-warning); }
-.hk-dot-purple { background: var(--hk-purple); }
-.hk-dot-maintenance { background: var(--hk-danger); }
-
 .hk-room-filter-grid {
     display: grid;
     grid-template-columns: 1.3fr 0.9fr 1fr 1.1fr 1.1fr auto;
     gap: 0.85rem;
     align-items: end;
-    background: var(--hk-bg);
-    padding: 1.1rem;
+    background: var(--hk-surface-subtle);
+    border: 1px solid var(--hk-border);
+    padding: 1rem 1.1rem;
     border-radius: var(--hk-radius-md);
 }
 
-/* ---------- 5. Floor Section & Room Cards (4 per row on Desktop) ---------- */
 .hk-floor-section {
     background: var(--hk-white);
     border-radius: var(--hk-radius-lg);
-    padding: 1.5rem;
+    padding: 1.45rem 1.5rem;
     margin-bottom: 1.5rem;
     border: 1px solid var(--hk-border);
     box-shadow: var(--hk-shadow-sm);
@@ -1448,9 +1361,9 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding-bottom: 1rem;
-    margin-bottom: 1.25rem;
-    border-bottom: 2px solid var(--hk-bg);
+    padding-bottom: 0.95rem;
+    margin-bottom: 1.2rem;
+    border-bottom: 1px solid var(--hk-border);
 }
 
 .hk-floor-badge-title {
@@ -1463,20 +1376,20 @@
     background: var(--hk-navy);
     color: var(--hk-cyan);
     font-weight: 700;
-    font-size: 0.85rem;
-    padding: 0.35rem 0.75rem;
+    font-size: 0.84rem;
+    padding: 0.3rem 0.75rem;
     border-radius: 8px;
 }
 
 .hk-floor-heading {
-    font-size: 1.2rem;
+    font-size: 1.15rem;
     font-weight: 700;
     color: var(--hk-navy);
     margin: 0;
 }
 
 .hk-floor-count-text {
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     color: var(--hk-text-muted);
     font-weight: 500;
 }
@@ -1491,42 +1404,26 @@
     background: var(--hk-white);
     border-radius: var(--hk-radius-md);
     border: 1px solid var(--hk-border);
-    border-top-width: 6px;
+    border-top-width: 5px;
     padding: 1.2rem;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    gap: 1rem;
+    gap: 0.95rem;
     box-shadow: var(--hk-shadow-sm);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .hk-rs-room-card:hover {
-    transform: translateY(-4px);
+    transform: translateY(-3px);
     box-shadow: var(--hk-shadow-md);
 }
 
-/* 5 สีสถานะห้องพักตามโจทย์ */
 .hk-rs-card-available { border-top-color: var(--hk-success); }
 .hk-rs-card-occupied { border-top-color: var(--hk-blue); }
-.hk-rs-card-pending { border-top-color: var(--hk-warning); }
+.hk-rs-card-pending { border-top-color: var(--hk-warning-accent); }
 .hk-rs-card-inprogress { border-top-color: var(--hk-purple); }
 .hk-rs-card-maintenance { border-top-color: var(--hk-danger); }
-
-.hk-rs-status-pill {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.3rem 0.7rem;
-    border-radius: 999px;
-    font-size: 0.78rem;
-    font-weight: 600;
-}
-
-.hk-rs-badge-available { background: var(--hk-success-bg); color: var(--hk-success); }
-.hk-rs-badge-occupied { background: var(--hk-info-bg); color: var(--hk-blue); }
-.hk-rs-badge-pending { background: var(--hk-warning-bg); color: #B45309; }
-.hk-rs-badge-inprogress { background: var(--hk-purple-bg); color: var(--hk-purple); }
-.hk-rs-badge-maintenance { background: var(--hk-danger-bg); color: var(--hk-danger); }
 
 .hk-rs-card-top {
     display: flex;
@@ -1543,16 +1440,16 @@
 }
 
 .hk-rs-room-no {
-    font-size: 1.85rem;
+    font-size: 1.65rem;
     font-weight: 700;
     color: var(--hk-navy);
     margin: 0.1rem 0 0;
-    line-height: 1.1;
+    line-height: 1.15;
 }
 
 .hk-rs-status-split {
-    background: #F8FAFC;
-    border: 1px solid var(--hk-border);
+    background: var(--hk-surface-subtle);
+    border: 1px solid #F1F5F9;
     border-radius: var(--hk-radius-sm);
     padding: 0.65rem 0.8rem;
     display: flex;
@@ -1563,24 +1460,26 @@
 
 .hk-rs-split-item {
     display: flex;
-    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
     font-size: 0.82rem;
 }
 
 .hk-rs-split-label {
     color: var(--hk-text-muted);
-    font-size: 0.75rem;
 }
 
 .hk-rs-split-val {
     color: var(--hk-navy);
+    text-align: right;
 }
 
 .hk-rs-meta-list {
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
-    font-size: 0.84rem;
+    font-size: 0.82rem;
     color: var(--hk-text-muted);
 }
 
@@ -1590,20 +1489,16 @@
     gap: 0.5rem;
 }
 
-/* ---------- 7 & 8. Update Status Modal & Checklist ---------- */
-.hk-rs-modal-dialog {
-    width: min(620px, 100%);
-}
-
 .hk-rs-current-status-box {
-    background: var(--hk-bg);
+    background: var(--hk-surface-subtle);
+    border: 1px solid var(--hk-border);
     border-radius: var(--hk-radius-sm);
-    padding: 0.9rem 1.1rem;
+    padding: 0.85rem 1rem;
     margin: 1rem 0;
     display: flex;
     flex-direction: column;
     gap: 0.4rem;
-    font-size: 0.92rem;
+    font-size: 0.9rem;
 }
 
 .hk-rs-cs-row {
@@ -1615,18 +1510,22 @@
 .hk-rs-action-radios {
     display: flex;
     flex-direction: column;
-    gap: 0.7rem;
+    gap: 0.65rem;
 }
 
 .hk-rs-radio-card {
     display: flex;
     align-items: flex-start;
     gap: 0.85rem;
-    padding: 0.95rem 1.1rem;
-    border: 2px solid var(--hk-border);
+    padding: 0.9rem 1.05rem;
+    border: 1.5px solid var(--hk-border);
     border-radius: var(--hk-radius-md);
     cursor: pointer;
-    transition: all 0.18s ease;
+    transition: all 0.16s ease;
+}
+
+.hk-rs-radio-card:hover {
+    border-color: #94A3B8;
 }
 
 .hk-rs-radio-card.is-selected {
@@ -1636,23 +1535,23 @@
 
 .hk-rs-radio-card input[type="radio"] {
     margin-top: 0.3rem;
-    transform: scale(1.25);
+    transform: scale(1.2);
 }
 
 .hk-rs-radio-content {
     display: flex;
     flex-direction: column;
-    gap: 0.2rem;
+    gap: 0.15rem;
 }
 
 .hk-rs-radio-title {
     color: var(--hk-navy);
-    font-size: 0.96rem;
+    font-size: 0.94rem;
 }
 
 .hk-rs-radio-desc {
     color: var(--hk-text-muted);
-    font-size: 0.84rem;
+    font-size: 0.82rem;
 }
 
 .hk-rs-checklist-box {
@@ -1664,7 +1563,7 @@
 }
 
 .hk-rs-checklist-title {
-    font-size: 1rem;
+    font-size: 0.98rem;
     font-weight: 700;
     color: #14532D;
     margin: 0 0 0.2rem;
@@ -1681,78 +1580,34 @@
     align-items: flex-start;
     gap: 0.65rem;
     padding: 0.45rem 0;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     color: var(--hk-navy);
     cursor: pointer;
 }
 
 .hk-check-item input[type="checkbox"] {
     margin-top: 0.25rem;
-    transform: scale(1.25);
+    transform: scale(1.2);
 }
 
-/* ---------- 11. Responsive Design ---------- */
-@media (max-width: 1399px) {
-    .hk-status-summary-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-    .hk-rs-cards-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-    .hk-room-filter-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-@media (max-width: 991px) {
-    /* Tablet: 2 ใบต่อแถว */
-    .hk-status-summary-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    .hk-rs-cards-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    .hk-room-filter-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 767px) {
-    /* Mobile: 1 ใบต่อแถว + Filter พับเก็บได้ */
-    .hk-status-summary-grid {
-        grid-template-columns: 1fr;
-    }
-    .hk-rs-cards-grid {
-        grid-template-columns: 1fr;
-    }
-    .hk-room-filter-grid {
-        grid-template-columns: 1fr;
-    }
-    .hk-room-filter-grid.is-collapsed-mobile {
-        display: none;
-    }
-}
 /* =====================================================================
- * CLEANING HISTORY MANAGEMENT ADDITIONS (ต่อท้ายไฟล์ wwwroot/css/Housekeeping.css)
- * ===================================================================== */
-
-.hk-kpi-danger {
-    border-left-color: var(--hk-danger);
-}
+   CLEANING HISTORY PAGE STYLES
+   ===================================================================== */
 
 .hk-export-btn-group {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.6rem;
+    gap: 0.55rem;
 }
 
 .hk-history-filter-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 0.9rem;
+    gap: 0.85rem;
     align-items: end;
-    background: var(--hk-bg);
-    padding: 1.15rem;
+    background: var(--hk-surface-subtle);
+    border: 1px solid var(--hk-border);
+    padding: 1.1rem;
     border-radius: var(--hk-radius-md);
 }
 
@@ -1760,51 +1615,8 @@
     grid-column: span 4;
     display: flex;
     justify-content: flex-end;
-    gap: 0.65rem;
+    gap: 0.6rem;
     padding-top: 0.35rem;
-}
-
-/* ---------- 7 & 8. Performance Analytics & Timeline Grid ---------- */
-.hk-history-analytics-grid {
-    display: grid;
-    grid-template-columns: 1.55fr 1fr;
-    gap: 1.5rem;
-    margin-bottom: 1.5rem;
-    align-items: start;
-}
-
-.hk-perf-metrics-row {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0.85rem;
-    margin-bottom: 1.15rem;
-}
-
-.hk-perf-mini-card {
-    background: var(--hk-bg);
-    border: 1px solid var(--hk-border);
-    border-radius: var(--hk-radius-sm);
-    padding: 0.85rem 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.hk-perf-mini-label {
-    font-size: 0.8rem;
-    color: var(--hk-text-muted);
-}
-
-.hk-perf-mini-val {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: var(--hk-navy);
-}
-
-.hk-scrollable-timeline {
-    max-height: 360px;
-    overflow-y: auto;
-    padding-right: 0.4rem;
 }
 
 .hk-duration-chip {
@@ -1812,14 +1624,9 @@
     background: #F1F5F9;
     color: var(--hk-navy);
     font-weight: 600;
-    font-size: 0.84rem;
-    padding: 0.25rem 0.65rem;
+    font-size: 0.82rem;
+    padding: 0.22rem 0.6rem;
     border-radius: 6px;
-}
-
-/* ---------- 6. History Details Modal ---------- */
-.hk-hist-modal-dialog {
-    width: min(650px, 100%);
 }
 
 .hk-hist-checklist-summary {
@@ -1837,40 +1644,289 @@
 }
 
 .hk-hist-modal-timeline {
-    background: var(--hk-bg);
+    background: var(--hk-surface-subtle);
     border-radius: var(--hk-radius-md);
     padding: 1rem 1.15rem;
 }
 
-/* ---------- 13. Responsive & Print Report Styles ---------- */
-@media (max-width: 1199px) {
-    .hk-history-analytics-grid {
-        grid-template-columns: 1fr;
+/* =====================================================================
+   TASK DETAILS FULL-PAGE STYLES
+   ===================================================================== */
+
+.hk-stepper-card {
+    padding: 1.35rem 1.75rem;
+}
+
+.hk-workflow-stepper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.hk-step-item {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    flex-shrink: 0;
+}
+
+.hk-step-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #F1F5F9;
+    color: var(--hk-text-muted);
+    border: 2px solid var(--hk-border-strong);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    transition: all 0.25s ease;
+}
+
+.hk-step-item.is-done .hk-step-circle {
+    background: var(--hk-success-bg);
+    color: var(--hk-success);
+    border-color: var(--hk-success);
+}
+
+.hk-step-item.is-current .hk-step-circle {
+    background: var(--hk-info-bg);
+    color: var(--hk-blue);
+    border-color: var(--hk-blue);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14);
+}
+
+.hk-step-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.hk-step-text strong {
+    font-size: 0.9rem;
+    color: var(--hk-navy);
+}
+
+.hk-step-text span {
+    font-size: 0.78rem;
+    color: var(--hk-text-muted);
+}
+
+.hk-step-line {
+    flex: 1;
+    height: 3px;
+    background: #E2E8F0;
+    border-radius: 999px;
+}
+
+.hk-step-line.is-done {
+    background: var(--hk-success);
+}
+
+.hk-td-main-grid {
+    display: grid;
+    grid-template-columns: 1.55fr 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.hk-td-spec-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.9rem;
+}
+
+.hk-td-spec-box {
+    background: var(--hk-surface-subtle);
+    border: 1px solid var(--hk-border);
+    border-radius: var(--hk-radius-sm);
+    padding: 0.85rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.hk-td-spec-label {
+    font-size: 0.78rem;
+    color: var(--hk-text-muted);
+    font-weight: 500;
+}
+
+.hk-td-spec-val {
+    font-size: 0.94rem;
+    color: var(--hk-navy);
+}
+
+.hk-td-note-banner {
+    background: #FFFBEB;
+    border: 1px solid #FDE68A;
+    border-radius: var(--hk-radius-md);
+    padding: 1rem 1.15rem;
+    color: #92400E;
+}
+
+.hk-td-note-title {
+    font-weight: 700;
+    font-size: 0.88rem;
+    margin-bottom: 0.25rem;
+}
+
+.hk-td-note-body {
+    font-size: 0.9rem;
+}
+
+.hk-td-maint-box {
+    background: #FEF2F2;
+    border: 1px solid #FCA5A5;
+    border-radius: var(--hk-radius-md);
+    padding: 1rem 1.15rem;
+}
+
+.hk-td-maint-heading {
+    font-size: 0.96rem;
+    font-weight: 700;
+    color: var(--hk-danger);
+    margin: 0 0 0.25rem;
+}
+
+/* =====================================================================
+   RESPONSIVE & PRINT STYLES
+   ===================================================================== */
+
+@media (max-width: 1399px) {
+    .hk-task-cards-grid,
+    .hk-rs-cards-grid {
+        grid-template-columns: repeat(3, 1fr);
     }
-    .hk-perf-metrics-row {
+    .hk-tasks-filter-grid,
+    .hk-room-filter-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 1199px) {
+    .hk-kpi-grid,
+    .hk-history-page .hk-kpi-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-    .hk-history-filter-grid {
+    .hk-main-grid,
+    .hk-td-main-grid {
+        grid-template-columns: 1fr;
+    }
+    .hk-filter-bar,
+    .hk-history-filter-grid,
+    .hk-td-spec-grid {
         grid-template-columns: repeat(2, 1fr);
     }
     .hk-history-filter-actions {
         grid-column: span 2;
     }
+    .hk-workflow-stepper {
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 991px) {
+    .hk-task-cards-grid,
+    .hk-rs-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .hk-tasks-filter-grid,
+    .hk-room-filter-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 @media (max-width: 767px) {
-    .hk-perf-metrics-row {
-        grid-template-columns: 1fr;
+    .hk-dashboard-wrapper {
+        padding: 1rem;
     }
-    .hk-history-filter-grid {
+    .hk-welcome-banner,
+    .hk-page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1.3rem;
+    }
+    .hk-task-cards-grid,
+    .hk-rs-cards-grid,
+    .hk-filter-bar,
+    .hk-tasks-filter-grid,
+    .hk-room-filter-grid,
+    .hk-history-filter-grid,
+    .hk-td-spec-grid {
         grid-template-columns: 1fr;
     }
     .hk-history-filter-actions {
         grid-column: span 1;
         flex-direction: column;
     }
+    .hk-tasks-filter-grid.is-collapsed-mobile,
+    .hk-room-filter-grid.is-collapsed-mobile,
     .hk-history-filter-grid.is-collapsed-mobile {
         display: none;
+    }
+    .hk-mobile-only {
+        display: inline-flex;
+    }
+    .hk-mtc-footer .hk-btn {
+        width: 100%;
+        min-height: 46px;
+        font-size: 0.98rem;
+    }
+    .hk-step-line {
+        display: none;
+    }
+    .hk-workflow-stepper {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.95rem;
+    }
+    .hk-table-responsive {
+        border: none;
+    }
+    .hk-table thead {
+        display: none;
+    }
+    .hk-table,
+    .hk-table tbody,
+    .hk-table tr,
+    .hk-table td {
+        display: block;
+        width: 100%;
+    }
+    .hk-table tbody tr {
+        background: var(--hk-white);
+        border: 1px solid var(--hk-border);
+        border-radius: var(--hk-radius-md);
+        margin-bottom: 0.9rem;
+        padding: 0.75rem 0.9rem;
+        box-shadow: var(--hk-shadow-sm);
+    }
+    .hk-table tbody td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0.25rem;
+        border-bottom: 1px solid #F1F5F9;
+        text-align: right;
+    }
+    .hk-table tbody td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: var(--hk-text-muted);
+        text-align: left;
+    }
+    .hk-table tbody td:last-child {
+        border-bottom: 0;
+        padding-top: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .hk-kpi-grid,
+    .hk-history-page .hk-kpi-grid {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -1891,182 +1947,9 @@
         border: 1px solid #CBD5E1 !important;
     }
 }
-/* =====================================================================
- * TASK DETAILS FULL-PAGE ADDITIONS (ต่อท้ายไฟล์ wwwroot/css/Housekeeping.css)
- * ===================================================================== */
-
-/* ---------- 4-Step Workflow Stepper ---------- */
-.hk-stepper-card {
-    padding: 1.35rem 1.75rem;
-}
-
-.hk-workflow-stepper {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-}
-
-.hk-step-item {
-    display: flex;
-    align-items: center;
-    gap: 0.85rem;
-    flex-shrink: 0;
-}
-
-.hk-step-circle {
-    width: 46px;
-    height: 46px;
-    border-radius: 50%;
-    background: #F1F5F9;
-    color: #64748B;
-    border: 2px solid #CBD5E1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.1rem;
-    transition: all 0.25s ease;
-}
-
-.hk-step-item.is-done .hk-step-circle {
-    background: var(--hk-success-bg);
-    color: var(--hk-success);
-    border-color: var(--hk-success);
-}
-
-.hk-step-item.is-current .hk-step-circle {
-    background: var(--hk-info-bg);
-    color: var(--hk-blue);
-    border-color: var(--hk-blue);
-    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
-}
-
-.hk-step-text {
-    display: flex;
-    flex-direction: column;
-}
-
-.hk-step-text strong {
-    font-size: 0.92rem;
-    color: var(--hk-navy);
-}
-
-.hk-step-text span {
-    font-size: 0.8rem;
-    color: var(--hk-text-muted);
-}
-
-.hk-step-line {
-    flex: 1;
-    height: 3px;
-    background: #E2E8F0;
-    border-radius: 999px;
-}
-
-.hk-step-line.is-done {
-    background: var(--hk-success);
-}
-
-/* ---------- Main Grid & Spec Cards ---------- */
-.hk-td-main-grid {
-    display: grid;
-    grid-template-columns: 1.55fr 1fr;
-    gap: 1.5rem;
-    align-items: start;
-}
-
-.hk-td-spec-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.95rem;
-}
-
-.hk-td-spec-box {
-    background: var(--hk-bg);
-    border: 1px solid var(--hk-border);
-    border-radius: var(--hk-radius-sm);
-    padding: 0.85rem 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.hk-td-spec-label {
-    font-size: 0.78rem;
-    color: var(--hk-text-muted);
-    font-weight: 500;
-}
-
-.hk-td-spec-val {
-    font-size: 0.96rem;
-    color: var(--hk-navy);
-}
-
-.hk-td-note-banner {
-    background: #FFFBEB;
-    border: 1px solid #FDE68A;
-    border-radius: var(--hk-radius-md);
-    padding: 1rem 1.2rem;
-    color: #92400E;
-}
-
-.hk-td-note-title {
-    font-weight: 700;
-    font-size: 0.9rem;
-    margin-bottom: 0.3rem;
-}
-
-.hk-td-note-body {
-    font-size: 0.92rem;
-}
-
-.hk-td-maint-box {
-    background: #FEF2F2;
-    border: 1px solid #FCA5A5;
-    border-radius: var(--hk-radius-md);
-    padding: 1rem 1.15rem;
-}
-
-.hk-td-maint-heading {
-    font-size: 0.98rem;
-    font-weight: 700;
-    color: var(--hk-danger);
-    margin: 0 0 0.25rem;
-}
-
-/* ---------- Responsive ---------- */
-@media (max-width: 1199px) {
-    .hk-td-main-grid {
-        grid-template-columns: 1fr;
-    }
-    .hk-td-spec-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    .hk-workflow-stepper {
-        flex-wrap: wrap;
-    }
-}
-
-@media (max-width: 767px) {
-    .hk-td-spec-grid {
-        grid-template-columns: 1fr;
-    }
-    .hk-step-line {
-        display: none;
-    }
-    .hk-workflow-stepper {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-    }
-}
 
 /* ==========================================================================
    HOUSEKEEPING PROFILE PAGE STYLES (Views/Housekeeping/Profile.cshtml)
-   ต่อท้ายไฟล์ wwwroot/css/Housekeeping.css
-   - ใช้ prefix hk-pf- ทั้งหมด ไม่ชนกับ class เดิม
-   - สีทั้งหมดอ่านจากตัวแปร --hk-pf-* ที่ผูกกับตัวแปรเดิมของโปรเจกต์ (ถ้ามี)
-     ถ้าไม่มีจะใช้ค่า fallback ด้านขวา ปรับสีได้ที่บล็อก .hk-pf-page ที่เดียว
    ========================================================================== */
 
 .hk-pf-page {
@@ -2096,7 +1979,6 @@
     to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Alerts */
 .hk-pf-alert {
     display: flex;
     align-items: center;
@@ -2120,7 +2002,6 @@
     border-color: rgba(220, 38, 38, 0.25);
 }
 
-/* Hero */
 .hk-pf-hero {
     position: relative;
     overflow: hidden;
@@ -2254,7 +2135,6 @@
     opacity: 0.6;
 }
 
-/* Quick stats */
 .hk-pf-stats {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2305,7 +2185,6 @@
     color: var(--hk-pf-muted);
 }
 
-/* Layout */
 .hk-pf-grid {
     display: grid;
     grid-template-columns: 1.35fr 1fr;
@@ -2319,7 +2198,6 @@
     gap: 1.25rem;
 }
 
-/* Panel */
 .hk-pf-panel {
     background: var(--hk-pf-white);
     border: 1px solid var(--hk-pf-border);
@@ -2379,7 +2257,6 @@
     color: var(--hk-pf-blue);
 }
 
-/* Form */
 .hk-pf-form-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -2517,7 +2394,6 @@
     margin-top: 0.15rem;
 }
 
-/* Buttons */
 .hk-pf-btn {
     display: inline-flex;
     align-items: center;
@@ -2593,7 +2469,6 @@
     color: var(--hk-pf-white);
 }
 
-/* Account info list */
 .hk-pf-info-list {
     display: flex;
     flex-direction: column;
@@ -2656,7 +2531,6 @@
     color: #B91C1C;
 }
 
-/* Logout card */
 .hk-pf-logout-card {
     display: flex;
     align-items: center;
@@ -2679,7 +2553,6 @@
     color: var(--hk-pf-blue);
 }
 
-/* Password modal */
 .hk-pf-modal-overlay {
     position: fixed;
     inset: 0;
@@ -2768,7 +2641,6 @@
     padding: 1rem 1.4rem 1.3rem 1.4rem;
 }
 
-/* Responsive */
 @media (max-width: 1199.98px) {
     .hk-pf-grid {
         grid-template-columns: 1fr;
@@ -2829,4 +2701,83 @@
     .hk-pf-info-item strong {
         text-align: left;
     }
+}
+/* =====================================================================
+   แก้ปัญหากรอบล้นจอ (Overflow Fix) — นำไปวางท้ายไฟล์ Housekeeping.css
+   ===================================================================== */
+
+.hk-dashboard-wrapper,
+.hk-dashboard-wrapper *,
+.hk-dashboard-wrapper *::before,
+.hk-dashboard-wrapper *::after {
+    box-sizing: border-box;
+}
+
+.hk-dashboard-wrapper {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+}
+
+.hk-section-card,
+.hk-floor-section,
+.hk-welcome-banner,
+.hk-page-header {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+/* 1. ปรับ Grid การ์ดงานและห้องพักให้ยืดหยุ่นตามพื้นที่ที่เหลือจริง (ไม่ล้น Sidebar) */
+.hk-task-cards-grid,
+.hk-rs-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(295px, 1fr));
+    gap: 1.15rem;
+    width: 100%;
+}
+
+/* 2. ปรับ Grid การ์ด KPI ด้านบนให้ยืดหยุ่นไม่ดันจอ */
+.hk-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 1.1rem;
+    width: 100%;
+}
+
+.hk-history-page .hk-kpi-grid {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+/* 3. ป้องกันเนื้อหาภายในการ์ดดันความกว้างเกินกรอบ */
+.hk-modern-task-card,
+.hk-rs-room-card,
+.hk-kpi-card {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.hk-mtc-header,
+.hk-rs-card-top {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.hk-mtc-badges {
+    align-items: flex-start;
+    max-width: 100%;
+}
+
+/* อนุญาตให้ข้อความในป้ายสถานะตัดบรรทัดได้หากจอแคบมาก */
+.hk-status-badge,
+.hk-rs-status-pill {
+    white-space: normal;
+    line-height: 1.3;
+}
+
+/* 4. ปรับ Filter Grid ให้ยืดหยุ่นตามพื้นที่จริง */
+.hk-tasks-filter-grid,
+.hk-room-filter-grid {
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
 }
