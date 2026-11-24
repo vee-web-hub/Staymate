@@ -1,18 +1,18 @@
 @model StayMate_Kavinvee_0576.Models.ViewModels.ManagerPromotionManagementViewModel
 @using System.Text.Json
 @{
-    ViewData["Title"] = "จัดการโปรโมชั่น";
+    ViewData["Title"] = "จัดการโปรโมชั่นและปฏิทินเทศกาล";
     Layout = "~/Views/Shared/_ManagerLayout.cshtml";
 }
 
 <div class="manager-portal-wrapper manager-promo-page">
 
-    <!-- Anti-Forgery Token หลักสำหรับปุ่ม AJAX -->
+    <!-- Anti-Forgery Token สำหรับคำสั่งปุ่ม AJAX -->
     <form id="managerPromoGlobalTokenForm" class="d-none">
         @Html.AntiForgeryToken()
     </form>
 
-    <!-- ═══════════════════════ Alerts (TempData & Validation) ═══════════════════════ -->
+    <!-- ═══════════════════════ การแจ้งเตือนสถานะ ═══════════════════════ -->
     @if (TempData["SuccessMessage"] != null)
     {
         <div class="manager-alert manager-alert-success" role="alert">
@@ -39,20 +39,20 @@
         </div>
     }
 
-    <!-- ═══════════════════════ Page Header ═══════════════════════ -->
+    <!-- ═══════════════════════ ส่วนหัวของหน้าจอ ═══════════════════════ -->
     <section class="manager-promo-header">
         <div class="manager-promo-header-top">
             <div class="manager-promo-title-wrap">
                 <nav class="manager-promo-breadcrumb" aria-label="Breadcrumb">
                     <a asp-controller="Manager" asp-action="Index" class="manager-promo-breadcrumb-link">
-                        <i class="fa-solid fa-chart-pie"></i> Manager
+                        <i class="fa-solid fa-chart-pie"></i> ภาพรวมระบบ
                     </a>
                     <span class="manager-promo-breadcrumb-sep">/</span>
-                    <span class="manager-promo-breadcrumb-current">Promotion Management</span>
+                    <span class="manager-promo-breadcrumb-current">จัดการโปรโมชั่นและวันหยุด</span>
                 </nav>
-                <h1 class="manager-promo-title">Promotion Management</h1>
+                <h1 class="manager-promo-title">จัดการโปรโมชั่นและวันหยุด</h1>
                 <p class="manager-promo-desc">
-                    Manage hotel promotions and holiday periods — บริหารจัดการแคมเปญส่งเสริมการขายและปฏิทินเทศกาล
+                    บริหารจัดการแคมเปญส่งเสริมการขาย มอบส่วนลดพิเศษ และกำหนดปฏิทินเทศกาลประจำปีของโรงแรม
                 </p>
             </div>
 
@@ -67,22 +67,22 @@
                             data-manager-fill="#savePromotionModalForm"
                             data-manager-fill-data='{"PromotionId":"","PromoCode":"","PromoName":"","Description":"","DiscountType":"percent_room","DiscountPercent":10,"DiscountPercentMax":20,"MinGuests":"","MinNights":"","MaxDiscountNights":"","ApplicableRoomTypeId":"","RequiresHoliday":false,"VoucherMinValue":"","VoucherMaxValue":"","IsActive":true,"ValidFrom":"","ValidTo":""}'>
                         <i class="fa-solid fa-plus-circle"></i>
-                        <span>สร้างแคมเปญโปรโมชั่น</span>
+                        <span>สร้างแคมเปญโปรโมชั่นใหม่</span>
                     </button>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- ═══════════════════════ SECTION 1: PROMOTION OVERVIEW (Summary Cards) ═══════════════════════ -->
+    <!-- ═══════════════════════ ส่วนที่ 1: สรุปผลการดำเนินงานแคมเปญ ═══════════════════════ -->
     <section class="manager-promo-section">
         <div class="manager-promo-section-head">
             <div>
                 <h2 class="manager-promo-section-title">
                     <i class="fa-solid fa-chart-line text-primary"></i>
-                    1. Promotion Overview (สรุปผลการดำเนินงานแคมเปญ)
+                    1. สรุปผลการดำเนินงานแคมเปญ (Promotion Overview)
                 </h2>
-                <p class="manager-promo-section-subtitle">สถิติปริมาณโปรโมชั่นสะสมแยกตามสถานะที่คำนวณจากระบบ</p>
+                <p class="manager-promo-section-subtitle">สถิติจำนวนแคมเปญโปรโมชั่นส่งเสริมการขายในระบบจำแนกตามสถานะปัจจุบัน</p>
             </div>
         </div>
 
@@ -92,9 +92,9 @@
                     <i class="fa-solid fa-circle-check"></i>
                 </div>
                 <div class="manager-promo-card-data">
-                    <span class="manager-promo-card-label">Active Promotions</span>
+                    <span class="manager-promo-card-label">เปิดใช้งานอยู่</span>
                     <strong class="manager-promo-card-val">@Model.ActiveCount</strong>
-                    <span class="manager-promo-card-sub">เปิดใช้งานจริงวันนี้</span>
+                    <span class="manager-promo-card-sub">แคมเปญที่ลูกค้าสามารถใช้สิทธิ์จองได้วันนี้</span>
                 </div>
             </article>
 
@@ -103,9 +103,9 @@
                     <i class="fa-solid fa-clock"></i>
                 </div>
                 <div class="manager-promo-card-data">
-                    <span class="manager-promo-card-label">Scheduled Promotions</span>
+                    <span class="manager-promo-card-label">เตรียมเปิดตัว</span>
                     <strong class="manager-promo-card-val">@Model.ScheduledCount</strong>
-                    <span class="manager-promo-card-sub">แคมเปญที่วางแผนไว้ล่วงหน้า</span>
+                    <span class="manager-promo-card-sub">แคมเปญที่วางกำหนดการเตรียมเปิดตัวล่วงหน้า</span>
                 </div>
             </article>
 
@@ -114,9 +114,9 @@
                     <i class="fa-solid fa-calendar-xmark"></i>
                 </div>
                 <div class="manager-promo-card-data">
-                    <span class="manager-promo-card-label">Expired Promotions</span>
+                    <span class="manager-promo-card-label">สิ้นสุดแคมเปญ</span>
                     <strong class="manager-promo-card-val">@Model.ExpiredCount</strong>
-                    <span class="manager-promo-card-sub">หมดอายุการร่วมรายการ</span>
+                    <span class="manager-promo-card-sub">แคมเปญที่ครบกำหนดเวลาจองในระบบแล้ว</span>
                 </div>
             </article>
 
@@ -125,24 +125,24 @@
                     <i class="fa-solid fa-ban"></i>
                 </div>
                 <div class="manager-promo-card-data">
-                    <span class="manager-promo-card-label">Disabled Promotions</span>
+                    <span class="manager-promo-card-label">ปิดระบบชั่วคราว</span>
                     <strong class="manager-promo-card-val">@Model.InactiveCount</strong>
-                    <span class="manager-promo-card-sub">โปรโมชั่นที่สั่งปิดระบบไว้</span>
+                    <span class="manager-promo-card-sub">แคมเปญที่ผู้จัดการสั่งระงับการเปิดจอง</span>
                 </div>
             </article>
         </div>
     </section>
 
-    <!-- ═══════════════════════ SECTION 2: PROMOTION TYPES (5 Preset Templates) ═══════════════════════ -->
+    <!-- ═══════════════════════ ส่วนที่ 2: แคมเปญโปรโมชั่นหลัก 5 ประเภท ═══════════════════════ -->
     <section class="manager-promo-section">
         <div class="manager-promo-section-head">
             <div>
                 <h2 class="manager-promo-section-title">
                     <i class="fa-solid fa-gift text-primary"></i>
-                    2. Predefined Promotion Campaigns (โปรโมชั่นและแคมเปญหลัก 5 ประเภท)
+                    2. แคมเปญโปรโมชั่นหลัก 5 ประเภทมาตรฐาน
                 </h2>
                 <p class="manager-promo-section-subtitle">
-                    แคมเปญมาตรฐานของโรงแรม StayMate ที่ผู้บริหารสามารถปรับแต่งเงื่อนไขได้อย่างสะดวกรวดเร็ว
+                    ต้นแบบเงื่อนไขโปรโมชั่นของทางโรงแรมที่ช่วยอำนวยความสะดวกในการเปิดใช้สิทธิ์โปรโมชั่นใหม่ได้อย่างรวดเร็ว
                 </p>
             </div>
         </div>
@@ -152,19 +152,19 @@
             <article class="manager-promo-card">
                 <div class="manager-promo-card-top">
                     <span class="manager-code-badge">3_PAY_2</span>
-                    <span class="manager-badge manager-badge-cyan">percent_extra_nights</span>
+                    <span class="manager-badge manager-badge-cyan">ลดราคาคืนพิเศษ</span>
                 </div>
                 <h3 class="manager-promo-title">1. แคมเปญ 3 Pay 2</h3>
-                <p class="manager-promo-desc">เข้าพักครบ 3 คืน สิทธิ์รับส่วนลดคืนพิเศษทันที (พัก 3 จ่าย 2) เหมาะสำหรับช่วง Low-Season</p>
+                <p class="manager-promo-desc">จองห้องพักประเภท Deluxe สำหรับ 3 ท่าน พักต่อเนื่องครบ 3 คืน รับส่วนลดมูลค่าเท่าค่าห้อง 1 คืนฟรีทันที</p>
                 <div class="manager-promo-meta-box">
-                    <span><i class="fa-solid fa-moon"></i> คืนพักขั้นต่ำ: <strong>3 คืน</strong></span>
-                    <span><i class="fa-solid fa-percent"></i> เพดานส่วนลดสูงสุด: <strong>20%</strong></span>
+                    <span><i class="fa-solid fa-moon"></i> เข้าพักขั้นต่ำ: <strong>3 คืน</strong></span>
+                    <span><i class="fa-solid fa-percent"></i> ส่วนลดสูงสุด: <strong>ไม่เกิน 20%</strong></span>
                 </div>
                 <button type="button"
                         class="manager-btn manager-btn-outline w-100"
                         data-manager-fill="#savePromotionModalForm"
-                        data-manager-fill-data='{"PromoCode":"STAY3_PAY2","PromoName":"3 Pay 2 (พัก 3 จ่าย 2)","Description":"พักต่อเนื่อง 3 คืนขึ้นไปรับส่วนลดคืนพิเศษ","DiscountType":"percent_extra_nights","DiscountPercent":15,"DiscountPercentMax":20,"MinNights":3,"MaxDiscountNights":1,"IsActive":true}'>
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> ตั้งค่าแคมเปญ 3 Pay 2
+                        data-manager-fill-data='{"PromoCode":"STAY3_PAY2","PromoName":"3 Pay 2 (พัก 3 จ่าย 2)","Description":"จองห้องพักประเภท Deluxe สำหรับ 3 ท่าน พักต่อเนื่องครบ 3 คืน รับสิทธิ์พักฟรี 1 คืนพิเศษ","DiscountType":"percent_extra_nights","DiscountPercent":15,"DiscountPercentMax":20,"MinNights":3,"MinGuests":3,"MaxDiscountNights":1,"IsActive":true}'>
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> เปิดใช้งานแคมเปญ 3 Pay 2
                 </button>
             </article>
 
@@ -172,19 +172,19 @@
             <article class="manager-promo-card">
                 <div class="manager-promo-card-top">
                     <span class="manager-code-badge">FAMILY_GANG</span>
-                    <span class="manager-badge manager-badge-violet">free_extra_bed</span>
+                    <span class="manager-badge manager-badge-violet">สิทธิ์เตียงเสริมฟรี</span>
                 </div>
-                <h3 class="manager-promo-title">2. Family &amp; Gang</h3>
-                <p class="manager-promo-desc">จองห้องพักประเภทครอบครัว (Family Room) ตั้งแต่ 5 คนขึ้นไป รับบริการเสริมเตียงฟรี</p>
+                <h3 class="manager-promo-title">2. แคมเปญ Family &amp; Gang</h3>
+                <p class="manager-promo-desc">จองห้องพักประเภท Family Room ตั้งแต่ 5 ท่านขึ้นไป รับบริการเสริมเตียงนอนเสริมฟรีไม่มีค่าใช้จ่าย</p>
                 <div class="manager-promo-meta-box">
                     <span><i class="fa-solid fa-user-group"></i> ผู้เข้าพักขั้นต่ำ: <strong>5 ท่าน</strong></span>
-                    <span><i class="fa-solid fa-bed"></i> ประเภทสิทธิ์: <strong>เสริมเตียงฟรี</strong></span>
+                    <span><i class="fa-solid fa-bed"></i> ประเภทสิทธิ์: <strong>เตียงเสริมฟรี</strong></span>
                 </div>
                 <button type="button"
                         class="manager-btn manager-btn-outline w-100"
                         data-manager-fill="#savePromotionModalForm"
-                        data-manager-fill-data='{"PromoCode":"FAMILY_GANG","PromoName":"Family & Gang (จองเป็นกลุ่มฟรีเตียงเสริม)","Description":"จองห้องพักตั้งแต่ 5 ท่านขึ้นไปฟรีค่าเตียงเสริม","DiscountType":"free_extra_bed","MinGuests":5,"ApplicableRoomTypeId":3,"IsActive":true}'>
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> ตั้งค่าแคมเปญ Family &amp; Gang
+                        data-manager-fill-data='{"PromoCode":"FAMILY_GANG","PromoName":"Family & Gang (จองเป็นกลุ่มฟรีเตียงเสริม)","Description":"จองห้องพักประเภท Family Room ตั้งแต่ 5 ท่านขึ้นไป รับสิทธิ์จัดหาเตียงนอนเสริมฟรีไม่มีค่าใช้จ่าย","DiscountType":"free_extra_bed","MinGuests":5,"ApplicableRoomTypeId":3,"IsActive":true}'>
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> เปิดใช้งาน Family &amp; Gang
                 </button>
             </article>
 
@@ -192,19 +192,19 @@
             <article class="manager-promo-card">
                 <div class="manager-promo-card-top">
                     <span class="manager-code-badge">STAY_3PLUS</span>
-                    <span class="manager-badge manager-badge-info">percent_room</span>
+                    <span class="manager-badge manager-badge-info">ส่วนลดห้องพักปกติ</span>
                 </div>
-                <h3 class="manager-promo-title">3. Stay 3+ Nights</h3>
-                <p class="manager-promo-desc">เข้าพักต่อเนื่องตั้งแต่ 3 คืนขึ้นไป รับส่วนลดค่าห้องพักทันทีสูงสุดไม่เกินเกณฑ์ 20%</p>
+                <h3 class="manager-promo-title">3. แคมเปญ Stay 3+ Nights</h3>
+                <p class="manager-promo-desc">สิทธิประโยชน์สำหรับผู้เข้าพักต่อเนื่องตั้งแต่ 3 คืนขึ้นไป รับส่วนลดพิเศษสูงสุด 10% ต่อคืนทันที</p>
                 <div class="manager-promo-meta-box">
-                    <span><i class="fa-solid fa-calendar-day"></i> คืนพักขั้นต่ำ: <strong>3 คืน</strong></span>
-                    <span><i class="fa-solid fa-percent"></i> ส่วนลดห้องพัก: <strong>10% (Max 20%)</strong></span>
+                    <span><i class="fa-solid fa-calendar-day"></i> เข้าพักต่อเนื่อง: <strong>3 คืนขึ้นไป</strong></span>
+                    <span><i class="fa-solid fa-percent"></i> ส่วนลดรวม: <strong>10% (สูงสุดไม่เกิน 20%)</strong></span>
                 </div>
                 <button type="button"
                         class="manager-btn manager-btn-outline w-100"
                         data-manager-fill="#savePromotionModalForm"
-                        data-manager-fill-data='{"PromoCode":"STAY_3PLUS","PromoName":"Stay 3+ Nights (พัก 3 คืนรับส่วนลด)","Description":"เข้าพักต่อเนื่อง 3 คืนขึ้นไป รับส่วนลดพิเศษค่าห้องพักสูงสุด 20%","DiscountType":"percent_room","DiscountPercent":10,"DiscountPercentMax":20,"MinNights":3,"IsActive":true}'>
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> ตั้งค่าแคมเปญ Stay 3+ Nights
+                        data-manager-fill-data='{"PromoCode":"STAY_3PLUS","PromoName":"Stay 3+ Nights (พักต่อเนื่องรับส่วนลด)","Description":"สิทธิประโยชน์สำหรับผู้เข้าพักต่อเนื่องตั้งแต่ 3 คืนขึ้นไป รับส่วนลดค่าห้องพักทันที 10% ต่อคืน","DiscountType":"percent_room","DiscountPercent":10,"DiscountPercentMax":20,"MinNights":3,"IsActive":true}'>
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> เปิดใช้งาน Stay 3+ Nights
                 </button>
             </article>
 
@@ -212,19 +212,19 @@
             <article class="manager-promo-card">
                 <div class="manager-promo-card-top">
                     <span class="manager-code-badge">WEEKLY_ESCAPE</span>
-                    <span class="manager-badge manager-badge-success">percent_room</span>
+                    <span class="manager-badge manager-badge-success">ส่วนลดพักระยะยาว</span>
                 </div>
-                <h3 class="manager-promo-title">4. Weekly Escape</h3>
-                <p class="manager-promo-desc">สิทธิพิเศษสำหรับผู้เข้าพักระยะยาวรายสัปดาห์ (7 คืนขึ้นไป) มอบส่วนลดพิเศษสูงสุด 20%</p>
+                <h3 class="manager-promo-title">4. แคมเปญ Weekly Escape</h3>
+                <p class="manager-promo-desc">แคมเปญกระตุ้นยอดจองพักต่อเนื่องระยะยาวรายสัปดาห์ (7 คืนขึ้นไป) มอบส่วนลดพิเศษสูงสุด 20%</p>
                 <div class="manager-promo-meta-box">
-                    <span><i class="fa-solid fa-suitcase-rolling"></i> คืนพักขั้นต่ำ: <strong>7 คืน</strong></span>
-                    <span><i class="fa-solid fa-percent"></i> ส่วนลดห้องพัก: <strong>15% - 20%</strong></span>
+                    <span><i class="fa-solid fa-suitcase-rolling"></i> เข้าพักต่อเนื่อง: <strong>7 คืนขึ้นไป</strong></span>
+                    <span><i class="fa-solid fa-percent"></i> อัตราส่วนลด: <strong>20% ของยอดจอง</strong></span>
                 </div>
                 <button type="button"
                         class="manager-btn manager-btn-outline w-100"
                         data-manager-fill="#savePromotionModalForm"
-                        data-manager-fill-data='{"PromoCode":"WEEKLY_ESCAPE","PromoName":"Weekly Escape (พักรายสัปดาห์)","Description":"เข้าพัก 7 คืนขึ้นไปรับส่วนลดแบบพรีเมียมสูงสุด 20%","DiscountType":"percent_room","DiscountPercent":20,"DiscountPercentMax":20,"MinNights":7,"IsActive":true}'>
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> ตั้งค่าแคมเปญ Weekly Escape
+                        data-manager-fill-data='{"PromoCode":"WEEKLY_ESCAPE","PromoName":"Weekly Escape (จองพักรายสัปดาห์)","Description":"แคมเปญพักระยะยาวรายสัปดาห์ (7 คืนขึ้นไป) มอบส่วนลดพิเศษสูงสุด 20% ของยอดจองรวม","DiscountType":"percent_room","DiscountPercent":20,"DiscountPercentMax":20,"MinNights":7,"IsActive":true}'>
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> เปิดใช้งาน Weekly Escape
                 </button>
             </article>
 
@@ -232,49 +232,47 @@
             <article class="manager-promo-card">
                 <div class="manager-promo-card-top">
                     <span class="manager-code-badge">FESTIVAL_WKND</span>
-                    <span class="manager-badge manager-badge-warning">RequiresHoliday</span>
+                    <span class="manager-badge manager-badge-warning">วันหยุดเทศกาล</span>
                 </div>
                 <h3 class="manager-promo-title">5. Festival &amp; Long Weekend</h3>
-                <p class="manager-promo-desc">แคมเปญผูกมัดกับตารางปฏิทินวันหยุดเทศกาลเพื่อสร้างสีสัน พร้อมแจกสิทธิ์ E-Voucher</p>
+                <p class="manager-promo-desc">แคมเปญพิเศษสำหรับการจองในช่วงวันหยุดยาว ผูกกับวันเทศกาล พร้อมรับสิทธิ์แจกบัตรกำนัลเสริม</p>
                 <div class="manager-promo-meta-box">
-                    <span><i class="fa-solid fa-calendar-star"></i> ผูกตารางเทศกาล: <strong>RequiresHoliday</strong></span>
-                    <span><i class="fa-solid fa-ticket"></i> E-Voucher: <strong>รองรับ (Min-Max)</strong></span>
+                    <span><i class="fa-solid fa-calendar-star"></i> อ้างอิงวันหยุด: <strong>ตรวจสอบปฏิทินเทศกาล</strong></span>
+                    <span><i class="fa-solid fa-ticket"></i> บัตรกำนัล (E-Voucher): <strong>รองรับการแจกสิทธิ์</strong></span>
                 </div>
                 <button type="button"
                         class="manager-btn manager-btn-outline w-100"
                         data-manager-fill="#savePromotionModalForm"
-                        data-manager-fill-data='{"PromoCode":"FESTIVAL_PROMO","PromoName":"Festival & Long Weekend Promotion","Description":"รับสิทธิประโยชน์และ E-Voucher พิเศษเฉพาะการเข้าพักตรงวันหยุดเทศกาล","DiscountType":"percent_room","DiscountPercent":10,"DiscountPercentMax":20,"RequiresHoliday":true,"VoucherMinValue":100,"VoucherMaxValue":300,"IsActive":true}'>
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> ตั้งค่า Festival &amp; Weekend
+                        data-manager-fill-data='{"PromoCode":"FESTIVAL_PROMO","PromoName":"Festival & Long Weekend Promotion","Description":"มอบสิทธิพิเศษเฉพาะผู้จองตรงวันหยุดเทศกาลตามเงื่อนไข พร้อมรับสิทธิ์แจกบัตรกำนัลเสริม","DiscountType":"percent_room","DiscountPercent":10,"DiscountPercentMax":20,"RequiresHoliday":true,"VoucherMinValue":100,"VoucherMaxValue":300,"IsActive":true}'>
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> เปิดใช้งาน Festival &amp; Weekend
                 </button>
             </article>
         </div>
     </section>
 
-    <!-- ═══════════════════════ SECTION 3: ACTIVE PROMOTIONS & HOLIDAY CALENDAR ═══════════════════════ -->
+    <!-- ═══════════════════════ ส่วนที่ 3: สรุปแคมเปญใช้งานอยู่ และปฏิทินวันเทศกาล ═══════════════════════ -->
     <section class="manager-promo-section">
         <div class="manager-promo-split-layout">
-
-            <!-- A. Active Promotions Container -->
+            
+            <!-- A. แผงควบคุมแคมเปญโปรโมชั่นที่ใช้งานอยู่ -->
             <div class="manager-promo-split-panel">
                 <div class="manager-card h-100">
                     <div class="manager-card-header">
                         <div>
                             <h3 class="manager-card-title">
                                 <span class="manager-promo-section-dot"></span>
-                                Active Promotions (แคมเปญที่เปิดใช้งานปัจจุบัน)
+                                แคมเปญโปรโมชั่นที่เปิดใช้งานในปัจจุบัน
                             </h3>
-                            <p class="manager-card-subtitle">แคมเปญที่มีสถานะ IsActive = true และยังไม่หมดอายุการใช้งานจริงในวันนี้</p>
+                            <p class="manager-card-subtitle">รายการแคมเปญส่งเสริมการขายที่เปิดใช้งานและลูกค้าใช้งานจองได้จริงวันนี้</p>
                         </div>
                     </div>
-
                     <div class="manager-promo-active-list">
                         @{
                             var activeCampaigns = Model.Promotions?.Where(p => p.Status == "active").ToList() ?? new List<StayMate_Kavinvee_0576.Models.ViewModels.ManagerPromotionRow>();
                         }
-
                         @if (activeCampaigns.Any())
                         {
-                            @foreach (var p in activeCampaigns)
+                            foreach (var p in activeCampaigns)
                             {
                                 var fillDataJson = JsonSerializer.Serialize(new
                                 {
@@ -304,28 +302,26 @@
                                             <h4 class="manager-promo-item-title">@p.PromoName</h4>
                                         </div>
                                         <span class="manager-badge manager-badge-success">
-                                            <i class="fa-solid fa-circle"></i> Active
+                                            <i class="fa-solid fa-circle"></i> กำลังแสดงสิทธิ์
                                         </span>
                                     </div>
-
-                                    <p class="manager-promo-item-desc">@(string.IsNullOrWhiteSpace(p.Description) ? "ไม่มีข้อมูลเงื่อนไขเพิ่มเติม" : p.Description)</p>
-
+                                    <p class="manager-promo-item-desc">@(string.IsNullOrWhiteSpace(p.Description) ? "ไม่มีข้อมูลข้อกำหนดและเงื่อนไขเพิ่มเติม" : p.Description)</p>
                                     <div class="manager-promo-item-details">
                                         <div class="manager-promo-detail-badge">
-                                            <span class="manager-promo-detail-lbl">รูปแบบ:</span>
+                                            <span class="manager-promo-detail-lbl">รูปแบบสิทธิ์:</span>
                                             <strong>@p.DiscountTypeLabel</strong>
                                         </div>
                                         @if (p.DiscountPercent.HasValue)
                                         {
                                             <div class="manager-promo-detail-badge">
-                                                <span class="manager-promo-detail-lbl">ส่วนลด:</span>
+                                                <span class="manager-promo-detail-lbl">สัดส่วนลด:</span>
                                                 <strong class="text-primary">@p.DiscountPercent.Value.ToString("0.00")%</strong>
                                             </div>
                                         }
                                         @if (p.VoucherMinValue.HasValue || p.VoucherMaxValue.HasValue)
                                         {
                                             <div class="manager-promo-detail-badge">
-                                                <span class="manager-promo-detail-lbl">E-Voucher:</span>
+                                                <span class="manager-promo-detail-lbl">สิทธิ์บัตรกำนัล:</span>
                                                 <strong class="text-violet">฿@(p.VoucherMinValue ?? 0) - ฿@(p.VoucherMaxValue ?? 0)</strong>
                                             </div>
                                         }
@@ -337,25 +333,22 @@
                                             </div>
                                         }
                                     </div>
-
                                     <div class="manager-promo-item-dates">
-                                        <span><i class="fa-solid fa-calendar-day"></i> เริ่มต้น: <strong>@(p.ValidFrom?.ToString("dd/MM/yyyy") ?? "ไม่มีกำหนด")</strong></span>
-                                        <span><i class="fa-solid fa-calendar-xmark"></i> สิ้นสุด: <strong>@(p.ValidTo?.ToString("dd/MM/yyyy") ?? "ไม่มีกำหนด")</strong></span>
+                                        <span><i class="fa-solid fa-calendar-day"></i> เริ่มต้นโปรโมชั่น: <strong>@(p.ValidFrom?.ToString("dd/MM/yyyy") ?? "ไม่มีกำหนดอายุ")</strong></span>
+                                        <span><i class="fa-solid fa-calendar-xmark"></i> สิ้นสุดโปรโมชั่น: <strong>@(p.ValidTo?.ToString("dd/MM/yyyy") ?? "ไม่มีกำหนดอายุ")</strong></span>
                                     </div>
-
                                     <div class="manager-promo-item-actions">
                                         <button type="button"
                                                 class="manager-btn manager-btn-outline manager-btn-sm"
                                                 data-manager-fill="#savePromotionModalForm"
                                                 data-manager-fill-data='@Html.Raw(fillDataJson)'>
-                                            <i class="fa-solid fa-pen-to-square"></i> แก้ไขแคมเปญ
+                                            <i class="fa-solid fa-pen-to-square"></i> แก้ไขเงื่อนไข
                                         </button>
-
                                         <form asp-controller="Manager"
                                               asp-action="TogglePromotion"
                                               method="post"
                                               data-manager-ajax
-                                              data-manager-confirm="คุณแน่ใจหรือไม่ว่าต้องการปิดการใช้งานโปรโมชั่น '@p.PromoName'?"
+                                              data-manager-confirm="คุณแน่ใจหรือไม่ว่าต้องการปิดใช้งานระบบสิทธิ์โปรโมชั่นของแคมเปญ '@p.PromoName' ชั่วคราว?"
                                               class="d-inline">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="promotionId" value="@p.PromotionId" />
@@ -372,27 +365,26 @@
                         {
                             <div class="manager-empty-state">
                                 <i class="fa-regular fa-folder-open"></i>
-                                <p>ไม่พบแคมเปญโปรโมชั่นที่เปิดใช้งานและตรงเงื่อนไขปัจจุบันในวันนี้</p>
+                                <p>ไม่พบรายการแคมเปญส่งเสริมการขายที่เปิดใช้งานในระบบปัจจุบันขณะนี้</p>
                             </div>
                         }
                     </div>
                 </div>
             </div>
 
-            <!-- B. Holiday & Festival Interactive Calendar -->
+                        <!-- B. Holiday & Festival Interactive Calendar -->
             <div class="manager-promo-split-panel">
                 <div class="manager-card h-100">
                     <div class="manager-card-header">
                         <div>
                             <h3 class="manager-card-title">
                                 <i class="fa-solid fa-calendar-days text-primary"></i>
-                                Holiday &amp; Festival Calendar (ปฏิทินเทศกาลและวันหยุด)
+                                ปฏิทินวันเทศกาลประจำปี (Holiday &amp; Festival Calendar)
                             </h3>
-                            <p class="manager-card-subtitle">แสดงรายการวันหยุดประจำปีที่ใช้อ้างอิงอัตราพิเศษและ E-Voucher</p>
+                            <p class="manager-card-subtitle">แสดงรายการวันหยุดประจำปีที่ใช้อ้างอิงการจัดแคมเปญราคาและบัตรกำนัลพิเศษ</p>
                         </div>
                     </div>
-
-                    <!-- Interactive Calendar Widget -->
+                    
                     <div class="manager-promo-calendar">
                         <div class="manager-promo-calendar-header">
                             <button type="button" class="manager-promo-calendar-btn" id="btnPrevMonth">
@@ -403,64 +395,72 @@
                                 <i class="fa-solid fa-chevron-right"></i>
                             </button>
                         </div>
-
                         <div class="manager-promo-calendar-weekdays">
                             <div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div>
                         </div>
-
                         <div class="manager-promo-calendar-grid" id="calendarGrid">
-                            <!-- วันที่ในปฏิทินจะเรนเดอร์ผ่าน JavaScript -->
+                            <!-- เรนเดอร์ช่องวันหยุดผ่านสคริปต์ JavaScript -->
                         </div>
                     </div>
 
-                    <!-- Detail Panel of Selected Date's Holiday -->
+                    <!-- เพิ่มส่วนสรุปรายชื่อวันหยุดประจำเดือน (Monthly Holiday Summary List) -->
+                    <div class="manager-promo-monthly-summary p-3 border-top" style="background-color: var(--manager-bg-light, #f8f9fa);">
+                        <h5 class="text-sm font-semibold mb-2" style="color: var(--manager-primary, #070D1E); font-size: 14px;">
+                            <i class="fa-solid fa-list-ul text-primary"></i> 
+                            สรุปวันหยุดเทศกาลประจำเดือน <span id="monthlySummaryLabel">พฤศจิกายน</span>
+                        </h5>
+                        <div id="monthlyHolidayList" class="d-flex flex-column gap-2" style="max-height: 150px; overflow-y: auto;">
+                            <!-- รายการวันหยุดของเดือนนั้นๆ จะถูกสร้างผ่าน JavaScript -->
+                        </div>
+                    </div>
+
                     <div class="manager-promo-holiday-detail-panel" id="holidayDetailPanel">
                         <div class="manager-promo-detail-placeholder" id="holidayDetailPlaceholder">
                             <i class="fa-solid fa-circle-info"></i>
-                            <span>คลิกเลือกวันหยุดที่เป็นสีบนปฏิทิน เพื่อตรวจสอบรายละเอียดเทศกาล</span>
+                            <span>เลือกคลิกวันที่มีแถบสีในช่องปฏิทินเทศกาล หรือเลือกจากรายการประจำเดือน เพื่อตรวจสอบรายละเอียด</span>
                         </div>
                         <div class="manager-promo-detail-content d-none" id="holidayDetailContent">
                             <div class="d-flex justify-content-between align-items-start mb-2">
                                 <h4 class="manager-promo-holiday-name" id="detHolidayName">เทศกาล</h4>
                                 <span class="manager-badge" id="detHolidayStatus">Ongoing</span>
                             </div>
-                            <p class="manager-promo-holiday-note" id="detHolidayNote">ไม่มีรายละเอียดพิเศษสำหรับวันหยุดนี้</p>
+                            <p class="manager-promo-holiday-note" id="detHolidayNote">ไม่มีคำอธิบายหรือหมายเหตุกิจกรรมเพิ่มเติม</p>
                             <div class="manager-promo-holiday-dates">
-                                <span><i class="fa-solid fa-hourglass-start text-success"></i> เริ่มต้น: <strong id="detStartDate">01/01/2026</strong></span>
-                                <span><i class="fa-solid fa-hourglass-end text-danger"></i> สิ้นสุด: <strong id="detEndDate">01/01/2026</strong></span>
+                                <span><i class="fa-solid fa-hourglass-start text-success"></i> เริ่มต้นแคมเปญวันหยุด: <strong id="detStartDate">01/01/2026</strong></span>
+                                <span><i class="fa-solid fa-hourglass-end text-danger"></i> สิ้นสุดแคมเปญวันหยุด: <strong id="detEndDate">01/01/2026</strong></span>
                             </div>
                             <div class="manager-promo-holiday-actions mt-3" id="holidayActionWrap">
-                                <!-- ปุ่มคำสั่งลบ/แก้ไขจะเติมผ่าน JS -->
+                                <!-- เติมสวิตช์ฟอร์มปุ่มแก้ไขหรือลบผ่าน JavaScript -->
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
+
         </div>
     </section>
 
-    <!-- ═══════════════════════ SECTION 4: PROMOTION RULES INFORMATION ═══════════════════════ -->
+    <!-- ═══════════════════════ ส่วนที่ 4: กฎควบคุมแคมเปญส่วนลดสูงสุด ═══════════════════════ -->
     <section class="manager-promo-section">
         <div class="manager-card">
             <div class="manager-card-header">
                 <div>
                     <h2 class="manager-card-title">
                         <i class="fa-solid fa-scale-balanced text-primary"></i>
-                        3. Predefined Promotion Rules (กฎเหล็กการใช้โปรโมชั่นของระบบ)
+                        3. นโยบายการคำนวณและควบคุมส่วนลดของโรงแรม
                     </h2>
-                    <p class="manager-card-subtitle">นโยบายและการคำนวณส่วนลดรวมบนระบบ StayMate เพื่อป้องกันความเสี่ยงด้านกำไรของทางโรงแรม</p>
+                    <p class="manager-card-subtitle">กฎเกณฑ์ความปลอดภัยเพื่อรักษาสมดุลต้นทุนห้องพักและกำไรจากการจองผ่านระบบ</p>
                 </div>
             </div>
-
             <div class="manager-promo-rules-box">
                 <article class="manager-promo-rule-card">
                     <div class="manager-promo-rule-icon">
                         <i class="fa-solid fa-shield-cat"></i>
                     </div>
                     <div>
-                        <h4 class="manager-promo-rule-title">เพดานส่วนลดรวมสูงสุดไม่เกิน 20% (Max Cap)</h4>
-                        <p class="manager-promo-rule-desc">ในกรณีที่ลูกค้าสแต็คสิทธิ์ใช้งานโปรโมชั่นหลายแคมเปญ ระบบจะสแต็คสิทธิ์ให้อัตโนมัติโดยคิดส่วนลดค่าห้องรวมสุทธิไม่เกิน 20% ของอัตราเข้าพักจริง</p>
+                        <h4 class="manager-promo-rule-title">เพดานส่วนลดรวมสูงสุด 20% ของค่าห้อง</h4>
+                        <p class="manager-promo-rule-desc">ในกรณีที่ผู้เข้าพักตรงวันหยุดยาวและใช้สิทธิ์แคมเปญพักระยะยาวร่วมด้วย ระบบจองห้องของฝั่งลูกค้าจะจำกัดและลดส่วนต่างยอดเงินรวมสูงสุดไม่เกิน 20% เสมอ</p>
                     </div>
                 </article>
 
@@ -469,8 +469,8 @@
                         <i class="fa-solid fa-calculator"></i>
                     </div>
                     <div>
-                        <h4 class="manager-promo-rule-title">ระบบคำนวณส่วนลดอัตโนมัติ (Auto Calculation)</h4>
-                        <p class="manager-promo-rule-desc">การทำรายการจองผ่านฝั่ง Customer จะถูกประเมินเทียบเงื่อนไข (MinGuests, MinNights, RequiresHoliday) จากฐานข้อมูลโดยไม่ต้องบันทึกสิทธิ์ด้วยพนักงาน</p>
+                        <h4 class="manager-promo-rule-title">ระบบสแต็คส่วนลดเพิ่ม 5% แบบมีเงื่อนไข</h4>
+                        <p class="manager-promo-rule-desc">เมื่อลูกค้าจองตรงเงื่อนไขของโปรโมชั่นหลายประเภท ระบบจะสแต็คสิทธิ์ลดแคมเปญหลัก (ที่ให้ส่วนลดมากที่สุด) และลดราคาเสริมเพิ่มรายการอื่นให้อีกชิ้นละ 5%</p>
                     </div>
                 </article>
 
@@ -479,42 +479,40 @@
                         <i class="fa-solid fa-hotel"></i>
                     </div>
                     <div>
-                        <h4 class="manager-promo-rule-title">สิทธิ์การจองแยกประเภทห้อง (Room Restriction)</h4>
-                        <p class="manager-promo-rule-desc">สามารถจำกัดโปรโมชั่นให้มีผลใช้งานได้เฉพาะประเภทห้องพักที่กำหนดได้ เช่น กำหนดให้แคมเปญ Family &amp; Gang ส่งผลใช้งานเฉพาะกับห้อง Family Room (ID: 3)</p>
+                        <h4 class="manager-promo-rule-title">การควบคุมและผูกเงื่อนไขเฉพาะระดับประเภทห้อง</h4>
+                        <p class="manager-promo-rule-desc">ผู้จัดการสามารถเจาะจงบังคับแคมเปญลดราคาให้มีผลใช้ได้กับประเภทห้องห้องใดห้องหนึ่งโดยเฉพาะได้ (เช่น เปิดส่วนลดเตียงเสริมฟรีเฉพาะผู้จองห้องประเภทครอบครัวเท่านั้น)</p>
                     </div>
                 </article>
             </div>
         </div>
     </section>
 
-    <!-- ═══════════════════════ SECTION 5: LIVE DATABASE DATA LIST ═══════════════════════ -->
+    <!-- ═══════════════════════ ส่วนที่ 5: ตารางรายละเอียดข้อมูลจากฐานข้อมูลจริง ═══════════════════════ -->
     <section class="manager-promo-section">
         <div class="manager-card">
             <div class="manager-card-header manager-card-header-responsive">
                 <div>
                     <h2 class="manager-card-title">
                         <i class="fa-solid fa-database text-primary"></i>
-                        4. Promotions &amp; Holidays Database Sync (ตารางข้อมูลจริงจากฐานข้อมูล)
+                        4. สรุปรายละเอียดแคมเปญและตารางปฏิทินวันหยุด (Database Sync)
                     </h2>
                     <p class="manager-card-subtitle">
-                        ค้นหาตัวกรอง และตรวจสอบรายการทำธุรกรรมโปรโมชั่นและปฏิทินเทศกาลจริงจาก Database
+                        ค้นหาเปรียบเทียบข้อกำหนด ปริมาณการนำไปใช้งาน และเครื่องมือเปลี่ยนสถานะเปิด-ปิด หรือลบเทศกาลพิเศษออกจากระบบ
                     </p>
                 </div>
 
-                <!-- GET Form Filter (Connected to GET /Manager/PromotionManagement) -->
                 <form method="get"
                       asp-controller="Manager"
                       asp-action="PromotionManagement"
                       data-manager-autosubmit
                       class="manager-promo-filter-bar">
-
                     <div class="manager-search-box">
                         <i class="fa-solid fa-magnifying-glass"></i>
                         <input type="search"
                                name="q"
                                value="@Model.Search"
                                class="manager-input"
-                               placeholder="ค้นหารหัส หรือชื่อโปรโมชั่น..."
+                               placeholder="ค้นหารหัส หรือชื่อแคมเปญ..."
                                data-manager-search="#dbPromotionsTable" />
                     </div>
 
@@ -522,7 +520,7 @@
                             class="manager-select"
                             data-manager-filter="#dbPromotionsTable"
                             data-filter-key="status"
-                            aria-label="กรองสถานะโปรโมชั่น">
+                            aria-label="กรองสถานะแคมเปญ">
                         <option value="">ทุกสถานะแคมเปญ</option>
                         @foreach (var opt in Model.StatusOptions)
                         {
@@ -536,7 +534,7 @@
                             class="manager-select"
                             data-manager-filter="#dbPromotionsTable"
                             data-filter-key="distype"
-                            aria-label="กรองตามประเภทส่วนลด">
+                            aria-label="กรองประเภทส่วนลด">
                         <option value="">ทุกประเภทส่วนลด</option>
                         @foreach (var opt in Model.DiscountTypeOptions)
                         {
@@ -547,42 +545,42 @@
                     </select>
 
                     <button type="submit" class="manager-btn manager-btn-primary">
-                        <i class="fa-solid fa-arrows-rotate"></i> Sync Data
+                        <i class="fa-solid fa-arrows-rotate"></i> อัปเดตข้อมูลสด
                     </button>
 
                     @if (!string.IsNullOrWhiteSpace(Model.Search) || !string.IsNullOrWhiteSpace(Model.Status) || !string.IsNullOrWhiteSpace(Model.DiscountType))
                     {
                         <a asp-controller="Manager" asp-action="PromotionManagement" class="manager-btn manager-btn-ghost">
-                            <i class="fa-solid fa-rotate-left"></i> Clear Filter
+                            <i class="fa-solid fa-rotate-left"></i> ล้างการกรอง
                         </a>
                     }
                 </form>
             </div>
 
-            <!-- Tabs Inside Database View -->
+            <!-- เมนูย่อยสำหรับสลับตาราง -->
             <div class="manager-promo-subtabs mt-2" role="tablist" aria-label="Database Tables">
                 <button type="button" class="manager-promo-subtab-btn active" data-manager-dbtab-target="dbtab-promotions">
-                    <i class="fa-solid fa-tags"></i> ตารางแคมเปญโปรโมชั่นจริง (@(Model.Promotions?.Count ?? 0) แคมเปญ)
+                    <i class="fa-solid fa-tags"></i> แคมเปญโปรโมชั่นในระบบทั้งหมด (@(Model.Promotions?.Count ?? 0) รายการ)
                 </button>
                 <button type="button" class="manager-promo-subtab-btn" data-manager-dbtab-target="dbtab-holidays">
-                    <i class="fa-solid fa-calendar-days"></i> ตารางปฏิทินวันเทศกาลประจำปี (@(Model.Holidays?.Count ?? 0) วันหยุด)
+                    <i class="fa-solid fa-calendar-days"></i> ปฏิทินวันเทศกาลทั้งหมด (@(Model.Holidays?.Count ?? 0) วันหยุด)
                 </button>
             </div>
 
-            <!-- Tab 5.1: Promotions Table -->
+            <!-- ตารางที่ 1: แคมเปญโปรโมชั่นทั้งหมด -->
             <div id="dbtab-promotions" class="manager-promo-dbtab-pane active">
                 <div class="manager-table-responsive">
                     <table class="manager-table manager-promo-table" id="dbPromotionsTable">
                         <thead>
                             <tr>
-                                <th>รหัสโปรโมชั่น (Promo Code)</th>
-                                <th>ชื่อโปรโมชั่น (Promo Name)</th>
-                                <th>ประเภทส่วนลด</th>
+                                <th>รหัสโปรโมชั่น</th>
+                                <th>ชื่อแคมเปญ</th>
+                                <th>ประเภทข้อตกลงส่วนลด</th>
                                 <th class="text-end">ส่วนลด (%)</th>
-                                <th class="text-center">Min Nights / Guests</th>
-                                <th>ช่วงวันที่ใช้งาน</th>
-                                <th class="text-center">ใช้ไปแล้ว</th>
-                                <th class="text-center">สถานะระบบ</th>
+                                <th class="text-center">เงื่อนไขผู้เข้าพัก / คืน</th>
+                                <th>กรอบช่วงเวลาที่ร่วมรายการ</th>
+                                <th class="text-center">ยอดจำนวนผู้ใช้สิทธิ์</th>
+                                <th class="text-center">สถานะแคมเปญ</th>
                                 <th class="text-end">การจัดการ</th>
                             </tr>
                         </thead>
@@ -621,7 +619,7 @@
                                             @if (p.RequiresHoliday)
                                             {
                                                 <div class="manager-promo-holiday-req">
-                                                    <i class="fa-solid fa-calendar-day"></i> ต้องตรงกับวันหยุด
+                                                    <i class="fa-solid fa-calendar-day"></i> ต้องตรงวันหยุดปฏิทินเทศกาล
                                                 </div>
                                             }
                                         </td>
@@ -630,14 +628,14 @@
                                             @(p.DiscountPercent.HasValue ? p.DiscountPercent.Value.ToString("0.00") + "%" : "--")
                                         </td>
                                         <td class="text-center">
-                                            <span class="manager-pill-neutral">คืน: @(p.MinNights?.ToString() ?? "0")</span>
-                                            <span class="manager-pill-neutral">คน: @(p.MinGuests?.ToString() ?? "0")</span>
+                                            <span class="manager-pill-neutral">จองขั้นต่ำ: @(p.MinNights?.ToString() ?? "0") คืน</span>
+                                            <span class="manager-pill-neutral">จำนวนแขก: @(p.MinGuests?.ToString() ?? "0") ท่าน</span>
                                         </td>
                                         <td>
                                             <div class="manager-promo-table-dates">
-                                                <span>@(p.ValidFrom?.ToString("dd/MM/yyyy") ?? "ไม่มีกำหนด")</span>
+                                                <span>@(p.ValidFrom?.ToString("dd/MM/yyyy") ?? "ไม่มีกำหนดเริ่มต้น")</span>
                                                 <i class="fa-solid fa-arrow-right"></i>
-                                                <span>@(p.ValidTo?.ToString("dd/MM/yyyy") ?? "ไม่มีกำหนด")</span>
+                                                <span>@(p.ValidTo?.ToString("dd/MM/yyyy") ?? "ไม่มีกำหนดสิ้นสุด")</span>
                                             </div>
                                         </td>
                                         <td class="text-center font-monospace">@p.UsageCount ครั้ง</td>
@@ -654,7 +652,6 @@
                                                         data-manager-fill-data='@Html.Raw(editJson)'>
                                                     <i class="fa-solid fa-pen-to-square"></i> แก้ไข
                                                 </button>
-
                                                 <form asp-controller="Manager"
                                                       asp-action="TogglePromotion"
                                                       method="post"
@@ -663,7 +660,7 @@
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="promotionId" value="@p.PromotionId" />
                                                     <input type="hidden" name="isActive" value="@(p.IsActive ? "false" : "true")" />
-                                                    <button type="submit" class="manager-btn manager-btn-ghost manager-btn-sm" title="@(p.IsActive ? "ปิดใช้งาน" : "เปิดใช้งาน")">
+                                                    <button type="submit" class="manager-btn manager-btn-ghost manager-btn-sm" title="@(p.IsActive ? "ระงับการเปิดจอง" : "เปิดสิทธิ์จองใหม่")">
                                                         <i class="fa-solid @(p.IsActive ? "fa-toggle-on text-success" : "fa-toggle-off text-muted")"></i>
                                                     </button>
                                                 </form>
@@ -677,7 +674,7 @@
                                 <tr>
                                     <td colspan="9" class="manager-empty-state">
                                         <i class="fa-solid fa-tags"></i>
-                                        <p>ไม่พบรายการแคมเปญโปรโมชั่นในฐานข้อมูล</p>
+                                        <p>ไม่พบรายการแคมเปญโปรโมชั่นใดๆ ในระบบ</p>
                                     </td>
                                 </tr>
                             }
@@ -686,18 +683,18 @@
                 </div>
             </div>
 
-            <!-- Tab 5.2: Holidays Table -->
+            <!-- ตารางที่ 2: วันหยุดเทศกาลทั้งหมด -->
             <div id="dbtab-holidays" class="manager-promo-dbtab-pane">
                 <div class="manager-table-responsive">
                     <table class="manager-table manager-promo-table" id="dbHolidaysTable">
                         <thead>
                             <tr>
-                                <th>รหัสวันหยุด</th>
-                                <th>ชื่อวันเทศกาล (Holiday Name)</th>
-                                <th>วันที่เริ่มต้น (Start Date)</th>
-                                <th>วันที่สิ้นสุด (End Date)</th>
-                                <th class="text-center">จำนวนวันหยุด</th>
-                                <th>บันทึกกิจกรรมเพิ่มเติม (Event Note)</th>
+                                <th>รหัสวันหยุดเทศกาล</th>
+                                <th>ชื่อวันเทศกาลสำคัญ</th>
+                                <th>วันเริ่มต้นตามปีปฏิทิน</th>
+                                <th>วันสิ้นสุดตามปีปฏิทิน</th>
+                                <th class="text-center">จำนวนวันรวม</th>
+                                <th>บันทึกกิจกรรมประจำปีเพิ่มเติม</th>
                                 <th class="text-center">สถานะเทศกาล</th>
                                 <th class="text-end">การจัดการ</th>
                             </tr>
@@ -726,7 +723,7 @@
                                         <td>@h.StartDate.ToString("dd/MM/yyyy")</td>
                                         <td>@h.EndDate.ToString("dd/MM/yyyy")</td>
                                         <td class="text-center">@h.DayCount วัน</td>
-                                        <td>@(string.IsNullOrWhiteSpace(h.EventNote) ? "--" : h.EventNote)</td>
+                                        <td>@(string.IsNullOrWhiteSpace(h.EventNote) ? "-- ไม่มีบันทึกกิจกรรมเสริม --" : h.EventNote)</td>
                                         <td class="text-center">
                                             <span class="manager-promo-holiday-badge manager-promo-holiday-badge-@h.Status">
                                                 @h.StatusLabel
@@ -738,19 +735,18 @@
                                                         class="manager-btn manager-btn-outline manager-btn-sm"
                                                         data-manager-fill="#saveHolidayModalForm"
                                                         data-manager-fill-data='@Html.Raw(hEditJson)'>
-                                                    <i class="fa-solid fa-pen-to-square"></i> แก้ไข
+                                                    <i class="fa-solid fa-pen-to-square"></i> แก้ไขเทศกาล
                                                 </button>
-
                                                 <form asp-controller="Manager"
                                                       asp-action="DeleteHoliday"
                                                       method="post"
                                                       data-manager-ajax
-                                                      data-manager-confirm="คุณแน่ใจหรือไม่ว่าต้องการลบวันหยุดเทศกาล '@h.HolidayName' ออกจากระบบ?"
+                                                      data-manager-confirm="คุณต้องการยืนยันการลบวันเทศกาลสำคัญประจำปี '@h.HolidayName' ออกจากระบบหรือไม่?"
                                                       class="d-inline">
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="holidayId" value="@h.HolidayId" />
                                                     <button type="submit" class="manager-btn manager-btn-danger manager-btn-sm">
-                                                        <i class="fa-solid fa-trash-can"></i> ลบ
+                                                        <i class="fa-solid fa-trash-can"></i> ลบรายการ
                                                     </button>
                                                 </form>
                                             </div>
@@ -763,7 +759,7 @@
                                 <tr>
                                     <td colspan="8" class="manager-empty-state">
                                         <i class="fa-regular fa-calendar-xmark"></i>
-                                        <p>ยังไม่มีบันทึกข้อมูลวันหยุดเทศกาลในปฏิทิน</p>
+                                        <p>ยังไม่มีการระบุหรือบันทึกเทศกาลพิเศษลงบนปฏิทิน</p>
                                     </td>
                                 </tr>
                             }
@@ -772,13 +768,12 @@
                 </div>
             </div>
 
-            <!-- Notes Panel -->
             @if (Model.DataNotes != null && Model.DataNotes.Any())
             {
                 <div class="manager-notes-box">
                     <div class="manager-notes-title">
                         <i class="fa-solid fa-circle-info"></i>
-                        <span>หมายเหตุกฎเกณฑ์และความสัมพันธ์แคมเปญ (System Database Notes)</span>
+                        <span>เงื่อนไขข้อบังคับด้านแคมเปญส่งเสริมการขายของระบบ</span>
                     </div>
                     <ul class="manager-notes-list">
                         @foreach (var note in Model.DataNotes)
@@ -790,14 +785,13 @@
             }
         </div>
     </section>
-
 </div>
 
 <!-- ═════════════════════════════════════════════════════════════════════════════
-     MODALS (Connected to Real Controller Actions: SavePromotion & SaveHoliday)
+     โมดอลจัดการข้อมูล (เชื่อมต่อการรันคำสั่ง POST กับระบบบริหารฝั่งเซิร์ฟเวอร์)
      ═════════════════════════════════════════════════════════════════════════════ -->
 
-<!-- Modal 1: Create / Edit Promotion Campaign (POST /Manager/SavePromotion) -->
+<!-- โมดอล 1: เพิ่ม / แก้ไข รายละเอียดแคมเปญโปรโมชั่น (POST /Manager/SavePromotion) -->
 <div class="modal fade manager-modal manager-promo-modal" id="managerSavePromotionModal" tabindex="-1" aria-labelledby="managerSavePromotionModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content manager-modal-content">
@@ -812,7 +806,7 @@
                 <div class="modal-header manager-modal-header">
                     <h5 class="modal-title" id="managerSavePromotionModalLabel">
                         <i class="fa-solid fa-tags text-info"></i>
-                        เพิ่ม / แก้ไขแคมเปญโปรโมชั่น (`SavePromotion`)
+                        สร้าง / แก้ไข ข้อมูลแคมเปญโปรโมชั่นพิเศษ
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -820,61 +814,61 @@
                 <div class="modal-body manager-modal-body">
                     <div class="manager-alert manager-alert-info mb-3">
                         <i class="fa-solid fa-circle-info"></i>
-                        <span>แคมเปญทุกประเภทจะได้รับการคำนวณและอยู่ภายใต้กฎจำกัดส่วนลดสูงสุดไม่เกิน 20% โดยอัตโนมัติ</span>
+                        <span>เงื่อนไขการสะสมส่วนลดรวมของทุกโปรโมชั่นเมื่อสแต็คสิทธิ์รวมกัน จะมีเพดานสูงสุดไม่เกิน 20% โดยอัตโนมัติ</span>
                     </div>
 
                     <div class="manager-form-row mb-3">
                         <div class="manager-form-group">
-                            <label class="manager-label">รหัสโปรโมชั่น (PromoCode: A-Z, 0-9, _, - เท่านั้น) <span class="manager-req">*</span></label>
-                            <input type="text" name="PromoCode" class="manager-input" maxlength="30" placeholder="เช่น FESTIVAL_WKND" required />
+                            <label class="manager-label">รหัสส่งเสริมการขาย (ระบุเป็นอักษรภาษาอังกฤษ ตัวเลข และเครื่องหมาย _ หรือ -) <span class="manager-req">*</span></label>
+                            <input type="text" name="PromoCode" class="manager-input" maxlength="30" placeholder="ตัวอย่างเช่น STAY_3PLUS" required />
                         </div>
                         <div class="manager-form-group">
-                            <label class="manager-label">ชื่อโปรโมชั่น (PromoName) <span class="manager-req">*</span></label>
-                            <input type="text" name="PromoName" class="manager-input" maxlength="150" placeholder="เช่น โปรโมชั่นวันหยุดยาว" required />
+                            <label class="manager-label">ชื่อแคมเปญหลัก (ใช้แสดงผลสำหรับการเลือกจองของฝั่งลูกค้า) <span class="manager-req">*</span></label>
+                            <input type="text" name="PromoName" class="manager-input" maxlength="150" placeholder="ตัวอย่างเช่น แคมเปญเที่ยวช่วงเทศกาล" required />
                         </div>
                     </div>
 
                     <div class="manager-form-group mb-3">
-                        <label class="manager-label">รายละเอียดเงื่อนไข (Description)</label>
-                        <textarea name="Description" class="manager-textarea" rows="2" placeholder="อธิบายสิทธิ์การใช้งานของแคมเปญให้พนักงานรับทราบ..."></textarea>
+                        <label class="manager-label">คำอธิบายและเงื่อนไขเพิ่มเติม (เพื่อใช้แสดงเป็นคำชี้แจงสำหรับลูกค้า)</label>
+                        <textarea name="Description" class="manager-textarea" rows="2" placeholder="กรอกรายละเอียดสิทธิประโยชน์เพื่อแสดงชี้แจงลูกค้า..."></textarea>
                     </div>
 
                     <div class="manager-form-row mb-3">
                         <div class="manager-form-group">
-                            <label class="manager-label">ประเภทส่วนลด (DiscountType) <span class="manager-req">*</span></label>
+                            <label class="manager-label">ประเภทรูปแบบแคมเปญส่วนลด <span class="manager-req">*</span></label>
                             <select name="DiscountType" class="manager-select" required>
-                                <option value="percent_room">ลดเปอร์เซ็นต์ค่าห้อง (percent_room)</option>
-                                <option value="percent_extra_nights">ลดเปอร์เซ็นต์คืนพิเศษ (percent_extra_nights)</option>
-                                <option value="free_extra_bed">เตียงเสริมฟรี (free_extra_bed)</option>
+                                <option value="percent_room">ลดส่วนต่างค่าห้องพักมาตรฐานรายคืน</option>
+                                <option value="percent_extra_nights">ลดราคากรณีพิเศษช่วงพักจำนวนคืนต่อเนื่อง</option>
+                                <option value="free_extra_bed">บริการเสริมเตียงนอนเสริมฟรีไม่มีค่าใช้จ่าย</option>
                             </select>
                         </div>
                         <div class="manager-form-group">
-                            <label class="manager-label">เปอร์เซ็นต์ส่วนลด (%)</label>
-                            <input type="number" name="DiscountPercent" class="manager-input" step="0.01" min="0.01" max="20" placeholder="สูงสุดไม่เกิน 20" />
+                            <label class="manager-label">อัตราส่วนลดกรณีปกติ (%)</label>
+                            <input type="number" name="DiscountPercent" class="manager-input" step="0.01" min="0.01" max="20" placeholder="อัตราปกติสูงสุดไม่เกิน 20%" />
                         </div>
                         <div class="manager-form-group">
-                            <label class="manager-label">เพดานส่วนลดสูงสุด (Max %)</label>
-                            <input type="number" name="DiscountPercentMax" class="manager-input" step="0.01" min="0.01" max="20" value="20" placeholder="20" />
+                            <label class="manager-label">เพดานส่วนลดจำกัดสูงสุด (%)</label>
+                            <input type="number" name="DiscountPercentMax" class="manager-input" step="0.01" min="0.01" max="20" value="20" placeholder="จำกัดเพดานไม่เกิน 20%" />
                         </div>
                     </div>
 
                     <div class="manager-form-row mb-3">
                         <div class="manager-form-group">
-                            <label class="manager-label">เข้าพักขั้นต่ำกี่คน (MinGuests)</label>
-                            <input type="number" name="MinGuests" class="manager-input" min="1" placeholder="เช่น 2" />
+                            <label class="manager-label">จำนวนผู้เข้าพักอย่างน้อยที่สุด (คน)</label>
+                            <input type="number" name="MinGuests" class="manager-input" min="1" placeholder="ใส่ตัวเลข เช่น 3" />
                         </div>
                         <div class="manager-form-group">
-                            <label class="manager-label">จองขั้นต่ำกี่คืน (MinNights)</label>
-                            <input type="number" name="MinNights" class="manager-input" min="1" placeholder="เช่น 3" />
+                            <label class="manager-label">จำนวนคืนเข้าพักขั้นต่ำ (คืน)</label>
+                            <input type="number" name="MinNights" class="manager-input" min="1" placeholder="ใส่ตัวเลข เช่น 3" />
                         </div>
                         <div class="manager-form-group">
-                            <label class="manager-label">จำกัดคืนลดสูงสุด (MaxDiscountNights)</label>
-                            <input type="number" name="MaxDiscountNights" class="manager-input" min="1" placeholder="เช่น 1" />
+                            <label class="manager-label">ขีดจำกัดคืนลดราคาพิเศษสูงสุด (คืน)</label>
+                            <input type="number" name="MaxDiscountNights" class="manager-input" min="1" placeholder="ใส่ตัวเลข เช่น 1" />
                         </div>
                         <div class="manager-form-group">
-                            <label class="manager-label">ใช้เฉพาะประเภทห้อง (ถ้ามี)</label>
+                            <label class="manager-label">ระบุประเภทห้องพักเฉพาะเจาะจง (ถ้ามี)</label>
                             <select name="ApplicableRoomTypeId" class="manager-select">
-                                <option value="">ทุกประเภทห้องพัก</option>
+                                <option value="">ใช้ร่วมกันได้กับห้องพักทุกประเภท</option>
                                 @foreach (var opt in Model.RoomTypeOptions)
                                 {
                                     <option value="@opt.Value">@opt.Label</option>
@@ -885,19 +879,19 @@
 
                     <div class="manager-form-row mb-3">
                         <div class="manager-form-group">
-                            <label class="manager-label">สิทธิ์มูลค่า Voucher ขั้นต่ำ (บาท)</label>
-                            <input type="number" name="VoucherMinValue" class="manager-input" step="0.01" min="0" placeholder="เช่น 100.00" />
+                            <label class="manager-label">สิทธิ์มูลค่าบัตรกำนัลขั้นต่ำที่ได้รับ (บาท)</label>
+                            <input type="number" name="VoucherMinValue" class="manager-input" step="0.01" min="0" placeholder="ตัวอย่างเช่น 100.00" />
                         </div>
                         <div class="manager-form-group">
-                            <label class="manager-label">สิทธิ์มูลค่า Voucher สูงสุด (บาท)</label>
-                            <input type="number" name="VoucherMaxValue" class="manager-input" step="0.01" min="0" placeholder="เช่น 300.00" />
+                            <label class="manager-label">สิทธิ์มูลค่าบัตรกำนัลสูงสุดที่ได้รับ (บาท)</label>
+                            <input type="number" name="VoucherMaxValue" class="manager-input" step="0.01" min="0" placeholder="ตัวอย่างเช่น 300.00" />
                         </div>
                         <div class="manager-form-group">
-                            <label class="manager-label">วันเริ่มต้น (ValidFrom)</label>
+                            <label class="manager-label">วันที่เริ่มเทศกาลโปรโมชั่น</label>
                             <input type="date" name="ValidFrom" class="manager-input" />
                         </div>
                         <div class="manager-form-group">
-                            <label class="manager-label">วันสิ้นสุด (ValidTo)</label>
+                            <label class="manager-label">วันที่สิ้นสุดเทศกาลโปรโมชั่น</label>
                             <input type="date" name="ValidTo" class="manager-input" />
                         </div>
                     </div>
@@ -905,11 +899,11 @@
                     <div class="manager-checkbox-row">
                         <label class="manager-checkbox-label">
                             <input type="checkbox" name="RequiresHoliday" value="true" />
-                            <span>ต้องใช้ร่วมกับตารางวันหยุดเทศกาล (RequiresHoliday)</span>
+                            <span>สิทธิ์แคมเปญนี้ต้องจองตรงกับวันปฏิทินวันหยุดเทศกาล</span>
                         </label>
                         <label class="manager-checkbox-label">
                             <input type="checkbox" name="IsActive" value="true" checked />
-                            <span>เปิดใช้งานทันที (IsActive)</span>
+                            <span>ยืนยันสิทธิ์เพื่อพร้อมเปิดให้ร่วมรายการจองในระบบทันที</span>
                         </label>
                     </div>
                 </div>
@@ -926,54 +920,129 @@
     </div>
 </div>
 
-<!-- Modal 2: Create / Edit Holiday Calendar Event (POST /Manager/SaveHoliday) -->
-<div class="modal fade manager-modal manager-promo-modal" id="managerSaveHolidayModal" tabindex="-1" aria-labelledby="managerSaveHolidayModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+<!-- Modal 1: Create / Edit Promotion Campaign (POST /Manager/SavePromotion) -->
+<div class="modal fade manager-modal manager-promo-modal" id="managerSavePromotionModal" tabindex="-1" aria-labelledby="managerSavePromotionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content manager-modal-content">
-            <form id="saveHolidayModalForm"
+            <form id="savePromotionModalForm"
                   asp-controller="Manager"
-                  asp-action="SaveHoliday"
+                  asp-action="SavePromotion"
                   method="post"
-                  data-manager-ajax>
+                  data-manager-ajax
+                  style="display: flex; flex-direction: column; max-height: calc(100vh - 3.5rem); overflow: hidden; width: 100%;">
                 @Html.AntiForgeryToken()
-                <input type="hidden" name="HolidayId" value="" />
+                <input type="hidden" name="PromotionId" value="" />
 
-                <div class="modal-header manager-modal-header">
-                    <h5 class="modal-title" id="managerSaveHolidayModalLabel">
-                        <i class="fa-solid fa-calendar-plus text-info"></i>
-                        บันทึกวันหยุดเทศกาลปฏิทิน (`SaveHoliday`)
+                <div class="modal-header manager-modal-header" style="flex-shrink: 0;">
+                    <h5 class="modal-title" id="managerSavePromotionModalLabel">
+                        <i class="fa-solid fa-tags text-info"></i>
+                        สร้าง / แก้ไข ข้อมูลแคมเปญโปรโมชั่นพิเศษ
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
-                <div class="modal-body manager-modal-body">
-                    <div class="manager-form-group mb-3">
-                        <label class="manager-label">ชื่อวันเทศกาล / วันหยุด <span class="manager-req">*</span></label>
-                        <input type="text" name="HolidayName" class="manager-input" maxlength="150" placeholder="เช่น เทศกาลปีใหม่, เทศกาลสงกรานต์" required />
+                <div class="modal-body manager-modal-body" style="overflow-y: auto; flex-grow: 1; max-height: calc(100vh - 13rem);">
+                    <div class="manager-alert manager-alert-info mb-3">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span>เงื่อนไขการสะสมส่วนลดรวมของทุกโปรโมชั่นเมื่อสแต็คสิทธิ์รวมกัน จะมีเพดานสูงสุดไม่เกิน 20% โดยอัตโนมัติ</span>
                     </div>
 
-                    <div class="manager-form-row mb-3">
-                        <div class="manager-form-group">
-                            <label class="manager-label">วันเริ่มต้นปฏิทิน <span class="manager-req">*</span></label>
-                            <input type="date" name="StartDate" class="manager-input" required />
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-5">
+                            <label class="manager-label">รหัสโปรโมชั่น (A-Z, 0-9, _, -) <span class="manager-req">*</span></label>
+                            <input type="text" name="PromoCode" class="manager-input" maxlength="30" placeholder="เช่น STAY_3PLUS" required />
                         </div>
-                        <div class="manager-form-group">
-                            <label class="manager-label">วันสิ้นสุดปฏิทิน <span class="manager-req">*</span></label>
-                            <input type="date" name="EndDate" class="manager-input" required />
+                        <div class="col-md-7">
+                            <label class="manager-label">ชื่อแคมเปญหลัก (แสดงผลให้ลูกค้าเห็น) <span class="manager-req">*</span></label>
+                            <input type="text" name="PromoName" class="manager-input" maxlength="150" placeholder="เช่น โปรโมชั่นพัก 3 คืน" required />
                         </div>
                     </div>
 
-                    <div class="manager-form-group">
-                        <label class="manager-label">บันทึกกิจกรรมเพิ่มเติม (Event Note)</label>
-                        <input type="text" name="EventNote" class="manager-input" maxlength="255" placeholder="เช่น ปริมาณคนพักหนาแน่น, สงกรานต์วันไหล" />
+                    <div class="mb-3">
+                        <label class="manager-label">คำอธิบายและเงื่อนไขเพิ่มเติม</label>
+                        <textarea name="Description" class="manager-textarea" rows="2" placeholder="อธิบายรายละเอียดสิทธิประโยชน์เพื่อแสดงชี้แจงลูกค้า..."></textarea>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="manager-label">ประเภทรูปแบบแคมเปญส่วนลด <span class="manager-req">*</span></label>
+                            <select name="DiscountType" class="manager-select" required>
+                                <option value="percent_room">ลดส่วนต่างค่าห้องพักมาตรฐานรายคืน</option>
+                                <option value="percent_extra_nights">ลดราคากรณีพิเศษช่วงพักจำนวนคืนต่อเนื่อง</option>
+                                <option value="free_extra_bed">บริการเสริมเตียงนอนเสริมฟรีไม่มีค่าใช้จ่าย</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="manager-label">อัตราส่วนลด (%)</label>
+                            <input type="number" name="DiscountPercent" class="manager-input" step="0.01" min="0.01" max="20" placeholder="สูงสุด 20%" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="manager-label">เพดานสูงสุด (%)</label>
+                            <input type="number" name="DiscountPercentMax" class="manager-input" step="0.01" min="0.01" max="20" value="20" placeholder="20" />
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-3">
+                            <label class="manager-label">ผู้เข้าพักขั้นต่ำ (คน)</label>
+                            <input type="number" name="MinGuests" class="manager-input" min="1" placeholder="เช่น 2" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="manager-label">เข้าพักขั้นต่ำ (คืน)</label>
+                            <input type="number" name="MinNights" class="manager-input" min="1" placeholder="เช่น 3" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="manager-label">จำกัดคืนลดสูงสุด (คืน)</label>
+                            <input type="number" name="MaxDiscountNights" class="manager-input" min="1" placeholder="เช่น 1" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="manager-label">ประเภทห้อง (ถ้ามี)</label>
+                            <select name="ApplicableRoomTypeId" class="manager-select">
+                                <option value="">ทุกประเภทห้อง</option>
+                                @foreach (var opt in Model.RoomTypeOptions)
+                                {
+                                    <option value="@opt.Value">@opt.Label</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-3">
+                            <label class="manager-label">Voucher ขั้นต่ำ (บาท)</label>
+                            <input type="number" name="VoucherMinValue" class="manager-input" step="0.01" min="0" placeholder="เช่น 100.00" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="manager-label">Voucher สูงสุด (บาท)</label>
+                            <input type="number" name="VoucherMaxValue" class="manager-input" step="0.01" min="0" placeholder="เช่น 300.00" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="manager-label">วันที่เริ่มต้น (ValidFrom)</label>
+                            <input type="date" name="ValidFrom" class="manager-input" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="manager-label">วันที่สิ้นสุด (ValidTo)</label>
+                            <input type="date" name="ValidTo" class="manager-input" />
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-4 pt-2 border-top">
+                        <label class="manager-checkbox-label">
+                            <input type="checkbox" name="RequiresHoliday" value="true" />
+                            <span>ต้องจองตรงกับวันหยุดเทศกาล</span>
+                        </label>
+                        <label class="manager-checkbox-label">
+                            <input type="checkbox" name="IsActive" value="true" checked />
+                            <span>เปิดใช้งานทันทีในระบบ</span>
+                        </label>
                     </div>
                 </div>
 
-                <div class="modal-footer manager-modal-footer">
+                <div class="modal-footer manager-modal-footer" style="flex-shrink: 0;">
                     <button type="button" class="manager-btn manager-btn-ghost" data-bs-dismiss="modal">ยกเลิก</button>
                     <button type="submit" class="manager-btn manager-btn-primary">
-                        <i class="fa-solid fa-calendar-check"></i>
-                        <span>บันทึกวันหยุด</span>
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span>บันทึกแคมเปญ</span>
                     </button>
                 </div>
             </form>
@@ -981,12 +1050,13 @@
     </div>
 </div>
 
+
 @section Scripts {
     <script>
         (function () {
             'use strict';
 
-            // 1. ระบบจัดการ Switch Tabs ของฐานข้อมูลแยกฝั่งจริง (Promotions Table / Holidays Table)
+            // 1. ระบบจัดการ Switch Tabs ของฐานข้อมูล (Promotions / Holidays)
             var dbTabButtons = document.querySelectorAll('[data-manager-dbtab-target]');
             var dbTabPanes = document.querySelectorAll('.manager-promo-dbtab-pane');
 
@@ -1005,22 +1075,50 @@
                 });
             });
 
-            // 2. ข้อมูลวันหยุดและเทศกาลจริง (Holiday Data) จาก Model เพื่อใช้งานบนปฏิทิน
-            var holidayList = @Html.Raw(JsonSerializer.Serialize(Model.Holidays));
+            // 2. ดึงข้อมูลวันหยุดจากฐานข้อมูลจริง และ Normalize ชื่อฟิลด์ให้ปลอดภัย (ป้องกันปัญหา PascalCase / camelCase)
+            var rawHolidays = @Html.Raw(JsonSerializer.Serialize(Model.Holidays)) || [];
+            var holidayList = rawHolidays.map(function (h) {
+                return {
+                    HolidayId: h.HolidayId || h.holidayId,
+                    HolidayName: h.HolidayName || h.holidayName || '',
+                    StartDate: (h.StartDate || h.startDate || '').substring(0, 10),
+                    EndDate: (h.EndDate || h.endDate || '').substring(0, 10),
+                    EventNote: h.EventNote || h.eventNote || '',
+                    Status: h.Status || h.status || 'upcoming',
+                    StatusLabel: h.StatusLabel || h.statusLabel || ''
+                };
+            });
 
-            // 3. ระบบ Interactive Holiday Calendar Widget
+            // 3. ตัวแปรปฏิทิน
             var monthsTH = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
-            var currentDate = new Date(2026, 10, 22); // อ้างอิงปี 2026 ตามที่ระบุใน Today หรือระบบจริง
             
-            @if (Model.Holidays != null && Model.Holidays.Any()) {
-                var firstHoliday = Model.Holidays.FirstOrDefault();
-                if (firstHoliday != null) {
-                    @:currentDate = new Date(@firstHoliday.StartDate.Year, @(firstHoliday.StartDate.Month - 1), 1);
-                }
-            }
+            // ตั้งต้นที่เดือนพฤศจิกายน 2026 ตามวันที่ระบบ
+            var currentDate = new Date(2026, 10, 1);
 
             var calTitle = document.getElementById('calendarTitle');
             var calGrid = document.getElementById('calendarGrid');
+            var monthlySummaryLabel = document.getElementById('monthlySummaryLabel');
+            var monthlyHolidayList = document.getElementById('monthlyHolidayList');
+
+            function padZero(num) {
+                return num < 10 ? '0' + num : '' + num;
+            }
+
+            function formatDateString(isoStr) {
+                if (!isoStr) return "--";
+                var parts = isoStr.split('-');
+                if (parts.length === 3) {
+                    return parts[2] + "/" + parts[1] + "/" + parts[0];
+                }
+                return isoStr;
+            }
+
+            // ค้นหาวันหยุดที่ตรงกับวันที่ระบุ (YYYY-MM-DD)
+            function findHolidaysForDate(dateStr) {
+                return holidayList.filter(function (h) {
+                    return h.StartDate && h.EndDate && dateStr >= h.StartDate && dateStr <= h.EndDate;
+                });
+            }
 
             function renderCalendar() {
                 if (!calTitle || !calGrid) return;
@@ -1029,60 +1127,97 @@
                 var month = currentDate.getMonth();
 
                 calTitle.textContent = monthsTH[month] + " " + year;
+                if (monthlySummaryLabel) monthlySummaryLabel.textContent = monthsTH[month];
+
                 calGrid.innerHTML = "";
 
                 var firstDayIndex = new Date(year, month, 1).getDay();
                 var totalDays = new Date(year, month + 1, 0).getDate();
 
-                // เรนเดอร์วันว่างของสัปดาห์แรก
+                // ช่องว่างต้นเดือน
                 for (var i = 0; i < firstDayIndex; i++) {
                     var emptyDiv = document.createElement('div');
                     emptyDiv.className = 'manager-promo-calendar-day-empty';
                     calGrid.appendChild(emptyDiv);
                 }
 
-                // เรนเดอร์แต่ละวันของเดือน
+                // วันที่ในเดือน
                 for (var d = 1; d <= totalDays; d++) {
                     var dayDiv = document.createElement('div');
                     dayDiv.className = 'manager-promo-calendar-day';
                     dayDiv.textContent = d;
 
-                    var thisDateStr = year + "-" + padZero(month + 1) + "-" + padZero(d);
-                    var matchedHolidays = findHolidayForDate(thisDateStr);
+                    var dateStr = year + "-" + padZero(month + 1) + "-" + padZero(d);
+                    var matched = findHolidaysForDate(dateStr);
 
-                    if (matchedHolidays.length > 0) {
-                        var holiday = matchedHolidays[0]; // ใช้เทศกาลแรกหากทับกัน
+                    if (matched.length > 0) {
+                        var h = matched[0];
                         dayDiv.classList.add('manager-promo-calendar-day-has-event');
-                        
-                        if (holiday.Status === "ongoing") {
+                        if (h.Status === 'ongoing') {
                             dayDiv.classList.add('manager-promo-calendar-day-ongoing');
                         } else {
                             dayDiv.classList.add('manager-promo-calendar-day-upcoming');
                         }
+                        dayDiv.title = h.HolidayName;
+                        dayDiv.setAttribute('data-holiday-id', h.HolidayId);
 
-                        dayDiv.title = holiday.HolidayName;
-                        dayDiv.setAttribute('data-holiday-id', holiday.HolidayId);
-                        
-                        // Event Listener เพื่อแสดงรายละเอียดวันหยุดที่ถูกเลือก
-                        dayDiv.addEventListener('click', (function(h) {
-                            return function() {
-                                showHolidayDetail(h);
+                        dayDiv.addEventListener('click', (function (item) {
+                            return function () {
+                                showHolidayDetail(item);
                             };
-                        })(holiday));
+                        })(h));
                     }
 
                     calGrid.appendChild(dayDiv);
                 }
+
+                // อัปเดตรายชื่อวันหยุดของเดือนนั้นๆ
+                renderMonthlyHolidays(year, month);
             }
 
-            function padZero(num) {
-                return num < 10 ? '0' + num : num;
-            }
+            // สรุปวันหยุดประจำเดือนที่เลือก
+            function renderMonthlyHolidays(year, month) {
+                if (!monthlyHolidayList) return;
+                monthlyHolidayList.innerHTML = "";
 
-            function findHolidayForDate(dateStr) {
-                // ค้นหาช่วงวันหยุดในโมเดลจริง
-                return holidayList.filter(function (h) {
-                    return dateStr >= h.StartDate && dateStr <= h.EndDate;
+                var monthStartStr = year + "-" + padZero(month + 1) + "-01";
+                var monthEndStr = year + "-" + padZero(month + 1) + "-" + padZero(new Date(year, month + 1, 0).getDate());
+
+                // กรองหาวันหยุดที่คาบเกี่ยวกับเดือนนี้
+                var currentMonthHolidays = holidayList.filter(function (h) {
+                    if (!h.StartDate || !h.EndDate) return false;
+                    return h.StartDate <= monthEndStr && h.EndDate >= monthStartStr;
+                });
+
+                if (currentMonthHolidays.length === 0) {
+                    var emptyItem = document.createElement('div');
+                    emptyItem.style.cssText = "font-size: 13px; color: #888; text-align: center; padding: 12px 0;";
+                    emptyItem.innerHTML = '<i class="fa-solid fa-calendar-minus"></i> เดือนนี้ไม่มีแคมเปญวันหยุดหรือเทศกาลในฐานข้อมูล';
+                    monthlyHolidayList.appendChild(emptyItem);
+                    return;
+                }
+
+                currentMonthHolidays.forEach(function (h) {
+                    var item = document.createElement('div');
+                    item.style.cssText = "display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #fff; border-radius: 6px; border-left: 4px solid " + (h.Status === 'ongoing' ? '#198754' : '#ffc107') + "; box-shadow: 0 1px 2px rgba(0,0,0,0.05); cursor: pointer;";
+
+                    var dateRangeText = formatDateString(h.StartDate) + " - " + formatDateString(h.EndDate);
+
+                    item.innerHTML = `
+                        <div style="display: flex; flex-direction: column; gap: 2px;">
+                            <strong style="font-size: 13px; color: #333;">${h.HolidayName}</strong>
+                            <span style="font-size: 11px; color: #666;"><i class="fa-regular fa-clock"></i> ${dateRangeText}</span>
+                        </div>
+                        <span class="manager-badge manager-promo-holiday-badge-${h.Status}" style="font-size: 11px; padding: 2px 6px;">
+                            ${h.Status === 'ongoing' ? 'กำลังดำเนินอยู่' : (h.Status === 'upcoming' ? 'กำลังจะมาถึง' : 'ผ่านมาแล้ว')}
+                        </span>
+                    `;
+
+                    item.addEventListener('click', function () {
+                        showHolidayDetail(h);
+                    });
+
+                    monthlyHolidayList.appendChild(item);
                 });
             }
 
@@ -1102,17 +1237,13 @@
                 content.classList.remove('d-none');
 
                 detName.textContent = h.HolidayName;
-                detNote.textContent = h.EventNote || "ไม่มีคำอธิบายเพิ่มเติมเกี่ยวกับกิจกรรม";
-                
-                // ฟอร์แมตวันที่แบบไทยอ่านง่าย
+                detNote.textContent = h.EventNote || "ไม่มีการบันทึกกิจกรรมเสริมสำหรับช่วงเวลาพิเศษนี้";
                 detStart.textContent = formatDateString(h.StartDate);
                 detEnd.textContent = formatDateString(h.EndDate);
 
-                // ตั้งค่า Badge สถานะ
                 detStatus.className = 'manager-badge manager-promo-holiday-badge-' + h.Status;
                 detStatus.textContent = h.Status === 'ongoing' ? 'กำลังดำเนินอยู่' : (h.Status === 'upcoming' ? 'กำลังจะมาถึง' : 'ผ่านมาแล้ว');
 
-                // เติมฟอร์มสำหรับลบและแก้ไขข้อมูลวันหยุด
                 var editDataJson = JSON.stringify({
                     HolidayId: h.HolidayId,
                     HolidayName: h.HolidayName,
@@ -1125,27 +1256,18 @@
                     <button type="button" class="manager-btn manager-btn-outline manager-btn-sm" 
                             data-manager-fill="#saveHolidayModalForm" 
                             data-manager-fill-data='${editDataJson}'>
-                        <i class="fa-solid fa-pen-to-square"></i> แก้ไขเทศกาล
+                        <i class="fa-solid fa-pen-to-square"></i> แก้ไขข้อมูลวันหยุด
                     </button>
-                    <form action="/Manager/DeleteHoliday" method="post" data-manager-ajax data-manager-confirm="ต้องการลบวันเทศกาล '${h.HolidayName}' หรือไม่?" class="d-inline">
+                    <form action="/Manager/DeleteHoliday" method="post" data-manager-ajax data-manager-confirm="คุณต้องการยืนยันการลบเทศกาลพิเศษ '${h.HolidayName}' ออกจากระบบหรือไม่?" class="d-inline">
                         <input type="hidden" name="holidayId" value="${h.HolidayId}" />
                         <button type="submit" class="manager-btn manager-btn-danger manager-btn-sm">
-                            <i class="fa-solid fa-trash"></i> ลบรายการ
+                            <i class="fa-solid fa-trash"></i> ลบวันหยุด
                         </button>
                     </form>
                 `;
             }
 
-            function formatDateString(isoStr) {
-                if (!isoStr) return "--";
-                var parts = isoStr.split('-');
-                if (parts.length === 3) {
-                    return parts[2] + "/" + parts + "/" + parts[0];
-                }
-                return isoStr;
-            }
-
-            // ปุ่มกดเปลี่ยนเดือน
+            // ปุ่มเปลี่ยนเดือน < และ >
             var btnPrev = document.getElementById('btnPrevMonth');
             var btnNext = document.getElementById('btnNextMonth');
 
@@ -1160,9 +1282,8 @@
                 });
             }
 
-            // เริ่มเรนเดอร์เมื่อโหลดสำเร็จ
+            // เรนเดอร์เริ่มต้น
             renderCalendar();
-
         })();
     </script>
 }

@@ -91,6 +91,7 @@ public class ManagerRoomTypeRow
     public byte RoomTypeId { get; set; }
     public string TypeCode { get; set; } = string.Empty;
     public string TypeName { get; set; } = string.Empty;
+    public string? Description { get; set; }          // [ใหม่] ใช้เติมฟอร์มแก้ไขประเภทห้อง
     public string? BedType { get; set; }
     public byte MinGuests { get; set; }
     public byte MaxGuests { get; set; }
@@ -136,6 +137,17 @@ public class ManagerPricePeriodRow
     public string PeriodStatusLabel { get; set; } = string.Empty;
 }
 
+/// <summary>[ใหม่] ประวัติการเปลี่ยนแปลงราคา (อ่านจาก audit_logs)</summary>
+public class ManagerPriceHistoryRow
+{
+    public DateTime CreatedAt { get; set; }
+    public string? UserName { get; set; }
+    public string Action { get; set; } = string.Empty;
+    public string ActionLabel { get; set; } = string.Empty;
+    /// <summary>สรุปสิ่งที่เปลี่ยน เช่น "ราคาพื้นฐาน: 1500 → 1800"</summary>
+    public string Summary { get; set; } = string.Empty;
+}
+
 public class ManagerRoomManagementViewModel
 {
     public string? Search { get; set; }
@@ -150,6 +162,7 @@ public class ManagerRoomManagementViewModel
     public List<ManagerRoomTypeRow> RoomTypes { get; set; } = new();
     public List<ManagerRoomRow> Rooms { get; set; } = new();
     public List<ManagerPricePeriodRow> PricePeriods { get; set; } = new();
+    public List<ManagerPriceHistoryRow> PriceHistory { get; set; } = new();   // [ใหม่]
 
     public List<ManagerOption> StatusOptions { get; set; } = new();
     public List<ManagerOption> RoomTypeOptions { get; set; } = new();
@@ -206,6 +219,9 @@ public class ManagerPromotionManagementViewModel
     public string? Status { get; set; }
     public string? DiscountType { get; set; }
     public DateOnly Today { get; set; }
+
+    /// <summary>[ใหม่] เพดานส่วนลดรวมตาม spec (ส่งให้ View ใช้ตั้ง max ของ input)</summary>
+    public decimal MaxDiscountPercent { get; set; }
 
     public int ActiveCount { get; set; }
     public int ScheduledCount { get; set; }
@@ -271,6 +287,11 @@ public class ManagerStaffRow
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
     public List<ManagerStaffRoleItem> Roles { get; set; } = new();
+
+    /// <summary>[ใหม่] true = Manager ระงับ/เปิดใช้งาน/เปลี่ยน Role ได้ (ไม่ใช่ตัวเอง และไม่ใช่ Owner/Manager)</summary>
+    public bool CanManage { get; set; }
+    /// <summary>[ใหม่] เป็นบัญชีของผู้ใช้ที่ล็อกอินอยู่</summary>
+    public bool IsSelf { get; set; }
 }
 
 public class ManagerStaffManagementViewModel
@@ -283,7 +304,10 @@ public class ManagerStaffManagementViewModel
     public int InactiveStaff { get; set; }
 
     public List<ManagerStaffRow> Staff { get; set; } = new();
+    /// <summary>Role สำหรับตัวกรอง (ทุก Role ที่ไม่ใช่ CUSTOMER/GUEST)</summary>
     public List<ManagerOption> RoleOptions { get; set; } = new();
+    /// <summary>[ใหม่] Role ที่ Manager มอบหมายได้ (ไม่รวม OWNER/MANAGER/ADMIN/CUSTOMER/GUEST)</summary>
+    public List<ManagerOption> AssignableRoleOptions { get; set; } = new();
     public List<string> DataNotes { get; set; } = new();
 }
 
@@ -341,4 +365,36 @@ public class ManagerHolidayInput
     public DateOnly? StartDate { get; set; }
     public DateOnly? EndDate { get; set; }
     public string? EventNote { get; set; }
+}
+
+/// <summary>[ใหม่] เพิ่ม/แก้ไขห้อง (RoomId ว่าง = เพิ่มใหม่) สถานะห้องไม่ให้แก้ผ่านฟอร์มนี้</summary>
+public class ManagerRoomInput
+{
+    public uint? RoomId { get; set; }
+    public string? RoomNumber { get; set; }
+    public byte? FloorNo { get; set; }
+    public byte? RoomTypeId { get; set; }
+}
+
+/// <summary>[ใหม่] แก้ไขข้อมูลประเภทห้อง (ราคาแก้ผ่าน UpdateBasePrice)</summary>
+public class ManagerRoomTypeInput
+{
+    public byte? RoomTypeId { get; set; }
+    public string? TypeName { get; set; }
+    public string? Description { get; set; }
+    public string? BedType { get; set; }
+    public byte? MinGuests { get; set; }
+    public byte? MaxGuests { get; set; }
+    public bool AllowExtraBed { get; set; }
+}
+
+/// <summary>[ใหม่] สร้างบัญชีพนักงาน</summary>
+public class ManagerStaffCreateInput
+{
+    public string? Username { get; set; }
+    public string? Email { get; set; }
+    public string? FullName { get; set; }
+    public string? Phone { get; set; }
+    public string? Password { get; set; }
+    public string? RoleCode { get; set; }
 }

@@ -2,18 +2,24 @@
 @{
     ViewData["Title"] = "ภาพรวมการดำเนินงาน";
     Layout = "~/Views/Shared/_ManagerLayout.cshtml";
+
+    var rtList = ViewBag.RoomTypes as List<StayMate_Kavinvee_0576.Models.RoomType>
+                 ?? new List<StayMate_Kavinvee_0576.Models.RoomType>();
+    var rtCounts = ViewBag.RoomCounts as Dictionary<byte, int>
+                   ?? new Dictionary<byte, int>();
+    var hotel = ViewBag.Hotel as StayMate_Kavinvee_0576.Models.HotelSetting
+                ?? StayMate_Kavinvee_0576.Models.HotelSetting.Default();
 }
 
 <div class="manager-portal-wrapper"
      data-manager-dashboard
      data-endpoint="@Url.Action("DashboardData", "Manager")">
 
-    <!-- Anti-Forgery Token สำหรับการทำรายการความปลอดภัยในโปรเจกต์ -->
     <form id="managerGlobalTokenForm" class="d-none">
         @Html.AntiForgeryToken()
     </form>
 
-    <!-- ═══════════════════════ Alerts (TempData & Validation) ═══════════════════════ -->
+    <!-- ═══════════════════════ การแจ้งเตือนสถานะ ═══════════════════════ -->
     @if (TempData["SuccessMessage"] != null)
     {
         <div class="manager-alert manager-alert-success" role="alert">
@@ -40,67 +46,67 @@
         </div>
     }
 
-    <!-- ═══════════════════════ Top Hero & Tab Navigation ═══════════════════════ -->
+    <!-- ═══════════════════════ ส่วนหัวและแถบสลับหมวดหมู่ ═══════════════════════ -->
     <div class="manager-hero-card">
         <div class="manager-hero-top">
             <div class="manager-hero-title-group">
                 <span class="manager-hero-eyebrow">
-                    <i class="fa-solid fa-shield-halved"></i>
-                    STAYMATE HOTEL MANAGEMENT SYSTEM
+                    <i class="fa-solid fa-building-user"></i>
+                    STAYMATE HOTEL MANAGEMENT
                 </span>
-                <h1 class="manager-hero-title">Manager Operations Dashboard</h1>
+                <h1 class="manager-hero-title">ภาพรวมการดำเนินงาน (Manager Dashboard)</h1>
                 <p class="manager-hero-subtitle">
-                    ภาพรวมสถิติรายรับจริง การจองห้องพัก และสัดส่วนการปฏิบัติงานรายวันของทางโรงแรม
+                    ติดตามสถิติการจอง รายรับ อัตราการเข้าพัก และสถานะห้องพักของโรงแรม
                 </p>
             </div>
             <div class="manager-hero-meta">
                 <div class="manager-meta-pill">
                     <i class="fa-regular fa-calendar-check"></i>
-                    <span>ช่วงเวลาข้อมูล: <strong>@Model.StartDate.ToString("dd/MM/yyyy") - @Model.EndDate.ToString("dd/MM/yyyy")</strong></span>
+                    <span>ช่วงวันที่: <strong>@Model.StartDate.ToString("dd/MM/yyyy") - @Model.EndDate.ToString("dd/MM/yyyy")</strong></span>
                 </div>
                 <div class="manager-meta-pill manager-meta-pill-accent">
                     <i class="fa-solid fa-star"></i>
-                    <span>คะแนนเฉลี่ย: <strong data-kpi="averageRating" data-format="rating">@(Model.AverageRating.HasValue ? Model.AverageRating.Value.ToString("0.00") : "-")</strong> / 5.00</span>
+                    <span>คะแนนรีวิวเฉลี่ย: <strong data-kpi="averageRating" data-format="rating">@(Model.AverageRating.HasValue ? Model.AverageRating.Value.ToString("0.00") : "-")</strong> / 5.00</span>
                 </div>
             </div>
         </div>
 
-        <!-- 6 Tabs Navigation สำหรับแสดงข้อมูลสรุปแต่ละด้านภายในหน้า Dashboard -->
-        <nav class="manager-section-nav" aria-label="Dashboard Overview Tabs">
+        <nav class="manager-section-nav" aria-label="เมนูภาพรวมการบริหาร">
             <button type="button" class="manager-nav-tab active" data-manager-tab-target="tab-dashboard">
                 <i class="fa-solid fa-chart-pie"></i>
-                <span>ภาพรวม Dashboard</span>
+                <span>ภาพรวมการดำเนินงาน</span>
             </button>
             <button type="button" class="manager-nav-tab" data-manager-tab-target="tab-rooms-summary">
                 <i class="fa-solid fa-bed"></i>
-                <span>สรุปห้องพักและราคา</span>
+                <span>ห้องพักและราคา</span>
             </button>
             <button type="button" class="manager-nav-tab" data-manager-tab-target="tab-promo-summary">
                 <i class="fa-solid fa-tags"></i>
-                <span>สรุปโปรโมชั่นและวันหยุด</span>
+                <span>โปรโมชั่นและเทศกาล</span>
                 <span class="manager-nav-badge" data-kpi="activePromotions" data-format="number">@Model.ActivePromotions</span>
             </button>
             <button type="button" class="manager-nav-tab" data-manager-tab-target="tab-review-summary">
                 <i class="fa-solid fa-star-half-stroke"></i>
-                <span>สรุปรีวิวผู้เข้าพัก</span>
+                <span>รีวิวผู้เข้าพัก</span>
                 <span class="manager-nav-badge" data-kpi="totalReviews" data-format="number">@Model.TotalReviews</span>
             </button>
             <button type="button" class="manager-nav-tab" data-manager-tab-target="tab-staff-summary">
                 <i class="fa-solid fa-user-shield"></i>
-                <span>สรุปสายงานพนักงาน</span>
+                <span>บัญชีพนักงาน</span>
             </button>
             <button type="button" class="manager-nav-tab" data-manager-tab-target="tab-hotel-settings">
                 <i class="fa-solid fa-hotel"></i>
-                <span>ข้อมูลโรงแรม</span>
+                <span>ตั้งค่าข้อมูลโรงแรม</span>
             </button>
         </nav>
     </div>
 
     <!-- ═════════════════════════════════════════════════════════════════════════════
-         TAB 1: MAIN DASHBOARD OVERVIEW
+         TAB 1: ภาพรวมการดำเนินงาน (Manager Dashboard)
          ═════════════════════════════════════════════════════════════════════════════ -->
     <div id="tab-dashboard" class="manager-tab-content active">
-        <!-- Date Range Filter Bar (Connected to manager.js [data-manager-range-form]) -->
+
+        <!-- ตัวกรองช่วงเวลา -->
         <div class="manager-card manager-filter-card">
             <form method="get"
                   asp-controller="Manager"
@@ -108,10 +114,10 @@
                   data-manager-range-form
                   class="manager-range-form">
                 <div class="manager-range-title">
-                    <i class="fa-solid fa-sliders text-primary"></i>
+                    <i class="fa-solid fa-calendar-days text-primary"></i>
                     <div>
-                        <h2 class="manager-card-title">ตัวกรองช่วงเวลาของรายงาน</h2>
-                        <p class="manager-card-subtitle">อัปเดตสถิติรายรับจริงและจำนวนการจองสดจากฐานข้อมูล</p>
+                        <h2 class="manager-card-title">ช่วงเวลาที่แสดงผล</h2>
+                        <p class="manager-card-subtitle">เลือกช่วงวันที่เพื่อดูแนวโน้มรายรับและยอดการจอง</p>
                     </div>
                 </div>
 
@@ -142,19 +148,19 @@
                         </div>
                         <button type="submit" class="manager-btn manager-btn-primary">
                             <i class="fa-solid fa-rotate"></i>
-                            <span>อัปเดตข้อมูล</span>
+                            <span>แสดงข้อมูล</span>
                         </button>
                     </div>
                 </div>
             </form>
         </div>
 
-        <!-- 6 Core KPI Cards -->
+        <!-- การ์ดตัวชี้วัดหลัก 6 รายการ -->
         <div class="manager-kpi-grid">
-            <!-- 1. Total Bookings -->
+            <!-- 1. การจองทั้งหมด -->
             <article class="manager-kpi-card manager-kpi-blue">
                 <div class="manager-kpi-header">
-                    <span class="manager-kpi-label">Total Bookings (การจองทั้งหมด)</span>
+                    <span class="manager-kpi-label">การจองทั้งหมด</span>
                     <div class="manager-kpi-icon">
                         <i class="fa-solid fa-calendar-check"></i>
                     </div>
@@ -163,66 +169,15 @@
                     @Model.TotalBookings.ToString("N0")
                 </div>
                 <div class="manager-kpi-footer">
-                    <span>ในช่วงเวลาจอง: <strong data-kpi="periodBookings" data-format="number">@Model.PeriodBookings.ToString("N0")</strong> รายการ</span>
+                    <span>ในช่วงที่เลือก: <strong data-kpi="periodBookings" data-format="number">@Model.PeriodBookings.ToString("N0")</strong> รายการ</span>
                     <span class="manager-badge manager-badge-info">รอเช็คอิน <span data-kpi="pendingCheckInBookings" data-format="number">@Model.PendingCheckInBookings</span></span>
                 </div>
             </article>
 
-            <!-- 2. Available Rooms -->
-            <article class="manager-kpi-card manager-kpi-emerald">
-                <div class="manager-kpi-header">
-                    <span class="manager-kpi-label">Available Rooms (ห้องว่างพร้อมพัก)</span>
-                    <div class="manager-kpi-icon">
-                        <i class="fa-solid fa-door-open"></i>
-                    </div>
-                </div>
-                <div class="manager-kpi-value" data-kpi="availableRooms" data-format="number">
-                    @Model.AvailableRooms.ToString("N0")
-                </div>
-                <div class="manager-kpi-footer">
-                    <span>จากห้องที่เปิดใช้งาน: <strong data-kpi="totalRooms" data-format="number">@Model.TotalRooms.ToString("N0")</strong> ห้อง</span>
-                    <span class="manager-badge manager-badge-success">พร้อมให้บริการ</span>
-                </div>
-            </article>
-
-            <!-- 3. Occupied Rooms -->
-            <article class="manager-kpi-card manager-kpi-violet">
-                <div class="manager-kpi-header">
-                    <span class="manager-kpi-label">Occupied Rooms (ห้องที่มีผู้เข้าพัก)</span>
-                    <div class="manager-kpi-icon">
-                        <i class="fa-solid fa-bed"></i>
-                    </div>
-                </div>
-                <div class="manager-kpi-value" data-kpi="occupiedRooms" data-format="number">
-                    @Model.OccupiedRooms.ToString("N0")
-                </div>
-                <div class="manager-kpi-footer">
-                    <span>ซ่อมบำรุง: <strong data-kpi="maintenanceRooms" data-format="number">@Model.MaintenanceRooms</strong> ห้อง</span>
-                    <span class="manager-badge manager-badge-violet">กำลังเข้าพัก</span>
-                </div>
-            </article>
-
-            <!-- 4. Rooms Waiting for Cleaning -->
-            <article class="manager-kpi-card manager-kpi-amber">
-                <div class="manager-kpi-header">
-                    <span class="manager-kpi-label">Waiting for Cleaning (รอทำความสะอาด)</span>
-                    <div class="manager-kpi-icon">
-                        <i class="fa-solid fa-broom"></i>
-                    </div>
-                </div>
-                <div class="manager-kpi-value" data-kpi="needsCleaningRooms" data-format="number">
-                    @Model.NeedsCleaningRooms.ToString("N0")
-                </div>
-                <div class="manager-kpi-footer">
-                    <span>สถานะ needs_cleaning ในระบบ</span>
-                    <span class="manager-badge manager-badge-warning">รอแม่บ้านดำเนินการ</span>
-                </div>
-            </article>
-
-            <!-- 5. Total Revenue -->
+            <!-- 2. รายได้รวม -->
             <article class="manager-kpi-card manager-kpi-cyan">
                 <div class="manager-kpi-header">
-                    <span class="manager-kpi-label">Total Revenue (รายรับอนุมัติรวม)</span>
+                    <span class="manager-kpi-label">รายได้รวมทั้งหมด</span>
                     <div class="manager-kpi-icon">
                         <i class="fa-solid fa-sack-dollar"></i>
                     </div>
@@ -236,10 +191,10 @@
                 </div>
             </article>
 
-            <!-- 6. Occupancy Rate -->
+            <!-- 3. อัตราการเข้าพัก -->
             <article class="manager-kpi-card manager-kpi-navy">
                 <div class="manager-kpi-header">
-                    <span class="manager-kpi-label">Occupancy Rate (อัตราเข้าพัก)</span>
+                    <span class="manager-kpi-label">อัตราการเข้าพัก (Occupancy Rate)</span>
                     <div class="manager-kpi-icon">
                         <i class="fa-solid fa-chart-line"></i>
                     </div>
@@ -251,24 +206,75 @@
                     <div class="manager-progress-track" aria-hidden="true">
                         <div class="manager-progress-fill" data-occupancy-bar="@Model.OccupancyRate"></div>
                     </div>
-                    <span class="manager-badge manager-badge-primary">รอตรวจสอบสลิป <span data-kpi="pendingApprovalBookings" data-format="number">@Model.PendingApprovalBookings</span></span>
+                    <span class="manager-badge manager-badge-primary">รอตรวจสลิป <span data-kpi="pendingApprovalBookings" data-format="number">@Model.PendingApprovalBookings</span></span>
+                </div>
+            </article>
+
+            <!-- 4. ห้องว่างพร้อมพัก -->
+            <article class="manager-kpi-card manager-kpi-emerald">
+                <div class="manager-kpi-header">
+                    <span class="manager-kpi-label">ห้องว่างพร้อมเข้าพัก</span>
+                    <div class="manager-kpi-icon">
+                        <i class="fa-solid fa-door-open"></i>
+                    </div>
+                </div>
+                <div class="manager-kpi-value" data-kpi="availableRooms" data-format="number">
+                    @Model.AvailableRooms.ToString("N0")
+                </div>
+                <div class="manager-kpi-footer">
+                    <span>จากห้องที่เปิดบริการ: <strong data-kpi="totalRooms" data-format="number">@Model.TotalRooms.ToString("N0")</strong> ห้อง</span>
+                    <span class="manager-badge manager-badge-success">พร้อมให้บริการ</span>
+                </div>
+            </article>
+
+            <!-- 5. ห้องที่มีผู้เข้าพัก -->
+            <article class="manager-kpi-card manager-kpi-violet">
+                <div class="manager-kpi-header">
+                    <span class="manager-kpi-label">ห้องที่มีผู้เข้าพัก</span>
+                    <div class="manager-kpi-icon">
+                        <i class="fa-solid fa-bed"></i>
+                    </div>
+                </div>
+                <div class="manager-kpi-value" data-kpi="occupiedRooms" data-format="number">
+                    @Model.OccupiedRooms.ToString("N0")
+                </div>
+                <div class="manager-kpi-footer">
+                    <span>กำลังซ่อมบำรุง: <strong data-kpi="maintenanceRooms" data-format="number">@Model.MaintenanceRooms</strong> ห้อง</span>
+                    <span class="manager-badge manager-badge-violet">กำลังเข้าพัก</span>
+                </div>
+            </article>
+
+            <!-- 6. ห้องรอทำความสะอาด -->
+            <article class="manager-kpi-card manager-kpi-amber">
+                <div class="manager-kpi-header">
+                    <span class="manager-kpi-label">ห้องรอทำความสะอาด</span>
+                    <div class="manager-kpi-icon">
+                        <i class="fa-solid fa-broom"></i>
+                    </div>
+                </div>
+                <div class="manager-kpi-value" data-kpi="needsCleaningRooms" data-format="number">
+                    @Model.NeedsCleaningRooms.ToString("N0")
+                </div>
+                <div class="manager-kpi-footer">
+                    <span>โปรโมชั่นที่เปิดอยู่: <strong data-kpi="activePromotions" data-format="number">@Model.ActivePromotions</strong> รายการ</span>
+                    <span class="manager-badge manager-badge-warning">รอดำเนินการ</span>
                 </div>
             </article>
         </div>
 
-        <!-- Charts Grid (Connected to manager.js native rendering) -->
+        <!-- กราฟสรุปผลการดำเนินงาน -->
         <div class="manager-charts-grid">
             <div class="manager-card manager-chart-card manager-chart-wide">
                 <div class="manager-card-header">
                     <div>
                         <h3 class="manager-card-title">
                             <i class="fa-solid fa-coins text-success"></i>
-                            สถิติแนวโน้มรายรับตามวันเข้าพักจริง (Revenue Trend)
+                            แนวโน้มรายรับรายวัน
                         </h3>
-                        <p class="manager-card-subtitle">รายรับคำนวณจากยอดชำระเงินที่อนุมัติแล้ว (Approved Payments)</p>
+                        <p class="manager-card-subtitle">ยอดรับชำระเงินที่ได้รับการอนุมัติแล้วในแต่ละวัน</p>
                     </div>
                     <span class="manager-badge manager-badge-success">
-                        รายรับรวมในช่วงนี้: <strong data-kpi="periodRevenue" data-format="currency">฿@Model.PeriodRevenue.ToString("N2")</strong>
+                        รวมในช่วงนี้: <strong data-kpi="periodRevenue" data-format="currency">฿@Model.PeriodRevenue.ToString("N2")</strong>
                     </span>
                 </div>
                 <div class="manager-chart-container">
@@ -281,9 +287,9 @@
                     <div>
                         <h3 class="manager-card-title">
                             <i class="fa-solid fa-calendar-day text-primary"></i>
-                            แนวโน้มปริมาณใบจองใหม่ (Daily Bookings)
+                            จำนวนการจองรายวัน
                         </h3>
-                        <p class="manager-card-subtitle">ปริมาณการจองห้องพักแยกรายวัน</p>
+                        <p class="manager-card-subtitle">จำนวนรายการจองใหม่ที่เกิดขึ้นในแต่ละวัน</p>
                     </div>
                 </div>
                 <div class="manager-chart-container">
@@ -296,9 +302,9 @@
                     <div>
                         <h3 class="manager-card-title">
                             <i class="fa-solid fa-circle-dot text-info"></i>
-                            สัดส่วนความหนาแน่นห้องพัก (Rooms Status)
+                            สัดส่วนสถานะห้องพัก
                         </h3>
-                        <p class="manager-card-subtitle">สถิติตามห้องพักที่เปิดใช้จริงในระบบ</p>
+                        <p class="manager-card-subtitle">จำแนกตามสถานะห้องที่เปิดให้บริการปัจจุบัน</p>
                     </div>
                 </div>
                 <div class="manager-chart-container">
@@ -311,9 +317,9 @@
                     <div>
                         <h3 class="manager-card-title">
                             <i class="fa-solid fa-check-double text-warning"></i>
-                            สัดส่วนสถานะใบจอง (Bookings Status)
+                            สัดส่วนสถานะการจอง
                         </h3>
-                        <p class="manager-card-subtitle">ประเมินสัดส่วนการจองทุกประเภท</p>
+                        <p class="manager-card-subtitle">ภาพรวมสถานะใบจองทั้งหมดในระบบ</p>
                     </div>
                 </div>
                 <div class="manager-chart-container">
@@ -322,24 +328,35 @@
             </div>
         </div>
 
-        <!-- Recent Bookings Real List inside Dashboard -->
+        <!-- ตารางรายการจองล่าสุด 10 รายการ -->
         <div class="manager-card">
             <div class="manager-card-header manager-card-header-responsive">
                 <div>
                     <h3 class="manager-card-title">
                         <i class="fa-solid fa-clock-rotate-left text-primary"></i>
-                        รายการทำธุรกรรมล่าสุด (10 อันดับแรก)
+                        รายการจองล่าสุด
                     </h3>
-                    <p class="manager-card-subtitle">ดึงข้อมูลสดจากฐานข้อมูลของระบบ StayMate</p>
+                    <p class="manager-card-subtitle">แสดงรายการจองห้องพัก 10 รายการล่าสุด</p>
                 </div>
-                <div class="manager-table-tools">
+                <div class="manager-table-tools d-flex flex-wrap gap-2">
                     <div class="manager-search-box">
                         <i class="fa-solid fa-magnifying-glass"></i>
                         <input type="search"
                                class="manager-input"
-                               placeholder="ค้นหาชื่อผู้ติดต่อ, รหัสใบจอง..."
+                               placeholder="ค้นหารหัสการจอง หรือชื่อผู้ติดต่อ..."
                                data-manager-search="#recentBookingsDashboardTable" />
                     </div>
+                    <select class="manager-input"
+                            style="width: auto; min-width: 180px;"
+                            aria-label="กรองตามสถานะการจอง"
+                            data-manager-filter="#recentBookingsDashboardTable"
+                            data-filter-key="status">
+                        <option value="">ทุกสถานะการจอง</option>
+                        @foreach (var s in Model.BookingsByStatus)
+                        {
+                            <option value="@s.Key">@s.Label (@s.Count)</option>
+                        }
+                    </select>
                 </div>
             </div>
 
@@ -350,8 +367,8 @@
                             <th>รหัสการจอง</th>
                             <th>ชื่อผู้ติดต่อ</th>
                             <th>ประเภทห้องพัก</th>
-                            <th>ช่วงวันที่เข้าพัก (เช็คอิน - เช็คเอาท์)</th>
-                            <th class="text-center">จำนวนคืน / แขก</th>
+                            <th>วันที่เช็คอิน - เช็คเอาท์</th>
+                            <th class="text-center">จำนวนคืน / ผู้เข้าพัก</th>
                             <th class="text-end">ยอดสุทธิ</th>
                             <th class="text-center">สถานะ</th>
                         </tr>
@@ -413,7 +430,7 @@
                             <tr data-manager-empty-row>
                                 <td colspan="7" class="manager-empty-state">
                                     <i class="fa-regular fa-folder-open"></i>
-                                    <p>ไม่พบรายการข้อมูลธุรกรรมล่าสุด</p>
+                                    <p>ยังไม่มีรายการจองในระบบ</p>
                                 </td>
                             </tr>
                         }
@@ -421,56 +438,57 @@
                 </table>
                 <div class="manager-empty-state d-none" data-manager-empty-for="#recentBookingsDashboardTable">
                     <i class="fa-solid fa-filter-circle-xmark"></i>
-                    <p>ไม่พบรายการข้อมูลที่ตรงกับเงื่อนไข</p>
+                    <p>ไม่พบรายการจองที่ตรงกับเงื่อนไขการค้นหา</p>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- ═════════════════════════════════════════════════════════════════════════════
-         TAB 2: ROOMS & RATES SUMMARY (SECTION 2 SUMMARY)
+         TAB 2: สรุปห้องพักและราคา (Room & Rate Management)
          ═════════════════════════════════════════════════════════════════════════════ -->
     <div id="tab-rooms-summary" class="manager-tab-content">
         <div class="manager-card">
             <div class="manager-card-header manager-card-header-responsive">
                 <div>
                     <h2 class="manager-card-title">
-                        <i class="fa-solid fa-hotel text-primary"></i>
-                        สรุปสถานะห้องพักและราคาพื้นฐานในระบบ
+                        <i class="fa-solid fa-bed text-primary"></i>
+                        ประเภทห้องพักและอัตราค่าบริการพื้นฐาน
                     </h2>
                     <p class="manager-card-subtitle">
-                        สถิติเชิงปริมาณของประเภทห้องพักทั้ง 4 ระดับ (กรุณาใช้แถบเครื่องมือด่วนด้านขวาเพื่อเปิดเมนูแบบละเอียดเต็มรูปแบบ)
+                        จัดการข้อมูลห้องพักทั้ง 4 ประเภท กำหนดจำนวนผู้เข้าพัก ราคาพื้นฐาน และราคาตามช่วงเวลา
                     </p>
                 </div>
                 <a asp-controller="Manager" asp-action="RoomManagement" class="manager-btn manager-btn-primary">
-                    <i class="fa-solid fa-up-right-from-square"></i>
-                    <span>ไปยังหน้าจัดการห้องพักและราคาแบบเต็ม</span>
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>จัดการห้องพักและราคา</span>
                 </a>
             </div>
 
-            @{
-                var rtList = ViewBag.RoomTypes as List<StayMate_Kavinvee_0576.Models.RoomType>
-                             ?? new List<StayMate_Kavinvee_0576.Models.RoomType>();
-                var rtCounts = ViewBag.RoomCounts as Dictionary<byte, int> ?? new Dictionary<byte, int>();
-            }
             <div class="manager-grid-2col">
                 @foreach (var rt in rtList)
                 {
                     <div class="manager-card manager-roomtype-card">
                         <div class="manager-roomtype-top">
                             <div>
-                                <span class="manager-code-badge">@rt.TypeCode | ID: @rt.RoomTypeId</span>
+                                <span class="manager-code-badge">@rt.TypeCode</span>
                                 <h3 class="manager-roomtype-name">@rt.TypeName</h3>
                             </div>
+                            <span class="manager-badge manager-badge-info">
+                                @(rtCounts.TryGetValue(rt.RoomTypeId, out var c) ? c : 0) ห้องที่เปิดบริการ
+                            </span>
                         </div>
                         <div class="manager-roomtype-specs">
                             <div class="manager-spec-item">
-                                <span class="manager-spec-label"><i class="fa-solid fa-users"></i> เตียง &amp; ผู้เข้าพัก</span>
-                                <span class="manager-spec-val">@rt.BedType / @rt.MinGuests–@rt.MaxGuests ท่าน</span>
+                                <span class="manager-spec-label"><i class="fa-solid fa-users"></i> ประเภทเตียงและจำนวนผู้เข้าพัก</span>
+                                <span class="manager-spec-val">@(string.IsNullOrWhiteSpace(rt.BedType) ? "-" : rt.BedType) · @rt.MinGuests–@rt.MaxGuests ท่าน</span>
                             </div>
                             <div class="manager-spec-item">
-                                <span class="manager-spec-label"><i class="fa-solid fa-door-open"></i> จำนวนห้อง / ราคาพื้นฐาน</span>
-                                <span class="manager-spec-val">@(rtCounts.TryGetValue(rt.RoomTypeId, out var c) ? c : 0) ห้อง · ฿@rt.BasePrice.ToString("N0") / คืน</span>
+                                <span class="manager-spec-label"><i class="fa-solid fa-tag"></i> ราคาพื้นฐาน / เตียงเสริม</span>
+                                <span class="manager-spec-val">
+                                    ฿@rt.BasePrice.ToString("N0") / คืน
+                                    @(rt.AllowExtraBed ? $" (เตียงเสริม ฿{rt.ExtraBedPrice:N0})" : " (ไม่รองรับเตียงเสริม)")
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -480,89 +498,88 @@
     </div>
 
     <!-- ═════════════════════════════════════════════════════════════════════════════
-         TAB 3: PROMOTION & HOLIDAY SUMMARY (SECTION 3 SUMMARY)
+         TAB 3: สรุปโปรโมชั่นและวันหยุดเทศกาล (Promotion Management)
          ═════════════════════════════════════════════════════════════════════════════ -->
     <div id="tab-promo-summary" class="manager-tab-content">
         <div class="manager-card">
             <div class="manager-card-header manager-card-header-responsive">
                 <div>
                     <h2 class="manager-card-title">
-                        <i class="fa-solid fa-gift text-primary"></i>
-                        ภาพรวมแคมเปญโปรโมชั่น 5 รูปแบบหลักของระบบ
+                        <i class="fa-solid fa-tags text-primary"></i>
+                        แคมเปญโปรโมชั่นหลักและวันหยุดเทศกาล
                     </h2>
                     <p class="manager-card-subtitle">
-                        สถิติโปรโมชั่นที่เปิดใช้งานอยู่ และปฏิทินวันเทศกาลปัจจุบันที่ใช้คำนวณราคาพิเศษในฐานข้อมูล
+                        ตั้งค่าการเปิด-ปิดโปรโมชั่น กำหนดช่วงเวลา ส่วนลด มูลค่า E-Voucher และปฏิทินวันหยุด
                     </p>
                 </div>
                 <a asp-controller="Manager" asp-action="PromotionManagement" class="manager-btn manager-btn-primary">
-                    <i class="fa-solid fa-up-right-from-square"></i>
-                    <span>ไปยังหน้าจัดการโปรโมชั่นและวันหยุดแบบเต็ม</span>
+                    <i class="fa-solid fa-gear"></i>
+                    <span>จัดการโปรโมชั่นและวันหยุด</span>
                 </a>
             </div>
 
-            <!-- Maximum 20% Discount Cap Policy Rule -->
             <div class="manager-policy-banner mb-3">
                 <div class="manager-policy-badge">
-                    <i class="fa-solid fa-scale-balanced"></i>
-                    <span>MAX DISCOUNT: 20%</span>
+                    <i class="fa-solid fa-percent"></i>
+                    <span>เพดานส่วนลดสูงสุด 20%</span>
                 </div>
                 <div class="manager-policy-text">
-                    <strong>กฎการควบคุมส่วนลดสูงสุด:</strong>
-                    <span>ระบบควบคุมการทำส่วนลดโปรโมชั่นให้อยู่ในเพดานสูงสุดไม่เกิน <strong>20%</strong> เพื่อรักษามาตรฐานอัตรากำไรขั้นต้นของโรงแรม</span>
+                    <strong>เงื่อนไขการคำนวณส่วนลดอัตโนมัติ:</strong>
+                    <span>ระบบเลือกโปรโมชั่นที่ให้ส่วนลดสูงสุดเป็นส่วนลดหลัก และให้ส่วนลดเพิ่มรายการละ 5% สำหรับโปรโมชั่นอื่นที่เข้าเงื่อนไข โดยส่วนลดรวมทั้งหมดไม่เกิน <strong>20%</strong> ของค่าห้องพัก</span>
                 </div>
             </div>
 
             <div class="manager-promo-grid">
                 <article class="manager-promo-card">
                     <div class="manager-promo-card-top">
-                        <span class="manager-code-badge">3_PAY_2</span>
-                        <span class="manager-badge manager-badge-cyan">percent_extra_nights</span>
+                        <span class="manager-code-badge">3 PAY 2</span>
+                        <span class="manager-badge manager-badge-cyan">Deluxe · 3 ท่าน</span>
                     </div>
-                    <h3 class="manager-promo-title">1. โปรโมชั่น 3 Pay 2</h3>
-                    <p class="manager-promo-desc">เข้าพักครบ 3 คืน สิทธิ์รับส่วนลดมูลค่าเทียบเท่าคืนพิเศษทันที (พัก 3 จ่าย 2)</p>
+                    <h3 class="manager-promo-title">1. 3 Pay 2</h3>
+                    <p class="manager-promo-desc">โปรโมชั่นสำหรับการจองห้องพักประเภท Deluxe สำหรับผู้เข้าพัก 3 ท่าน</p>
                 </article>
 
                 <article class="manager-promo-card">
                     <div class="manager-promo-card-top">
-                        <span class="manager-code-badge">FAMILY_GANG</span>
-                        <span class="manager-badge manager-badge-violet">free_extra_bed</span>
+                        <span class="manager-code-badge">FAMILY &amp; GANG</span>
+                        <span class="manager-badge manager-badge-violet">Family · 5 ท่านขึ้นไป</span>
                     </div>
                     <h3 class="manager-promo-title">2. Family &amp; Gang</h3>
-                    <p class="manager-promo-desc">สำหรับผู้เข้าพักเป็นกลุ่ม 3 ท่านขึ้นไป รับสิทธิ์เสริมเตียงนอนฟรีไม่มีค่าใช้จ่าย</p>
+                    <p class="manager-promo-desc">สิทธิพิเศษสำหรับการจองห้องพัก Family Room เมื่อเข้าพักตั้งแต่ 5 ท่านขึ้นไป</p>
                 </article>
 
                 <article class="manager-promo-card">
                     <div class="manager-promo-card-top">
-                        <span class="manager-code-badge">STAY_3PLUS</span>
-                        <span class="manager-badge manager-badge-info">percent_room</span>
+                        <span class="manager-code-badge">STAY 3+ NIGHTS</span>
+                        <span class="manager-badge manager-badge-info">พัก 3 คืนขึ้นไป</span>
                     </div>
                     <h3 class="manager-promo-title">3. Stay 3+ Nights</h3>
-                    <p class="manager-promo-desc">ส่วนลดพิเศษสำหรับผู้เข้าพักต่อเนื่องตั้งแต่ 3 คืนขึ้นไปแบบมีเงื่อนไขสูงสุด 20%</p>
+                    <p class="manager-promo-desc">ส่วนลดค่าห้องพักสำหรับลูกค้าที่เข้าพักต่อเนื่องตั้งแต่ 3 คืนขึ้นไป</p>
                 </article>
 
                 <article class="manager-promo-card">
                     <div class="manager-promo-card-top">
-                        <span class="manager-code-badge">WEEKLY_ESCAPE</span>
-                        <span class="manager-badge manager-badge-success">Max 20% Discount</span>
+                        <span class="manager-code-badge">WEEKLY ESCAPE</span>
+                        <span class="manager-badge manager-badge-success">พัก 7 คืนขึ้นไป</span>
                     </div>
                     <h3 class="manager-promo-title">4. Weekly Escape</h3>
-                    <p class="manager-promo-desc">โปรโมชั่นพักระยะยาวสัปดาห์ขึ้นไป ปรับส่วนลดค่าห้องสูงสุดตามเพดานที่ปลอดภัย</p>
+                    <p class="manager-promo-desc">ส่วนลดพิเศษสำหรับการเข้าพักระยะยาวต่อเนื่องตั้งแต่ 7 คืนขึ้นไป</p>
                 </article>
 
                 <article class="manager-promo-card">
                     <div class="manager-promo-card-top">
-                        <span class="manager-code-badge">FESTIVAL_WKND</span>
-                        <span class="manager-badge manager-badge-warning">RequiresHoliday</span>
+                        <span class="manager-code-badge">FESTIVAL &amp; LONG WEEKEND</span>
+                        <span class="manager-badge manager-badge-warning">ช่วงวันหยุดเทศกาล</span>
                     </div>
                     <h3 class="manager-promo-title">5. Festival &amp; Long Weekend</h3>
-                    <p class="manager-promo-desc">แคมเปญช่วงวันเทศกาลสำคัญ รองรับการแจก E-Voucher สิทธิพิเศษเสริม</p>
+                    <p class="manager-promo-desc">แคมเปญสำหรับการเข้าพักในช่วงเทศกาลและวันหยุดยาว พร้อมสิทธิ์รับ E-Voucher</p>
                 </article>
             </div>
         </div>
     </div>
 
     <!-- ═════════════════════════════════════════════════════════════════════════════
-         TAB 4: REVIEWS & SATISFACTION SUMMARY (SECTION 4 SUMMARY)
+         TAB 4: สรุปรีวิวและความคิดเห็นลูกค้า (Review Management)
          ═════════════════════════════════════════════════════════════════════════════ -->
     <div id="tab-review-summary" class="manager-tab-content">
         <div class="manager-card">
@@ -570,15 +587,15 @@
                 <div>
                     <h2 class="manager-card-title">
                         <i class="fa-solid fa-star text-warning"></i>
-                        สรุปความพึงพอใจการเข้าพักและ Feedback จากฐานข้อมูล
+                        คะแนนความพึงพอใจและรีวิวจากผู้เข้าพัก
                     </h2>
                     <p class="manager-card-subtitle">
-                        สถิติตัวเลขอัตราความพึงพอใจสะสมของผู้เข้าพักจริง (ตรวจสอบรีวิวทั้งหมดและตอบกลับได้ที่หน้าหลัก)
+                        ตรวจสอบคะแนนรีวิว ค้นหาความคิดเห็น และกรองข้อมูลตามระดับดาวหรือช่วงเวลา
                     </p>
                 </div>
                 <a asp-controller="Manager" asp-action="ReviewManagement" class="manager-btn manager-btn-primary">
-                    <i class="fa-solid fa-up-right-from-square"></i>
-                    <span>ไปยังหน้าจัดการรีวิวและ Feedback แบบเต็ม</span>
+                    <i class="fa-solid fa-comments"></i>
+                    <span>ดูรีวิวทั้งหมด</span>
                 </a>
             </div>
 
@@ -594,14 +611,14 @@
                         <i class="fa-solid fa-star"></i>
                         <i class="fa-solid fa-star-half-stroke"></i>
                     </div>
-                    <span class="manager-score-count">จากทั้งหมด <strong data-kpi="totalReviews" data-format="number">@Model.TotalReviews</strong> รีวิว</span>
+                    <span class="manager-score-count">จากรีวิวทั้งหมด <strong data-kpi="totalReviews" data-format="number">@Model.TotalReviews</strong> รายการ</span>
                 </div>
                 <div class="manager-review-readonly-note">
                     <div class="manager-badge manager-badge-info mb-2">
-                        <i class="fa-solid fa-circle-info"></i> ข้อมูลโครงสร้างระบบ (Database Note)
+                        <i class="fa-solid fa-chart-simple"></i> การติดตามคุณภาพบริการ
                     </div>
                     <p class="mb-0">
-                        ตามสถาปัตยกรรมฐานข้อมูลใน `ManagerController.cs` ฟีเจอร์ตอบกลับความคิดเห็นรีวิวของลูกค้าเป็นฟังก์ชันสำหรับการตรวจสอบสถิติเชิงลึกแบบ Read-only (การตอบกลับแบบบันทึกประวัติการพัฒนาจะอยู่ในการควบคุมของ Admin ส่วนกลาง)
+                        ผู้จัดการสามารถค้นหารีวิวจากรหัสการจอง ชื่อผู้เข้าพัก หรือข้อความความคิดเห็น รวมถึงกรองดูตามระดับคะแนน 1–5 ดาว เพื่อนำไปพัฒนาคุณภาพการให้บริการของแต่ละแผนก
                     </p>
                 </div>
             </div>
@@ -609,7 +626,7 @@
     </div>
 
     <!-- ═════════════════════════════════════════════════════════════════════════════
-         TAB 5: STAFF SECURITY & GOVERNANCE SUMMARY (SECTION 5 SUMMARY)
+         TAB 5: สรุปการจัดการบัญชีพนักงาน (Staff Management)
          ═════════════════════════════════════════════════════════════════════════════ -->
     <div id="tab-staff-summary" class="manager-tab-content">
         <div class="manager-card">
@@ -617,44 +634,43 @@
                 <div>
                     <h2 class="manager-card-title">
                         <i class="fa-solid fa-user-shield text-primary"></i>
-                        การควบคุมสิทธิ์พนักงานและนโยบายความปลอดภัยของระบบ
+                        การบริหารบัญชีพนักงานและกำหนดสิทธิ์ตามบทบาท
                     </h2>
                     <p class="manager-card-subtitle">
-                        สถิติสรุปบทบาทหน้าที่ (Roles) การปฏิบัติงานส่วนควบคุมโรงแรม StayMate
+                        เพิ่มบัญชีพนักงานใหม่ กำหนดบทบาทหน้าที่ ระงับการใช้งาน หรือเปิดใช้งานบัญชีอีกครั้ง
                     </p>
                 </div>
                 <a asp-controller="Manager" asp-action="StaffManagement" class="manager-btn manager-btn-primary">
-                    <i class="fa-solid fa-up-right-from-square"></i>
-                    <span>ไปยังหน้าจัดการบัญชีพนักงานแบบเต็ม</span>
+                    <i class="fa-solid fa-users-gear"></i>
+                    <span>จัดการบัญชีพนักงาน</span>
                 </a>
             </div>
 
-            <!-- Security Policy Callout Banner -->
             <div class="manager-security-banner">
                 <div class="manager-security-header">
-                    <i class="fa-solid fa-shield-cat"></i>
-                    <strong>กฎเหล็กความปลอดภัยของระบบบริหาร (Operational Security Guidelines)</strong>
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <strong>ขอบเขตสิทธิ์และการแบ่งแยกหน้าที่ (Separation of Duties)</strong>
                 </div>
                 <div class="manager-security-grid">
                     <div class="manager-security-rule">
+                        <i class="fa-solid fa-user-check text-success"></i>
+                        <div>
+                            <strong>จัดการสายงานปฏิบัติการ</strong>
+                            <span>เพิ่มบัญชี เปลี่ยนตำแหน่ง ระงับ หรือเปิดใช้งานบัญชีพนักงานต้อนรับ (Reception) ฝ่ายการเงิน (Finance) และแม่บ้าน (Housekeeping)</span>
+                        </div>
+                    </div>
+                    <div class="manager-security-rule">
                         <i class="fa-solid fa-ban text-danger"></i>
                         <div>
-                            <strong>ไม่ยกระดับบัญชี Owner</strong>
-                            <span>ระบบห้ามสร้างบัญชีระดับ Owner หรือสิทธิ์ที่ไม่เกี่ยวข้องกับสายพนักงานฝ่ายปฏิบัติการในทุกรณี</span>
+                            <strong>คุ้มครองบัญชีระดับบริหาร</strong>
+                            <span>ไม่อนุญาตให้แก้ไข ระงับ หรือยกระดับสิทธิ์บัญชีเจ้าของกิจการ (Owner) ผู้จัดการท่านอื่น หรือบัญชีของตนเอง</span>
                         </div>
                     </div>
                     <div class="manager-security-rule">
-                        <i class="fa-solid fa-user-lock text-info"></i>
+                        <i class="fa-solid fa-key text-info"></i>
                         <div>
-                            <strong>ห้ามขยายสิทธิ์ของตัวเอง</strong>
-                            <span>ผู้ใช้บทบาท Manager ไม่สามารถขยายสิทธิ์หรือมอบหมาย Role เพิ่มเติมให้บัญชีตัวเองได้</span>
-                        </div>
-                    </div>
-                    <div class="manager-security-rule">
-                        <i class="fa-solid fa-eye text-success"></i>
-                        <div>
-                            <strong>พนักงาน Front / Finance / Maid</strong>
-                            <span>ข้อมูลพนักงานทั้งหมดใช้สำหรับการควบคุม ติดตาม เพื่อประเมินผลการทำงานและการประสานงาน</span>
+                            <strong>ความปลอดภัยของรหัสผ่าน</strong>
+                            <span>กำหนดรหัสผ่านเริ่มต้นได้เฉพาะเมื่อสร้างบัญชีใหม่เท่านั้น ระบบไม่แสดงและไม่อนุญาตให้แก้ไขรหัสผ่านของพนักงานภายหลัง</span>
                         </div>
                     </div>
                 </div>
@@ -663,30 +679,37 @@
     </div>
 
     <!-- ═════════════════════════════════════════════════════════════════════════════
-         TAB 6: HOTEL SETTINGS (SECTION 6)
+         TAB 6: ตั้งค่าข้อมูลโรงแรม (Hotel Settings)
          ═════════════════════════════════════════════════════════════════════════════ -->
     <div id="tab-hotel-settings" class="manager-tab-content">
-        @{
-            var hotel = ViewBag.Hotel as StayMate_Kavinvee_0576.Models.HotelSetting
-                        ?? StayMate_Kavinvee_0576.Models.HotelSetting.Default();
-        }
         <div class="manager-card">
             <div class="manager-card-header">
                 <div>
-                    <h2 class="manager-card-title"><i class="fa-solid fa-hotel text-primary"></i> ข้อมูลโรงแรม (Hotel Settings)</h2>
-                    <p class="manager-card-subtitle">บันทึกลงฐานข้อมูลจริง และแสดงบนหน้าเว็บไซต์ทันที</p>
+                    <h2 class="manager-card-title">
+                        <i class="fa-solid fa-hotel text-primary"></i>
+                        ข้อมูลพื้นฐานของโรงแรม
+                    </h2>
+                    <p class="manager-card-subtitle">แก้ไขชื่อโรงแรม โลโก้ ที่อยู่ ช่องทางติดต่อ และเวลาเช็คอิน/เช็คเอาท์มาตรฐาน</p>
                 </div>
             </div>
-            <form asp-controller="Manager" asp-action="SaveHotelSettings" method="post" enctype="multipart/form-data" class="p-3">
+
+            <form asp-controller="Manager"
+                  asp-action="SaveHotelSettings"
+                  method="post"
+                  enctype="multipart/form-data"
+                  class="p-3">
+                @Html.AntiForgeryToken()
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="manager-label" for="hsName">ชื่อโรงแรม *</label>
                         <input id="hsName" name="hotelName" class="manager-input" maxlength="150" required value="@hotel.HotelName" />
                     </div>
                     <div class="col-md-6">
-                        <label class="manager-label" for="hsLogo">โลโก้โรงแรม (.jpg .png .webp ไม่เกิน 2 MB)</label>
+                        <label class="manager-label" for="hsLogo">โลโก้โรงแรม (.jpg, .png, .webp ขนาดไม่เกิน 2 MB)</label>
                         <input id="hsLogo" name="logo" type="file" accept=".jpg,.jpeg,.png,.webp" class="manager-input" />
-                        <img src="@(hotel.LogoPath ?? "/images/Logo/LogoStayMate.jpg")" alt="โลโก้ปัจจุบัน" style="height:56px;margin-top:8px;border-radius:8px;" />
+                        <img src="@(hotel.LogoPath ?? "/images/Logo/LogoStayMate.jpg")"
+                             alt="โลโก้โรงแรม"
+                             style="height:56px;margin-top:8px;border-radius:8px;" />
                     </div>
                     <div class="col-12">
                         <label class="manager-label" for="hsAddr">ที่อยู่ *</label>
@@ -701,18 +724,19 @@
                         <input id="hsEmail" name="email" type="email" class="manager-input" maxlength="120" required value="@hotel.Email" />
                     </div>
                     <div class="col-md-6">
-                        <label class="manager-label" for="hsIn">เวลา Check-in *</label>
+                        <label class="manager-label" for="hsIn">เวลาเช็คอินมาตรฐาน *</label>
                         <input id="hsIn" name="checkInTime" type="time" class="manager-input" required value="@hotel.CheckInTime.ToString("HH:mm")" />
                     </div>
                     <div class="col-md-6">
-                        <label class="manager-label" for="hsOut">เวลา Check-out *</label>
+                        <label class="manager-label" for="hsOut">เวลาเช็คเอาท์มาตรฐาน *</label>
                         <input id="hsOut" name="checkOutTime" type="time" class="manager-input" required value="@hotel.CheckOutTime.ToString("HH:mm")" />
                     </div>
                 </div>
                 <div class="mt-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <small class="manager-text-muted">แก้ไขล่าสุด: @hotel.UpdatedAt.ToString("dd/MM/yyyy HH:mm")</small>
+                    <small class="manager-text-muted">อัปเดตล่าสุด: @hotel.UpdatedAt.ToString("dd/MM/yyyy HH:mm")</small>
                     <button type="submit" class="manager-btn manager-btn-primary">
-                        <i class="fa-solid fa-floppy-disk"></i> <span>บันทึกข้อมูลโรงแรม</span>
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span>บันทึกข้อมูลโรงแรม</span>
                     </button>
                 </div>
             </form>
@@ -726,14 +750,26 @@
         (function () {
             'use strict';
 
-            // 1. ตั้งค่าความกว้าง Progress Bar ของ Occupancy Rate แบบ Dynamic
-            var occBars = document.querySelectorAll('[data-occupancy-bar]');
-            occBars.forEach(function (bar) {
-                var val = parseFloat(bar.getAttribute('data-occupancy-bar')) || 0;
-                bar.style.width = Math.min(100, Math.max(0, val)) + '%';
-            });
+            // อัปเดตความกว้างแถบอัตราการเข้าพัก
+            function updateOccupancyBar() {
+                var occBars = document.querySelectorAll('[data-occupancy-bar]');
+                var kpiEl = document.querySelector('[data-kpi="occupancyRate"]');
+                occBars.forEach(function (bar) {
+                    var raw = kpiEl ? parseFloat(kpiEl.textContent) : parseFloat(bar.getAttribute('data-occupancy-bar'));
+                    var val = isNaN(raw) ? 0 : raw;
+                    bar.style.width = Math.min(100, Math.max(0, val)) + '%';
+                });
+            }
 
-            // 2. พัฒนาระบบสลับ Tabs ภายในหน้า Index.cshtml (Dashboard Overview Tabs)
+            updateOccupancyBar();
+
+            // สังเกตการเปลี่ยนแปลงค่า Occupancy Rate เมื่อ manager.js โหลดข้อมูลผ่าน AJAX
+            var occKpi = document.querySelector('[data-kpi="occupancyRate"]');
+            if (occKpi && window.MutationObserver) {
+                new MutationObserver(updateOccupancyBar).observe(occKpi, { childList: true, characterData: true, subtree: true });
+            }
+
+            // ระบบสลับแท็บภายในหน้า Dashboard
             var tabButtons = document.querySelectorAll('[data-manager-tab-target]');
             var tabPanes = document.querySelectorAll('.manager-tab-content');
 
@@ -742,12 +778,10 @@
                     var targetId = btn.getAttribute('data-manager-tab-target');
                     if (!targetId) return;
 
-                    // สลับสถานะปุ่มเมนู
                     tabButtons.forEach(function (b) {
                         b.classList.toggle('active', b.getAttribute('data-manager-tab-target') === targetId);
                     });
 
-                    // สลับสถานะหน้าเนื้อหา
                     tabPanes.forEach(function (pane) {
                         pane.classList.toggle('active', pane.id === targetId);
                     });

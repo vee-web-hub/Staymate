@@ -1,18 +1,17 @@
 @model StayMate_Kavinvee_0576.Models.ViewModels.ManagerRoomManagementViewModel
 @using System.Text.Json
 @{
-    ViewData["Title"] = "จัดการห้องพักและราคา (Room Management)";
+    ViewData["Title"] = "จัดการห้องพักและราคา";
     Layout = "~/Views/Shared/_ManagerLayout.cshtml";
 }
 
 <div class="manager-portal-wrapper manager-room-page">
 
-    <!-- Anti-Forgery Token หลักสำหรับคำสั่ง AJAX ใน manager.js -->
     <form id="managerRoomGlobalTokenForm" class="d-none">
         @Html.AntiForgeryToken()
     </form>
 
-    <!-- ═══════════════════════ Alerts (TempData & Validation) ═══════════════════════ -->
+    <!-- ═══════════════════════ การแจ้งเตือนสถานะ ═══════════════════════ -->
     @if (TempData["SuccessMessage"] != null)
     {
         <div class="manager-alert manager-alert-success" role="alert">
@@ -49,31 +48,31 @@
         </div>
     }
 
-    <!-- ═══════════════════════ Page Header ═══════════════════════ -->
+    <!-- ═══════════════════════ ส่วนหัวของหน้าจอ ═══════════════════════ -->
     <section class="manager-room-header">
         <div class="manager-room-header-top">
             <div class="manager-room-title-wrap">
                 <nav class="manager-room-breadcrumb" aria-label="Breadcrumb">
                     <a asp-controller="Manager" asp-action="Index" class="manager-room-breadcrumb-link">
-                        <i class="fa-solid fa-chart-pie"></i> Manager
+                        <i class="fa-solid fa-chart-pie"></i> ภาพรวมระบบ
                     </a>
                     <span class="manager-room-breadcrumb-sep">/</span>
-                    <span class="manager-room-breadcrumb-current">Room Management</span>
+                    <span class="manager-room-breadcrumb-current">จัดการห้องพักและราคา</span>
                 </nav>
-                <h1 class="manager-room-title">Room Management</h1>
+                <h1 class="manager-room-title">จัดการห้องพักและราคา</h1>
                 <p class="manager-room-desc">
-                    Manage room types, occupancy and room rates — บริหารประเภทห้องพัก อัตราเข้าพัก ราคาพื้นฐาน และช่วงราคาตามวันที่
+                    บริหารประเภทห้องพัก กำหนดราคาพื้นฐาน และสร้างราคาพิเศษตามช่วงเทศกาลหรือวันหยุดยาวของโรงแรม
                 </p>
             </div>
 
             <div class="manager-room-header-meta">
                 <div class="manager-room-date-pill">
                     <i class="fa-regular fa-calendar-check"></i>
-                    <span>ข้อมูลราคาอ้างอิงวันที่: <strong>@Model.Today.ToString("dd/MM/yyyy")</strong></span>
+                    <span>ราคาอ้างอิงวันที่: <strong>@Model.Today.ToString("dd/MM/yyyy")</strong></span>
                 </div>
                 <div class="manager-room-date-pill manager-room-pill-cyan">
                     <i class="fa-solid fa-door-open"></i>
-                    <span>ห้องพักที่เปิดใช้งานทั้งหมด: <strong>@Model.TotalRooms.ToString("N0") ห้อง</strong></span>
+                    <span>ห้องพักเปิดใช้งาน: <strong>@Model.TotalRooms.ToString("N0") ห้อง</strong></span>
                 </div>
                 <div class="manager-room-header-btns">
                     <button type="button"
@@ -81,47 +80,47 @@
                             data-manager-fill="#savePricePeriodForm"
                             data-manager-fill-data='{"RateId":"","RoomTypeId":"","PeriodName":"","StartDate":"@Model.Today.ToString("yyyy-MM-dd")","EndDate":"@Model.Today.ToString("yyyy-MM-dd")","PricePerNight":""}'>
                         <i class="fa-solid fa-calendar-plus"></i>
-                        <span>เพิ่มช่วงราคาห้องพัก</span>
+                        <span>กำหนดช่วงราคาพิเศษ</span>
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Quick Section Jump Bar -->
-        <nav class="manager-room-jumpnav" aria-label="Room Management Sections">
+        <!-- แถบลิงก์ข้ามไปยังส่วนต่างๆ ของหน้าจอ -->
+        <nav class="manager-room-jumpnav" aria-label="หมวดหมู่ย่อย">
             <a href="#section-room-overview" class="manager-room-jump-link">
                 <i class="fa-solid fa-grip"></i>
-                <span>1. Room Overview</span>
+                <span>1. สรุปประเภทห้องพัก</span>
             </a>
             <a href="#section-rate-summary" class="manager-room-jump-link">
                 <i class="fa-solid fa-table-list"></i>
-                <span>2. Room &amp; Rate Summary</span>
+                <span>2. ตารางเปรียบเทียบราคา</span>
             </a>
             <a href="#section-room-details" class="manager-room-jump-link">
                 <i class="fa-solid fa-circle-info"></i>
-                <span>3. Room Type Details &amp; Rooms</span>
+                <span>3. รายการห้องพักรายห้อง</span>
             </a>
             <a href="#section-rate-management" class="manager-room-jump-link">
                 <i class="fa-solid fa-tags"></i>
-                <span>4. Room Rate Management</span>
+                <span>4. จัดการราคาตามเทศกาล</span>
             </a>
         </nav>
     </section>
 
-    <!-- ═══════════════════════ SECTION 1: ROOM OVERVIEW (4 Summary Cards) ═══════════════════════ -->
+    <!-- ═══════════════════════ ส่วนที่ 1: การ์ดสรุปประเภทห้องพัก ═══════════════════════ -->
     <section id="section-room-overview" class="manager-room-section">
         <div class="manager-room-section-head">
             <div>
                 <h2 class="manager-room-section-title">
                     <i class="fa-solid fa-layer-group text-primary"></i>
-                    1. Room Overview (สรุปภาพรวมห้องพักแยกตามประเภท)
+                    1. สรุปภาพรวมห้องพักแยกตามประเภท
                 </h2>
                 <p class="manager-room-section-subtitle">
-                    แสดงจำนวนห้องทั้งหมด ห้องว่าง ห้องที่มีผู้เข้าพัก และราคาพื้นฐานต่อคืนจากฐานข้อมูลจริง
+                    รายละเอียดปริมาณห้องพัก อัตราความหนาแน่นผู้เข้าพัก และการเปรียบเทียบราคาในแต่ละประเภทห้องพัก
                 </p>
             </div>
             <span class="manager-badge manager-badge-info">
-                ประเภทห้องทั้งหมด: @(Model.RoomTypes?.Count ?? 0) ประเภท
+                รวมทั้งหมด: @(Model.RoomTypes?.Count ?? 0) ประเภทห้องพัก
             </span>
         </div>
 
@@ -163,13 +162,13 @@
                                 @if (isActiveType)
                                 {
                                     <span class="manager-room-status manager-room-status-active">
-                                        <i class="fa-solid fa-circle-check"></i> Active
+                                        <i class="fa-solid fa-circle-check"></i> พร้อมให้บริการ
                                     </span>
                                 }
                                 else
                                 {
                                     <span class="manager-room-status manager-room-status-inactive">
-                                        <i class="fa-solid fa-circle-pause"></i> Inactive
+                                        <i class="fa-solid fa-circle-pause"></i> ปิดบริการ
                                     </span>
                                 }
                             </div>
@@ -179,7 +178,7 @@
                             <h3 class="manager-room-card-title">@rt.TypeName</h3>
                             <p class="manager-room-card-bed">
                                 <i class="fa-solid fa-mattress-pillow"></i>
-                                <span>รูปแบบเตียง: <strong>@(string.IsNullOrWhiteSpace(rt.BedType) ? "--" : rt.BedType)</strong></span>
+                                <span>จัดเตรียมเตียง: <strong>@(string.IsNullOrWhiteSpace(rt.BedType) ? "--" : rt.BedType)</strong></span>
                             </p>
 
                             <div class="manager-room-stats-box">
@@ -204,11 +203,11 @@
 
                             <div class="manager-room-price-block">
                                 <div>
-                                    <span class="manager-room-price-caption">ราคาพื้นฐาน / คืน (Base Price)</span>
+                                    <span class="manager-room-price-caption">ราคาพื้นฐาน / คืน</span>
                                     <div class="manager-room-price-main">฿@rt.BasePrice.ToString("N2")</div>
                                 </div>
                                 <div class="text-end">
-                                    <span class="manager-room-price-caption">ราคาที่ใช้วันนี้</span>
+                                    <span class="manager-room-price-caption">ราคาขายวันนี้</span>
                                     <div class="manager-room-price-current">฿@rt.CurrentPrice.ToString("N2")</div>
                                 </div>
                             </div>
@@ -217,14 +216,14 @@
                         <div class="manager-room-card-footer manager-room-actions">
                             <a href="#room-detail-@rt.RoomTypeId" class="manager-btn manager-btn-outline">
                                 <i class="fa-solid fa-eye"></i>
-                                <span>View Details</span>
+                                <span>ดูรายละเอียดห้องพัก</span>
                             </a>
                             <button type="button"
                                     class="manager-btn manager-btn-primary"
                                     data-manager-fill="#updateBasePriceModalForm"
                                     data-manager-fill-data='@Html.Raw(editBasePriceJson)'>
                                 <i class="fa-solid fa-pen-to-square"></i>
-                                <span>Edit Price</span>
+                                <span>แก้ไขราคาเริ่มต้น</span>
                             </button>
                         </div>
                     </article>
@@ -235,22 +234,22 @@
         {
             <div class="manager-card manager-empty-state">
                 <i class="fa-solid fa-bed"></i>
-                <p>ไม่พบข้อมูลประเภทห้องพักในระบบ (--)</p>
+                <p>ไม่พบข้อมูลประเภทห้องพักในระบบ</p>
             </div>
         }
     </section>
 
-    <!-- ═══════════════════════ SECTION 2: ROOM & RATE SUMMARY TABLE ═══════════════════════ -->
+    <!-- ═══════════════════════ ส่วนที่ 2: ตารางเปรียบเทียบราคา ═══════════════════════ -->
     <section id="section-rate-summary" class="manager-room-section">
         <div class="manager-card">
             <div class="manager-card-header manager-card-header-responsive">
                 <div>
                     <h2 class="manager-card-title">
                         <i class="fa-solid fa-table-list text-primary"></i>
-                        2. Room &amp; Rate Summary (ตารางสรุปประเภทห้องพักและราคาปัจจุบัน)
+                        2. ตารางเปรียบเทียบราคาและเงื่อนไขเข้าพัก
                     </h2>
                     <p class="manager-card-subtitle">
-                        เปรียบเทียบราคาพื้นฐาน ราคาที่มีผลในวันนี้ จำนวนผู้เข้าพักสูงสุด และจำนวนห้องที่เปิดใช้งานของแต่ละประเภท
+                        สรุปการเปรียบเทียบราคา ความจุจำนวนผู้เข้าพัก และสิทธิการรับเตียงเสริมของห้องพักแต่ละประเภท
                     </p>
                 </div>
             </div>
@@ -259,14 +258,14 @@
                 <table class="manager-table manager-room-table">
                     <thead>
                         <tr>
-                            <th>Room Type</th>
-                            <th class="text-end">Base Price / Night</th>
-                            <th class="text-end">Current Rate (วันนี้)</th>
-                            <th class="text-center">Max Guests</th>
-                            <th class="text-center">Extra Bed</th>
-                            <th class="text-center">Total Rooms</th>
-                            <th class="text-center">Status</th>
-                            <th class="text-end">Actions</th>
+                            <th>ประเภทห้องพัก</th>
+                            <th class="text-end">ราคาเริ่มต้น / คืน</th>
+                            <th class="text-end">ราคาขายวันนี้</th>
+                            <th class="text-center">จำกัดผู้เข้าพัก</th>
+                            <th class="text-center">บริการเตียงเสริม</th>
+                            <th class="text-center">สัดส่วนห้องพัก</th>
+                            <th class="text-center">สถานะใช้งาน</th>
+                            <th class="text-end">เครื่องมือ</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -297,7 +296,7 @@
                                             <span class="manager-code-badge">@rt.TypeCode</span>
                                             <div>
                                                 <strong>@rt.TypeName</strong>
-                                                <div class="manager-room-cell-sub">เตียง: @(string.IsNullOrWhiteSpace(rt.BedType) ? "--" : rt.BedType)</div>
+                                                <div class="manager-room-cell-sub">จัดเตรียมเตียง: @(string.IsNullOrWhiteSpace(rt.BedType) ? "--" : rt.BedType)</div>
                                             </div>
                                         </div>
                                     </td>
@@ -305,7 +304,7 @@
                                         <strong class="manager-amount">฿@rt.BasePrice.ToString("N2")</strong>
                                     </td>
                                     <td class="text-end">
-                                        <strong class="manager-room-current-price">฿@rt.CurrentPrice.ToString("N2")</strong>
+                                        <strong class="manager-room-current-price text-success">฿@rt.CurrentPrice.ToString("N2")</strong>
                                         @if (!string.IsNullOrWhiteSpace(rt.CurrentPeriodName))
                                         {
                                             <div class="manager-room-period-tag">
@@ -314,7 +313,7 @@
                                         }
                                         else
                                         {
-                                            <div class="manager-room-cell-sub">ใช้ราคาพื้นฐาน (Base Rate)</div>
+                                            <div class="manager-room-cell-sub">ใช้งานราคาพื้นฐาน</div>
                                         }
                                     </td>
                                     <td class="text-center">
@@ -326,28 +325,28 @@
                                         @if (rt.AllowExtraBed)
                                         {
                                             <span class="manager-badge manager-badge-info">
-                                                +฿@rt.ExtraBedPrice.ToString("N2")
+                                                คิดเพิ่ม +฿@rt.ExtraBedPrice.ToString("N2")
                                             </span>
                                         }
                                         else
                                         {
-                                            <span class="manager-text-muted">ไม่รองรับ (--)</span>
+                                            <span class="manager-text-muted">ไม่รองรับ</span>
                                         }
                                     </td>
                                     <td class="text-center">
                                         <strong>@rt.RoomCount.ToString("N0") ห้อง</strong>
                                         <div class="manager-room-cell-sub">
-                                            ว่าง @rt.AvailableCount | พัก @rt.OccupiedCount
+                                            ว่าง @rt.AvailableCount | พักอยู่ @rt.OccupiedCount
                                         </div>
                                     </td>
                                     <td class="text-center">
                                         @if (isActiveType)
                                         {
-                                            <span class="manager-room-status manager-room-status-active">Active</span>
+                                            <span class="manager-room-status manager-room-status-active">เปิดบริการ</span>
                                         }
                                         else
                                         {
-                                            <span class="manager-room-status manager-room-status-inactive">Inactive</span>
+                                            <span class="manager-room-status manager-room-status-inactive">ปิดชั่วคราว</span>
                                         }
                                     </td>
                                     <td class="text-end">
@@ -357,13 +356,13 @@
                                                     data-manager-fill="#updateBasePriceModalForm"
                                                     data-manager-fill-data='@Html.Raw(editBasePriceJson)'>
                                                 <i class="fa-solid fa-pen"></i>
-                                                <span>Edit Base Rate</span>
+                                                <span>ปรับราคาตั้งต้น</span>
                                             </button>
                                             <button type="button"
                                                     class="manager-btn manager-btn-ghost manager-btn-sm"
                                                     data-manager-fill="#savePricePeriodForm"
                                                     data-manager-fill-data='@Html.Raw(addPeriodForTypeJson)'
-                                                    title="กำหนดราคาตามช่วงวันที่">
+                                                    title="เพิ่มกำหนดราคาเทศกาล">
                                                 <i class="fa-solid fa-calendar-plus"></i>
                                             </button>
                                         </div>
@@ -376,7 +375,7 @@
                             <tr>
                                 <td colspan="8" class="manager-empty-state">
                                     <i class="fa-regular fa-folder-open"></i>
-                                    <p>ไม่มีข้อมูลสรุปประเภทห้องพักและราคาในระบบ</p>
+                                    <p>ไม่มีข้อมูลสรุปประเภทห้องพักในระบบ</p>
                                 </td>
                             </tr>
                         }
@@ -386,35 +385,20 @@
         </div>
     </section>
 
-    <!-- ═══════════════════════ SECTION 3: ROOM TYPE DETAILS & INVENTORY ═══════════════════════ -->
+    <!-- ═══════════════════════ ส่วนที่ 3: รายการห้องพักรายห้อง ═══════════════════════ -->
     <section id="section-room-details" class="manager-room-section">
         <div class="manager-room-section-head">
             <div>
                 <h2 class="manager-room-section-title">
                     <i class="fa-solid fa-clipboard-list text-primary"></i>
-                    3. Room Type Details &amp; Room Inventory (รายละเอียดประเภทห้องและรายการห้องพักจริง)
+                    3. ตรวจสอบสถานะการดำเนินงานและรายชื่อห้องพักรายห้อง
                 </h2>
                 <p class="manager-room-section-subtitle">
-                    แสดงข้อมูลโครงสร้างของแต่ละประเภทห้องจาก `ManagerRoomTypeRow` และตารางค้นหาห้องพักรายห้องจาก `ManagerRoomRow`
+                    ข้อมูลคุณสมบัติเด่น ขนาด และสิ่งอำนวยความสะดวกพื้นฐานของแต่ละประเภทห้องพัก พร้อมตารางตรวจสถานะห้องทั้งหมดรายห้อง
                 </p>
             </div>
         </div>
 
-        <!-- Read-Only Backend Policy Notice for Structural Fields -->
-        <div class="manager-info-banner">
-            <div class="manager-info-banner-icon">
-                <i class="fa-solid fa-database"></i>
-            </div>
-            <div>
-                <strong>ขอบเขตข้อมูลจาก `ManagerViewModel` และ `ManagerController`:</strong>
-                <span>
-                    ใน `ManagerRoomTypeRow` มีข้อมูล `TypeName`, `TypeCode`, `BedType`, `MinGuests`, `MaxGuests`, `AllowExtraBed`, `ExtraBedPrice`, `BasePrice` และ `CurrentPrice` (ไม่มีฟิลด์ Room Description, Room Size หรือรายการ Amenities ใน ViewModel จึงแสดง `--` และ Read-only Badge ตามข้อกำหนด)
-                    โดยท่านสามารถกดแก้ไข **ราคาพื้นฐาน** และ **ราคาเตียงเสริม** เพื่อบันทึกลงฐานข้อมูลจริงผ่าน `POST /Manager/UpdateBasePrice` ได้ทันที
-                </span>
-            </div>
-        </div>
-
-        <!-- Detailed Room Type Cards -->
         @if (Model.RoomTypes != null && Model.RoomTypes.Any())
         {
             <div class="manager-room-detail-grid">
@@ -435,11 +419,11 @@
                                     <span class="manager-code-badge">ID: @rt.RoomTypeId | @rt.TypeCode</span>
                                     @if (isActiveType)
                                     {
-                                        <span class="manager-room-status manager-room-status-active">Active (@rt.RoomCount ห้อง)</span>
+                                        <span class="manager-room-status manager-room-status-active">เปิดบริการอยู่ (@rt.RoomCount ห้อง)</span>
                                     }
                                     else
                                     {
-                                        <span class="manager-room-status manager-room-status-inactive">Inactive (0 ห้อง)</span>
+                                        <span class="manager-room-status manager-room-status-inactive">ปิดชั่วคราว (0 ห้อง)</span>
                                     }
                                 </div>
                                 <h3 class="manager-room-detail-name">@rt.TypeName</h3>
@@ -449,51 +433,42 @@
                                     data-manager-fill="#updateBasePriceModalForm"
                                     data-manager-fill-data='@Html.Raw(editBasePriceJson)'>
                                 <i class="fa-solid fa-pen-to-square"></i>
-                                <span>แก้ไขราคาพื้นฐาน / เตียงเสริม</span>
+                                <span>ปรับปรุงราคาเริ่มต้น</span>
                             </button>
                         </div>
 
                         <div class="manager-room-spec-grid">
                             <div class="manager-room-spec-box">
-                                <span class="manager-room-spec-label">Room Name</span>
+                                <span class="manager-room-spec-label">ชื่อประเภทห้อง</span>
                                 <strong class="manager-room-spec-value">@rt.TypeName</strong>
                             </div>
                             <div class="manager-room-spec-box">
-                                <span class="manager-room-spec-label">Maximum Guests</span>
-                                <strong class="manager-room-spec-value">@rt.MinGuests – @rt.MaxGuests ท่าน <span class="manager-room-ro-tag">Read-only</span></strong>
+                                <span class="manager-room-spec-label">จำนวนผู้เข้าพักมาตรฐาน</span>
+                                <strong class="manager-room-spec-value">@rt.MinGuests – @rt.MaxGuests ท่าน</strong>
                             </div>
                             <div class="manager-room-spec-box">
-                                <span class="manager-room-spec-label">Bed Type</span>
-                                <strong class="manager-room-spec-value">@(string.IsNullOrWhiteSpace(rt.BedType) ? "--" : rt.BedType) <span class="manager-room-ro-tag">Read-only</span></strong>
+                                <span class="manager-room-spec-label">รูปแบบเตียง</span>
+                                <strong class="manager-room-spec-value">@(string.IsNullOrWhiteSpace(rt.BedType) ? "--" : rt.BedType)</strong>
                             </div>
                             <div class="manager-room-spec-box">
-                                <span class="manager-room-spec-label">Base Price &amp; Extra Bed</span>
+                                <span class="manager-room-spec-label">อัตราค่าบริการ (รวมสิทธิเตียงเสริม)</span>
                                 <strong class="manager-room-spec-value text-primary">
                                     ฿@rt.BasePrice.ToString("N2")
                                     @(rt.AllowExtraBed ? $" (เตียงเสริม +฿{rt.ExtraBedPrice:N2})" : " (ไม่รองรับเตียงเสริม)")
                                 </strong>
                             </div>
-                            <div class="manager-room-spec-box">
-                                <span class="manager-room-spec-label">Room Size / Description</span>
-                                <span class="manager-text-muted">-- (ไม่มีฟิลด์ใน `ManagerRoomTypeRow`)</span>
-                            </div>
-                            <div class="manager-room-spec-box">
-                                <span class="manager-room-spec-label">Room Status Control</span>
-                                <span class="manager-text-muted">คำนวณจากห้องที่ `IsActive != false` (@rt.RoomCount ห้อง)</span>
-                            </div>
                         </div>
 
                         <div class="manager-room-amenities-bar">
                             <span class="manager-room-amenities-title">
-                                <i class="fa-solid fa-concierge-bell"></i> Amenities (Read-only Reference):
+                                <i class="fa-solid fa-concierge-bell"></i> สิ่งอำนวยความสะดวกภายในห้องพัก:
                             </span>
                             <div class="manager-room-amenity-chips">
-                                <span class="manager-room-amenity-chip"><i class="fa-solid fa-wifi"></i> Free Wi-Fi</span>
-                                <span class="manager-room-amenity-chip"><i class="fa-solid fa-snowflake"></i> Air Conditioning</span>
-                                <span class="manager-room-amenity-chip"><i class="fa-solid fa-tv"></i> Television</span>
-                                <span class="manager-room-amenity-chip"><i class="fa-solid fa-shower"></i> Private Bathroom</span>
-                                <span class="manager-room-amenity-chip"><i class="fa-solid fa-temperature-low"></i> Refrigerator</span>
-                                <span class="manager-room-amenity-chip manager-room-ro-tag">ไม่มี Endpoint แก้ไขสิ่งอำนวยความสะดวก</span>
+                                <span class="manager-room-amenity-chip"><i class="fa-solid fa-wifi"></i> ฟรี Wi-Fi ความเร็วสูง</span>
+                                <span class="manager-room-amenity-chip"><i class="fa-solid fa-snowflake"></i> เครื่องปรับอากาศ</span>
+                                <span class="manager-room-amenity-chip"><i class="fa-solid fa-tv"></i> สมาร์ททีวีจอแบน</span>
+                                <span class="manager-room-amenity-chip"><i class="fa-solid fa-shower"></i> ห้องน้ำส่วนตัวพร้อมเครื่องทำน้ำอุ่น</span>
+                                <span class="manager-room-amenity-chip"><i class="fa-solid fa-temperature-low"></i> ตู้เย็นและมินิบาร์</span>
                             </div>
                         </div>
                     </article>
@@ -501,20 +476,22 @@
             </div>
         }
 
-        <!-- Individual Rooms Inventory & Server/Client Filter Table -->
+        
+                <!-- ตารางข้อมูลห้องพักแยกรายห้องแบบละเอียด -->
         <div class="manager-card mt-3">
             <div class="manager-card-header manager-card-header-responsive">
                 <div>
                     <h3 class="manager-card-title">
                         <i class="fa-solid fa-door-closed text-primary"></i>
-                        รายการห้องพักทั้งหมดในระบบ (Room Inventory — แสดง @Model.FilteredRoomCount จาก @Model.TotalRooms ห้อง)
+                        รายการข้อมูลและสถานะห้องพักรายห้อง 
+                        (<span id="managerRoomCountText">กำลังโหลด...</span>)
                     </h3>
                     <p class="manager-card-subtitle">
-                        ค้นหาและกรองหมายเลขห้องพัก ชั้น ประเภทห้อง และสถานะห้องพักจาก `Model.Rooms`
+                        ค้นหาเลขห้อง ระดับชั้น หรือกรองตามสถานะและประเภทห้องจากข้อมูลทั้งหมดในระบบ
                     </p>
                 </div>
 
-                <!-- Server-side GET Filter Form (Connected to GET /Manager/RoomManagement) -->
+                <!-- ฟอร์มกรองสืบค้นฝั่ง Server-side -->
                 <form method="get"
                       asp-controller="Manager"
                       asp-action="RoomManagement"
@@ -536,7 +513,7 @@
                             class="manager-select"
                             data-manager-filter="#managerRoomsTable"
                             data-filter-key="roomtype"
-                            aria-label="กรองตามประเภทห้อง">
+                            aria-label="กรองประเภทห้อง">
                         <option value="">ทุกประเภทห้องพัก</option>
                         @foreach (var opt in Model.RoomTypeOptions)
                         {
@@ -550,7 +527,7 @@
                             class="manager-select"
                             data-manager-filter="#managerRoomsTable"
                             data-filter-key="status"
-                            aria-label="กรองตามสถานะห้อง">
+                            aria-label="กรองสถานะห้อง">
                         <option value="">ทุกสถานะห้องพัก</option>
                         @foreach (var st in Model.StatusOptions)
                         {
@@ -562,7 +539,7 @@
 
                     <button type="submit" class="manager-btn manager-btn-primary">
                         <i class="fa-solid fa-filter"></i>
-                        <span>กรองข้อมูล</span>
+                        <span>ค้นหา</span>
                     </button>
 
                     @if (!string.IsNullOrWhiteSpace(Model.Search) || !string.IsNullOrWhiteSpace(Model.Status) || Model.RoomTypeId.HasValue)
@@ -579,21 +556,21 @@
                 <table class="manager-table manager-room-table" id="managerRoomsTable">
                     <thead>
                         <tr>
-                            <th>หมายเลขห้อง (Room No.)</th>
-                            <th class="text-center">ชั้น (Floor)</th>
-                            <th>ประเภทห้อง (Room Type)</th>
-                            <th class="text-end">Base Price / Night</th>
-                            <th class="text-end">Current Rate (วันนี้)</th>
-                            <th class="text-center">สถานะห้องพัก (Room Status)</th>
-                            <th class="text-center">สถานะเปิดใช้งาน</th>
+                            <th>หมายเลขห้อง</th>
+                            <th class="text-center">ระดับชั้น</th>
+                            <th>ประเภทห้องพัก</th>
+                            <th class="text-end">ราคาปกติ / คืน</th>
+                            <th class="text-end">ราคาจองวันนี้</th>
+                            <th class="text-center">สถานะปัจจุบัน</th>
+                            <th class="text-center">สถานะการให้บริการ</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="paginationTableBody">
                         @if (Model.Rooms != null && Model.Rooms.Any())
                         {
                             foreach (var r in Model.Rooms)
                             {
-                                <tr data-status="@r.Status" data-roomtype="@r.RoomTypeId">
+                                <tr data-status="@r.Status" data-roomtype="@r.RoomTypeId" class="manager-room-row-item">
                                     <td>
                                         <span class="manager-code-badge">ห้อง @r.RoomNumber</span>
                                     </td>
@@ -617,11 +594,11 @@
                                     <td class="text-center">
                                         @if (r.IsActive)
                                         {
-                                            <span class="manager-room-status manager-room-status-active">Active</span>
+                                            <span class="manager-room-status manager-room-status-active">เปิดใช้งาน</span>
                                         }
                                         else
                                         {
-                                            <span class="manager-room-status manager-room-status-inactive">Inactive</span>
+                                            <span class="manager-room-status manager-room-status-inactive">ปิดให้บริการ</span>
                                         }
                                     </td>
                                 </tr>
@@ -640,28 +617,39 @@
                 </table>
                 <div class="manager-empty-state d-none" data-manager-empty-for="#managerRoomsTable">
                     <i class="fa-solid fa-filter-circle-xmark"></i>
-                    <p>ไม่พบหมายเลขห้องพักที่ตรงกับคำค้นหา</p>
+                    <p>ไม่พบหมายเลขห้องพักที่ตรงกับคำค้นหาของคุณ</p>
                 </div>
             </div>
-        </div>
-    </section>
 
-    <!-- ═══════════════════════ SECTION 4: ROOM RATE MANAGEMENT ═══════════════════════ -->
+            <!-- เพิ่มแถบเปลี่ยนหน้า Pagination Footer -->
+            <div class="manager-card-footer d-flex justify-content-between align-items-center flex-wrap gap-2 py-3" id="tablePaginationFooter">
+                <div class="manager-text-muted text-sm">
+                    แสดง <span id="paginationInfoStart">0</span> - <span id="paginationInfoEnd">0</span> จากทั้งหมด <span id="paginationInfoTotal">0</span> รายการ
+                </div>
+                <nav aria-label="แถบสลับหน้าตารางห้องพัก">
+                    <ul class="pagination pagination-sm mb-0" id="tablePaginationBtns" style="gap: 4px;">
+                        <!-- ปุ่มจะถูกสร้างแบบ Dynamic ผ่าน JavaScript -->
+                    </ul>
+                </nav>
+            </div>
+        </div>
+
+
+    <!-- ═══════════════════════ ส่วนที่ 4: การกำหนดอัตราค่าบริการตามเทศกาล ═══════════════════════ -->
     <section id="section-rate-management" class="manager-room-section">
         <div class="manager-card">
             <div class="manager-card-header manager-card-header-responsive">
                 <div>
                     <h2 class="manager-card-title">
                         <i class="fa-solid fa-money-check-dollar text-primary"></i>
-                        4. Room Rate Management (ตารางจัดการราคาห้องพักตามช่วงวันที่)
+                        4. อัตราค่าบริการห้องพักตามเทศกาลและช่วงเวลาพิเศษ
                     </h2>
                     <p class="manager-card-subtitle">
-                        กำหนดราคาพิเศษตามช่วงวันที่ (Rate Periods) โดยระบบตรวจสอบไม่ให้ช่วงวันที่ซ้อนทับกันในประเภทห้องเดียวกัน (ไม่มี Dynamic Pricing)
+                        กำหนดราคาสำหรับช่วงเวลาพิเศษ (เช่น ปีใหม่ สงกรานต์ หรือ High Season) โดยระบบจะล็อกป้องกันวันที่ซ้อนทับกันในประเภทห้องเดียวกัน
                     </p>
                 </div>
 
                 <div class="manager-room-rate-tools">
-                    <!-- Toggle Include Past Periods via GET -->
                     <form method="get" asp-controller="Manager" asp-action="RoomManagement" class="d-inline">
                         <input type="hidden" name="q" value="@Model.Search" />
                         <input type="hidden" name="status" value="@Model.Status" />
@@ -669,17 +657,16 @@
                         <input type="hidden" name="includePast" value="@(Model.IncludePastPeriods ? "false" : "true")" />
                         <button type="submit" class="manager-btn manager-btn-outline">
                             <i class="fa-solid @(Model.IncludePastPeriods ? "fa-eye-slash" : "fa-clock-rotate-left")"></i>
-                            <span>@(Model.IncludePastPeriods ? "ซ่อนช่วงราคาที่สิ้นสุดแล้ว" : "แสดงช่วงราคาที่สิ้นสุดแล้วด้วย")</span>
+                            <span>@(Model.IncludePastPeriods ? "ซ่อนราคาเทศกาลที่ผ่านไปแล้ว" : "แสดงราคาเทศกาลที่ผ่านไปแล้ว")</span>
                         </button>
                     </form>
 
-                    <!-- Add New Rate Period Button -->
                     <button type="button"
                             class="manager-btn manager-btn-primary"
                             data-manager-fill="#savePricePeriodForm"
                             data-manager-fill-data='{"RateId":"","RoomTypeId":"","PeriodName":"","StartDate":"@Model.Today.ToString("yyyy-MM-dd")","EndDate":"@Model.Today.ToString("yyyy-MM-dd")","PricePerNight":""}'>
                         <i class="fa-solid fa-plus"></i>
-                        <span>เพิ่มช่วงราคาใหม่</span>
+                        <span>เพิ่มราคาเทศกาลใหม่</span>
                     </button>
                 </div>
             </div>
@@ -693,15 +680,15 @@
                 <table class="manager-table manager-room-table" id="managerPricePeriodsTable">
                     <thead>
                         <tr>
-                            <th>Room Type</th>
-                            <th>ชื่อช่วงราคา (Period Name)</th>
-                            <th class="text-end">Base Price</th>
-                            <th>Start Date</th>
-                            <th>End Date</th>
-                            <th class="text-end">Special Rate / Night</th>
-                            <th class="text-end">Current Rate (วันนี้)</th>
-                            <th class="text-center">Status</th>
-                            <th class="text-end">Actions</th>
+                            <th>ประเภทห้องพัก</th>
+                            <th>ชื่อเทศกาล / ช่วงฤดูกาล</th>
+                            <th class="text-end">ราคาตั้งต้น</th>
+                            <th>วันเริ่มต้นแคมเปญ</th>
+                            <th>วันสิ้นสุดแคมเปญ</th>
+                            <th class="text-end">ราคาพิเศษ / คืน</th>
+                            <th class="text-end">ราคาที่มีผลวันนี้</th>
+                            <th class="text-center">สถานะแคมเปญ</th>
+                            <th class="text-end">เครื่องมือ</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -732,7 +719,7 @@
                                         }
                                         else
                                         {
-                                            <span class="manager-text-muted">-- (ไม่ได้ระบุชื่อช่วง)</span>
+                                            <span class="manager-text-muted">-- ไม่ระบุชื่อช่วง --</span>
                                         }
                                         @if (!string.IsNullOrWhiteSpace(p.CreatedByName))
                                         {
@@ -773,11 +760,11 @@
                                                   asp-action="DeletePricePeriod"
                                                   method="post"
                                                   data-manager-ajax
-                                                  data-manager-confirm="ยืนยันการลบช่วงราคา '@(p.PeriodName ?? p.RoomTypeName)' (@p.StartDate.ToString("dd/MM/yyyy") - @p.EndDate.ToString("dd/MM/yyyy"))?"
+                                                  data-manager-confirm="ต้องการยืนยันการลบแคมเปญช่วงราคาพิเศษ '@(p.PeriodName ?? p.RoomTypeName)' (@p.StartDate.ToString("dd/MM/yyyy") - @p.EndDate.ToString("dd/MM/yyyy")) หรือไม่?"
                                                   class="d-inline">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="rateId" value="@p.RateId" />
-                                                <button type="submit" class="manager-btn manager-btn-danger manager-btn-sm" title="ลบช่วงราคา">
+                                                <button type="submit" class="manager-btn manager-btn-danger manager-btn-sm" title="ลบข้อมูล">
                                                     <i class="fa-solid fa-trash-can"></i>
                                                 </button>
                                             </form>
@@ -791,7 +778,7 @@
                             <tr>
                                 <td colspan="9" class="manager-empty-state">
                                     <i class="fa-regular fa-calendar-xmark"></i>
-                                    <p>ยังไม่มีรายการกำหนดราคาตามช่วงวันที่ (ทุกห้องใช้ราคาพื้นฐาน Base Price)</p>
+                                    <p>ยังไม่มีการกำหนดราคารายช่วงฤดูกาลพิเศษ (ทุกประเภทห้องพักใช้งานราคาพื้นฐานมาตรฐาน)</p>
                                 </td>
                             </tr>
                         }
@@ -804,7 +791,7 @@
                 <div class="manager-notes-box">
                     <div class="manager-notes-title">
                         <i class="fa-solid fa-circle-info"></i>
-                        <span>หมายเหตุระบบจัดการห้องพักและราคา (System Data Notes)</span>
+                        <span>ข้อกำหนดและการคำนวณราคาอัตโนมัติ</span>
                     </div>
                     <ul class="manager-notes-list">
                         @foreach (var note in Model.DataNotes)
@@ -820,10 +807,10 @@
 </div>
 
 <!-- ═════════════════════════════════════════════════════════════════════════════
-     MODALS (Connected to Real Controller POST Actions: UpdateBasePrice & SavePricePeriod)
+     โมดอลการทำรายการ (เชื่อมกับ POST Actions ใน Controller)
      ═════════════════════════════════════════════════════════════════════════════ -->
 
-<!-- Modal 1: Edit Base Price & Extra Bed Price (POST /Manager/UpdateBasePrice) -->
+<!-- โมดอล 1: ปรับปรุงราคาตั้งต้นเริ่มต้น (POST /Manager/UpdateBasePrice) -->
 <div class="modal fade manager-modal manager-room-modal" id="managerUpdateBasePriceModal" tabindex="-1" aria-labelledby="managerUpdateBasePriceModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content manager-modal-content">
@@ -837,14 +824,14 @@
                 <div class="modal-header manager-modal-header">
                     <h5 class="modal-title" id="managerUpdateBasePriceModalLabel">
                         <i class="fa-solid fa-money-bill-wave text-info"></i>
-                        แก้ไขราคาพื้นฐานและราคาเตียงเสริม (`UpdateBasePrice`)
+                        แก้ไขค่าบริการเริ่มต้นและค่าบริการเตียงเสริม
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
                 <div class="modal-body manager-modal-body">
                     <div class="manager-form-group mb-3">
-                        <label for="modalBaseRoomTypeId" class="manager-label">ประเภทห้องพัก (Room Type) <span class="manager-req">*</span></label>
+                        <label for="modalBaseRoomTypeId" class="manager-label">ระบุประเภทห้องพัก <span class="manager-req">*</span></label>
                         <select id="modalBaseRoomTypeId" name="roomTypeId" class="manager-select" required>
                             @if (Model.RoomTypes != null)
                             {
@@ -857,7 +844,7 @@
                     </div>
 
                     <div class="manager-form-group mb-3">
-                        <label for="modalBasePriceInput" class="manager-label">ราคาพื้นฐานต่อคืน (Base Price - บาท) <span class="manager-req">*</span></label>
+                        <label for="modalBasePriceInput" class="manager-label">ราคาตั้งต้นเริ่มต้น / คืน (บาท) <span class="manager-req">*</span></label>
                         <input type="number"
                                id="modalBasePriceInput"
                                name="basePrice"
@@ -865,12 +852,12 @@
                                step="0.01"
                                min="0.01"
                                max="99999999.99"
-                               placeholder="ระบุราคาพื้นฐานต่อคืน"
+                               placeholder="กรอกราคาค่าห้องเริ่มต้นต่อคืน"
                                required />
                     </div>
 
                     <div class="manager-form-group">
-                        <label for="modalExtraBedPriceInput" class="manager-label">ราคาเตียงเสริมต่อคืน (Extra Bed Price - บาท)</label>
+                        <label for="modalExtraBedPriceInput" class="manager-label">ราคาเสริมเตียงนอน / คืน (บาท)</label>
                         <input type="number"
                                id="modalExtraBedPriceInput"
                                name="extraBedPrice"
@@ -878,7 +865,7 @@
                                step="0.01"
                                min="0"
                                max="99999999.99"
-                               placeholder="ระบุราคาเตียงเสริม (0 หากไม่มีค่าใช้จ่าย)" />
+                               placeholder="ระบุค่าบริการเสริมเตียงนอนต่อคืน (ใส่ 0 หากไม่มีค่าใช้จ่าย)" />
                     </div>
                 </div>
 
@@ -886,7 +873,7 @@
                     <button type="button" class="manager-btn manager-btn-ghost" data-bs-dismiss="modal">ยกเลิก</button>
                     <button type="submit" class="manager-btn manager-btn-primary">
                         <i class="fa-solid fa-floppy-disk"></i>
-                        <span>บันทึกราคาพื้นฐาน</span>
+                        <span>บันทึกข้อมูล</span>
                     </button>
                 </div>
             </form>
@@ -894,7 +881,7 @@
     </div>
 </div>
 
-<!-- Modal 2: Add / Edit Seasonal Rate Period (POST /Manager/SavePricePeriod) -->
+<!-- โมดอล 2: บันทึก-แก้ไขแคมเปญช่วงราคาตามวันเทศกาล (POST /Manager/SavePricePeriod) -->
 <div class="modal fade manager-modal manager-room-modal" id="managerSavePricePeriodModal" tabindex="-1" aria-labelledby="managerSavePricePeriodModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content manager-modal-content">
@@ -909,7 +896,7 @@
                 <div class="modal-header manager-modal-header">
                     <h5 class="modal-title" id="managerSavePricePeriodModalLabel">
                         <i class="fa-solid fa-calendar-week text-info"></i>
-                        กำหนดราคาห้องพักตามช่วงวันที่ (`SavePricePeriod`)
+                        ตั้งค่าอัตราค่าห้องพักพิเศษตามวันและเวลาเทศกาล
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -918,37 +905,37 @@
                     <div id="periodDateErrorAlert" class="manager-alert manager-alert-danger d-none mb-3" role="alert">
                         <div class="manager-alert-content">
                             <i class="fa-solid fa-triangle-exclamation"></i>
-                            <span id="periodDateErrorText">วันที่สิ้นสุดต้องไม่ก่อนวันที่เริ่มต้น</span>
+                            <span id="periodDateErrorText">ไม่สามารถทำรายการได้เนื่องจากเลือกวันที่สิ้นสุดก่อนวันที่เริ่มต้นแคมเปญ</span>
                         </div>
                     </div>
 
                     <div class="manager-form-group mb-3">
-                        <label for="periodModalRoomTypeId" class="manager-label">ประเภทห้องพัก (Room Type) <span class="manager-req">*</span></label>
+                        <label for="periodModalRoomTypeId" class="manager-label">ระบุประเภทห้องพัก <span class="manager-req">*</span></label>
                         <select id="periodModalRoomTypeId" name="RoomTypeId" class="manager-select" required>
-                            <option value="">-- เลือกประเภทห้องพัก --</option>
+                            <option value="">-- เลือกประเภทห้องพักที่ต้องการรับราคาพิเศษ --</option>
                             @if (Model.RoomTypes != null)
                             {
                                 foreach (var rt in Model.RoomTypes)
                                 {
-                                    <option value="@rt.RoomTypeId">@rt.TypeName (Base: ฿@rt.BasePrice.ToString("N2"))</option>
+                                    <option value="@rt.RoomTypeId">@rt.TypeName (ราคาปกติ: ฿@rt.BasePrice.ToString("N2"))</option>
                                 }
                             }
                         </select>
                     </div>
 
                     <div class="manager-form-group mb-3">
-                        <label for="periodModalName" class="manager-label">ชื่อช่วงราคา / เทศกาล (Period Name)</label>
+                        <label for="periodModalName" class="manager-label">ชื่อแคมเปญ / เทศกาลพิเศษ</label>
                         <input type="text"
                                id="periodModalName"
                                name="PeriodName"
                                class="manager-input"
                                maxlength="100"
-                               placeholder="เช่น High Season, เทศกาลปีใหม่, วันหยุดยาว" />
+                               placeholder="ระบุชื่อแคมเปญ เช่น ปีใหม่, สงกรานต์, วันหยุดต่อเนื่อง" />
                     </div>
 
                     <div class="manager-form-row mb-3">
                         <div class="manager-form-group">
-                            <label for="periodModalStartDate" class="manager-label">วันที่เริ่มต้น (Start Date) <span class="manager-req">*</span></label>
+                            <label for="periodModalStartDate" class="manager-label">วันเริ่มต้นแคมเปญ <span class="manager-req">*</span></label>
                             <input type="date"
                                    id="periodModalStartDate"
                                    name="StartDate"
@@ -956,7 +943,7 @@
                                    required />
                         </div>
                         <div class="manager-form-group">
-                            <label for="periodModalEndDate" class="manager-label">วันที่สิ้นสุด (End Date) <span class="manager-req">*</span></label>
+                            <label for="periodModalEndDate" class="manager-label">วันสิ้นสุดแคมเปญ <span class="manager-req">*</span></label>
                             <input type="date"
                                    id="periodModalEndDate"
                                    name="EndDate"
@@ -966,7 +953,7 @@
                     </div>
 
                     <div class="manager-form-group">
-                        <label for="periodModalPrice" class="manager-label">ราคาพิเศษต่อคืน (Special Rate / Night - บาท) <span class="manager-req">*</span></label>
+                        <label for="periodModalPrice" class="manager-label">ราคาค่าห้องกรณีพิเศษ / คืน (บาท) <span class="manager-req">*</span></label>
                         <input type="number"
                                id="periodModalPrice"
                                name="PricePerNight"
@@ -974,7 +961,7 @@
                                step="0.01"
                                min="0.01"
                                max="99999999.99"
-                               placeholder="เช่น 1800.00"
+                               placeholder="ระบุตัวเลขยอดเงิน เช่น 1800.00"
                                required />
                     </div>
                 </div>
@@ -983,7 +970,7 @@
                     <button type="button" class="manager-btn manager-btn-ghost" data-bs-dismiss="modal">ยกเลิก</button>
                     <button type="submit" class="manager-btn manager-btn-primary">
                         <i class="fa-solid fa-floppy-disk"></i>
-                        <span>บันทึกช่วงราคา</span>
+                        <span>บันทึกข้อมูลช่วงราคา</span>
                     </button>
                 </div>
             </form>
@@ -996,7 +983,133 @@
         (function () {
             'use strict';
 
-            // Client-side Date Range Validation ก่อนส่งไปยัง manager.js (ป้องกัน StartDate > EndDate)
+            // =================================================================
+            // 1. ระบบแบ่งหน้าตารางห้องพัก (Client-side Pagination)
+            // =================================================================
+            var tableBody = document.getElementById('paginationTableBody');
+            var footer = document.getElementById('tablePaginationFooter');
+            var paginationBtns = document.getElementById('tablePaginationBtns');
+            var countTextSpan = document.getElementById('managerRoomCountText');
+            
+            var itemsPerPage = 10; // กำหนดให้แสดงผลหน้าละ 10 ห้องพัก
+            var currentPage = 1;
+            var filteredRows = [];
+
+            function initPagination() {
+                if (!tableBody) return;
+
+                // ดึงแถวข้อมูลทั้งหมดในปัจจุบัน (สแกนหาแถวที่ไม่ถูกปิดซ่อนโดย Filter ของระบบค้นหา)
+                var allRows = Array.prototype.slice.call(tableBody.querySelectorAll('.manager-room-row-item'));
+                
+                filteredRows = allRows.filter(function(row) {
+                    return !row.classList.contains('d-none');
+                });
+
+                // อัปเดตข้อความจำนวนห้องที่พบจริงบนหัวข้อการ์ดแบบ Dynamic
+                if (countTextSpan) {
+                    countTextSpan.textContent = 'พบ ' + filteredRows.length + ' จาก ' + allRows.length + ' ห้อง';
+                }
+
+                // หากไม่มีข้อมูลที่ตรงเงื่อนไขเลยให้ซ่อนแถบ Pagination ด้านล่าง
+                if (filteredRows.length === 0) {
+                    if (footer) footer.style.setProperty('display', 'none', 'important');
+                    return;
+                } else {
+                    if (footer) footer.style.setProperty('display', 'flex', 'important');
+                }
+
+                var totalPages = Math.ceil(filteredRows.length / itemsPerPage);
+                if (currentPage > totalPages) currentPage = 1;
+
+                // ซ่อน/แสดงแถวข้อมูลตามเงื่อนไขหน้าปัจจุบัน
+                var startIdx = (currentPage - 1) * itemsPerPage;
+                var endIdx = startIdx + itemsPerPage;
+
+                filteredRows.forEach(function(row, idx) {
+                    if (idx >= startIdx && idx < endIdx) {
+                        row.style.setProperty('display', '', 'important'); // แสดงแถวที่อยู่ในช่วงหน้า
+                    } else {
+                        row.style.setProperty('display', 'none', 'important'); // ซ่อนแถวที่อยู่นอกช่วงหน้า
+                    }
+                });
+
+                // อัปเดตตัวเลขรายละเอียดการแสดงผลด้านซ้ายของ Footer
+                document.getElementById('paginationInfoStart').textContent = startIdx + 1;
+                document.getElementById('paginationInfoEnd').textContent = Math.min(endIdx, filteredRows.length);
+                document.getElementById('paginationInfoTotal').textContent = filteredRows.length;
+
+                // วาดปุ่มนำทาง (Previous, ตัวเลข, Next) ลงในเมนูสลับหน้า
+                renderPaginationButtons(totalPages);
+            }
+
+            function renderPaginationButtons(totalPages) {
+                if (!paginationBtns) return;
+                paginationBtns.innerHTML = '';
+
+                // สร้างปุ่มย้อนกลับ (Previous)
+                var prevLi = document.createElement('li');
+                prevLi.className = 'page-item ' + (currentPage === 1 ? 'disabled' : '');
+                prevLi.innerHTML = '<button class="manager-btn manager-btn-ghost manager-btn-sm py-1 px-2" type="button" aria-label="หน้าก่อนหน้า"><i class="fa-solid fa-angle-left"></i></button>';
+                if (currentPage !== 1) {
+                    prevLi.querySelector('button').addEventListener('click', function() {
+                        currentPage--;
+                        initPagination();
+                    });
+                }
+                paginationBtns.appendChild(prevLi);
+
+                // สร้างปุ่มหมายเลขหน้าแบบเรียงลำดับ
+                for (var i = 1; i <= totalPages; i++) {
+                    (function(pageIndex) {
+                        var pageLi = document.createElement('li');
+                        pageLi.className = 'page-item';
+                        var activeClass = currentPage === pageIndex ? 'manager-btn-primary' : 'manager-btn-ghost';
+                        pageLi.innerHTML = '<button class="manager-btn ' + activeClass + ' manager-btn-sm py-1 px-2" type="button" style="min-width: 32px;">' + pageIndex + '</button>';
+                        
+                        pageLi.querySelector('button').addEventListener('click', function() {
+                            currentPage = pageIndex;
+                            initPagination();
+                        });
+                        paginationBtns.appendChild(pageLi);
+                    })(i);
+                }
+
+                // สร้างปุ่มถัดไป (Next)
+                var nextLi = document.createElement('li');
+                nextLi.className = 'page-item ' + (currentPage === totalPages ? 'disabled' : '');
+                nextLi.innerHTML = '<button class="manager-btn manager-btn-ghost manager-btn-sm py-1 px-2" type="button" aria-label="หน้าถัดไป"><i class="fa-solid fa-angle-right"></i></button>';
+                if (currentPage !== totalPages) {
+                    nextLi.querySelector('button').addEventListener('click', function() {
+                        currentPage++;
+                        initPagination();
+                    });
+                }
+                paginationBtns.appendChild(nextLi);
+            }
+
+            // รันระบบสลับหน้าทันทีเมื่อเปิดหน้าจอ
+            initPagination();
+
+            // เชื่อมโยงตัวสลับหน้าเข้ากับฟอร์มค้นหาและตัวกรองของเดิมในระบบ
+            var filterForm = document.querySelector('[data-manager-autosubmit]');
+            var searchBox = document.querySelector('[data-manager-search]');
+            
+            if (filterForm) {
+                filterForm.addEventListener('change', function() {
+                    currentPage = 1;
+                    setTimeout(initPagination, 150); // รอระบบกรองเดิมประมวลผล d-none เสร็จแล้วอัปเดตหน้าทันที
+                });
+            }
+            if (searchBox) {
+                searchBox.addEventListener('input', function() {
+                    currentPage = 1;
+                    setTimeout(initPagination, 150);
+                });
+            }
+
+            // =================================================================
+            // 2. ระบบตรวจสอบป้องกันความขัดแย้งของช่วงวันที่ (Date Validation)
+            // =================================================================
             var periodForm = document.getElementById('savePricePeriodForm');
             var startInput = document.getElementById('periodModalStartDate');
             var endInput = document.getElementById('periodModalEndDate');
@@ -1021,7 +1134,7 @@
             }
 
             if (periodForm) {
-                // ใช้ Capture Phase เพื่อตรวจสอบและหยุด Event ก่อนที่ submit handler ใน manager.js จะทำงานหากวันที่ผิด
+                // ตรวจสอบและหยุด Event การบันทึกทันทีหากเลือกช่วงวันที่ขัดแย้งกัน
                 periodForm.addEventListener('submit', function (e) {
                     if (!validatePeriodDates()) {
                         e.preventDefault();
@@ -1032,3 +1145,4 @@
         })();
     </script>
 }
+``` ⚡
