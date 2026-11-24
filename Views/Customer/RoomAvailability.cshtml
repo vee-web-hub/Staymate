@@ -1,5 +1,6 @@
 @model List<StayMate_Kavinvee_0576.Models.RoomType>
 @using System.Text.Json
+
 @{
     Layout = "~/Views/Shared/_CustomerLayout.cshtml";
     ViewData["Title"] = "ค้นหาห้องพัก";
@@ -293,7 +294,6 @@
                         @foreach (var room in roomList)
                         {
                             var imgUrl = GetRoomImage(room.TypeCode, room.TypeName);
-                            var availableCount = room.Rooms?.Count(r => r.Status == "available" && r.IsActive == true) ?? 0;
 
                             <article class="customer-ra-room-card"
                                      data-room-id="@room.RoomTypeId"
@@ -301,23 +301,16 @@
                                      data-price="@((int)room.BasePrice)"
                                      data-min-guests="@room.MinGuests"
                                      data-max-guests="@room.MaxGuests"
-                                     data-available="@availableCount">
+                                     data-available="0">
                                 <div class="row g-0">
                                     <div class="col-md-5 col-xl-4">
                                         <div class="customer-ra-img-wrap">
                                             <img src="@imgUrl" alt="@room.TypeName" class="customer-ra-img" loading="lazy" />
-                                            @if (availableCount > 0)
-                                            {
-                                                <span class="customer-ra-avail-pill">
-                                                    <span class="customer-ra-dot-green"></span> ว่าง @availableCount ห้อง
-                                                </span>
-                                            }
-                                            else
-                                            {
-                                                <span class="customer-ra-avail-pill">
-                                                    <span class="customer-ra-dot-green" style="background:#dc3545;"></span> ห้องเต็ม
-                                                </span>
-                                            }
+                                            
+                                            <!-- ข้อ 2) แทนที่ Pill ด้วยแบบตรวจสอบสถานะแบบเดียวสำหรับการเริ่มงานของ JS -->
+                                            <span class="customer-ra-avail-pill js-avail-pill">
+                                                <span class="customer-ra-dot-green" style="background:#F59E0B;"></span> กำลังตรวจสอบห้องว่าง…
+                                            </span>
                                         </div>
                                     </div>
                                     <div class="col-md-7 col-xl-8">
@@ -367,25 +360,21 @@
                                             </div>
 
                                             <div class="customer-ra-card-footer">
+                                                <div class="customer-ra-policy-note">
+                                                    <i class="fa-solid fa-circle-info text-primary me-1"></i>
+                                                    <span>ยกเลิกฟรี 24 ชม. ก่อนเข้าพัก</span>
+                                                </div>
                                                 <div class="customer-ra-card-actions ms-auto">
                                                     <a href="#" class="customer-ra-btn-outline js-details-link">
                                                         <i class="fa-solid fa-circle-info"></i>
                                                         <span>ดูรายละเอียดห้อง</span>
                                                     </a>
-                                                    @if (availableCount > 0)
-                                                    {
-                                                        <a href="#" class="customer-ra-btn-book js-book-link">
-                                                            <i class="fa-solid fa-calendar-check"></i>
-                                                            <span>จองห้องนี้</span>
-                                                        </a>
-                                                    }
-                                                    else
-                                                    {
-                                                        <span class="customer-ra-btn-book" style="opacity:.5; pointer-events:none;">
-                                                            <i class="fa-solid fa-ban"></i>
-                                                            <span>ห้องเต็ม</span>
-                                                        </span>
-                                                    }
+                                                    
+                                                    <!-- ข้อ 3) แทนที่การสลับปุ่มด้วยโครงปุ่มเดี่ยวเพื่อให้ JS อัปเดตคุณสมบัติการคลิก -->
+                                                    <a href="#" class="customer-ra-btn-book js-book-link">
+                                                        <i class="fa-solid fa-calendar-check"></i>
+                                                        <span class="js-book-text">จองห้องนี้</span>
+                                                    </a>
                                                 </div>
                                             </div>
                                         </div>
@@ -418,6 +407,8 @@
         const defaultGuests = @selectedGuests;
         const checkoutUrl = "@Url.Action("Checkout", "Customer")";
         const roomDetailsUrl = "@Url.Action("RoomDetails", "Customer")";
+        // ข้อ 4) กำหนดตัวแปร Endpoint ตรวจเช็คความพร้อมของห้องว่างจริง
+        const availabilityUrl = "@Url.Action("AvailabilityByDate", "Customer")";
 
         document.addEventListener("DOMContentLoaded", function () {
             const checkInEl = document.getElementById("raCheckIn");
@@ -467,6 +458,7 @@
                 checkOutEl.value = toInputDate(initMinOut);
             }
 
+            // ข้อ 6) เรียกใช้ refreshAvailability ใน Handler ของ Check-In
             checkInEl.addEventListener("change", function () {
                 if (!this.value) return;
                 const inDate = toDate(this.value);
@@ -477,9 +469,11 @@
                     checkOutEl.value = toInputDate(minOut);
                 }
                 updateUI();
+                refreshAvailability();
             });
 
-            checkOutEl.addEventListener("change", updateUI);
+            // ข้อ 6) ปรับแก้วิธีเรียก Handler เมื่อ Check-Out มีการเปลี่ยนแปลง
+            checkOutEl.addEventListener("change", () => { updateUI(); refreshAvailability(); });
             guestsEl.addEventListener("change", updateUI);
 
             function getStayNights() {
@@ -518,6 +512,33 @@
                 return badges.length > 0
                     ? badges.join("")
                     : `<span class="customer-ra-promo-none">ยังไม่มีโปรโมชั่นที่ตรงกับเงื่อนไขการเข้าพักนี้</span>`;
+            }
+
+            // ข้อ 5) ฟังก์ชันยิง AJAX เพื่ออัปเดตจำนวนห้องว่างและการแสดงผลปุ่มจองแบบ Real-time
+            let availTimer;
+            function refreshAvailability() {
+                clearTimeout(availTimer);
+                availTimer = setTimeout(async () => {
+                    try {
+                        const res = await fetch(`${availabilityUrl}?checkIn=${checkInEl.value}&checkOut=${checkOutEl.value}`);
+                        const data = await res.json();
+                        if (!data.success) return;
+
+                        roomCards.forEach(card => {
+                            const n = data.available[card.dataset.roomId] ?? 0;
+                            card.dataset.available = n;
+
+                            card.querySelector(".js-avail-pill").innerHTML = n > 0
+                                ? `<span class="customer-ra-dot-green"></span> ว่าง ${n} ห้อง`
+                                : `<span class="customer-ra-dot-green" style="background:#dc3545;"></span> ห้องเต็ม`;
+
+                            const book = card.querySelector(".js-book-link");
+                            book.style.opacity = n > 0 ? "" : ".5";
+                            book.style.pointerEvents = n > 0 ? "" : "none";
+                            card.querySelector(".js-book-text").textContent = n > 0 ? "จองห้องนี้" : "ห้องเต็ม";
+                        });
+                    } catch { /* เงียบไว้ ปล่อยสถานะเดิม */ }
+                }, 250);
             }
 
             // ---------- อัปเดตหน้าจอ ----------
@@ -589,12 +610,14 @@
                 history.replaceState(null, "", `${location.pathname}?${params.toString()}`);
             }
 
+            // ข้อ 5) ใส่ refreshAvailability ไว้ก่อน searchForm Event Listener
             searchForm.addEventListener("submit", function (e) {
                 e.preventDefault();
                 const sel = roomTypeSelectEl.value;
                 roomTypeCheckboxes.forEach(cb => cb.checked = (sel === "ALL" || cb.value === sel));
                 syncUrl();
                 updateUI();
+                refreshAvailability();
             });
 
             roomTypeCheckboxes.forEach(cb => cb.addEventListener("change", updateUI));
@@ -613,12 +636,15 @@
                 priceRangeLabel.textContent = `ไม่เกิน ฿${defaultMaxPrice.toLocaleString("en-US")}`;
                 sortSelect.value = "price-asc";
                 updateUI();
+                refreshAvailability();
             }
 
             if (btnResetFilters) btnResetFilters.addEventListener("click", resetFilters);
             if (btnEmptyReset) btnEmptyReset.addEventListener("click", resetFilters);
 
+            // ข้อ 6) เรียกใช้ refreshAvailability ในขั้นตอนเริ่มทำงานครั้งแรกสุด
             updateUI();
+            refreshAvailability();
         });
     </script>
 }

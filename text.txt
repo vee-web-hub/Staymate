@@ -207,6 +207,7 @@ C:.
 |   |   ErrorViewModel.cs
 |   |   FinancialTransaction.cs
 |   |   Holiday.cs
+|   |   HotelSetting.cs
 |   |   HousekeepingTask.cs
 |   |   Payment.cs
 |   |   Promotion.cs
@@ -315,7 +316,7 @@ C:.
 |           |       exs9hyujan-{0}-ie65a857dr-ie65a857dr.gz
 |           |       f44ihm0v0j-{0}-pk9g2wxc8p-pk9g2wxc8p.gz
 |           |       fb9wif4nsc-{0}-356vix0kms-356vix0kms.gz
-|           |       fho7g43ely-{0}-2tz4jy55bf-2tz4jy55bf.gz
+|           |       fho7g43ely-{0}-9l9qtknb7w-9l9qtknb7w.gz
 |           |       h1lyw2vlih-{0}-tdbxkamptv-tdbxkamptv.gz
 |           |       i1x1kz1fsl-{0}-tgadfym4ri-tgadfym4ri.gz
 |           |       i23z9ljo7z-{0}-4v8eqarkd7-4v8eqarkd7.gz
@@ -339,6 +340,7 @@ C:.
 |           |       pt1k9kq9eu-{0}-elz40haf1e-elz40haf1e.gz
 |           |       pzv0fe9zp4-{0}-7uwepcaqx8-7uwepcaqx8.gz
 |           |       q1qwgno2ax-{0}-0i3buxo5is-0i3buxo5is.gz
+|           |       qowxkch1wc-{0}-1tdr9z7fse-1tdr9z7fse.gz
 |           |       ru5wq50895-{0}-mbxehriccz-mbxehriccz.gz
 |           |       rv0i07z09r-{0}-pj5nd1wqec-pj5nd1wqec.gz
 |           |       rxnzu9022f-{0}-fsbi9cje9m-fsbi9cje9m.gz
@@ -489,6 +491,7 @@ C:.
     |       site.css
     |       staymate-layout.css
     |       staymate_login_Register.css
+    |       Staymate_motion.css
     |       
     +---images
     |   \---Logo

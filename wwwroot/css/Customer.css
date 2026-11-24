@@ -1700,19 +1700,77 @@ html {
 }
 
 /* ==========================================================
-   ROOM AVAILABILITY PAGE STYLES (Scoped with .customer-ra-*)
+   ROOM AVAILABILITY PREMIUM UI OVERRIDES (อัปเดตสไตล์การ์ดและปุ่ม)
    ========================================================== */
-
-.customer-ra-wrapper {
-    font-family: 'Prompt', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    color: var(--ch-text-main, #0F172A);
-    width: 100%;
-    padding-bottom: 56px;
+.customer-ra-room-card {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 24px !important; /* ปรับความโค้งมนระดับพรีเมียม */
+    overflow: hidden;
+    box-shadow: 0 12px 30px rgba(7, 13, 30, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
-.customer-ra-wrapper .container {
-    max-width: var(--ch-max-width, 1240px);
+.customer-ra-room-card:hover {
+    transform: translateY(-5px) !important;
+    border-color: rgba(37, 99, 235, 0.4) !important;
+    box-shadow: 0 20px 42px rgba(7, 13, 30, 0.11), 0 0 20px rgba(0, 229, 255, 0.12) !important;
 }
+
+.customer-ra-card-footer {
+    margin-top: auto;
+    padding-top: 16px !important;
+    border-top: 1px solid #F1F5F9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+/* ปรับปรุงดีไซน์ปุ่มรายละเอียดแบบ Softer Rounded */
+.customer-ra-btn-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 18px !important;
+    border-radius: 14px !important; /* ปรับโค้งรับดีไซน์ใหม่ */
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: #2563EB !important;
+    background: #EFF6FF;
+    border: 1px solid rgba(37, 99, 235, 0.25) !important;
+    text-decoration: none;
+    transition: all 0.22s ease;
+}
+
+.customer-ra-btn-outline:hover {
+    background: #DBEAFE !important;
+    transform: translateY(-1.5px);
+}
+
+/* ปรับปรุงปุ่มจองแบบ Premium Gradient & Glow */
+.customer-ra-btn-book {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 24px !important;
+    border-radius: 14px !important; /* ปรับโค้งรับดีไซน์ใหม่ */
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #FFFFFF !important;
+    background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%) !important; /* ไล่เฉดสี */
+    border: 1px solid rgba(0, 229, 255, 0.45) !important;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3) !important;
+    text-decoration: none;
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.customer-ra-btn-book:hover {
+    transform: translateY(-2.5px) !important;
+    box-shadow: 0 12px 26px rgba(37, 99, 235, 0.45), 0 0 14px rgba(0, 229, 255, 0.35) !important;
+}
+
 
 /* ==========================================================
    1. PAGE HEADER & BREADCRUMB
@@ -6035,3 +6093,13 @@ html {
     color: #CBD5E1;
     line-height: 1.5;
 }
+.customer-promo-btn-disabled {
+    background: rgba(255,255,255,.12); color: #CBD5E1; border: 1px dashed rgba(255,255,255,.3);
+    border-radius: 14px; padding: 10px 14px; font-size: .82rem; font-weight: 600; cursor: not-allowed;
+}
+.customer-promo-card.is-expired { filter: grayscale(.6); opacity: .8; }
+.customer-promo-btn-primary {
+    display: inline-flex; align-items: center; padding: 10px 22px; border-radius: 999px;
+    background: linear-gradient(135deg, #070D1E, #2563EB); color: #fff !important; font-weight: 600; text-decoration: none;
+}
+.customer-promo-empty-state { background: #fff; border: 1px dashed #CBD5E1; border-radius: 24px; }

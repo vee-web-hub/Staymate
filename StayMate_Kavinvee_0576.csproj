@@ -21,6 +21,11 @@
     <PackageReference Include="MySqlConnector" Version="2.6.2" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0" />
     <PackageReference Include="QuestPDF" Version="2026.9.2" />
+    
+    <!-- ยกเว้นโฟลเดอร์ uploads ไม่ให้ dotnet watch และ Hot Reload ตรวจจับไฟล์ใหม่ -->
+    <Watch Remove="wwwroot/uploads/**" />
+    <Watch Remove="wwwroot\uploads\**" />
+    <Content Update="wwwroot/uploads/**" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" Watch="false" />
   </ItemGroup>
 
 </Project>

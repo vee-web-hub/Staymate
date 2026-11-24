@@ -122,10 +122,13 @@
     decimal taxAmount = booking.TaxAmount;
     decimal totalAmount = booking.TotalAmount;
 
-    string? promoName = booking.BookingPromotions?.Select(bp => bp.Promotion?.PromoName).FirstOrDefault(n => !string.IsNullOrWhiteSpace(n));
+    var promoName = string.Join(", ", booking.BookingPromotions?
+    .Select(bp => bp.Promotion?.PromoName)
+    .Where(n => !string.IsNullOrWhiteSpace(n))
+    ?? Enumerable.Empty<string?>());
 
-    string bookingStatus = MapBookingStatus(booking.Status);
-    string paymentStatus = MapPaymentStatus(booking, latestPayment);
+string bookingStatus = MapBookingStatus(booking.Status);
+string paymentStatus = MapPaymentStatus(booking, latestPayment);
 
     string? paymentMethod = latestPayment == null
         ? null

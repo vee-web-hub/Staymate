@@ -1,4 +1,6 @@
 @model StayMate_Kavinvee_0576.Models.User
+@using StayMate_Kavinvee_0576.Models.ViewModels
+
 @{
     Layout = "~/Views/Shared/_CustomerLayout.cshtml";
     ViewData["Title"] = "การจองของฉัน";
@@ -53,20 +55,11 @@
         "Rejected" => "สลิปไม่ผ่าน",
         _ => "ยังไม่ชำระ"
     };
+string GetRoomImage(string? code, string? name) =>
+    RoomExtrasCatalog.Find(code, name)?.Gallery.FirstOrDefault()
+    ?? RoomExtrasCatalog.Fallback(name ?? "");
 
-    string GetRoomImage(string? code, string? name)
-    {
-        var key = ((code ?? "") + " " + (name ?? "")).ToLowerInvariant();
-        if (key.Contains("std") || key.Contains("standard"))
-            return "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=900&q=80";
-        if (key.Contains("dlx") || key.Contains("deluxe"))
-            return "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=900&q=80";
-        if (key.Contains("fam") || key.Contains("family"))
-            return "https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=900&q=80";
-        if (key.Contains("sui") || key.Contains("suite"))
-            return "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=900&q=80";
-        return "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=900&q=80";
-    }
+
 
     var rawBookings = Model?.Bookings?.OrderByDescending(b => b.CreatedAt).ToList()
                       ?? new List<StayMate_Kavinvee_0576.Models.Booking>();
@@ -83,7 +76,8 @@
             ? $"{typeName} · ห้อง {roomEntity.RoomNumber}"
             : typeName;
 
-        var promoName = b.BookingPromotions?.Select(bp => bp.Promotion?.PromoName).FirstOrDefault(n => !string.IsNullOrWhiteSpace(n));
+       var promoName = string.Join(", ", b.BookingPromotions?
+    .Select(bp => bp.Promotion?.PromoName).Where(n => !string.IsNullOrWhiteSpace(n)) ?? Enumerable.Empty<string?>());
 
         var mappedBStatus = MapBookingStatus(b.Status);
         var mappedPStatus = MapPaymentStatus(b);

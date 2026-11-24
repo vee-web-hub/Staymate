@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity; // 2. เพิ่ม using บนสุดของไฟล์
 using StayMate_Kavinvee_0576.Models;
 using StayMate_Kavinvee_0576.Models.ViewModels;
 
@@ -14,6 +15,8 @@ namespace StayMate_Kavinvee_0576.Controllers
     public class CustomerController : Controller
     {
         private readonly StayMateDbContext _db;
+        // 1. เพิ่ม field ต่อจาก _db
+        private readonly PasswordHasher<User> _hasher = new();
 
         public CustomerController(StayMateDbContext db)
         {
@@ -185,7 +188,6 @@ namespace StayMate_Kavinvee_0576.Controllers
 
             var promos = promoRows.Select((p, i) =>
             {
-                // สิทธิประโยชน์
                 var benefits = new List<string>();
                 switch (p.DiscountType)
                 {
@@ -205,7 +207,6 @@ namespace StayMate_Kavinvee_0576.Controllers
                 if (p.VoucherMinValue.HasValue && p.VoucherMaxValue.HasValue)
                     benefits.Add($"E-Voucher ฿{p.VoucherMinValue:N0}–฿{p.VoucherMaxValue:N0}");
 
-                // เงื่อนไข
                 var conds = new List<string>();
                 if (p.MinGuests is > 0) conds.Add($"ผู้เข้าพักตั้งแต่ {p.MinGuests} ท่านขึ้นไป");
                 if (p.MinNights is > 0) conds.Add($"พักขั้นต่ำ {p.MinNights} คืน");
@@ -227,7 +228,7 @@ namespace StayMate_Kavinvee_0576.Controllers
                 };
             }).ToList();
 
-            // ---------- 5) รีวิว (นับ/เฉลี่ยใน DB ไม่ต้องโหลดทั้งหมด) ----------
+            // ---------- 5) รีวิว ----------
             var reviewCount = await _db.Reviews.AsNoTracking().CountAsync();
             double? averageRating = reviewCount > 0
                 ? await _db.Reviews.AsNoTracking().AverageAsync(r => (double)r.Rating)
@@ -271,7 +272,6 @@ namespace StayMate_Kavinvee_0576.Controllers
             if (await GetCurrentUserId() == null)
                 return RedirectToAction("Login", "Account");
 
-            // ประเภทห้องพร้อมห้องย่อย เพื่อนับจำนวนห้องว่างจริง
             var roomTypes = await _db.RoomTypes
                 .AsNoTracking()
                 .Include(rt => rt.Rooms)
@@ -283,6 +283,27 @@ namespace StayMate_Kavinvee_0576.Controllers
             return View(roomTypes);
         }
 
+        /// <summary>ตรวจสอบจำนวนห้องว่างตามช่วงวันที่เช็คอิน-เช็คเอาท์จริง</summary>
+        [HttpGet]
+        public async Task<IActionResult> AvailabilityByDate(string? checkIn, string? checkOut)
+        {
+            if (await GetCurrentUserId() == null)
+                return Fail("กรุณาเข้าสู่ระบบใหม่อีกครั้ง");
+
+            if (!TryParseDate(checkIn, out var inDate) || !TryParseDate(checkOut, out var outDate))
+                return Fail("รูปแบบวันที่ไม่ถูกต้อง");
+            if (inDate < Today || outDate <= inDate)
+                return Fail("ช่วงวันที่ไม่ถูกต้อง");
+
+            var typeIds = await _db.RoomTypes.AsNoTracking().Select(rt => rt.RoomTypeId).ToListAsync();
+            var available = new Dictionary<string, int>();
+
+            foreach (var id in typeIds)
+                available[id.ToString()] = await CountAvailableRoomsAsync(id, inDate, outDate);
+
+            return Json(new { success = true, available });
+        }
+
         // ==========================================
         // 3. ROOMS / ROOM DETAILS
         // ==========================================
@@ -291,7 +312,6 @@ namespace StayMate_Kavinvee_0576.Controllers
             if (await GetCurrentUserId() == null)
                 return RedirectToAction("Login", "Account");
 
-            // ไปยังประเภทห้องแรกที่มีอยู่จริง (ไม่ hardcode id = 1)
             var firstId = await _db.RoomTypes
                 .AsNoTracking()
                 .OrderBy(rt => rt.RoomTypeId)
@@ -313,7 +333,6 @@ namespace StayMate_Kavinvee_0576.Controllers
                 .OrderBy(rt => rt.RoomTypeId)
                 .ToListAsync();
 
-            // ส่ง id ที่เลือกให้ View ใช้เปิดแท็บ/ห้องที่ต้องการ
             ViewBag.SelectedRoomTypeId = id;
 
             return View(roomTypes);
@@ -329,7 +348,6 @@ namespace StayMate_Kavinvee_0576.Controllers
 
             var today = Today;
 
-            // โปรโมชั่นที่เปิดใช้งานและยังไม่หมดอายุ (รวมที่ยังไม่เริ่ม เพื่อโชว์ล่วงหน้า)
             var promotionsList = await _db.Promotions
                 .AsNoTracking()
                 .Include(p => p.ApplicableRoomType)
@@ -369,12 +387,13 @@ namespace StayMate_Kavinvee_0576.Controllers
         // ==========================================
         private const int MaxStayNights = 30;
         private const long MaxSlipBytes = 5 * 1024 * 1024;
+        private const decimal OnTopPercent = 5m;
+        private const decimal MaxTotalDiscountPercent = 20m;
 
-        // สถานะการจองที่ "กันห้อง" ไว้
-        // ไม่รวม pending_payment เพราะขั้นตอนจองนี้สร้างรายการพร้อมสลิป (pending_approval) เสมอ
-        // และระบบยังไม่มีเวลาหมดอายุของการรอชำระเงิน จึงไม่ควรกันห้องค้าง
+        private sealed record AppliedPromo(Promotion Promo, string Role, decimal Percent, decimal Amount);
+
         private static readonly IReadOnlyList<string> HoldingStatuses =
-    new[] { "pending_approval", "confirmed", "checked_in" };
+            new[] { "pending_approval", "confirmed", "checked_in" };
 
         private static readonly Regex PhoneRegex = new(@"^[0-9+\-\s]{8,20}$");
 
@@ -387,8 +406,8 @@ namespace StayMate_Kavinvee_0576.Controllers
             public int Nights { get; init; }
             public decimal RoomAmount { get; init; }
             public decimal AvgPricePerNight { get; init; }
-            public Promotion? Promo { get; init; }
-            public decimal PromoPercent { get; init; }
+            public List<AppliedPromo> Applied { get; init; } = new();
+            public bool DiscountCapped { get; init; }
             public decimal Discount { get; init; }
             public decimal DiscountPercent { get; init; }
             public decimal Total { get; init; }
@@ -410,16 +429,13 @@ namespace StayMate_Kavinvee_0576.Controllers
             return Math.Max(0, totalRooms - bookedRooms);
         }
 
-        /// <summary>เลือกโปรโมชั่นที่ให้ส่วนลดสูงสุด (โปรที่ลูกค้าระบุรหัสมาได้สิทธิ์ก่อน)</summary>
-        private static (Promotion? Promo, decimal Discount, decimal Percent) PickPromotion(
-            List<Promotion> promos, RoomType room, int guests, List<decimal> nightly,
-            bool stayHasHoliday, string? preferredCode)
+        /// <summary>โปรหลัก = ส่วนลดสูงสุด, โปรอื่นที่เข้าเงื่อนไข On-top รายการละ 5%, รวมไม่เกิน 20% ของค่าห้อง</summary>
+        private static (List<AppliedPromo> Applied, decimal Discount, bool Capped) ApplyPromotions(
+            List<Promotion> promos, RoomType room, int guests, List<decimal> nightly, bool stayHasHoliday)
         {
             var nights = nightly.Count;
             var roomAmount = nightly.Sum();
-
-            Promotion? best = null;
-            decimal bestDiscount = 0m, bestPercent = 0m, bestScore = -1m;
+            var eligible = new List<(Promotion P, decimal Standalone)>();
 
             foreach (var p in promos)
             {
@@ -435,36 +451,37 @@ namespace StayMate_Kavinvee_0576.Controllers
                     case "percent_room":
                         discount = roomAmount * pct / 100m;
                         break;
-
                     case "percent_extra_nights":
-                        // ลดเฉพาะคืนที่เกินจำนวนคืนขั้นต่ำ (นับจากคืนท้าย ๆ) และไม่เกิน MaxDiscountNights
                         var extra = Math.Max(0, nights - (p.MinNights ?? 1));
-                        if (p.MaxDiscountNights is > 0)
-                            extra = Math.Min(extra, p.MaxDiscountNights.Value);
+                        if (p.MaxDiscountNights is > 0) extra = Math.Min(extra, p.MaxDiscountNights.Value);
                         discount = nightly.Skip(nights - extra).Sum() * pct / 100m;
                         break;
-
                     case "free_extra_bed":
-                        // ระบบยังไม่คิดค่าเตียงเสริมในใบจอง จึงยังไม่มีมูลค่าส่วนลดเป็นเงิน
-                        break;
+                        break; // ยังไม่มีมูลค่าเป็นเงินในใบจอง
                 }
 
-                discount = Math.Round(Math.Min(discount, roomAmount), 2);
-
-                var preferred = !string.IsNullOrWhiteSpace(preferredCode)
-                                && string.Equals(p.PromoCode, preferredCode, StringComparison.OrdinalIgnoreCase);
-                var score = discount + (preferred ? 1_000_000m : 0m);
-
-                if (score > bestScore)
-                {
-                    bestScore = score;
-                    best = p;
-                    bestDiscount = discount;
-                    bestPercent = pct;
-                }
+                eligible.Add((p, Math.Round(Math.Min(discount, roomAmount), 2)));
             }
 
-            return (best, bestDiscount, bestPercent);
+            if (eligible.Count == 0) return (new List<AppliedPromo>(), 0m, false);
+
+            var ordered = eligible.OrderByDescending(e => e.Standalone).ThenBy(e => e.P.PromotionId).ToList();
+            var remaining = Math.Round(roomAmount * MaxTotalDiscountPercent / 100m, 2);
+            var applied = new List<AppliedPromo>();
+            var capped = false;
+
+            for (var i = 0; i < ordered.Count; i++)
+            {
+                var wanted = i == 0 ? ordered[i].Standalone : Math.Round(roomAmount * OnTopPercent / 100m, 2);
+                var amount = Math.Min(wanted, remaining);
+                if (amount < wanted) capped = true;
+                remaining -= amount;
+
+                var percent = roomAmount > 0m ? Math.Round(amount / roomAmount * 100m, 2) : 0m;
+                applied.Add(new AppliedPromo(ordered[i].P, i == 0 ? "base" : "on_top", percent, amount));
+            }
+
+            return (applied, applied.Sum(a => a.Amount), capped);
         }
 
         /// <summary>คำนวณราคาและตรวจห้องว่าง (ใช้ร่วมกันทั้งหน้า Checkout และตอนบันทึกจริง)</summary>
@@ -487,8 +504,6 @@ namespace StayMate_Kavinvee_0576.Controllers
             if (guests < room.MinGuests || guests > room.MaxGuests)
                 return (null, $"ห้อง {room.TypeName} รองรับผู้เข้าพัก {room.MinGuests}–{room.MaxGuests} ท่าน");
 
-            // ราคาต่อคืน: ใช้ราคาช่วงเวลาพิเศษ (room_rate_periods) ถ้ามี ไม่เช่นนั้นใช้ราคาปกติ
-            // (ถ้ามีหลายช่วงทับกัน ใช้รายการที่สร้างล่าสุด)
             var lastNight = checkOut.AddDays(-1);
             var periods = await _db.RoomRatePeriods
                 .AsNoTracking()
@@ -511,8 +526,7 @@ namespace StayMate_Kavinvee_0576.Controllers
             var stayHasHoliday = promos.Any(p => p.RequiresHoliday)
                 && await _db.Holidays.AnyAsync(h => h.StartDate <= lastNight && h.EndDate >= checkIn);
 
-            var (promo, discount, pct) = PickPromotion(promos, room, guests, nightly, stayHasHoliday, promoCode);
-
+            var (applied, discount, capped) = ApplyPromotions(promos, room, guests, nightly, stayHasHoliday);
             var effectivePercent = roomAmount > 0m ? Math.Round(discount / roomAmount * 100m, 2) : 0m;
 
             var quote = new BookingQuote
@@ -521,8 +535,8 @@ namespace StayMate_Kavinvee_0576.Controllers
                 Nights = nights,
                 RoomAmount = roomAmount,
                 AvgPricePerNight = Math.Round(roomAmount / nights, 2),
-                Promo = promo,
-                PromoPercent = pct,
+                Applied = applied,
+                DiscountCapped = capped,
                 Discount = discount,
                 DiscountPercent = effectivePercent,
                 Total = roomAmount - discount,
@@ -543,16 +557,31 @@ namespace StayMate_Kavinvee_0576.Controllers
             return $"BK{DateTime.Now:yyMMdd}{suffix}";
         }
 
-        /// <summary>ตรวจชนิดไฟล์จากไบต์แรกของไฟล์จริง ไม่เชื่อแค่นามสกุลหรือ Content-Type</summary>
+        /// <summary>ตรวจชนิดไฟล์จากไบต์แรกของไฟล์จริง</summary>
         private static async Task<string?> DetectImageExtensionAsync(IFormFile file)
         {
             var header = new byte[8];
             await using var stream = file.OpenReadStream();
             var read = await stream.ReadAsync(header.AsMemory(0, header.Length));
-            if (read < 4) return null;
+            if (read < 8) return null;
 
-            if (header[0] == 0xFF && header[1] == 0xD8 && header[2] == 0xFF) return ".jpg";
-            if (header[0] == 0x89 && header[1] == 0x50 && header[2] == 0x4E && header[3] == 0x47) return ".png";
+           // ตรวจสอบ JPEG
+    if (header[0] == 0xFF &&
+        header[1] == 0xD8 &&
+        header[2] == 0xFF)
+    {
+        return ".jpg";
+    }
+
+    // ตรวจสอบ PNG
+    if (header[0] == 0x89 &&
+        header[1] == 0x50 &&
+        header[2] == 0x4E &&
+        header[3] == 0x47)
+    {
+        return ".png";
+    }
+
             return null;
         }
 
@@ -578,10 +607,18 @@ namespace StayMate_Kavinvee_0576.Controllers
                 nights = quote.Nights,
                 roomAmount = quote.RoomAmount,
                 discount = quote.Discount,
+                discountPercent = quote.DiscountPercent,
+                discountCapped = quote.DiscountCapped,
                 total = quote.Total,
-                promoName = quote.Promo?.PromoName,
-                promoType = quote.Promo?.DiscountType,
-                available = quote.Available
+                available = quote.Available,
+                promoName = string.Join(" + ", quote.Applied.Select(a => a.Promo.PromoName)),
+                promos = quote.Applied.Select(a => new
+                {
+                    name = a.Promo.PromoName,
+                    role = a.Role,
+                    percent = a.Percent,
+                    amount = a.Amount
+                })
             });
         }
 
@@ -630,7 +667,6 @@ namespace StayMate_Kavinvee_0576.Controllers
                 return Fail("รองรับเฉพาะไฟล์รูปภาพ JPEG หรือ PNG");
 
             // ---------- 2) ล็อกประเภทห้อง แล้วคำนวณราคา/ตรวจห้องว่างใหม่ในธุรกรรมเดียว ----------
-            // การล็อกแถว room_types ทำให้คำขอจองประเภทห้องเดียวกันเข้ามาทีละคำขอ ป้องกันการจองห้องเกินจำนวน
             string? savedSlipFullPath = null;
 
             await using var tx = await _db.Database.BeginTransactionAsync();
@@ -646,7 +682,6 @@ namespace StayMate_Kavinvee_0576.Controllers
                 if (quote.Available <= 0)
                     return Fail($"ขออภัย ห้อง {quote.Room.TypeName} เต็มในช่วงวันที่เลือก กรุณาเลือกวันที่หรือประเภทห้องอื่น");
 
-                // ยอดที่ลูกค้าเห็นต้องตรงกับที่เซิร์ฟเวอร์คำนวณ ไม่เช่นนั้นให้ลูกค้ายืนยันยอดใหม่
                 if (Math.Abs(netTotal - quote.Total) > 0.01m)
                     return Json(new
                     {
@@ -682,6 +717,7 @@ namespace StayMate_Kavinvee_0576.Controllers
                 var booking = new Booking
                 {
                     BookingCode = bookingCode,
+                    QrCode = bookingCode, // ให้ Reception สแกนแล้วได้ Booking ID / Code ทันที
                     UserId = userId.Value,
                     ContactName = name,
                     ContactEmail = mail,
@@ -693,14 +729,13 @@ namespace StayMate_Kavinvee_0576.Controllers
                     RoomAmount = quote.RoomAmount,
                     DiscountPercent = quote.DiscountPercent,
                     DiscountAmount = quote.Discount,
-                    TaxAmount = 0m, // ราคาห้องที่แสดงเป็นราคาสุทธิ ไม่แยกภาษี
+                    TaxAmount = 0m,
                     TotalAmount = quote.Total,
-                    Status = "pending_approval", // แนบสลิปแล้ว รอเจ้าหน้าที่ตรวจสอบ
+                    Status = "pending_approval",
                     SpecialRequest = request,
                     CreatedAt = now
                 };
 
-                // ยังไม่กำหนดห้องจริง (RoomId) จะกำหนดตอนเช็คอิน
                 booking.BookingRooms.Add(new BookingRoom
                 {
                     RoomTypeId = quote.Room.RoomTypeId,
@@ -711,14 +746,14 @@ namespace StayMate_Kavinvee_0576.Controllers
                     LineTotal = quote.RoomAmount
                 });
 
-                if (quote.Promo != null)
+                foreach (var a in quote.Applied)
                 {
                     booking.BookingPromotions.Add(new BookingPromotion
                     {
-                        PromotionId = quote.Promo.PromotionId,
-                        StackRole = "base",
-                        AppliedPercent = quote.PromoPercent,
-                        AppliedAmount = quote.Discount,
+                        PromotionId = a.Promo.PromotionId,
+                        StackRole = a.Role,
+                        AppliedPercent = a.Percent,
+                        AppliedAmount = a.Amount,
                         AppliedAt = now
                     });
                 }
@@ -746,7 +781,6 @@ namespace StayMate_Kavinvee_0576.Controllers
             }
             catch (Exception)
             {
-                // ยกเลิกธุรกรรม (ทำโดยอัตโนมัติเมื่อ dispose) และลบไฟล์สลิปที่เพิ่งบันทึก
                 if (savedSlipFullPath != null && System.IO.File.Exists(savedSlipFullPath))
                     System.IO.File.Delete(savedSlipFullPath);
 
@@ -765,7 +799,7 @@ namespace StayMate_Kavinvee_0576.Controllers
 
             var user = await _db.Users
                 .AsNoTracking()
-                .AsSplitQuery() // หลีกเลี่ยง cartesian explosion จาก Include หลายชั้น
+                .AsSplitQuery()
                 .Include(u => u.Bookings)
                     .ThenInclude(b => b.BookingRooms)
                         .ThenInclude(br => br.RoomType)
@@ -791,7 +825,6 @@ namespace StayMate_Kavinvee_0576.Controllers
             if (userId == null)
                 return RedirectToAction("Login", "Account");
 
-            // ป้องกัน IDOR: ดึงเฉพาะการจองของผู้ใช้ปัจจุบันเท่านั้น
             var user = await _db.Users
                 .AsNoTracking()
                 .AsSplitQuery()
@@ -856,7 +889,6 @@ namespace StayMate_Kavinvee_0576.Controllers
             if (string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(newEmail))
                 return Fail("กรุณากรอกชื่อและอีเมลให้ครบถ้วน");
 
-            // ขนาดตามคอลัมน์ในฐานข้อมูล
             if (fullName.Length > 150)
                 return Fail("ชื่อ-นามสกุลต้องไม่เกิน 150 ตัวอักษร");
             if (newEmail.Length > 120 || !new EmailAddressAttribute().IsValid(newEmail))
@@ -864,7 +896,6 @@ namespace StayMate_Kavinvee_0576.Controllers
             if (newPhone != null && newPhone.Length > 20)
                 return Fail("เบอร์โทรศัพท์ต้องไม่เกิน 20 ตัวอักษร");
 
-            // อีเมลต้องไม่ซ้ำกับผู้ใช้อื่น (unique index uq_users_email)
             var emailTaken = await _db.Users.AnyAsync(u =>
                 u.Email == newEmail && u.UserId != user.UserId);
             if (emailTaken)
@@ -904,8 +935,6 @@ namespace StayMate_Kavinvee_0576.Controllers
             if (user == null)
                 return Fail("ไม่พบข้อมูลผู้ใช้งาน");
 
-            // TODO: ปัจจุบันระบบเก็บรหัสผ่านแบบ plain text ให้ตรงกับหน้า Login เดิม
-            //       ควรเปลี่ยนเป็น hash (PasswordHasher<User> / BCrypt) ทั้ง Register, Login และที่นี่
             if (user.PasswordHash != oldPassword)
                 return Fail("รหัสผ่านเดิมไม่ถูกต้อง");
 
@@ -928,7 +957,6 @@ namespace StayMate_Kavinvee_0576.Controllers
             if (userId == null)
                 return RedirectToAction("Login", "Account");
 
-            // 1) รีวิวทั้งหมดในระบบ
             var allReviews = await _db.Reviews
                 .AsNoTracking()
                 .Include(r => r.User)
@@ -938,7 +966,6 @@ namespace StayMate_Kavinvee_0576.Controllers
                 .OrderByDescending(r => r.CreatedAt)
                 .ToListAsync();
 
-            // 2) การจองของลูกค้าปัจจุบัน สำหรับเลือกเขียนรีวิว
             ViewBag.UserBookings = await _db.Bookings
                 .AsNoTracking()
                 .Include(b => b.Review)
@@ -967,10 +994,10 @@ namespace StayMate_Kavinvee_0576.Controllers
 
             if (string.IsNullOrWhiteSpace(cleanComment))
                 return Fail("กรุณาเขียนความคิดเห็นก่อนส่งรีวิว");
-            if (cleanComment.Length > 2000 || (cleanTitle?.Length ?? 0) > 100)
-                return Fail("ข้อความรีวิวยาวเกินกำหนด");
 
-            // กรองด้วย UserId เสมอ เพื่อป้องกัน IDOR
+            if (cleanComment.Length > 2000 || (cleanTitle?.Length ?? 0) > 100)
+                return Fail("ข้อความรีวิยาวเกินกำหนด");
+
             var booking = await _db.Bookings
                 .Include(b => b.Review)
                 .Include(b => b.BookingRooms)
@@ -981,6 +1008,7 @@ namespace StayMate_Kavinvee_0576.Controllers
                 return Fail("ไม่พบรายการจองของคุณ");
 
             var status = (booking.Status ?? "").ToLowerInvariant();
+
             if (status != "checked_out" && status != "completed")
                 return Fail("สามารถเขียนรีวิวได้เฉพาะรายการจองที่เข้าพักเสร็จสิ้น (Completed) แล้วเท่านั้น");
 
@@ -1008,7 +1036,6 @@ namespace StayMate_Kavinvee_0576.Controllers
             }
             catch (DbUpdateException)
             {
-                // กรณีกดส่งซ้ำพร้อมกัน ชน unique index uq_review_booking
                 return Fail("รายการจองนี้ได้รับการรีวิวไปแล้ว ไม่สามารถส่งรีวิวซ้ำได้");
             }
 

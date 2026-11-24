@@ -1,4 +1,6 @@
 @using System.Text.Json
+@using StayMate_Kavinvee_0576.Models.ViewModels
+
 @{
     Layout = "~/Views/Shared/_CustomerLayout.cshtml";
     ViewData["Title"] = "จองห้องพักและชำระเงิน";
@@ -18,20 +20,10 @@
     var currentRoomType = roomTypes.FirstOrDefault(rt => rt.RoomTypeId == parsedInitId)
                           ?? roomTypes.FirstOrDefault();
 
-    // จับคู่รูปตามรหัสหรือชื่อห้อง (ชุดเดียวกับหน้า RoomAvailability)
-    string GetRoomImage(string? code, string? name)
-    {
-        var key = ((code ?? "") + " " + (name ?? "")).ToLower();
-        if (key.Contains("std") || key.Contains("standard"))
-            return "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=900&q=80";
-        if (key.Contains("dlx") || key.Contains("deluxe"))
-            return "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=900&q=80";
-        if (key.Contains("fam") || key.Contains("family"))
-            return "https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=900&q=80";
-        if (key.Contains("sui") || key.Contains("suite"))
-            return "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=900&q=80";
-        return "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=900&q=80";
-    }
+    // ดึงรูปภาพห้องพักให้สอดคล้องกันตรงตามหน้าแรกผ่านการอ้างอิงแค็ตตาล็อกมาตรฐาน
+    string GetRoomImage(string? code, string? name) =>
+        RoomExtrasCatalog.Find(code, name)?.Gallery.FirstOrDefault()
+        ?? RoomExtrasCatalog.Fallback(name ?? "");
 
     var roomTypesJson = JsonSerializer.Serialize(roomTypes.Select(rt => new
     {
@@ -43,7 +35,6 @@
         maxGuests = (int)rt.MaxGuests,
         img = GetRoomImage(rt.TypeCode, rt.TypeName)
     }));
-
 }
 
 @section Styles {
@@ -221,6 +212,7 @@
                                     <input type="file" id="slipUploadInput" name="slipFile" accept="image/jpeg, image/png" class="d-none" onchange="previewPaymentSlip(this)" />
                                 </div>
                             </div>
+
                             <div class="col-md-6 text-center">
                                 <div class="customer-co-slip-preview" id="slipPreviewContainer">
                                     <div class="text-muted py-4 small" id="slipPreviewPlaceholder">
@@ -236,12 +228,12 @@
                         </div>
                     </div>
 
-                    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                    <div class="d-flex justify-content-end mt-4 pt-3 border-top">
                         <button type="button" class="customer-mb-btn-outline btn border rounded-pill px-3" onclick="navigateToStep(1)">
                             <i class="fa-solid fa-arrow-left me-1"></i>
                             <span>ย้อนกลับ</span>
                         </button>
-                        <button type="button" id="btnConfirmBooking" class="customer-co-btn-book" onclick="submitBookingForm()">
+                        <button type="button" id="btnConfirmBooking" class="customer-co-btn-book ms-3" onclick="submitBookingForm()">
                             <i class="fa-solid fa-circle-check"></i>
                             <span>ยืนยันการจองและส่งสลิป</span>
                         </button>
@@ -324,7 +316,10 @@
                                 <span id="lblPromoLabel">ส่วนลดโปรโมชั่น</span>
                                 <strong id="lblPromoDiscount">-฿0</strong>
                             </div>
-                            <div class="small text-success d-none" id="lblPromoNote"></div>
+                            
+                            <!-- 1) แทนที่บรรทัดเดิมด้วยช่องสำหรับจัดทำรายการแจกแจงแบบไดนามิก -->
+                            <div id="promoBreakdown" class="small mb-2 d-none"></div>
+                            
                             <hr class="my-2" />
                             <div class="d-flex justify-content-between align-items-baseline">
                                 <span class="fw-bold text-dark">ยอดชำระสุทธิ</span>
@@ -427,6 +422,7 @@
             const pad = (n) => String(n).padStart(2, "0");
             const toInputDate = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
+            // แก้ไขจุดเกิดเหตุ parts[1] - 1
             const parseLocalDate = (value) => {
                 if (!value) return null;
                 const parts = value.split("-").map(Number);
@@ -504,7 +500,7 @@
                 document.getElementById("lblBaseNights").textContent = nightsCount;
             }
 
-            // ---------- คำนวณราคา (ขอจากเซิร์ฟเวอร์ เพื่อให้ตรงกับราคาจริงและห้องว่างตามวันที่) ----------
+            // ---------- คำนวณราคา ----------
             let activeNetTotal = 0;
             let quoteReady = false;
             let quoteSeq = 0;
@@ -514,6 +510,35 @@
                 document.getElementById("lblPromoDiscount").textContent = discount === null ? "-" : `-${baht(discount)}`;
                 document.getElementById("lblNetTotal").textContent = total === null ? "-" : baht(total);
                 document.getElementById("lblPayAmount").textContent = total === null ? "-" : baht(total);
+            }
+
+            function renderPromoBreakdown(q) {
+                const box = document.getElementById("promoBreakdown");
+                box.innerHTML = "";
+                const list = q.promos || [];
+                if (list.length === 0) { box.classList.add("d-none"); return; }
+
+                list.forEach(p => {
+                    const row = document.createElement("div");
+                    row.className = "d-flex justify-content-between gap-2 text-success mb-1";
+                    
+                    const name = document.createElement("span");
+                    name.textContent = `${p.role === "base" ? "โปรหลัก" : "On-top"}: ${p.name}`;
+                    
+                    const val = document.createElement("strong");
+                    val.textContent = p.amount > 0 ? `-${baht(p.amount)} (${p.percent}%)` : "รับสิทธิพิเศษ";
+                    
+                    row.append(name, val);
+                    box.appendChild(row);
+                });
+
+                if (q.discountCapped) {
+                    const cap = document.createElement("div");
+                    cap.className = "text-warning-emphasis mt-1";
+                    cap.textContent = "ส่วนลดรวมถึงเพดานสูงสุด 20% ของค่าห้องแล้ว";
+                    box.appendChild(cap);
+                }
+                box.classList.remove("d-none");
             }
 
             async function calculatePrices(keepError = false) {
@@ -545,7 +570,7 @@
 
                 try {
                     const res = await fetch(`${quoteUrl}?${params.toString()}`, { headers: { "Accept": "application/json" } });
-                    if (seq !== quoteSeq) return; // มีการเปลี่ยนเงื่อนไขใหม่แล้ว
+                    if (seq !== quoteSeq) return;
 
                     if (!res.ok) {
                         showError(`ไม่สามารถคำนวณราคาได้ (รหัสข้อผิดพลาด ${res.status}) กรุณาลองใหม่อีกครั้ง`);
@@ -562,15 +587,8 @@
 
                     document.getElementById("lblBaseNights").textContent = q.nights;
                     document.getElementById("lblPromoLabel").textContent =
-                        q.promoName ? `ส่วนลด: ${q.promoName}` : "ส่วนลดโปรโมชั่น";
-
-                    const noteEl = document.getElementById("lblPromoNote");
-                    if (q.promoType === "free_extra_bed") {
-                        noteEl.textContent = "รับสิทธิ์ฟรีค่าเตียงเสริม";
-                        noteEl.classList.remove("d-none");
-                    } else {
-                        noteEl.classList.add("d-none");
-                    }
+                        q.discountPercent > 0 ? `ส่วนลดรวม (${q.discountPercent}%)` : "ส่วนลดโปรโมชั่น";
+                    renderPromoBreakdown(q);
 
                     activeNetTotal = q.total;
                     setPriceLabels(q.roomAmount, q.discount, q.total);

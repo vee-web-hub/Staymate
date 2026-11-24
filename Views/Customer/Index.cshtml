@@ -917,17 +917,18 @@
                 );
             }
 
-            // 3. Swiper: Promotion Carousel
+                        // 3. Swiper: Promotion Carousel (แบ่ง 2 หน้า / 2 จุด Pagination)
             const promoSwiperEl = document.querySelector(".customer-home-promo-swiper");
             if (typeof Swiper !== "undefined" && promoSwiperEl) {
                 new Swiper(".customer-home-promo-swiper", {
                     slidesPerView: 1,
+                    slidesPerGroup: 1,
                     spaceBetween: 24,
-                    loop: @(Model.Promotions.Count > 3 ? "true" : "false"),
+                    loop: false, // ปิด loop เพื่อให้แบ่งเป็น 2 หน้าเป๊ะๆ ตามจำนวน 5 รายการ
                     grabCursor: true,
                     speed: prefersReducedMotion ? 0 : 700,
                     autoplay: prefersReducedMotion ? false : {
-                        delay: 4200,
+                        delay: 4500,
                         disableOnInteraction: false,
                         pauseOnMouseEnter: true
                     },
@@ -940,12 +941,25 @@
                         prevEl: ".ch-promo-prev"
                     },
                     breakpoints: {
-                        640: { slidesPerView: 1.25, spaceBetween: 20 },
-                        768: { slidesPerView: 2, spaceBetween: 24 },
-                        1200: { slidesPerView: 3, spaceBetween: 28 }
+                        640: { 
+                            slidesPerView: 1.25, 
+                            slidesPerGroup: 1, 
+                            spaceBetween: 20 
+                        },
+                        768: { 
+                            slidesPerView: 2, 
+                            slidesPerGroup: 2, 
+                            spaceBetween: 24 
+                        },
+                        1200: { 
+                            slidesPerView: 3, 
+                            slidesPerGroup: 3, // เลื่อนทีละ 3 การ์ด -> 5 โปรโมชั่นจะแบ่งเป็น 2 หน้าพอดี
+                            spaceBetween: 28 
+                        }
                     }
                 });
             }
+
 
             // 4. AOS: Section Scroll Reveal
             if (typeof AOS !== "undefined") {

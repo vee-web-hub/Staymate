@@ -1,6 +1,7 @@
 @model List<StayMate_Kavinvee_0576.Models.Promotion>
 @using System.Text.Json
 @using System.Globalization
+
 @{
     Layout = "~/Views/Shared/_CustomerLayout.cshtml";
     ViewData["Title"] = "โปรโมชั่น";
@@ -140,7 +141,7 @@
             HasVoucher = hasVoucher,
             VoucherMin = p.VoucherMinValue,
             VoucherMax = p.VoucherMaxValue,
-            HowToUse = $"กดปุ่ม Book Now เพื่อไปยังหน้าจอง แล้วเลือกโปรโมชั่นรหัส {p.PromoCode}"
+            HHowToUse = "กดปุ่ม Book Now แล้วเลือกวันเข้าพัก ระบบจะคำนวณโปรโมชั่นที่เข้าเงื่อนไขให้อัตโนมัติ (โปรหลักที่ลดสูงสุด + On-top รายการละ 5% รวมไม่เกิน 20% ของค่าห้อง)"
         };
     }).ToList();
 
@@ -262,7 +263,7 @@
                             <div class="customer-promo-featured-body">
                                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                                     <span class="customer-promo-badge-cyan">
-                                        <i class="fa-solid fa-bolt me-1"></i> CODE: @featuredPromo.PromoCode
+                                        <i class="fa-solid fa-sparkles me-1"></i> ระบบคำนวณให้อัตโนมัติ
                                     </span>
                                     <span class="customer-promo-date-pill">
                                         <i class="fa-regular fa-calendar-check me-1"></i> @featuredPromo.PeriodText
@@ -352,7 +353,7 @@
                             <div class="swiper-slide h-auto">
                                 <div class="customer-promo-mini-slide @item.ThemeClass" onclick="openPromoDetailModal(@item.PromoId)">
                                     <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <span class="badge bg-dark bg-opacity-50 text-info border border-info border-opacity-25 rounded-pill">@item.PromoCode</span>
+                                        <span class="badge bg-dark bg-opacity-50 text-info border border-info border-opacity-25 rounded-pill">ใช้สิทธิ์อัตโนมัติ</span>
                                         <span class="fw-bold text-warning small">@item.DiscountBadge</span>
                                     </div>
                                     <h5 class="text-white fw-bold mb-1">@item.PromoName</h5>
@@ -447,10 +448,7 @@
                                 <div class="customer-promo-card-body">
                                     <div class="d-flex justify-content-between align-items-center mb-1">
                                         <span class="customer-promo-code-chip">
-                                            CODE: <strong>@p.PromoCode</strong>
-                                            <button type="button" class="customer-promo-copy-btn" data-code="@p.PromoCode" title="คัดลอกโค้ด">
-                                                <i class="fa-regular fa-copy"></i>
-                                            </button>
+                                            <i class="fa-solid fa-wand-magic-sparkles me-1"></i> <strong>ใช้สิทธิ์อัตโนมัติ</strong>
                                         </span>
                                         <span class="customer-promo-room-tag text-truncate" style="max-width: 150px;">
                                             <i class="fa-solid fa-bed me-1"></i> @p.ApplicableRoomName
@@ -567,12 +565,9 @@
 
                                     <div class="customer-promo-evoucher-code-bar">
                                         <div>
-                                            <small class="text-muted d-block" style="font-size:0.7rem;">PROMO CODE</small>
-                                            <strong class="customer-promo-mono-code">@v.PromoCode</strong>
+                                            <small class="text-muted d-block" style="font-size:0.7rem;">PROMO SYSTEM</small>
+                                            <strong class="customer-promo-mono-code text-primary"><i class="fa-solid fa-circle-check"></i> คำนวณอัตโนมัติ</strong>
                                         </div>
-                                        <button type="button" class="customer-promo-btn-copy-voucher js-copy-voucher" data-code="@v.PromoCode">
-                                            <i class="fa-regular fa-copy me-1"></i> <span>คัดลอกโค้ด</span>
-                                        </button>
                                     </div>
 
                                     <small class="text-muted d-block mt-2" style="font-size: 0.75rem;">
@@ -624,19 +619,13 @@
     <div class="modal fade customer-promo-modal" id="promoDetailModal" tabindex="-1" aria-labelledby="promoModalTitle" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
             <div class="modal-content customer-promo-modal-content">
-                <div class="modal-header customer-promo-modal-header">
-                    <div>
-                        <span class="customer-promo-badge-cyan mb-1 d-inline-block" id="mPromoCodeBadge"></span>
-                        <h4 class="modal-title fw-bold text-white mb-0" id="promoModalTitle"></h4>
-                    </div>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-
                 <div class="modal-body p-4">
                     <div class="customer-promo-modal-img-wrap mb-4">
                         <img id="mPromoImage" src="" alt="Promotion Preview" />
                         <span class="customer-promo-modal-discount" id="mPromoDiscount"></span>
                     </div>
+
+                    <h4 class="fw-bold text-dark mb-3" id="promoModalTitle"></h4>
 
                     <div class="mb-4" id="mPromoDescWrap">
                         <h6 class="fw-bold text-dark"><i class="fa-solid fa-circle-info text-primary me-2"></i>รายละเอียดโปรโมชั่น</h6>
@@ -709,7 +698,6 @@
             const item = promoCatalog.find(x => x.PromoId === promoId);
             if (!item) return;
 
-            document.getElementById("mPromoCodeBadge").textContent = `PROMO CODE: ${item.PromoCode}`;
             document.getElementById("promoModalTitle").textContent = item.PromoName;
             document.getElementById("mPromoImage").src = item.ImageUrl;
             document.getElementById("mPromoDiscount").textContent = item.DiscountBadge;
@@ -721,7 +709,7 @@
             document.getElementById("mPromoPeriod").textContent = item.PeriodText;
             document.getElementById("mPromoRooms").textContent = item.ApplicableRoomName;
             document.getElementById("mPromoConditions").textContent = item.Conditions;
-            document.getElementById("mPromoHowTo").textContent = item.HowToUse;
+            document.getElementById("mPromoHowTo").textContent = item.HHowToUse;
 
             const benefitsUl = document.getElementById("mPromoBenefits");
             benefitsUl.innerHTML = "";
@@ -856,19 +844,6 @@
                         if (!updateClock()) clearInterval(timerId);
                     }, 1000);
                 }
-            });
-
-            // 7. Copy code
-            document.querySelectorAll(".customer-promo-copy-btn, .js-copy-voucher").forEach(btn => {
-                btn.addEventListener("click", function () {
-                    const code = this.dataset.code;
-                    if (!code || !navigator.clipboard) return;
-                    navigator.clipboard.writeText(code).then(() => {
-                        const originalHtml = this.innerHTML;
-                        this.innerHTML = `<i class="fa-solid fa-check text-success"></i>`;
-                        setTimeout(() => { this.innerHTML = originalHtml; }, 1800);
-                    });
-                });
             });
         });
     </script>
