@@ -173,13 +173,17 @@ document.addEventListener("DOMContentLoaded", function () {
         setTimelineStep("stepCheckedIn", "timeCheckedIn", data.checkedInAt);
         setTimelineStep("stepCheckedOut", "timeCheckedOut", data.checkedOutAt);
 
-        // แสดงปุ่ม Check-in / Check-out ตามเงื่อนไข
-        const formCheckIn = document.getElementById("formModalCheckIn");
+        // [บรรทัดแก้ไข]: แสดงปุ่ม Check-in / Check-out ตามเงื่อนไขด้วย JS โดยดึงค่าสถานะสิทธิ์จาก Element Data
+        const goCheckIn = document.getElementById("btnModalGoCheckIn");
         const formCheckOut = document.getElementById("formModalCheckOut");
-        document.getElementById("inputCheckInBookingId").value = data.bookingId || "";
-        document.getElementById("inputCheckOutBookingId").value = data.bookingId || "";
+        const outInput = document.getElementById("inputCheckOutBookingId");
 
-        formCheckIn?.classList.toggle("d-none", !data.canCheckIn);
+        if (outInput) outInput.value = data.bookingId || "";
+
+        if (goCheckIn) {
+            goCheckIn.href = `/Reception/CheckIn?bookingCode=${encodeURIComponent(data.bookingCode || "")}`;
+            goCheckIn.classList.toggle("d-none", !data.canCheckIn);
+        }
         formCheckOut?.classList.toggle("d-none", !data.canCheckOut);
 
         detailsModal?.classList.add("is-open");

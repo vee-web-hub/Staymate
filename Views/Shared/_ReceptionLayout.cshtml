@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="th">
 <head>
 <meta charset="utf-8" />
@@ -12,8 +11,6 @@
 <link rel="stylesheet" href="~/css/Reception.css" asp-append-version="true" />
 
 @await RenderSectionAsync("Styles", required: false)
-
-
 </head>
 
 <body class="staff-page">
@@ -96,16 +93,16 @@
             </a>
 
             <a asp-controller="Reception"
-               asp-action="RoomCalendar"
-               class="@(currentAction == "RoomCalendar" ? "active" : "")">
+               asp-action="Calendar"
+               class="@(currentAction == "Calendar" ? "active" : "")">
 
                 <i class="fa-regular fa-calendar-days"></i>
                 ปฏิทินห้องพัก
             </a>
 
             <a asp-controller="Reception"
-               asp-action="BookingManagement"
-               class="@(currentAction == "BookingManagement" ? "active" : "")">
+               asp-action="Bookings"
+               class="@(currentAction == "Bookings" ? "active" : "")">
 
                 <i class="fa-solid fa-clipboard-list"></i>
                 จัดการการจอง (QR)
@@ -165,7 +162,6 @@
 <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
 @await RenderSectionAsync("Scripts", required: false)
-
 
 </body>
 </html>

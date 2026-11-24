@@ -19,6 +19,53 @@ namespace StayMate_Kavinvee_0576.Controllers
         }
 
         // ==========================================
+        // HELPERS: ประวัติการเปลี่ยนสถานะห้อง + Audit Log (ตามสเปกข้อ 9.7)
+        // ------------------------------------------
+        // หมายเหตุ: ชื่อ DbSet/Property ด้านล่างเป็นการสมมติจากชื่อ Model ในสเปก
+        // (RoomStatusHistory.cs, AuditLog.cs) หากชื่อจริงต่างกัน แก้เฉพาะ 2 เมธอดนี้ที่เดียว
+        // ==========================================
+
+        private void LogRoomStatus(Room room, string oldStatus, string newStatus, string? note)
+        {
+            _context.RoomStatusHistories.Add(new RoomStatusHistory
+            {
+                RoomId = room.RoomId,
+                OldStatus = oldStatus,
+                NewStatus = newStatus,
+                ChangedBy = GetCurrentUserId(),
+                ChangedAt = DateTime.Now,
+                Note = note
+            });
+        }
+
+        private void LogAudit(string action, string entityType, uint entityId, string? detail)
+        {
+            _context.AuditLogs.Add(new AuditLog
+            {
+                UserId = GetCurrentUserId(),
+                TableName = entityType,
+                Action = $"{action}:{entityType}#{entityId}",
+                CreatedAt = DateTime.Now
+            });
+        }
+
+        private static string NormalizePayment(string? status)
+        {
+            var s = (status ?? "").Trim().ToLowerInvariant();
+            return s switch
+            {
+                "approved" or "paid" or "verified" => "approved",
+                "rejected" or "failed" => "rejected",
+                _ => "pending"
+            };
+        }
+
+        private static bool IsApprovedPayment(string? status) => NormalizePayment(status) == "approved";
+
+        private static bool IsRoomStatus(string? status, string expected) =>
+            string.Equals(status?.Trim(), expected, StringComparison.OrdinalIgnoreCase);
+
+        // ==========================================
         // 1. DASHBOARD
         // ==========================================
 
@@ -147,8 +194,12 @@ namespace StayMate_Kavinvee_0576.Controllers
         // 2. ROOM CALENDAR (ห้องพัก + Booking Bar)
         // ==========================================
 
-        public async Task<IActionResult> RoomCalendar()
+        public async Task<IActionResult> Calendar(string? view, DateOnly? startDate)
         {
+            var daysCount = (view ?? "week").ToLowerInvariant() switch { "day" => 1, "month" => 30, _ => 7 };
+            var start = startDate ?? DateOnly.FromDateTime(DateTime.Today);
+            var end = start.AddDays(daysCount - 1);
+
             var rooms = await _context.Rooms
                 .AsNoTracking()
                 .Where(r => r.IsActive == true)
@@ -165,16 +216,23 @@ namespace StayMate_Kavinvee_0576.Controllers
                 })
                 .ToListAsync();
 
-            // การจองที่ยืนยันแล้วและกำหนดห้องแล้ว (Reserved)
+            // การจองที่ยืนยันแล้วและกำหนดห้องแล้ว (Reserved) ที่ซ้อนทับช่วงวันที่เลือก
             var reservedStays = await _context.Bookings
                 .AsNoTracking()
-                .Where(b => b.Status == "confirmed")
+                .Where(b => b.Status == "confirmed" &&
+                            b.CheckInDate <= end &&
+                            b.CheckOutDate > start)
                 .SelectMany(b => b.BookingRooms
                     .Where(br => br.RoomId != null)
                     .Select(br => new ReceptionStayViewModel
                     {
                         BookingId = b.BookingId,
                         BookingCode = b.BookingCode,
+                        BookingStatus = b.Status,
+                        PaymentStatus = b.Payments
+                            .OrderByDescending(p => p.CreatedAt)
+                            .Select(p => p.Status)
+                            .FirstOrDefault() ?? "pending",
                         GuestName = b.ContactName,
                         GuestPhone = b.ContactPhone,
                         RoomId = br.RoomId ?? 0,
@@ -186,7 +244,7 @@ namespace StayMate_Kavinvee_0576.Controllers
                     }))
                 .ToListAsync();
 
-            // กำลังเข้าพักจริง (Occupied)
+            // กำลังเข้าพักจริง (Occupied) แสดงเสมอจนกว่าจะ Check-out
             var activeStays = await _context.StayRecords
                 .AsNoTracking()
                 .Where(s => s.CheckedOutAt == null)
@@ -195,6 +253,8 @@ namespace StayMate_Kavinvee_0576.Controllers
                     StayId = s.StayId,
                     BookingId = s.BookingId,
                     BookingCode = s.Booking.BookingCode,
+                    BookingStatus = s.Booking.Status,
+                    PaymentStatus = "approved",
                     GuestName = s.Booking.ContactName,
                     GuestPhone = s.Booking.ContactPhone,
                     RoomId = s.RoomId,
@@ -207,6 +267,10 @@ namespace StayMate_Kavinvee_0576.Controllers
                     ActualGuests = s.ActualGuests
                 })
                 .ToListAsync();
+
+            ViewBag.CalendarStart = start;
+            ViewBag.CalendarEnd = end;
+            ViewBag.CalendarView = (view ?? "week").ToLowerInvariant();
 
             var model = new ReceptionIndexViewModel
             {
@@ -226,9 +290,11 @@ namespace StayMate_Kavinvee_0576.Controllers
 
         // ==========================================
         // 3. BOOKING MANAGEMENT
+        // route ให้ตรงกับที่ JS เรียก: /Reception/Bookings
         // ==========================================
 
-        public async Task<IActionResult> BookingManagement(string? search)
+        [HttpGet("Reception/Bookings")]
+        public async Task<IActionResult> Bookings(string? search)
         {
             var query = _context.Bookings
                 .AsNoTracking()
@@ -313,6 +379,8 @@ namespace StayMate_Kavinvee_0576.Controllers
                 return Json(new { success = false, message = "QR Code ไม่ถูกต้อง หรือไม่มีรหัสอ้างอิง" });
             }
 
+            var today = DateOnly.FromDateTime(DateTime.Today);
+
             // ใช้เฉพาะรหัสอ้างอิง ไม่เชื่อชื่อหรือยอดเงินที่อาจแนบมาใน QR
             var code = qrPayload.Trim();
             if (code.Contains('|'))
@@ -334,6 +402,8 @@ namespace StayMate_Kavinvee_0576.Controllers
                     b.CheckOutDate,
                     b.Nights,
                     b.NumGuests,
+                    b.DiscountAmount,
+                    b.TaxAmount,
                     b.TotalAmount,
                     b.Status,
                     b.CreatedAt,
@@ -342,7 +412,8 @@ namespace StayMate_Kavinvee_0576.Controllers
                     PaymentStatus = b.Payments.OrderByDescending(p => p.CreatedAt).Select(p => p.Status).FirstOrDefault() ?? "pending",
                     PaymentSubmittedAt = b.Payments.OrderByDescending(p => p.CreatedAt).Select(p => (DateTime?)p.CreatedAt).FirstOrDefault(),
                     CheckedInAt = b.StayRecords.OrderByDescending(s => s.CheckedInAt).Select(s => (DateTime?)s.CheckedInAt).FirstOrDefault(),
-                    CheckedOutAt = b.StayRecords.OrderByDescending(s => s.CheckedInAt).Select(s => s.CheckedOutAt).FirstOrDefault()
+                    CheckedOutAt = b.StayRecords.OrderByDescending(s => s.CheckedInAt).Select(s => s.CheckedOutAt).FirstOrDefault(),
+                    HasOpenStay = b.StayRecords.Any(s => s.CheckedOutAt == null)
                 })
                 .FirstOrDefaultAsync();
 
@@ -356,12 +427,31 @@ namespace StayMate_Kavinvee_0576.Controllers
                 return Json(new { success = false, message = $"การจองรหัส {booking.BookingCode} ถูกยกเลิกแล้ว" });
             }
 
-            bool isPaymentApproved = booking.PaymentStatus == "approved"
-                                     || booking.PaymentStatus == "paid"
-                                     || booking.Status == "confirmed";
-            bool canCheckIn = booking.Status == "confirmed" && isPaymentApproved && booking.CheckedInAt == null;
-            bool canCheckOut = booking.Status == "checked_in"
-                               || (booking.CheckedInAt != null && booking.CheckedOutAt == null);
+            // ต้องเป็น Approved จาก Finance เท่านั้น (ไม่ใช้สถานะ booking แทน)
+            bool isPaymentApproved = IsApprovedPayment(booking.PaymentStatus);
+
+            bool dateAllowed = booking.CheckInDate <= today && booking.CheckOutDate > today;
+            bool canCheckIn = booking.Status == "confirmed"
+                              && isPaymentApproved
+                              && dateAllowed
+                              && !booking.HasOpenStay;
+            bool canCheckOut = booking.HasOpenStay;
+
+            var payNorm = NormalizePayment(booking.PaymentStatus);
+            var bookNorm = booking.Status switch
+            {
+                "checked_out" or "completed" => "checked_out",
+                "pending_approval" => "pending",
+                var s => s
+            };
+            var bookLabel = bookNorm switch
+            {
+                "confirmed" => "Confirmed",
+                "checked_in" => "Checked-in",
+                "checked_out" => "Checked-out",
+                "cancelled" => "Cancelled",
+                _ => "Pending"
+            };
 
             return Json(new
             {
@@ -379,10 +469,13 @@ namespace StayMate_Kavinvee_0576.Controllers
                     checkOutDisplay = booking.CheckOutDate.ToString("dd/MM/yyyy"),
                     nights = booking.Nights,
                     guests = booking.NumGuests,
-                    paymentStatus = isPaymentApproved ? "approved" : booking.PaymentStatus,
-                    paymentLabel = isPaymentApproved ? "Approved" : "Pending",
-                    bookingStatus = booking.Status,
-                    bookingLabel = booking.Status,
+                    totalAmount = booking.TotalAmount.ToString("N2"),
+                    discountAmount = booking.DiscountAmount.ToString("N2"),
+                    taxAmount = booking.TaxAmount.ToString("N2"),
+                    paymentStatus = payNorm,
+                    paymentLabel = char.ToUpper(payNorm[0]) + payNorm[1..],
+                    bookingStatus = bookNorm,
+                    bookingLabel = bookLabel,
                     createdAt = booking.CreatedAt.ToString("dd/MM/yyyy HH:mm"),
                     paymentSubmittedAt = booking.PaymentSubmittedAt?.ToString("dd/MM/yyyy HH:mm") ?? "Waiting",
                     paymentApprovedAt = isPaymentApproved ? "อนุมัติแล้ว" : "Waiting",
@@ -400,106 +493,201 @@ namespace StayMate_Kavinvee_0576.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ProcessCheckInFromBooking(uint bookingId)
+        public async Task<IActionResult> ProcessCheckInFromBooking(uint bookingId, uint? roomId)
         {
             var today = DateOnly.FromDateTime(DateTime.Today);
 
             var booking = await _context.Bookings
-                .Include(b => b.BookingRooms)
-                    .ThenInclude(br => br.Room)
+                .Include(b => b.BookingRooms).ThenInclude(br => br.Room)
+                .Include(b => b.BookingRooms).ThenInclude(br => br.RoomType)
                 .Include(b => b.StayRecords)
+                .Include(b => b.Payments)
                 .FirstOrDefaultAsync(b => b.BookingId == bookingId);
 
             if (booking == null)
             {
                 TempData["ErrorMessage"] = "ไม่พบข้อมูลการจองในระบบ";
-                return RedirectToAction(nameof(BookingManagement));
+                return RedirectToAction(nameof(Bookings));
             }
 
-            // ป้องกัน Check-in ซ้ำ
+            IActionResult Fail(string msg)
+            {
+                TempData["ErrorMessage"] = msg;
+                return RedirectToAction(nameof(CheckIn), new { bookingCode = booking.BookingCode });
+            }
+
+            // 2. ต้องไม่ถูกยกเลิก
+            if (booking.Status == "cancelled")
+                return Fail($"การจอง {booking.BookingCode} ถูกยกเลิกแล้ว ไม่สามารถ Check-in ได้");
+
+            // 6. ต้องไม่ Check-in ซ้ำ
             if (booking.Status == "checked_in" || booking.StayRecords.Any(s => s.CheckedOutAt == null))
-            {
-                TempData["ErrorMessage"] = $"การจอง {booking.BookingCode} ได้ดำเนินการ Check-in ไปแล้ว";
-                return RedirectToAction(nameof(BookingManagement), new { search = booking.BookingCode });
-            }
+                return Fail($"การจอง {booking.BookingCode} ได้ดำเนินการ Check-in ไปแล้ว");
 
-            // ต้องผ่านการอนุมัติการชำระเงินจากฝ่ายการเงินแล้วเท่านั้น
-            if (booking.Status != "confirmed")
-            {
-                TempData["ErrorMessage"] = "ไม่สามารถ Check-in ได้ เนื่องจากการจองยังไม่ได้รับการอนุมัติการชำระเงินจากฝ่ายการเงิน";
-                return RedirectToAction(nameof(BookingManagement), new { search = booking.BookingCode });
-            }
+            if (booking.Status == "checked_out")
+                return Fail($"การจอง {booking.BookingCode} ได้ Check-out ไปแล้ว");
 
-            // ห้าม Check-in ก่อนวันเข้าพัก
+            // 4. Payment ต้อง Approved (ตรวจจากตาราง Payment)
+            var latestPayment = booking.Payments.OrderByDescending(p => p.CreatedAt).FirstOrDefault();
+            if (latestPayment == null || !IsApprovedPayment(latestPayment.Status) || booking.Status != "confirmed")
+                return Fail("ไม่สามารถ Check-in ได้ เนื่องจากการจองยังไม่ได้รับการอนุมัติการชำระเงินจากฝ่ายการเงิน");
+
+            // 3. วันที่
             if (booking.CheckInDate > today)
+                return Fail($"ยังไม่ถึงวันเข้าพักของการจอง {booking.BookingCode}");
+
+            if (booking.CheckOutDate <= today)
+                return Fail($"การจอง {booking.BookingCode} เลยกำหนดวันออกแล้ว ไม่สามารถ Check-in ได้");
+
+            if (!booking.BookingRooms.Any())
+                return Fail("การจองนี้ยังไม่มีห้องพัก");
+
+            // กำหนดห้องให้การจองที่ยังไม่ระบุห้อง (ต้องเป็นประเภทเดียวกับที่จอง)
+            bool assignedNow = false;
+            if (roomId.HasValue)
             {
-                TempData["ErrorMessage"] = $"ยังไม่ถึงวันเข้าพักของการจอง {booking.BookingCode}";
-                return RedirectToAction(nameof(BookingManagement), new { search = booking.BookingCode });
+                var pick = await _context.Rooms
+                    .Include(r => r.RoomType)
+                    .FirstOrDefaultAsync(r => r.RoomId == roomId.Value && r.IsActive == true);
+
+                if (pick == null)
+                    return Fail("ไม่พบห้องพักที่เลือก");
+
+                if (!IsRoomStatus(pick.Status, "available"))
+                    return Fail($"ห้อง {pick.RoomNumber} ไม่อยู่ในสถานะ Available (สถานะ: {pick.Status})");
+
+                if (booking.BookingRooms.Any(br => br.RoomId == pick.RoomId))
+                    return Fail($"ห้อง {pick.RoomNumber} ถูกกำหนดให้การจองนี้แล้ว");
+
+                var slot = booking.BookingRooms.FirstOrDefault(br =>
+                    br.RoomId == null && br.RoomType.TypeName == pick.RoomType.TypeName);
+
+                if (slot == null)
+                    return Fail($"ไม่มีรายการห้องประเภท {pick.RoomType.TypeName} ที่รอกำหนดห้องในการจองนี้");
+
+                slot.RoomId = pick.RoomId;
+                slot.Room = pick;
+                assignedNow = true;
+
+                LogAudit("ASSIGN_ROOM", "Booking", booking.BookingId, $"กำหนดห้อง {pick.RoomNumber} ให้ {booking.BookingCode}");
             }
 
-            var assignedRoom = booking.BookingRooms.FirstOrDefault(br => br.Room != null)?.Room;
-            if (assignedRoom == null || assignedRoom.Status != "available")
+            // ยังมีห้องที่ไม่ได้กำหนด
+            if (booking.BookingRooms.Any(br => br.Room == null))
             {
-                TempData["ErrorMessage"] = "กรุณากำหนดห้องพักที่มีสถานะว่าง (Available) ก่อนดำเนินการ Check-in";
-                return RedirectToAction(nameof(CheckIn));
+                if (assignedNow) await _context.SaveChangesAsync();
+                return Fail(assignedNow
+                    ? "กำหนดห้องให้แล้ว แต่ยังเหลือห้องที่ยังไม่กำหนด กรุณากำหนดห้องที่เหลือก่อน Check-in"
+                    : "กรุณากำหนดห้องพักให้ครบทุกห้องก่อนดำเนินการ Check-in");
             }
 
-            assignedRoom.Status = "occupied";
+            var rooms = booking.BookingRooms
+                .Select(br => br.Room!)
+                .GroupBy(r => r.RoomId)
+                .Select(g => g.First())
+                .ToList();
+
+            var maintenanceRoom = rooms.FirstOrDefault(r => IsRoomStatus(r.Status, "maintenance"));
+            if (maintenanceRoom != null)
+                return Fail($"ห้อง {maintenanceRoom.RoomNumber} อยู่ในสถานะ Maintenance ไม่สามารถ Check-in ได้");
+
+            var notReadyRoom = rooms.FirstOrDefault(r => !IsRoomStatus(r.Status, "available"));
+            if (notReadyRoom != null)
+                return Fail($"ห้อง {notReadyRoom.RoomNumber} ยังไม่พร้อมใช้งาน (สถานะ: {notReadyRoom.Status})");
+
+            // ผ่านทุกเงื่อนไข
+            var now = DateTime.Now;
             booking.Status = "checked_in";
 
-            _context.StayRecords.Add(new StayRecord
+            foreach (var room in rooms)
             {
-                BookingId = booking.BookingId,
-                RoomId = assignedRoom.RoomId,
-                CheckedInAt = DateTime.Now,
-                ActualGuests = booking.NumGuests
-            });
+                var oldStatus = room.Status;
+                room.Status = "occupied";
+
+                _context.StayRecords.Add(new StayRecord
+                {
+                    BookingId = booking.BookingId,
+                    RoomId = room.RoomId,
+                    CheckedInAt = now,
+                    ActualGuests = booking.NumGuests
+                });
+
+                LogRoomStatus(room, oldStatus, "occupied", $"Check-in ({booking.BookingCode})");
+            }
+
+            LogAudit("CHECK_IN", "Booking", booking.BookingId,
+                $"Check-in {booking.BookingCode} ห้อง {string.Join(", ", rooms.Select(r => r.RoomNumber))}");
 
             await _context.SaveChangesAsync();
-            TempData["SuccessMessage"] = $"ดำเนินการ Check-in รหัส {booking.BookingCode} (ห้อง {assignedRoom.RoomNumber}) สำเร็จ";
-            return RedirectToAction(nameof(BookingManagement), new { search = booking.BookingCode });
+
+            TempData["SuccessMessage"] =
+                $"ดำเนินการ Check-in รหัส {booking.BookingCode} (ห้อง {string.Join(", ", rooms.Select(r => r.RoomNumber))}) สำเร็จ";
+            
+            return RedirectToAction(nameof(Bookings));
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ProcessCheckOutFromBooking(uint bookingId)
         {
-            var stay = await _context.StayRecords
+            var now = DateTime.Now;
+
+            // ค้นหารายการ StayRecord ที่กำลังเข้าพัก (ยังไม่ได้ Check-out)
+            var openStays = await _context.StayRecords
                 .Include(s => s.Booking)
                 .Include(s => s.Room)
-                .FirstOrDefaultAsync(s => s.BookingId == bookingId && s.CheckedOutAt == null);
+                .Where(s => s.BookingId == bookingId && s.CheckedOutAt == null)
+                .ToListAsync();
 
-            if (stay == null)
+            if (!openStays.Any())
             {
                 TempData["ErrorMessage"] = "ไม่พบรายการกำลังเข้าพัก หรือดำเนินการ Check-out ไปแล้ว";
-                return RedirectToAction(nameof(BookingManagement));
+                return RedirectToAction(nameof(CheckOut));
             }
 
-            stay.CheckedOutAt = DateTime.Now;
-            stay.Room.Status = "needs_cleaning";
+            var booking = openStays.First().Booking;
+            
+            // ตั้งเวลาจำกัด (Cutoff) เป็น 12:00 น. ของวัน CheckOutDate
+            var checkOutCutoff = booking.CheckOutDate.ToDateTime(new TimeOnly(12, 0));
 
-            // เปลี่ยนสถานะการจองเป็น checked_out เมื่อไม่เหลือห้องที่ยังพักอยู่
-            var hasOtherOpenStays = await _context.StayRecords
-                .AnyAsync(s => s.BookingId == stay.BookingId
-                               && s.StayId != stay.StayId
-                               && s.CheckedOutAt == null);
-            if (!hasOtherOpenStays)
+            // แก้ไข: ห้ามกด Check-out ก่อนถึงเวลา 12:00 น. ของวัน CheckOutDate
+            if (now < checkOutCutoff)
             {
-                stay.Booking.Status = "checked_out";
+                TempData["ErrorMessage"] =
+                    $"ยังไม่ถึงกำหนด Check-out ของการจอง {booking.BookingCode} (กดได้ตั้งแต่ {checkOutCutoff:dd/MM/yyyy HH:mm} น.)";
+                return RedirectToAction(nameof(CheckOut));
             }
 
-            _context.HousekeepingTasks.Add(new HousekeepingTask
+            // ทำการบันทึกเวลาออกและปิดห้องพัก
+            foreach (var stay in openStays)
             {
-                RoomId = stay.RoomId,
-                BookingId = stay.BookingId,
-                Status = "pending",
-                Note = $"ทำความสะอาดหลังลูกค้า Check-out ({stay.Booking.BookingCode})",
-                CreatedAt = DateTime.Now
-            });
+                stay.CheckedOutAt = now;
+
+                var oldStatus = stay.Room.Status;
+                stay.Room.Status = "needs_cleaning"; // เปลี่ยนเป็นสถานะทำความสะอาด
+                LogRoomStatus(stay.Room, oldStatus, "needs_cleaning", $"Check-out ({booking.BookingCode})");
+
+                _context.HousekeepingTasks.Add(new HousekeepingTask
+                {
+                    RoomId = stay.RoomId,
+                    BookingId = stay.BookingId,
+                    Status = "pending",
+                    Note = $"ทำความสะอาดหลังลูกค้า Check-out ({booking.BookingCode})",
+                    CreatedAt = now
+                });
+            }
+
+            booking.Status = "checked_out";
+
+            LogAudit("CHECK_OUT", "Booking", booking.BookingId,
+                $"Check-out {booking.BookingCode} ห้อง {string.Join(", ", openStays.Select(s => s.Room.RoomNumber))}");
 
             await _context.SaveChangesAsync();
-            TempData["SuccessMessage"] = $"Check-out ห้อง {stay.Room.RoomNumber} สำเร็จ เปลี่ยนสถานะห้องเป็น Dirty และส่งงานไปยังแผนกแม่บ้านเรียบร้อยแล้ว";
-            return RedirectToAction(nameof(BookingManagement), new { search = stay.Booking.BookingCode });
+
+            TempData["SuccessMessage"] =
+                $"Check-out ห้อง {string.Join(", ", openStays.Select(s => s.Room.RoomNumber))} สำเร็จ เปลี่ยนสถานะห้องเป็น Cleaning และส่งงานไปยังแผนกแม่บ้านเรียบร้อยแล้ว";
+            
+            return RedirectToAction(nameof(Bookings));
         }
 
         // ==========================================
@@ -566,18 +754,29 @@ namespace StayMate_Kavinvee_0576.Controllers
                     .ToList();
             }
 
+            var availableRooms = await _context.Rooms
+                .AsNoTracking()
+                .Where(r => r.IsActive == true && r.Status == "available")
+                .OrderBy(r => r.FloorNo)
+                .ThenBy(r => r.RoomNumber)
+                .Select(r => new ReceptionRoomViewModel
+                {
+                    RoomId = r.RoomId,
+                    RoomNumber = r.RoomNumber,
+                    FloorNo = r.FloorNo,
+                    RoomTypeName = r.RoomType.TypeName,
+                    Status = r.Status,
+                    IsActive = r.IsActive
+                })
+                .ToListAsync();
+
             var model = new ReceptionIndexViewModel
             {
                 CheckInList = checkInList,
-
-                AvailableRooms = await _context.Rooms
-                    .CountAsync(r => r.IsActive == true &&
-                                     r.Status == "available"),
-
+                Rooms = availableRooms,
+                AvailableRooms = availableRooms.Count,
                 TodayCheckIns = await _context.Bookings
-                    .CountAsync(b => b.CheckInDate == today &&
-                                     b.Status == "confirmed"),
-
+                    .CountAsync(b => b.CheckInDate == today && b.Status == "confirmed"),
                 CompletedCheckInsCount = await _context.StayRecords
                     .CountAsync(s => s.CheckedOutAt == null)
             };
@@ -593,10 +792,27 @@ namespace StayMate_Kavinvee_0576.Controllers
         {
             var today = DateOnly.FromDateTime(DateTime.Today);
 
-            // ดึงข้อมูล StayRecords ทั้งที่รอ Check-out และที่ Check-out สำเร็จแล้ว (ล่าสุด 100 รายการ)
-            var staysQuery = _context.StayRecords
-                .AsNoTracking()
-                .OrderBy(s => s.CheckedOutAt != null) // ให้รายการที่ยังไม่ Check-out ขึ้นก่อน
+            // กรองที่ฐานข้อมูลก่อน แล้วค่อย Take(100) เพื่อไม่ให้ค้นหาพลาดข้อมูลเก่า
+            var baseQuery = _context.StayRecords.AsNoTracking().AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(guestName))
+            {
+                var kw = guestName.Trim();
+                baseQuery = baseQuery.Where(s => s.Booking.ContactName.Contains(kw));
+            }
+            if (!string.IsNullOrWhiteSpace(bookingCode))
+            {
+                var kw = bookingCode.Trim();
+                baseQuery = baseQuery.Where(s => s.Booking.BookingCode.Contains(kw));
+            }
+            if (!string.IsNullOrWhiteSpace(roomNumber))
+            {
+                var kw = roomNumber.Trim();
+                baseQuery = baseQuery.Where(s => s.Room.RoomNumber.Contains(kw));
+            }
+
+            var allStays = await baseQuery
+                .OrderBy(s => s.CheckedOutAt != null) // รายการที่ยังไม่ Check-out ขึ้นก่อน
                 .ThenBy(s => s.Booking.CheckOutDate)
                 .ThenByDescending(s => s.CheckedInAt)
                 .Take(100)
@@ -616,26 +832,8 @@ namespace StayMate_Kavinvee_0576.Controllers
                     CheckedOutAt = s.CheckedOutAt,
                     NumGuests = s.Booking.NumGuests,
                     ActualGuests = s.ActualGuests
-                });
-
-            var allStays = await staysQuery.ToListAsync();
-
-            // กรองข้อมูลหากส่งมาจากฟอร์มค้นหา
-            if (!string.IsNullOrWhiteSpace(guestName))
-            {
-                var kw = guestName.Trim();
-                allStays = allStays.Where(x => x.GuestName.Contains(kw, StringComparison.OrdinalIgnoreCase)).ToList();
-            }
-            if (!string.IsNullOrWhiteSpace(bookingCode))
-            {
-                var kw = bookingCode.Trim();
-                allStays = allStays.Where(x => x.BookingCode.Contains(kw, StringComparison.OrdinalIgnoreCase)).ToList();
-            }
-            if (!string.IsNullOrWhiteSpace(roomNumber))
-            {
-                var kw = roomNumber.Trim();
-                allStays = allStays.Where(x => x.RoomNumber.Contains(kw, StringComparison.OrdinalIgnoreCase)).ToList();
-            }
+                })
+                .ToListAsync();
 
             var model = new ReceptionIndexViewModel
             {
@@ -722,6 +920,9 @@ namespace StayMate_Kavinvee_0576.Controllers
                 CreatedAt = DateTime.Now
             });
 
+            LogAudit("CREATE_HOUSEKEEPING_REQUEST", "Room", room.RoomId,
+                $"แจ้งงานแม่บ้านห้อง {room.RoomNumber}");
+
             await _context.SaveChangesAsync();
             TempData["SuccessMessage"] = $"แจ้งงานแม่บ้านสำหรับห้อง {room.RoomNumber} เรียบร้อยแล้ว";
             return RedirectToAction(nameof(HousekeepingRequests));
@@ -806,70 +1007,65 @@ namespace StayMate_Kavinvee_0576.Controllers
                 })
                 .FirstOrDefaultAsync();
         }
+
         // ==========================================
-// 7.1 CHANGE PASSWORD (เปลี่ยนรหัสผ่านพนักงานต้อนรับ)
-// ==========================================
-[HttpPost]
-[ValidateAntiForgeryToken]
-public async Task<IActionResult> ChangePassword(string? oldPassword, string? newPassword, string? confirmPassword)
-{
-    var userId = GetCurrentUserId();
-    if (userId == null)
-    {
-        return RedirectToAction("Login", "Account");
-    }
-
-    // 1. ตรวจสอบข้อมูลนำเข้าเบื้องต้น (Validation)
-    string? error = null;
-    if (string.IsNullOrWhiteSpace(oldPassword) || string.IsNullOrWhiteSpace(newPassword) || string.IsNullOrWhiteSpace(confirmPassword))
-    {
-        error = "กรุณากรอกรหัสผ่านให้ครบถ้วนทุกช่อง";
-    }
-    else if (newPassword.Length < 6)
-    {
-        error = "รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร";
-    }
-    else if (newPassword != confirmPassword)
-    {
-        error = "รหัสผ่านใหม่และการยืนยันรหัสผ่านไม่ตรงกัน";
-    }
-
-    // 2. ดึงข้อมูล User จากฐานข้อมูล
-    var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId.Value);
-    if (user == null)
-    {
-        return RedirectToAction("Login", "Account");
-    }
-
-    // ประกาศ Hasher ไว้ที่ Scope ระดับบนสุดของเมธอดเพื่อให้เรียกใช้ได้ทั่วถึง
-    var hasher = new PasswordHasher<User>();
-
-    // 3. ตรวจสอบรหัสผ่านเดิม (เฉพาะกรณีที่ไม่มีข้อผิดพลาดก่อนหน้า)
-    if (error == null)
-    {
-        var verify = hasher.VerifyHashedPassword(user, user.PasswordHash, oldPassword!);
-        if (verify == PasswordVerificationResult.Failed)
+        // 7.1 CHANGE PASSWORD (เปลี่ยนรหัสผ่านพนักงานต้อนรับ)
+        // ==========================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(string? oldPassword, string? newPassword, string? confirmPassword)
         {
-            error = "รหัสผ่านเดิมไม่ถูกต้อง";
+            var userId = GetCurrentUserId();
+            if (userId == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            string? error = null;
+            if (string.IsNullOrWhiteSpace(oldPassword) || string.IsNullOrWhiteSpace(newPassword) || string.IsNullOrWhiteSpace(confirmPassword))
+            {
+                error = "กรุณากรอกรหัสผ่านให้ครบถ้วนทุกช่อง";
+            }
+            else if (newPassword.Length < 6)
+            {
+                error = "รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร";
+            }
+            else if (newPassword != confirmPassword)
+            {
+                error = "รหัสผ่านใหม่และการยืนยันรหัสผ่านไม่ตรงกัน";
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId.Value);
+            if (user == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            var hasher = new PasswordHasher<User>();
+
+            if (error == null)
+            {
+                var verify = hasher.VerifyHashedPassword(user, user.PasswordHash, oldPassword!);
+                if (verify == PasswordVerificationResult.Failed)
+                {
+                    error = "รหัสผ่านเดิมไม่ถูกต้อง";
+                }
+            }
+
+            if (error != null)
+            {
+                TempData["ErrorMessage"] = error;
+                TempData["OpenPasswordModal"] = true;
+                return RedirectToAction(nameof(Profile));
+            }
+
+            user.PasswordHash = hasher.HashPassword(user, newPassword!);
+            user.UpdatedAt = DateTime.Now;
+
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "เปลี่ยนรหัสผ่านเรียบร้อยแล้ว";
+            return RedirectToAction(nameof(Profile));
         }
-    }
-
-    // 4. หากมีข้อผิดพลาด ให้แจ้งเตือนกลับไปยังหน้า Profile
-    if (error != null)
-    {
-        TempData["ErrorMessage"] = error;
-        TempData["OpenPasswordModal"] = true; // ส่งค่าเพื่อสั่งให้ View เปิดหน้าต่าง Modal รหัสผ่านค้างไว้
-        return RedirectToAction(nameof(Profile));
-    }
-
-    // 5. ทำการแฮชรหัสผ่านใหม่และบันทึกข้อมูล
-    user.PasswordHash = hasher.HashPassword(user, newPassword!);
-    user.UpdatedAt = DateTime.Now;
-
-    await _context.SaveChangesAsync();
-
-    TempData["SuccessMessage"] = "เปลี่ยนรหัสผ่านเรียบร้อยแล้ว";
-    return RedirectToAction(nameof(Profile));
-}
     }
 }

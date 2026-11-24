@@ -5,31 +5,28 @@
 
     var thaiCulture = new System.Globalization.CultureInfo("th-TH");
     var currentDateText = DateTime.Now.ToString("วันddddที่ d MMMM yyyy", thaiCulture);
-    var staffName = User.Identity?.Name ?? "พนักงานต้อนรับ (Front Desk)";
+    var staffName = User.Identity?.Name ?? "Front Desk";
 }
 
 <div class="reception-dashboard-wrapper" id="receptionDashboard">
 
-    <!-- ==========================================
-         ส่วนที่ 1: PAGE HEADER
-         ========================================== -->
+    <!-- Page Header -->
     <section class="reception-page-header reception-fade-in">
         <div class="reception-header-left">
             <div class="reception-title-badge">
                 <span class="reception-live-dot"></span>
-                <span>FRONT DESK OPERATIONS · NON-FINANCIAL AUTHORITY</span>
+                <span>FRONT DESK OPERATIONS</span>
             </div>
             <h1 class="reception-main-title">
                 <i class="fa-solid fa-bell-concierge reception-title-icon"></i>
                 Reception Dashboard
             </h1>
             <p class="reception-welcome-text">
-                ยินดีต้อนรับ <strong>@staffName</strong> · ปฏิบัติงานประจำ<span>@currentDateText</span>
+                <strong>@staffName</strong> · @currentDateText
             </p>
         </div>
 
         <div class="reception-header-right">
-            <!-- ฟอร์มค้นหาการจองด้วย Booking ID / ชื่อ / เบอร์โทร (เชื่อม Action Bookings ที่มีอยู่จริง) -->
             <form asp-controller="Reception" asp-action="Bookings" method="get" class="reception-quick-search-form">
                 <div class="reception-search-input-group">
                     <i class="fa-solid fa-magnifying-glass reception-search-icon"></i>
@@ -37,56 +34,31 @@
                            name="search"
                            value="@Model?.SearchTerm"
                            class="reception-search-input"
-                           placeholder="ค้นหา Booking Code, ชื่อลูกค้า, เบอร์โทร..."
+                           placeholder="ค้นหา Booking ID, ชื่อผู้เข้าพัก, เบอร์โทร..."
                            aria-label="ค้นหาการจอง" />
                     <button type="submit" class="reception-btn reception-btn-primary">
-                        ค้นหาการจอง
+                        ค้นหา
                     </button>
                 </div>
             </form>
 
-            <button type="button" id="btnRefreshDashboard" class="reception-btn reception-btn-outline" title="รีเฟรชข้อมูลล่าสุด">
+            <button type="button" id="btnRefreshDashboard" class="reception-btn reception-btn-outline" title="รีเฟรชข้อมูล">
                 <i class="fa-solid fa-rotate"></i>
                 <span>Refresh</span>
             </button>
         </div>
     </section>
 
-    <!-- ==========================================
-         ส่วนที่ 7: QUICK ACTIONS (แถบปุ่มลัดสำหรับพนักงานต้อนรับ)
-         ========================================== -->
+    <!-- Quick Actions -->
     <section class="reception-quick-actions-bar reception-fade-in">
-        <div class="reception-section-label">
-            <i class="fa-solid fa-bolt text-info"></i> ทางลัดการปฏิบัติงาน (Quick Actions)
-        </div>
         <div class="reception-quick-actions-grid">
-            <a asp-controller="Reception" asp-action="Bookings" class="reception-action-tile">
-                <span class="reception-action-icon reception-icon-blue">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                </span>
-                <span class="reception-action-text">
-                    <strong>Search Booking</strong>
-                    <small>ค้นหาด้วยรหัสการจอง</small>
-                </span>
-            </a>
-
-            <a asp-controller="Reception" asp-action="Bookings" class="reception-action-tile">
-                <span class="reception-action-icon reception-icon-cyan">
-                    <i class="fa-solid fa-qrcode"></i>
-                </span>
-                <span class="reception-action-text">
-                    <strong>Scan QR Code</strong>
-                    <small>ตรวจสอบใบจอง (QR)</small>
-                </span>
-            </a>
-
             <a asp-controller="Reception" asp-action="CheckIn" class="reception-action-tile">
-                <span class="reception-action-icon reception-icon-green">
+                <span class="reception-action-icon reception-icon-blue">
                     <i class="fa-solid fa-key"></i>
                 </span>
                 <span class="reception-action-text">
                     <strong>Check-in</strong>
-                    <small>ลงทะเบียนเข้าพัก (@(Model?.TodayCheckIns ?? 0))</small>
+                    <small>วันนี้ @(Model?.TodayCheckIns ?? 0) รายการ</small>
                 </span>
             </a>
 
@@ -96,7 +68,17 @@
                 </span>
                 <span class="reception-action-text">
                     <strong>Check-out</strong>
-                    <small>คืนห้องพัก (@(Model?.TodayCheckOuts ?? 0))</small>
+                    <small>วันนี้ @(Model?.TodayCheckOuts ?? 0) รายการ</small>
+                </span>
+            </a>
+
+            <a asp-controller="Reception" asp-action="Bookings" class="reception-action-tile">
+                <span class="reception-action-icon reception-icon-cyan">
+                    <i class="fa-solid fa-qrcode"></i>
+                </span>
+                <span class="reception-action-text">
+                    <strong>Bookings &amp; QR</strong>
+                    <small>ตรวจสอบการจอง</small>
                 </span>
             </a>
 
@@ -106,27 +88,24 @@
                 </span>
                 <span class="reception-action-text">
                     <strong>Room Calendar</strong>
-                    <small>ตารางสถานะห้องพัก</small>
+                    <small>ปฏิทินห้องพัก</small>
                 </span>
             </a>
 
             <a asp-controller="Reception" asp-action="HousekeepingRequests" class="reception-action-tile">
                 <span class="reception-action-icon reception-icon-navy">
-                    <i class="fa-solid fa-headset"></i>
+                    <i class="fa-solid fa-broom"></i>
                 </span>
                 <span class="reception-action-text">
-                    <strong>HousekeepingRequests</strong>
-                    <small>แจ้งงานแม่บ้าน</small>
+                    <strong>Housekeeping</strong>
+                    <small>แจ้งทำความสะอาด</small>
                 </span>
             </a>
         </div>
     </section>
 
-    <!-- ==========================================
-         ส่วนที่ 2: KPI SUMMARY CARDS (4 ใบตามข้อกำหนด)
-         ========================================== -->
+    <!-- KPI Summary Cards -->
     <section class="reception-kpi-grid reception-fade-in">
-        <!-- Card 1: Total Rooms -->
         <article class="reception-kpi-card reception-kpi-navy">
             <div class="reception-kpi-top">
                 <div>
@@ -141,12 +120,11 @@
             </div>
             <div class="reception-kpi-footer">
                 <span class="reception-kpi-desc">
-                    จำนวนห้องพักที่เปิดใช้งานทั้งหมด (ทำความสะอาด @(Model?.NeedsCleaningRooms ?? 0) · ซ่อมบำรุง @(Model?.MaintenanceRooms ?? 0))
+                    Cleaning @(Model?.NeedsCleaningRooms ?? 0) · Maintenance @(Model?.MaintenanceRooms ?? 0)
                 </span>
             </div>
         </article>
 
-        <!-- Card 2: Available Rooms -->
         <article class="reception-kpi-card reception-kpi-success">
             <div class="reception-kpi-top">
                 <div>
@@ -160,13 +138,10 @@
                 </div>
             </div>
             <div class="reception-kpi-footer">
-                <span class="reception-kpi-desc">
-                    ห้องว่างพร้อมขายและพร้อมส่งมอบให้ลูกค้า Check-in ทันที
-                </span>
+                <span class="reception-kpi-desc">ห้องว่างพร้อมเข้าพัก</span>
             </div>
         </article>
 
-        <!-- Card 3: Occupied Rooms -->
         <article class="reception-kpi-card reception-kpi-primary">
             <div class="reception-kpi-top">
                 <div>
@@ -180,24 +155,21 @@
                 </div>
             </div>
             <div class="reception-kpi-footer">
-                <span class="reception-kpi-desc">
-                    ห้องที่มีลูกค้ากำลังเข้าพักอยู่ในระบบขณะนี้
-                </span>
+                <span class="reception-kpi-desc">กำลังเข้าพัก @(Model?.CompletedCheckInsCount ?? Model?.OccupiedRooms ?? 0) รายการ</span>
             </div>
         </article>
 
-        <!-- Card 4: Today's Check-in / Check-out -->
         <article class="reception-kpi-card reception-kpi-violet">
             <div class="reception-kpi-top">
                 <div>
                     <span class="reception-kpi-title">Today's Check-in / Check-out</span>
                     <div class="reception-kpi-dual-number">
-                        <span class="reception-kpi-in" title="กำหนด Check-in วันนี้">
+                        <span class="reception-kpi-in" title="Check-in วันนี้">
                             <i class="fa-solid fa-arrow-right-to-bracket"></i>
                             <strong class="reception-kpi-number" data-target="@(Model?.TodayCheckIns ?? 0)">@(Model?.TodayCheckIns ?? 0)</strong>
                         </span>
                         <span class="reception-kpi-divider">/</span>
-                        <span class="reception-kpi-out" title="กำหนด Check-out วันนี้">
+                        <span class="reception-kpi-out" title="Check-out วันนี้">
                             <i class="fa-solid fa-arrow-right-from-bracket"></i>
                             <strong class="reception-kpi-number" data-target="@(Model?.TodayCheckOuts ?? 0)">@(Model?.TodayCheckOuts ?? 0)</strong>
                         </span>
@@ -209,31 +181,24 @@
             </div>
             <div class="reception-kpi-footer">
                 <span class="reception-kpi-desc">
-                    ยืนยันแล้ว @(Model?.ConfirmedBookings ?? 0) รายการ · รอฝ่ายการเงินตรวจสอบ @(Model?.PendingBookings ?? 0) รายการ
+                    Confirmed @(Model?.ConfirmedBookings ?? 0) · Pending @(Model?.PendingBookings ?? 0)
                 </span>
             </div>
         </article>
     </section>
 
-    <!-- ==========================================
-         ส่วนที่ 3 & 4: TODAY'S CHECK-IN & TODAY'S CHECK-OUT
-         ========================================== -->
+    <!-- Today's Check-in & Check-out -->
     <div class="reception-operations-row reception-fade-in">
 
-        <!-- ส่วนที่ 3: Today's Check-in -->
+        <!-- Today's Check-in -->
         <section class="reception-panel">
             <div class="reception-panel-header">
-                <div>
-                    <h3 class="reception-panel-title">
-                        <i class="fa-solid fa-key text-success"></i>
-                        Today's Check-in
-                    </h3>
-                    <p class="reception-panel-subtitle">
-                        รายการลูกค้าที่มีกำหนดเข้าพักวันนี้ (ต้องผ่านการอนุมัติชำระเงินจากฝ่ายการเงินแล้วเท่านั้น)
-                    </p>
-                </div>
+                <h3 class="reception-panel-title">
+                    <i class="fa-solid fa-key text-success"></i>
+                    Today's Check-in
+                </h3>
                 <a asp-controller="Reception" asp-action="CheckIn" class="reception-link-more">
-                    จัดการทั้งหมด <i class="fa-solid fa-angle-right"></i>
+                    ทั้งหมด <i class="fa-solid fa-angle-right"></i>
                 </a>
             </div>
 
@@ -242,11 +207,10 @@
                     <thead>
                         <tr>
                             <th>Booking ID</th>
-                            <th>Guest Name</th>
-                            <th>Room Type</th>
-                            <th>Room Number</th>
+                            <th>Guest</th>
+                            <th>Room</th>
                             <th>Check-in Date</th>
-                            <th>Payment Status</th>
+                            <th>Payment</th>
                             <th class="text-end">Action</th>
                         </tr>
                     </thead>
@@ -255,12 +219,14 @@
                         {
                             foreach (var item in Model.CheckInList)
                             {
+                                var codeDisplay = string.IsNullOrWhiteSpace(item.BookingCode) ? $"#{item.BookingId}" : item.BookingCode;
                                 var isRoomAssigned = item.RoomId > 0 && !string.IsNullOrWhiteSpace(item.RoomNumber) && item.RoomNumber != "ยังไม่กำหนดห้อง";
+                                var isPayApproved = string.Equals(item.PaymentStatus, "approved", StringComparison.OrdinalIgnoreCase)
+                                                    || string.Equals(item.PaymentStatus, "paid", StringComparison.OrdinalIgnoreCase);
+
                                 <tr>
                                     <td>
-                                        <span class="reception-code-badge">
-                                            @(string.IsNullOrWhiteSpace(item.BookingCode) ? $"#{item.BookingId}" : item.BookingCode)
-                                        </span>
+                                        <span class="reception-code-badge">@codeDisplay</span>
                                     </td>
                                     <td>
                                         <div class="reception-guest-cell">
@@ -268,59 +234,50 @@
                                             <small>@item.GuestPhone · @item.NumGuests ท่าน</small>
                                         </div>
                                     </td>
-                                    <td>@item.RoomTypeName</td>
                                     <td>
                                         @if (isRoomAssigned)
                                         {
                                             <span class="reception-room-chip">ห้อง @item.RoomNumber</span>
+                                            <small class="d-block text-muted">@item.RoomTypeName</small>
                                         }
                                         else
                                         {
-                                            <span class="reception-status-badge reception-badge-warning">ยังไม่กำหนดห้อง</span>
+                                            <span class="reception-status-badge reception-badge-warning">รอกำหนดห้อง</span>
+                                            <small class="d-block text-muted">@item.RoomTypeName</small>
                                         }
                                     </td>
                                     <td>
-                                        <span class="reception-time-text">
-                                            @item.CheckInDate.ToString("dd/MM/yyyy") (14:00 น.)
-                                        </span>
+                                        <span class="reception-time-text">@item.CheckInDate.ToString("dd/MM/yyyy")</span>
                                     </td>
                                     <td>
-                                        <!-- CheckInList ดึงเฉพาะ Booking ที่ Status == "confirmed" (ผ่านการอนุมัติชำระเงินแล้ว) -->
-                                        <span class="reception-status-badge reception-badge-success">
-                                            <i class="fa-solid fa-circle-check"></i> อนุมัติแล้ว (Confirmed)
-                                        </span>
+                                        @if (isPayApproved)
+                                        {
+                                            <span class="reception-status-badge reception-badge-success">Approved</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="reception-status-badge reception-badge-warning">@(string.IsNullOrWhiteSpace(item.PaymentStatus) ? "Pending" : item.PaymentStatus)</span>
+                                        }
                                     </td>
                                     <td class="text-end">
                                         <div class="reception-action-group">
                                             <a asp-controller="Reception"
                                                asp-action="Bookings"
-                                               asp-route-search="@item.BookingCode"
+                                               asp-route-search="@codeDisplay"
                                                class="reception-btn-sm reception-btn-ghost"
-                                               title="ดูรายละเอียดการจอง">
-                                                <i class="fa-regular fa-eye"></i> View Details
+                                               title="ดูรายละเอียด">
+                                                <i class="fa-regular fa-eye"></i>
                                             </a>
 
-                                            @if (isRoomAssigned)
-                                            {
-                                                <a asp-controller="Reception"
-                                                   asp-action="CheckIn"
-                                                   asp-route-bookingId="@item.BookingId"
-                                                   class="reception-btn-sm reception-btn-success js-confirm-checkin"
-                                                   data-booking="@item.BookingCode"
-                                                   data-guest="@item.GuestName"
-                                                   data-room="@item.RoomNumber">
-                                                    <i class="fa-solid fa-check"></i> Check-in
-                                                </a>
-                                            }
-                                            else
-                                            {
-                                                <a asp-controller="Reception"
-                                                   asp-action="CheckIn"
-                                                   class="reception-btn-sm reception-btn-warning"
-                                                   title="กรุณากำหนดห้องพักที่พร้อมใช้งานก่อน Check-in">
-                                                    <i class="fa-solid fa-door-closed"></i> เลือกห้องพัก
-                                                </a>
-                                            }
+                                            <a asp-controller="Reception"
+                                               asp-action="CheckIn"
+                                               asp-route-bookingId="@item.BookingId"
+                                               class="reception-btn-sm @(isRoomAssigned && isPayApproved ? "reception-btn-success js-confirm-checkin" : "reception-btn-warning")"
+                                               data-booking="@codeDisplay"
+                                               data-guest="@item.GuestName"
+                                               data-room="@(isRoomAssigned ? item.RoomNumber : "-")">
+                                                <i class="fa-solid fa-check"></i> Check-in
+                                            </a>
                                         </div>
                                     </td>
                                 </tr>
@@ -329,12 +286,9 @@
                         else
                         {
                             <tr>
-                                <td colspan="7" class="reception-empty-state">
+                                <td colspan="6" class="reception-empty-state">
                                     <i class="fa-regular fa-calendar-check"></i>
-                                    <p>ไม่มีรายการรอ Check-in ในขณะนี้ หรือยังไม่ได้โหลดรายการเข้าสู่หน้า Dashboard</p>
-                                    <a asp-controller="Reception" asp-action="CheckIn" class="reception-btn-sm reception-btn-outline">
-                                        ไปยังหน้าบริการ Check-in (@(Model?.TodayCheckIns ?? 0) รายการวันนี้)
-                                    </a>
+                                    <p>ไม่มีรายการรอ Check-in</p>
                                 </td>
                             </tr>
                         }
@@ -343,20 +297,15 @@
             </div>
         </section>
 
-        <!-- ส่วนที่ 4: Today's Check-out -->
+        <!-- Today's Check-out -->
         <section class="reception-panel">
             <div class="reception-panel-header">
-                <div>
-                    <h3 class="reception-panel-title">
-                        <i class="fa-solid fa-arrow-right-from-bracket text-danger"></i>
-                        Today's Check-out
-                    </h3>
-                    <p class="reception-panel-subtitle">
-                        รายการห้องพักที่มีกำหนดส่งคืนห้องวันนี้ (เมื่อ Check-out สำเร็จ ห้องจะเปลี่ยนเป็น Dirty และแจ้งแม่บ้านอัตโนมัติ)
-                    </p>
-                </div>
+                <h3 class="reception-panel-title">
+                    <i class="fa-solid fa-arrow-right-from-bracket text-danger"></i>
+                    Today's Check-out
+                </h3>
                 <a asp-controller="Reception" asp-action="CheckOut" class="reception-link-more">
-                    จัดการทั้งหมด <i class="fa-solid fa-angle-right"></i>
+                    ทั้งหมด <i class="fa-solid fa-angle-right"></i>
                 </a>
             </div>
 
@@ -365,10 +314,10 @@
                     <thead>
                         <tr>
                             <th>Booking ID</th>
-                            <th>Guest Name</th>
-                            <th>Room Number</th>
-                            <th>Check-out Time</th>
-                            <th>Booking Status</th>
+                            <th>Guest</th>
+                            <th>Room</th>
+                            <th>Check-out Date</th>
+                            <th>Status</th>
                             <th class="text-end">Action</th>
                         </tr>
                     </thead>
@@ -377,17 +326,17 @@
                         {
                             foreach (var stay in Model.CheckOutList)
                             {
+                                var codeDisplay = string.IsNullOrWhiteSpace(stay.BookingCode) ? $"#{stay.BookingId}" : stay.BookingCode;
                                 var isAlreadyCheckedOut = stay.CheckedOutAt.HasValue;
+
                                 <tr>
                                     <td>
-                                        <span class="reception-code-badge">
-                                            @(string.IsNullOrWhiteSpace(stay.BookingCode) ? $"#{stay.BookingId}" : stay.BookingCode)
-                                        </span>
+                                        <span class="reception-code-badge">@codeDisplay</span>
                                     </td>
                                     <td>
                                         <div class="reception-guest-cell">
                                             <strong>@stay.GuestName</strong>
-                                            <small>@stay.GuestPhone · เข้าพักจริง @(stay.ActualGuests ?? stay.NumGuests) ท่าน</small>
+                                            <small>@stay.GuestPhone · @(stay.ActualGuests ?? stay.NumGuests) ท่าน</small>
                                         </div>
                                     </td>
                                     <td>
@@ -395,31 +344,26 @@
                                         <small class="d-block text-muted">@stay.RoomTypeName</small>
                                     </td>
                                     <td>
-                                        <span class="reception-time-text">
-                                            @stay.CheckOutDate.ToString("dd/MM/yyyy") (ก่อน 12:00 น.)
-                                        </span>
+                                        <span class="reception-time-text">@stay.CheckOutDate.ToString("dd/MM/yyyy")</span>
                                     </td>
                                     <td>
                                         @if (isAlreadyCheckedOut)
                                         {
-                                            <span class="reception-status-badge reception-badge-neutral">
-                                                Check-out แล้ว
-                                            </span>
+                                            <span class="reception-status-badge reception-badge-neutral">Checked-out</span>
                                         }
                                         else
                                         {
-                                            <span class="reception-status-badge reception-badge-info">
-                                                <i class="fa-solid fa-bed"></i> กำลังเข้าพัก (Checked-in)
-                                            </span>
+                                            <span class="reception-status-badge reception-badge-info">Checked-in</span>
                                         }
                                     </td>
                                     <td class="text-end">
                                         <div class="reception-action-group">
                                             <a asp-controller="Reception"
                                                asp-action="Bookings"
-                                               asp-route-search="@stay.BookingCode"
-                                               class="reception-btn-sm reception-btn-ghost">
-                                                <i class="fa-regular fa-eye"></i> View Details
+                                               asp-route-search="@codeDisplay"
+                                               class="reception-btn-sm reception-btn-ghost"
+                                               title="ดูรายละเอียด">
+                                                <i class="fa-regular fa-eye"></i>
                                             </a>
 
                                             @if (!isAlreadyCheckedOut)
@@ -428,7 +372,7 @@
                                                    asp-action="CheckOut"
                                                    asp-route-stayId="@stay.StayId"
                                                    class="reception-btn-sm reception-btn-danger js-confirm-checkout"
-                                                   data-booking="@stay.BookingCode"
+                                                   data-booking="@codeDisplay"
                                                    data-guest="@stay.GuestName"
                                                    data-room="@stay.RoomNumber">
                                                     <i class="fa-solid fa-arrow-right-from-bracket"></i> Check-out
@@ -444,10 +388,7 @@
                             <tr>
                                 <td colspan="6" class="reception-empty-state">
                                     <i class="fa-solid fa-suitcase-rolling"></i>
-                                    <p>ไม่มีรายการค้าง Check-out ในตารางสรุป หรือยังไม่ได้โหลดรายการเข้าสู่หน้า Dashboard</p>
-                                    <a asp-controller="Reception" asp-action="CheckOut" class="reception-btn-sm reception-btn-outline">
-                                        ไปยังหน้าบริการ Check-out (@(Model?.TodayCheckOuts ?? 0) รายการวันนี้)
-                                    </a>
+                                    <p>ไม่มีรายการรอ Check-out</p>
                                 </td>
                             </tr>
                         }
@@ -457,48 +398,40 @@
         </section>
     </div>
 
-    <!-- ==========================================
-         ส่วนที่ 5 & 6: ROOM STATUS OVERVIEW & RECENT BOOKING ACTIVITY
-         ========================================== -->
+    <!-- Room Status Overview & Recent Bookings -->
     <div class="reception-bottom-grid reception-fade-in">
 
-        <!-- ส่วนที่ 5: Room Status Overview -->
+        <!-- Room Status Overview -->
         <section class="reception-panel">
             <div class="reception-panel-header">
-                <div>
-                    <h3 class="reception-panel-title">
-                        <i class="fa-solid fa-table-cells-large text-primary"></i>
-                        Room Status Overview
-                    </h3>
-                    <p class="reception-panel-subtitle">
-                        สถานะห้องพักแบบเรียลไทม์ แยกตามสีสถานะเพื่อตรวจสอบความพร้อมก่อนส่งมอบห้องพัก
-                    </p>
-                </div>
+                <h3 class="reception-panel-title">
+                    <i class="fa-solid fa-table-cells-large text-primary"></i>
+                    Room Status Overview
+                </h3>
                 <a asp-controller="Reception" asp-action="Calendar" class="reception-link-more">
-                    เปิดปฏิทินห้องพัก <i class="fa-solid fa-angle-right"></i>
+                    ปฏิทินห้องพัก <i class="fa-solid fa-angle-right"></i>
                 </a>
             </div>
 
-            <!-- แถบสรุปสถานะห้องพักและตัวกรอง -->
             <div class="reception-room-legend-bar">
                 <button type="button" class="reception-filter-chip active" data-filter="all">
                     ทั้งหมด (@(Model?.TotalRooms ?? 0))
                 </button>
                 <button type="button" class="reception-filter-chip reception-legend-available" data-filter="available">
                     <span class="reception-dot reception-dot-green"></span>
-                    Available ห้องว่าง (@(Model?.AvailableRooms ?? 0))
+                    Available (@(Model?.AvailableRooms ?? 0))
                 </button>
                 <button type="button" class="reception-filter-chip reception-legend-occupied" data-filter="occupied">
                     <span class="reception-dot reception-dot-blue"></span>
-                    Occupied เข้าพัก (@(Model?.OccupiedRooms ?? 0))
+                    Occupied (@(Model?.OccupiedRooms ?? 0))
                 </button>
-                <button type="button" class="reception-filter-chip reception-legend-dirty" data-filter="dirty">
+                <button type="button" class="reception-filter-chip reception-legend-dirty" data-filter="cleaning">
                     <span class="reception-dot reception-dot-orange"></span>
-                    Dirty รอทำความสะอาด (@(Model?.NeedsCleaningRooms ?? 0))
+                    Cleaning (@(Model?.NeedsCleaningRooms ?? 0))
                 </button>
                 <button type="button" class="reception-filter-chip reception-legend-maintenance" data-filter="maintenance">
                     <span class="reception-dot reception-dot-red"></span>
-                    Maintenance ซ่อมบำรุง (@(Model?.MaintenanceRooms ?? 0))
+                    Maintenance (@(Model?.MaintenanceRooms ?? 0))
                 </button>
             </div>
 
@@ -512,17 +445,19 @@
                         {
                             "available" => "available",
                             "occupied" => "occupied",
-                            "needs_cleaning" or "dirty" => "dirty",
+                            "needs_cleaning" or "dirty" or "cleaning" => "cleaning",
                             "maintenance" => "maintenance",
                             _ => "available"
                         };
 
+                        var cardCss = normalizedStatus == "cleaning" ? "dirty" : normalizedStatus;
+
                         var statusLabel = normalizedStatus switch
                         {
-                            "available" => "Available · ห้องว่าง",
-                            "occupied" => "Occupied · มีลูกค้าเข้าพัก",
-                            "dirty" => "Dirty · รอทำความสะอาด",
-                            "maintenance" => "Maintenance · ซ่อมบำรุง",
+                            "available" => "Available",
+                            "occupied" => "Occupied",
+                            "cleaning" => "Cleaning",
+                            "maintenance" => "Maintenance",
                             _ => room.Status
                         };
 
@@ -530,12 +465,12 @@
                         {
                             "available" => "fa-circle-check",
                             "occupied" => "fa-user-lock",
-                            "dirty" => "fa-broom",
+                            "cleaning" => "fa-broom",
                             "maintenance" => "fa-screwdriver-wrench",
                             _ => "fa-door-closed"
                         };
 
-                        <div class="reception-room-card reception-room-@normalizedStatus" data-room-status="@normalizedStatus">
+                        <div class="reception-room-card reception-room-@cardCss" data-room-status="@normalizedStatus">
                             <div class="reception-room-card-top">
                                 <span class="reception-room-no">@room.RoomNumber</span>
                                 <span class="reception-room-floor">ชั้น @room.FloorNo</span>
@@ -548,17 +483,20 @@
                         </div>
                     }
                 </div>
+
+                <div id="roomOverviewPagination" class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3 pt-2 border-top">
+                    <small id="roomPageSummary" class="text-muted"></small>
+                    <div id="roomPageButtons" class="d-flex align-items-center gap-1"></div>
+                </div>
             }
             else
             {
-                <!-- แสดง Summary Status Cards จากตัวเลขจริงใน Model หากยังไม่ได้ Include รายการห้องรายใบใน Index() -->
                 <div class="reception-room-summary-fallback">
                     <div class="reception-room-card reception-room-available">
                         <div class="reception-room-card-top">
                             <span class="reception-room-no">@(Model?.AvailableRooms ?? 0) ห้อง</span>
-                            <span class="reception-room-floor">พร้อมเข้าพัก</span>
                         </div>
-                        <div class="reception-room-type">Available Rooms</div>
+                        <div class="reception-room-type">Available</div>
                         <div class="reception-room-status-pill">
                             <i class="fa-solid fa-circle-check"></i> ห้องว่างพร้อมขาย
                         </div>
@@ -567,9 +505,8 @@
                     <div class="reception-room-card reception-room-occupied">
                         <div class="reception-room-card-top">
                             <span class="reception-room-no">@(Model?.OccupiedRooms ?? 0) ห้อง</span>
-                            <span class="reception-room-floor">กำลังเข้าพัก</span>
                         </div>
-                        <div class="reception-room-type">Occupied Rooms</div>
+                        <div class="reception-room-type">Occupied</div>
                         <div class="reception-room-status-pill">
                             <i class="fa-solid fa-bed"></i> มีลูกค้าเข้าพัก
                         </div>
@@ -578,9 +515,8 @@
                     <div class="reception-room-card reception-room-dirty">
                         <div class="reception-room-card-top">
                             <span class="reception-room-no">@(Model?.NeedsCleaningRooms ?? 0) ห้อง</span>
-                            <span class="reception-room-floor">Housekeeping</span>
                         </div>
-                        <div class="reception-room-type">Dirty / Needs Cleaning</div>
+                        <div class="reception-room-type">Cleaning</div>
                         <div class="reception-room-status-pill">
                             <i class="fa-solid fa-broom"></i> รอทำความสะอาด
                         </div>
@@ -589,31 +525,25 @@
                     <div class="reception-room-card reception-room-maintenance">
                         <div class="reception-room-card-top">
                             <span class="reception-room-no">@(Model?.MaintenanceRooms ?? 0) ห้อง</span>
-                            <span class="reception-room-floor">Engineering</span>
                         </div>
-                        <div class="reception-room-type">Maintenance Rooms</div>
+                        <div class="reception-room-type">Maintenance</div>
                         <div class="reception-room-status-pill">
-                            <i class="fa-solid fa-screwdriver-wrench"></i> อยู่ระหว่างซ่อมบำรุง
+                            <i class="fa-solid fa-screwdriver-wrench"></i> กำลังซ่อมบำรุง
                         </div>
                     </div>
                 </div>
             }
         </section>
 
-        <!-- ส่วนที่ 6: Recent Booking Activity -->
+        <!-- Recent Bookings -->
         <section class="reception-panel">
             <div class="reception-panel-header">
-                <div>
-                    <h3 class="reception-panel-title">
-                        <i class="fa-solid fa-clock-rotate-left text-info"></i>
-                        Recent Booking Activity
-                    </h3>
-                    <p class="reception-panel-subtitle">
-                        ความเคลื่อนไหวการจองและการปฏิบัติงานล่าสุด 10 รายการ (ไม่แสดงยอดเงินตามสิทธิ์ Reception)
-                    </p>
-                </div>
+                <h3 class="reception-panel-title">
+                    <i class="fa-solid fa-clock-rotate-left text-info"></i>
+                    Recent Bookings
+                </h3>
                 <a asp-controller="Reception" asp-action="Bookings" class="reception-link-more">
-                    ดูทั้งหมด <i class="fa-solid fa-angle-right"></i>
+                    ทั้งหมด <i class="fa-solid fa-angle-right"></i>
                 </a>
             </div>
 
@@ -622,15 +552,16 @@
                 {
                     foreach (var booking in Model.RecentBookings)
                     {
+                        var codeDisplay = string.IsNullOrWhiteSpace(booking.BookingCode) ? $"#{booking.BookingId}" : booking.BookingCode;
                         var statusNormalized = (booking.Status ?? "").ToLowerInvariant();
-                        var activityTitle = statusNormalized switch
+                        var statusText = statusNormalized switch
                         {
-                            "confirmed" => "อนุมัติการจองแล้ว · พร้อมรับ Check-in",
-                            "checked_in" => "ลูกค้าดำเนินการ Check-in เข้าพักแล้ว",
-                            "checked_out" or "completed" => "ลูกค้า Check-out · ส่งงานแม่บ้านแล้ว",
-                            "pending_approval" or "pending" => "สร้างรายการจองใหม่ · รอฝ่ายการเงินตรวจสอบสลิป",
-                            "cancelled" => "ยกเลิกรายการจอง",
-                            _ => $"อัปเดตสถานะการจอง ({booking.Status})"
+                            "confirmed" => "Confirmed",
+                            "checked_in" => "Checked-in",
+                            "checked_out" or "completed" => "Checked-out",
+                            "pending_approval" or "pending" => "Pending Approval",
+                            "cancelled" => "Cancelled",
+                            _ => booking.Status
                         };
 
                         var badgeClass = statusNormalized switch
@@ -649,22 +580,20 @@
                             </div>
                             <div class="reception-activity-body">
                                 <div class="reception-activity-top">
-                                    <span class="reception-activity-name">@activityTitle</span>
-                                    <span class="reception-code-badge">
-                                        @(string.IsNullOrWhiteSpace(booking.BookingCode) ? $"#{booking.BookingId}" : booking.BookingCode)
-                                    </span>
+                                    <span class="reception-activity-name">@booking.ContactName</span>
+                                    <span class="reception-code-badge">@codeDisplay</span>
                                 </div>
                                 <div class="reception-activity-meta">
-                                    <span><i class="fa-regular fa-user"></i> ลูกค้า: <strong>@booking.ContactName</strong> (@booking.NumGuests ท่าน, @booking.Nights คืน)</span>
-                                    <span><i class="fa-regular fa-calendar"></i> เข้าพัก: @booking.CheckInDate.ToString("dd/MM/yyyy") - @booking.CheckOutDate.ToString("dd/MM/yyyy")</span>
+                                    <span>@statusText · @booking.NumGuests ท่าน (@booking.Nights คืน)</span>
+                                    <span>@booking.CheckInDate.ToString("dd/MM/yyyy") - @booking.CheckOutDate.ToString("dd/MM/yyyy")</span>
                                 </div>
                             </div>
                             <div class="reception-activity-action">
                                 <a asp-controller="Reception"
                                    asp-action="Bookings"
-                                   asp-route-search="@booking.BookingCode"
+                                   asp-route-search="@codeDisplay"
                                    class="reception-btn-icon"
-                                   title="ตรวจสอบข้อมูลการจอง">
+                                   title="ดูรายละเอียด">
                                     <i class="fa-solid fa-chevron-right"></i>
                                 </a>
                             </div>
@@ -675,7 +604,7 @@
                 {
                     <div class="reception-empty-state">
                         <i class="fa-regular fa-folder-open"></i>
-                        <p>ยังไม่มีประวัติความเคลื่อนไหวการจองล่าสุดในระบบ</p>
+                        <p>ไม่มีรายการจองล่าสุด</p>
                     </div>
                 }
             </div>

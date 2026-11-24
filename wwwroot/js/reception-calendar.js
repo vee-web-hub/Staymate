@@ -22,19 +22,32 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // 3. Instant Search & Filter (Room Number, Booking ID, Guest Name, Room Type, Room Status)
+    // 3. Floor Pagination & Instant Search/Filter
     const searchInput = document.getElementById("calendarSearchInput");
     const typeSelect = document.getElementById("filterRoomType");
     const statusSelect = document.getElementById("filterRoomStatus");
     const resetBtn = document.getElementById("btnResetCalendarFilter");
-    const roomRows = document.querySelectorAll(".reception-timeline-room-row");
 
-    function applyCalendarFilters() {
+    const floorRows = Array.from(document.querySelectorAll(".reception-timeline-floor-row"));
+    const roomRows = Array.from(document.querySelectorAll(".reception-timeline-room-row"));
+    const floorSummaryEl = document.getElementById("calendarFloorSummary");
+    const floorButtonsEl = document.getElementById("calendarFloorButtons");
+
+    const distinctFloors = [...new Set(floorRows.map((r) => r.getAttribute("data-floor") || ""))]
+        .filter((f) => f !== "");
+    let currentFloorIndex = 0;
+
+    function renderCalendarView() {
         const keyword = (searchInput?.value || "").trim().toLowerCase();
         const selectedType = (typeSelect?.value || "all").toLowerCase();
         const selectedStatus = (statusSelect?.value || "all").toLowerCase();
+        const isFiltering = Boolean(keyword) || selectedType !== "all" || selectedStatus !== "all";
 
+        const activeFloor = distinctFloors[currentFloorIndex] || "";
+
+        // กรองแถวห้องพักตามเงื่อนไข Search/Filter และชั้นที่เลือก
         roomRows.forEach((row) => {
+            const rowFloor = row.getAttribute("data-floor") || "";
             const rowSearchText = row.getAttribute("data-search-text") || "";
             const rowType = row.getAttribute("data-room-type") || "";
             const rowStatus = row.getAttribute("data-room-status") || "";
@@ -42,21 +55,95 @@ document.addEventListener("DOMContentLoaded", function () {
             const matchKeyword = !keyword || rowSearchText.includes(keyword);
             const matchType = selectedType === "all" || rowType.includes(selectedType);
             const matchStatus = selectedStatus === "all" || rowStatus === selectedStatus;
+            const matchFloor = isFiltering || rowFloor === activeFloor;
 
-            row.style.display = (matchKeyword && matchType && matchStatus) ? "" : "none";
+            row.style.display = (matchKeyword && matchType && matchStatus && matchFloor) ? "" : "none";
         });
+
+        // แสดง/ซ่อนหัวข้อชั้น (Floor Banner) เฉพาะชั้นที่มีห้องแสดงอยู่
+        floorRows.forEach((fRow) => {
+            const fVal = fRow.getAttribute("data-floor") || "";
+            const hasVisibleRooms = roomRows.some(
+                (r) => r.getAttribute("data-floor") === fVal && r.style.display !== "none"
+            );
+            fRow.style.display = hasVisibleRooms ? "" : "none";
+        });
+
+        // อัปเดตแถบ Pagination ด้านล่าง
+        if (floorSummaryEl && floorButtonsEl) {
+            if (isFiltering) {
+                const totalVisible = roomRows.filter((r) => r.style.display !== "none").length;
+                floorSummaryEl.textContent = `พบห้องพักที่ตรงเงื่อนไข ${totalVisible} ห้อง (แสดงรวมทุกชั้น)`;
+                floorButtonsEl.innerHTML = "";
+            } else if (distinctFloors.length > 0) {
+                const roomsOnFloor = roomRows.filter((r) => r.getAttribute("data-floor") === activeFloor).length;
+                floorSummaryEl.textContent = `กำลังแสดง ชั้น ${activeFloor} (${roomsOnFloor} ห้อง) · ทั้งหมด ${distinctFloors.length} ชั้น`;
+
+                floorButtonsEl.innerHTML = "";
+
+                // ปุ่มย้อนกลับชั้นก่อนหน้า
+                const prevBtn = document.createElement("button");
+                prevBtn.type = "button";
+                prevBtn.className = "reception-page-btn";
+                prevBtn.innerHTML = `<i class="fa-solid fa-chevron-left"></i>`;
+                prevBtn.disabled = currentFloorIndex === 0;
+                prevBtn.title = "ชั้นก่อนหน้า";
+                prevBtn.addEventListener("click", () => {
+                    if (currentFloorIndex > 0) {
+                        currentFloorIndex--;
+                        renderCalendarView();
+                    }
+                });
+                floorButtonsEl.appendChild(prevBtn);
+
+                // ปุ่มเลือกแต่ละชั้น (ชั้น 3, ชั้น 4, ชั้น 5, ...)
+                distinctFloors.forEach((floorNo, idx) => {
+                    const btn = document.createElement("button");
+                    btn.type = "button";
+                    btn.className = `reception-page-btn ${idx === currentFloorIndex ? "active" : ""}`;
+                    btn.style.width = "auto";
+                    btn.style.padding = "0 10px";
+                    btn.textContent = `ชั้น ${floorNo}`;
+                    btn.addEventListener("click", () => {
+                        currentFloorIndex = idx;
+                        renderCalendarView();
+                    });
+                    floorButtonsEl.appendChild(btn);
+                });
+
+                // ปุ่มชั้นถัดไป
+                const nextBtn = document.createElement("button");
+                nextBtn.type = "button";
+                nextBtn.className = "reception-page-btn";
+                nextBtn.innerHTML = `<i class="fa-solid fa-chevron-right"></i>`;
+                nextBtn.disabled = currentFloorIndex >= distinctFloors.length - 1;
+                nextBtn.title = "ชั้นถัดไป";
+                nextBtn.addEventListener("click", () => {
+                    if (currentFloorIndex < distinctFloors.length - 1) {
+                        currentFloorIndex++;
+                        renderCalendarView();
+                    }
+                });
+                floorButtonsEl.appendChild(nextBtn);
+            }
+        }
     }
 
-    searchInput?.addEventListener("input", applyCalendarFilters);
-    typeSelect?.addEventListener("change", applyCalendarFilters);
-    statusSelect?.addEventListener("change", applyCalendarFilters);
+    searchInput?.addEventListener("input", renderCalendarView);
+    typeSelect?.addEventListener("change", renderCalendarView);
+    statusSelect?.addEventListener("change", renderCalendarView);
 
     resetBtn?.addEventListener("click", function () {
         if (searchInput) searchInput.value = "";
         if (typeSelect) typeSelect.value = "all";
         if (statusSelect) statusSelect.value = "all";
-        applyCalendarFilters();
+        currentFloorIndex = 0;
+        renderCalendarView();
     });
+
+    if (floorRows.length > 0) {
+        renderCalendarView();
+    }
 
     // 4. Room & Booking Information Side Panel (Modal Drawer)
     const drawer = document.getElementById("roomInfoDrawer");
@@ -110,10 +197,12 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         if (btnCheckIn) {
+            btnCheckIn.href = `/Reception/CheckIn?bookingCode=${encodeURIComponent(bookingCode)}`;
             btnCheckIn.classList.toggle("d-none", !canCheckIn);
         }
 
         if (btnCheckOut) {
+            btnCheckOut.href = `/Reception/CheckOut?bookingCode=${encodeURIComponent(bookingCode)}`;
             btnCheckOut.classList.toggle("d-none", !canCheckOut);
         }
 

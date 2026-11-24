@@ -8,6 +8,7 @@
 
 :root {
     --reception-midnight-navy: #070D1E;
+    --reception-navy-light: #111C38;
     --reception-electric-blue: #2563EB;
     --reception-cyber-cyan: #00E5FF;
     --reception-space-violet: #8B5CF6;
@@ -26,6 +27,9 @@
     --reception-shadow-md: 0 10px 25px rgba(7, 13, 30, 0.08);
 }
 
+/* ==========================================================================
+   1. LAYOUT & PAGE HEADER
+   ========================================================================== */
 .reception-dashboard-wrapper {
     font-family: 'Prompt', sans-serif;
     color: var(--reception-text-main);
@@ -34,14 +38,11 @@
     min-height: calc(100vh - 120px);
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1.35rem;
 }
 
-/* ==========================================
-   1. PAGE HEADER
-   ========================================== */
 .reception-page-header {
-    background: linear-gradient(135deg, var(--reception-midnight-navy) 0%, #111C38 100%);
+    background: linear-gradient(135deg, var(--reception-midnight-navy) 0%, var(--reception-navy-light) 100%);
     color: var(--reception-white);
     border-radius: var(--reception-radius-lg);
     padding: 1.5rem 1.75rem;
@@ -51,19 +52,19 @@
     flex-wrap: wrap;
     gap: 1.25rem;
     box-shadow: var(--reception-shadow-md);
-    border: 1px solid rgba(0, 229, 255, 0.16);
+    border: 1px solid rgba(0, 229, 255, 0.18);
 }
 
 .reception-title-badge {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     font-weight: 600;
     letter-spacing: 0.06em;
     color: var(--reception-cyber-cyan);
-    background: rgba(0, 229, 255, 0.1);
-    padding: 0.28rem 0.75rem;
+    background: rgba(0, 229, 255, 0.12);
+    padding: 0.28rem 0.8rem;
     border-radius: 999px;
     margin-bottom: 0.5rem;
 }
@@ -77,12 +78,13 @@
 }
 
 .reception-main-title {
-    font-size: 1.65rem;
+    font-size: 1.6rem;
     font-weight: 700;
     margin: 0 0 0.25rem 0;
     display: flex;
     align-items: center;
     gap: 0.6rem;
+    line-height: 1.25;
 }
 
 .reception-title-icon {
@@ -91,8 +93,8 @@
 
 .reception-welcome-text {
     margin: 0;
-    font-size: 0.92rem;
-    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.82);
 }
 
 .reception-header-right {
@@ -102,6 +104,7 @@
     flex-wrap: wrap;
 }
 
+/* Header Search Group */
 .reception-search-input-group {
     display: flex;
     align-items: center;
@@ -126,7 +129,7 @@
     background: transparent;
     border: none;
     color: var(--reception-white);
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     min-width: 240px;
     outline: none;
 }
@@ -135,25 +138,32 @@
     color: rgba(255, 255, 255, 0.55);
 }
 
-/* ==========================================
-   BUTTONS
-   ========================================== */
+/* ==========================================================================
+   2. BUTTONS & INTERACTIVE CONTROLS
+   ========================================================================== */
 .reception-btn {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.55rem 1rem;
+    justify-content: center;
+    gap: 0.45rem;
+    padding: 0.52rem 1rem;
     border-radius: var(--reception-radius-sm);
-    font-size: 0.88rem;
+    font-size: 0.86rem;
     font-weight: 500;
-    border: none;
+    border: 1px solid transparent;
     cursor: pointer;
     text-decoration: none;
-    transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    white-space: nowrap;
+    transition: all 0.18s ease;
 }
 
-.reception-btn:hover {
+.reception-btn:hover:not(:disabled) {
     transform: translateY(-1px);
+}
+
+.reception-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
 }
 
 .reception-btn-primary {
@@ -161,7 +171,7 @@
     color: var(--reception-white);
 }
 
-.reception-btn-primary:hover {
+.reception-btn-primary:hover:not(:disabled) {
     background: #1D4ED8;
     color: var(--reception-white);
 }
@@ -169,13 +179,116 @@
 .reception-btn-outline {
     background: rgba(255, 255, 255, 0.08);
     color: var(--reception-white);
-    border: 1px solid rgba(255, 255, 255, 0.24);
+    border-color: rgba(255, 255, 255, 0.24);
 }
 
-.reception-btn-outline:hover {
-    background: rgba(0, 229, 255, 0.15);
+.reception-btn-outline:hover:not(:disabled) {
+    background: rgba(0, 229, 255, 0.16);
     border-color: var(--reception-cyber-cyan);
     color: var(--reception-white);
+}
+
+.reception-btn-outline-dark {
+    border-color: var(--reception-border);
+    background: var(--reception-white);
+    color: var(--reception-text-main);
+}
+
+.reception-btn-outline-dark:hover:not(:disabled) {
+    background: #F1F5F9;
+}
+
+.reception-btn-ghost {
+    background: #F8FAFC;
+    color: var(--reception-text-main);
+    border-color: var(--reception-border);
+}
+
+.reception-btn-ghost:hover:not(:disabled) {
+    background: #E2E8F0;
+    color: var(--reception-midnight-navy);
+}
+
+.reception-btn-success,
+.reception-btn-success-solid {
+    background: var(--reception-success);
+    color: var(--reception-white);
+}
+
+.reception-btn-success:hover:not(:disabled),
+.reception-btn-success-solid:hover:not(:disabled) {
+    background: #15803D;
+    color: var(--reception-white);
+}
+
+.reception-btn-danger {
+    background: var(--reception-danger);
+    color: var(--reception-white);
+}
+
+.reception-btn-danger:hover:not(:disabled) {
+    background: #DC2626;
+    color: var(--reception-white);
+}
+
+.reception-btn-warning {
+    background: var(--reception-warning);
+    color: var(--reception-white);
+}
+
+.reception-btn-sm {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.38rem 0.72rem;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid transparent;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+}
+
+.reception-btn-sm:hover {
+    transform: translateY(-1px);
+}
+
+.reception-qr-trigger-btn {
+    background: linear-gradient(135deg, var(--reception-cyber-cyan) 0%, var(--reception-electric-blue) 100%);
+    color: var(--reception-midnight-navy);
+    font-weight: 700;
+    box-shadow: 0 4px 15px rgba(0, 229, 255, 0.3);
+}
+
+.reception-qr-trigger-btn:hover {
+    color: var(--reception-white);
+    box-shadow: 0 6px 20px rgba(0, 229, 255, 0.45);
+}
+
+.reception-btn-qr-mini {
+    background: rgba(0, 229, 255, 0.14);
+    color: #0369A1;
+    border-color: rgba(0, 229, 255, 0.38);
+}
+
+.reception-btn-qr-mini:hover {
+    background: var(--reception-midnight-navy);
+    color: var(--reception-cyber-cyan);
+}
+
+.reception-btn-checkout-cta {
+    background: linear-gradient(135deg, #F97316 0%, #EA580C 50%, #DC2626 100%);
+    color: var(--reception-white);
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(234, 88, 12, 0.28);
+}
+
+.reception-btn-checkout-cta:hover {
+    color: var(--reception-white);
+    box-shadow: 0 6px 16px rgba(220, 38, 38, 0.38);
 }
 
 .reception-btn.is-loading i {
@@ -186,19 +299,19 @@
     100% { transform: rotate(360deg); }
 }
 
-/* ==========================================
-   2. QUICK ACTIONS BAR
-   ========================================== */
+/* ==========================================================================
+   3. DASHBOARD QUICK ACTIONS & KPI SUMMARY CARDS
+   ========================================================================== */
 .reception-quick-actions-bar {
     background: var(--reception-white);
     border-radius: var(--reception-radius-lg);
-    padding: 1.1rem 1.25rem;
+    padding: 1.15rem 1.3rem;
     border: 1px solid var(--reception-border);
     box-shadow: var(--reception-shadow-sm);
 }
 
 .reception-section-label {
-    font-size: 0.85rem;
+    font-size: 0.84rem;
     font-weight: 600;
     color: var(--reception-text-muted);
     margin-bottom: 0.85rem;
@@ -258,29 +371,20 @@
     line-height: 1.25;
 }
 
-.reception-action-text strong {
-    font-size: 0.88rem;
-    font-weight: 600;
-}
+.reception-action-text strong { font-size: 0.88rem; font-weight: 600; }
+.reception-action-text small { font-size: 0.75rem; color: var(--reception-text-muted); }
 
-.reception-action-text small {
-    font-size: 0.75rem;
-    color: var(--reception-text-muted);
-}
-
-/* ==========================================
-   3. KPI SUMMARY CARDS (4 COLUMNS)
-   ========================================== */
+/* KPI Grid (4 Columns) */
 .reception-kpi-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 1.15rem;
+    gap: 1.1rem;
 }
 
 .reception-kpi-card {
     background: var(--reception-white);
     border-radius: var(--reception-radius-lg);
-    padding: 1.25rem 1.35rem;
+    padding: 1.2rem 1.35rem;
     border: 1px solid var(--reception-border);
     box-shadow: var(--reception-shadow-sm);
     position: relative;
@@ -289,7 +393,7 @@
 }
 
 .reception-kpi-card:hover {
-    transform: translateY(-3px);
+    transform: translateY(-2px);
     box-shadow: var(--reception-shadow-md);
 }
 
@@ -306,16 +410,19 @@
 .reception-kpi-success::before { background: var(--reception-success); }
 .reception-kpi-primary::before { background: var(--reception-electric-blue); }
 .reception-kpi-violet::before { background: var(--reception-space-violet); }
+.reception-kpi-warning::before { background: var(--reception-warning); }
+.reception-kpi-danger::before { background: var(--reception-danger); }
+.reception-kpi-cyan::before { background: var(--reception-cyber-cyan); }
 
 .reception-kpi-top {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    margin-bottom: 0.75rem;
+    gap: 0.75rem;
 }
 
 .reception-kpi-title {
-    font-size: 0.82rem;
+    font-size: 0.78rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -323,10 +430,11 @@
 }
 
 .reception-kpi-number {
-    font-size: 2rem;
+    font-size: 1.9rem;
     font-weight: 700;
     margin: 0.25rem 0 0 0;
     color: var(--reception-midnight-navy);
+    line-height: 1.15;
 }
 
 .reception-kpi-dual-number {
@@ -342,29 +450,34 @@
 .reception-kpi-divider { color: var(--reception-text-muted); }
 
 .reception-kpi-icon {
-    width: 46px;
-    height: 46px;
+    width: 44px;
+    height: 44px;
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.25rem;
+    font-size: 1.2rem;
+    flex-shrink: 0;
 }
 
 .reception-kpi-navy .reception-kpi-icon { background: rgba(7, 13, 30, 0.08); color: var(--reception-midnight-navy); }
 .reception-kpi-success .reception-kpi-icon { background: rgba(22, 163, 74, 0.12); color: var(--reception-success); }
 .reception-kpi-primary .reception-kpi-icon { background: rgba(37, 99, 235, 0.12); color: var(--reception-electric-blue); }
 .reception-kpi-violet .reception-kpi-icon { background: rgba(139, 92, 246, 0.12); color: var(--reception-space-violet); }
+.reception-kpi-warning .reception-kpi-icon { background: rgba(245, 158, 11, 0.14); color: var(--reception-warning); }
+.reception-kpi-danger .reception-kpi-icon { background: rgba(239, 68, 68, 0.12); color: var(--reception-danger); }
+.reception-kpi-cyan .reception-kpi-icon { background: rgba(0, 229, 255, 0.16); color: #0284C7; }
 
 .reception-kpi-desc {
     font-size: 0.78rem;
     color: var(--reception-text-muted);
     display: block;
+    margin-top: 0.45rem;
 }
 
-/* ==========================================
-   4. PANELS & TABLES (CHECK-IN / CHECK-OUT)
-   ========================================== */
+/* ==========================================================================
+   4. PANELS, DATA TABLES & STATUS BADGES
+   ========================================================================== */
 .reception-operations-row {
     display: grid;
     grid-template-columns: 1fr;
@@ -381,7 +494,7 @@
 
 .reception-panel-header {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: 1rem;
     margin-bottom: 1.1rem;
@@ -389,18 +502,19 @@
 }
 
 .reception-panel-title {
-    font-size: 1.12rem;
+    font-size: 1.1rem;
     font-weight: 700;
-    margin: 0 0 0.2rem 0;
+    margin: 0;
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    color: var(--reception-midnight-navy);
 }
 
 .reception-panel-subtitle {
     font-size: 0.82rem;
     color: var(--reception-text-muted);
-    margin: 0;
+    margin: 0.2rem 0 0 0;
 }
 
 .reception-link-more {
@@ -417,33 +531,37 @@
     text-decoration: underline;
 }
 
+/* Clean Scrollable Table */
 .reception-table-responsive {
     width: 100%;
     overflow-x: auto;
+    border-radius: var(--reception-radius-sm);
 }
 
 .reception-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.88rem;
+    font-size: 0.86rem;
 }
 
 .reception-table thead th {
     background: #F8FAFC;
     color: var(--reception-text-muted);
     font-weight: 600;
-    font-size: 0.78rem;
+    font-size: 0.76rem;
     text-transform: uppercase;
-    letter-spacing: 0.03em;
-    padding: 0.75rem 0.9rem;
+    letter-spacing: 0.04em;
+    padding: 0.8rem 0.85rem;
+    border-top: 1px solid var(--reception-border);
     border-bottom: 1px solid var(--reception-border);
     white-space: nowrap;
 }
 
 .reception-table tbody td {
-    padding: 0.85rem 0.9rem;
+    padding: 0.85rem 0.85rem;
     border-bottom: 1px solid #F1F5F9;
     vertical-align: middle;
+    white-space: nowrap;
 }
 
 .reception-table tbody tr {
@@ -456,18 +574,25 @@
 
 .reception-code-badge {
     display: inline-block;
-    font-family: monospace;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-weight: 700;
     font-size: 0.82rem;
-    background: rgba(7, 13, 30, 0.07);
+    background: rgba(7, 13, 30, 0.06);
     color: var(--reception-midnight-navy);
-    padding: 0.22rem 0.55rem;
+    padding: 0.25rem 0.6rem;
     border-radius: 6px;
+    border: 1px solid rgba(7, 13, 30, 0.08);
 }
 
 .reception-guest-cell {
     display: flex;
     flex-direction: column;
+    gap: 0.1rem;
+}
+
+.reception-guest-cell strong {
+    font-weight: 600;
+    color: var(--reception-text-main);
 }
 
 .reception-guest-cell small {
@@ -476,31 +601,27 @@
 }
 
 .reception-room-chip {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
     background: rgba(37, 99, 235, 0.1);
     color: var(--reception-electric-blue);
     font-weight: 600;
-    padding: 0.22rem 0.6rem;
+    padding: 0.25rem 0.65rem;
     border-radius: 6px;
     font-size: 0.82rem;
 }
 
-.reception-status-badge {
+.reception-guest-count-pill {
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    padding: 0.25rem 0.65rem;
+    background: #F1F5F9;
+    color: var(--reception-midnight-navy);
+    padding: 0.24rem 0.65rem;
     border-radius: 999px;
-    font-size: 0.76rem;
+    font-size: 0.78rem;
     font-weight: 600;
-    white-space: nowrap;
 }
-
-.reception-badge-success { background: rgba(22, 163, 74, 0.12); color: var(--reception-success); }
-.reception-badge-warning { background: rgba(245, 158, 11, 0.14); color: #D97706; }
-.reception-badge-danger { background: rgba(239, 68, 68, 0.12); color: var(--reception-danger); }
-.reception-badge-info { background: rgba(37, 99, 235, 0.12); color: var(--reception-electric-blue); }
-.reception-badge-neutral { background: #E2E8F0; color: #475569; }
 
 .reception-action-group {
     display: inline-flex;
@@ -509,59 +630,124 @@
     flex-wrap: nowrap;
 }
 
-.reception-btn-sm {
+/* Unified High-Contrast Status Badges */
+.reception-status-badge {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.35rem;
-    padding: 0.38rem 0.72rem;
-    border-radius: 8px;
-    font-size: 0.78rem;
+    padding: 0.28rem 0.72rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
     font-weight: 600;
-    text-decoration: none;
-    border: 1px solid transparent;
-    transition: all 0.15s ease;
+    line-height: 1.2;
+    letter-spacing: 0.01em;
     white-space: nowrap;
 }
 
-.reception-btn-ghost {
-    background: #F8FAFC;
-    color: var(--reception-text-main);
-    border-color: var(--reception-border);
+.reception-badge-success,
+.reception-pay-badge-approved,
+.reception-cobadge-completed,
+.reception-hkbadge-completed {
+    background: #DCFCE7;
+    color: #15803D;
+    border: 1px solid #BBF7D0;
 }
 
-.reception-btn-ghost:hover {
+.reception-badge-warning,
+.reception-pay-badge-pending,
+.reception-bstatus-pending,
+.reception-cibadge-pending,
+.reception-cobadge-duetoday,
+.reception-hkbadge-pending {
+    background: #FEF3C7;
+    color: #B45309;
+    border: 1px solid #FDE68A;
+}
+
+.reception-badge-danger,
+.reception-pay-badge-rejected,
+.reception-bstatus-cancelled,
+.reception-cibadge-cancelled,
+.reception-cobadge-overdue,
+.reception-hkbadge-cancelled {
+    background: #FEE2E2;
+    color: #B91C1C;
+    border: 1px solid #FECACA;
+}
+
+.reception-badge-info,
+.reception-bstatus-checkedout,
+.reception-cobadge-staying {
+    background: #DBEAFE;
+    color: #1D4ED8;
+    border: 1px solid #BFDBFE;
+}
+
+.reception-bstatus-confirmed {
+    background: #EDE9FE;
+    color: #6D28D9;
+    border: 1px solid #DDD6FE;
+}
+
+.reception-bstatus-checkedin,
+.reception-cibadge-checkedin,
+.reception-hkbadge-inprogress {
+    background: #CFFAFE;
+    color: #0E7490;
+    border: 1px solid #A5F3FC;
+}
+
+.reception-cibadge-confirmed {
+    background: #DCFCE7;
+    color: #15803D;
+    border: 1px solid #BBF7D0;
+}
+
+.reception-badge-neutral {
     background: #E2E8F0;
-    color: var(--reception-midnight-navy);
+    color: #475569;
+    border: 1px solid #CBD5E1;
 }
 
-.reception-btn-success {
-    background: var(--reception-success);
-    color: var(--reception-white);
+/* Alerts */
+.reception-booking-alert,
+.reception-checkin-alert {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.95rem 1.25rem;
+    border-radius: var(--reception-radius-md);
+    font-weight: 500;
+    font-size: 0.9rem;
+    box-shadow: var(--reception-shadow-sm);
 }
 
-.reception-btn-success:hover {
-    background: #15803D;
-    color: var(--reception-white);
+.reception-alert-icon {
+    font-size: 1.25rem;
+    flex-shrink: 0;
 }
 
-.reception-btn-danger {
-    background: var(--reception-danger);
-    color: var(--reception-white);
+.reception-alert-content {
+    display: flex;
+    flex-direction: column;
 }
 
-.reception-btn-danger:hover {
-    background: #DC2626;
-    color: var(--reception-white);
+.reception-alert-success {
+    background: #F0FDF4;
+    color: #15803D;
+    border: 1px solid #BBF7D0;
 }
 
-.reception-btn-warning {
-    background: var(--reception-warning);
-    color: var(--reception-white);
+.reception-alert-danger {
+    background: #FEF2F2;
+    color: #B91C1C;
+    border: 1px solid #FECACA;
 }
 
-/* ==========================================
-   5. ROOM STATUS OVERVIEW & RECENT ACTIVITY
-   ========================================== */
+/* ==========================================================================
+   5. ROOM STATUS OVERVIEW & RECENT ACTIVITY (DASHBOARD)
+   ========================================================================== */
 .reception-bottom-grid {
     display: grid;
     grid-template-columns: 1.35fr 1fr;
@@ -596,12 +782,7 @@
     border-color: var(--reception-midnight-navy);
 }
 
-.reception-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-}
-
+.reception-dot { width: 8px; height: 8px; border-radius: 50%; }
 .reception-dot-green { background: var(--reception-success); }
 .reception-dot-blue { background: var(--reception-electric-blue); }
 .reception-dot-orange { background: var(--reception-warning); }
@@ -623,30 +804,14 @@
 }
 
 .reception-room-card:hover {
-    transform: translateY(-3px);
+    transform: translateY(-2px);
     box-shadow: var(--reception-shadow-sm);
 }
 
-/* สีสถานะห้องพักตามข้อกำหนด: เขียว = Available, น้ำเงิน = Occupied, ส้ม = Dirty, แดง = Maintenance */
-.reception-room-available {
-    border-left: 4px solid var(--reception-success);
-    background: linear-gradient(180deg, rgba(22, 163, 74, 0.04) 0%, #FFFFFF 100%);
-}
-
-.reception-room-occupied {
-    border-left: 4px solid var(--reception-electric-blue);
-    background: linear-gradient(180deg, rgba(37, 99, 235, 0.05) 0%, #FFFFFF 100%);
-}
-
-.reception-room-dirty {
-    border-left: 4px solid var(--reception-warning);
-    background: linear-gradient(180deg, rgba(245, 158, 11, 0.06) 0%, #FFFFFF 100%);
-}
-
-.reception-room-maintenance {
-    border-left: 4px solid var(--reception-danger);
-    background: linear-gradient(180deg, rgba(239, 68, 68, 0.06) 0%, #FFFFFF 100%);
-}
+.reception-room-available { border-left: 4px solid var(--reception-success); background: linear-gradient(180deg, rgba(22, 163, 74, 0.04) 0%, #FFFFFF 100%); }
+.reception-room-occupied { border-left: 4px solid var(--reception-electric-blue); background: linear-gradient(180deg, rgba(37, 99, 235, 0.05) 0%, #FFFFFF 100%); }
+.reception-room-dirty { border-left: 4px solid var(--reception-warning); background: linear-gradient(180deg, rgba(245, 158, 11, 0.06) 0%, #FFFFFF 100%); }
+.reception-room-maintenance { border-left: 4px solid var(--reception-danger); background: linear-gradient(180deg, rgba(239, 68, 68, 0.06) 0%, #FFFFFF 100%); }
 
 .reception-room-card-top {
     display: flex;
@@ -655,116 +820,28 @@
     margin-bottom: 0.3rem;
 }
 
-.reception-room-no {
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: var(--reception-midnight-navy);
-}
-
-.reception-room-floor {
-    font-size: 0.72rem;
-    color: var(--reception-text-muted);
-    background: #F1F5F9;
-    padding: 0.12rem 0.45rem;
-    border-radius: 6px;
-}
-
-.reception-room-type {
-    font-size: 0.78rem;
-    color: var(--reception-text-muted);
-    margin-bottom: 0.55rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.reception-room-status-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    font-size: 0.74rem;
-    font-weight: 600;
-}
+.reception-room-no { font-size: 1.05rem; font-weight: 700; color: var(--reception-midnight-navy); }
+.reception-room-floor { font-size: 0.72rem; color: var(--reception-text-muted); background: #F1F5F9; padding: 0.12rem 0.45rem; border-radius: 6px; }
+.reception-room-type { font-size: 0.78rem; color: var(--reception-text-muted); margin-bottom: 0.55rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.reception-room-status-pill { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.74rem; font-weight: 600; }
 
 .reception-room-available .reception-room-status-pill { color: var(--reception-success); }
 .reception-room-occupied .reception-room-status-pill { color: var(--reception-electric-blue); }
 .reception-room-dirty .reception-room-status-pill { color: #D97706; }
 .reception-room-maintenance .reception-room-status-pill { color: var(--reception-danger); }
 
-/* Recent Activity List */
-.reception-activity-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.65rem;
-}
-
-.reception-activity-item {
-    display: flex;
-    align-items: center;
-    gap: 0.85rem;
-    padding: 0.75rem 0.85rem;
-    border-radius: var(--reception-radius-md);
-    border: 1px solid #F1F5F9;
-    background: #F8FAFC;
-    transition: border-color 0.15s ease, background-color 0.15s ease;
-}
-
-.reception-activity-item:hover {
-    background: var(--reception-white);
-    border-color: var(--reception-border);
-}
-
-.reception-activity-icon-wrap {
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.reception-activity-body {
-    flex: 1;
-    min-width: 0;
-}
-
-.reception-activity-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-    margin-bottom: 0.2rem;
-}
-
-.reception-activity-name {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--reception-text-main);
-}
-
-.reception-activity-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    font-size: 0.76rem;
-    color: var(--reception-text-muted);
-}
-
-.reception-btn-icon {
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--reception-text-muted);
-    text-decoration: none;
-}
+.reception-activity-list { display: flex; flex-direction: column; gap: 0.65rem; }
+.reception-activity-item { display: flex; align-items: center; gap: 0.85rem; padding: 0.75rem 0.85rem; border-radius: var(--reception-radius-md); border: 1px solid #F1F5F9; background: #F8FAFC; }
+.reception-activity-icon-wrap { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.reception-activity-body { flex: 1; min-width: 0; }
+.reception-activity-top { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.2rem; }
+.reception-activity-name { font-size: 0.85rem; font-weight: 600; color: var(--reception-text-main); }
+.reception-activity-meta { display: flex; flex-wrap: wrap; gap: 0.75rem; font-size: 0.76rem; color: var(--reception-text-muted); }
+.reception-btn-icon { width: 30px; height: 30px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; color: var(--reception-text-muted); text-decoration: none; }
 
 .reception-empty-state {
     text-align: center;
-    padding: 2rem 1rem;
+    padding: 2.25rem 1rem;
     color: var(--reception-text-muted);
 }
 
@@ -774,70 +851,9 @@
     color: #94A3B8;
 }
 
-/* ==========================================
-   6. ANIMATION & RESPONSIVE BREAKPOINTS
-   ========================================== */
-.reception-fade-in {
-    animation: receptionFadeUp 0.35s ease both;
-}
-
-@keyframes receptionFadeUp {
-    from {
-        opacity: 0;
-        transform: translateY(8px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Tablet (<= 1199px): KPI 2 Columns, Quick Actions 3 Columns */
-@media (max-width: 1199.98px) {
-    .reception-kpi-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .reception-quick-actions-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-
-    .reception-bottom-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* Mobile (<= 767px): KPI 1-2 Columns, Vertical Stack */
-@media (max-width: 767.98px) {
-    .reception-dashboard-wrapper {
-        padding: 1rem;
-    }
-
-    .reception-kpi-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .reception-quick-actions-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .reception-header-right,
-    .reception-quick-search-form,
-    .reception-search-input-group {
-        width: 100%;
-    }
-
-    .reception-search-input {
-        min-width: 0;
-        width: 100%;
-    }
-}
 /* ==========================================================================
-   PART 2: ROOM CALENDAR & HOTEL TIMELINE MATRIX STYLES
-   Append directly to the end of wwwroot/css/reception.css
+   6. ROOM CALENDAR & HOTEL TIMELINE MATRIX
    ========================================================================== */
-
-/* 1. Room Summary Cards (6 Columns) */
 .reception-calendar-summary-grid {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
@@ -857,10 +873,7 @@
     transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
-.reception-calendar-stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--reception-shadow-md);
-}
+.reception-calendar-stat-card:hover { transform: translateY(-2px); box-shadow: var(--reception-shadow-md); }
 
 .reception-stat-total { border-top-color: var(--reception-midnight-navy); }
 .reception-stat-available { border-top-color: var(--reception-success); }
@@ -869,17 +882,7 @@
 .reception-stat-dirty { border-top-color: var(--reception-warning); }
 .reception-stat-maintenance { border-top-color: var(--reception-danger); }
 
-.reception-stat-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.1rem;
-    flex-shrink: 0;
-}
-
+.reception-stat-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
 .reception-stat-total .reception-stat-icon { background: rgba(7, 13, 30, 0.08); color: var(--reception-midnight-navy); }
 .reception-stat-available .reception-stat-icon { background: rgba(22, 163, 74, 0.12); color: var(--reception-success); }
 .reception-stat-reserved .reception-stat-icon { background: rgba(139, 92, 246, 0.12); color: var(--reception-space-violet); }
@@ -887,717 +890,111 @@
 .reception-stat-dirty .reception-stat-icon { background: rgba(245, 158, 11, 0.14); color: var(--reception-warning); }
 .reception-stat-maintenance .reception-stat-icon { background: rgba(239, 68, 68, 0.12); color: var(--reception-danger); }
 
-.reception-stat-info {
-    display: flex;
-    flex-direction: column;
-    line-height: 1.2;
-}
+.reception-stat-info { display: flex; flex-direction: column; line-height: 1.2; }
+.reception-stat-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; color: var(--reception-text-muted); }
+.reception-stat-value { font-size: 1.35rem; font-weight: 700; color: var(--reception-midnight-navy); margin: 0.15rem 0; }
+.reception-stat-info small { font-size: 0.7rem; color: var(--reception-text-muted); }
 
-.reception-stat-label {
-    font-size: 0.72rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    color: var(--reception-text-muted);
-}
+.reception-calendar-toolbar { background: var(--reception-white); border-radius: var(--reception-radius-lg); padding: 1.15rem 1.35rem; border: 1px solid var(--reception-border); box-shadow: var(--reception-shadow-sm); display: flex; flex-direction: column; gap: 1rem; }
+.reception-calendar-nav-row, .reception-calendar-filter-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.85rem; }
+.reception-calendar-nav-group, .reception-calendar-view-group { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+.reception-calendar-nav-btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 0.85rem; border-radius: var(--reception-radius-sm); border: 1px solid var(--reception-border); background: #F8FAFC; color: var(--reception-text-main); font-size: 0.84rem; font-weight: 600; text-decoration: none; }
+.reception-calendar-nav-btn:hover { background: var(--reception-midnight-navy); color: var(--reception-white); border-color: var(--reception-midnight-navy); }
+.reception-nav-today { background: rgba(37, 99, 235, 0.1); color: var(--reception-electric-blue); border-color: rgba(37, 99, 235, 0.25); }
+.reception-calendar-period-label { font-size: 0.95rem; font-weight: 700; color: var(--reception-midnight-navy); padding: 0 0.5rem; display: inline-flex; align-items: center; gap: 0.45rem; }
+.reception-calendar-date-input { padding: 0.42rem 0.75rem; border-radius: var(--reception-radius-sm); border: 1px solid var(--reception-border); font-size: 0.84rem; font-family: 'Prompt', sans-serif; color: var(--reception-text-main); }
+.reception-view-switcher { display: inline-flex; background: #F1F5F9; padding: 0.22rem; border-radius: var(--reception-radius-sm); }
+.reception-view-btn { padding: 0.35rem 0.8rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; color: var(--reception-text-muted); text-decoration: none; }
+.reception-view-btn.active, .reception-view-btn:hover { background: var(--reception-midnight-navy); color: var(--reception-white); }
+.reception-calendar-filter-row { padding-top: 0.85rem; border-top: 1px solid #F1F5F9; }
+.reception-calendar-search-box { flex: 1; min-width: 240px; display: flex; align-items: center; gap: 0.5rem; background: #F8FAFC; border: 1px solid var(--reception-border); border-radius: var(--reception-radius-sm); padding: 0.45rem 0.85rem; }
+.reception-calendar-search-box input { border: none; background: transparent; width: 100%; font-size: 0.86rem; outline: none; }
+.reception-calendar-select-group { display: flex; align-items: center; gap: 0.45rem; font-size: 0.82rem; font-weight: 600; color: var(--reception-text-muted); }
+.reception-calendar-select { padding: 0.45rem 0.75rem; border-radius: var(--reception-radius-sm); border: 1px solid var(--reception-border); background: var(--reception-white); font-size: 0.84rem; color: var(--reception-text-main); }
+.reception-calendar-reset-btn { padding: 0.45rem 0.85rem; border-radius: var(--reception-radius-sm); border: 1px solid var(--reception-border); background: #F8FAFC; font-size: 0.82rem; font-weight: 600; color: var(--reception-text-muted); cursor: pointer; }
+.reception-calendar-reset-btn:hover { background: #E2E8F0; color: var(--reception-midnight-navy); }
 
-.reception-stat-value {
-    font-size: 1.35rem;
-    font-weight: 700;
-    color: var(--reception-midnight-navy);
-    margin: 0.15rem 0;
-}
-
-.reception-stat-info small {
-    font-size: 0.7rem;
-    color: var(--reception-text-muted);
-}
-
-/* 2. Calendar Toolbar & Filters */
-.reception-calendar-toolbar {
-    background: var(--reception-white);
-    border-radius: var(--reception-radius-lg);
-    padding: 1.15rem 1.35rem;
-    border: 1px solid var(--reception-border);
-    box-shadow: var(--reception-shadow-sm);
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.reception-calendar-nav-row,
-.reception-calendar-filter-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 0.85rem;
-}
-
-.reception-calendar-nav-group,
-.reception-calendar-view-group {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-}
-
-.reception-calendar-nav-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.45rem 0.85rem;
-    border-radius: var(--reception-radius-sm);
-    border: 1px solid var(--reception-border);
-    background: #F8FAFC;
-    color: var(--reception-text-main);
-    font-size: 0.84rem;
-    font-weight: 600;
-    text-decoration: none;
-    transition: all 0.15s ease;
-}
-
-.reception-calendar-nav-btn:hover {
-    background: var(--reception-midnight-navy);
-    color: var(--reception-white);
-    border-color: var(--reception-midnight-navy);
-}
-
-.reception-nav-today {
-    background: rgba(37, 99, 235, 0.1);
-    color: var(--reception-electric-blue);
-    border-color: rgba(37, 99, 235, 0.25);
-}
-
-.reception-calendar-period-label {
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: var(--reception-midnight-navy);
-    padding: 0 0.5rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-}
-
-.reception-calendar-date-input {
-    padding: 0.42rem 0.75rem;
-    border-radius: var(--reception-radius-sm);
-    border: 1px solid var(--reception-border);
-    font-size: 0.84rem;
-    font-family: 'Prompt', sans-serif;
-    color: var(--reception-text-main);
-}
-
-.reception-view-switcher {
-    display: inline-flex;
-    background: #F1F5F9;
-    padding: 0.22rem;
-    border-radius: var(--reception-radius-sm);
-}
-
-.reception-view-btn {
-    padding: 0.35rem 0.8rem;
-    border-radius: 6px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--reception-text-muted);
-    text-decoration: none;
-    transition: all 0.15s ease;
-}
-
-.reception-view-btn.active,
-.reception-view-btn:hover {
-    background: var(--reception-midnight-navy);
-    color: var(--reception-white);
-}
-
-.reception-calendar-filter-row {
-    padding-top: 0.85rem;
-    border-top: 1px solid #F1F5F9;
-}
-
-.reception-calendar-search-box {
-    flex: 1;
-    min-width: 240px;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: #F8FAFC;
-    border: 1px solid var(--reception-border);
-    border-radius: var(--reception-radius-sm);
-    padding: 0.45rem 0.85rem;
-}
-
-.reception-calendar-search-box input {
-    border: none;
-    background: transparent;
-    width: 100%;
-    font-size: 0.86rem;
-    outline: none;
-}
-
-.reception-calendar-select-group {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: var(--reception-text-muted);
-}
-
-.reception-calendar-select {
-    padding: 0.45rem 0.75rem;
-    border-radius: var(--reception-radius-sm);
-    border: 1px solid var(--reception-border);
-    background: var(--reception-white);
-    font-size: 0.84rem;
-    color: var(--reception-text-main);
-}
-
-.reception-calendar-reset-btn {
-    padding: 0.45rem 0.85rem;
-    border-radius: var(--reception-radius-sm);
-    border: 1px solid var(--reception-border);
-    background: #F8FAFC;
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: var(--reception-text-muted);
-    cursor: pointer;
-}
-
-.reception-calendar-reset-btn:hover {
-    background: #E2E8F0;
-    color: var(--reception-midnight-navy);
-}
-
-/* 3. Status Legend Bar */
-.reception-calendar-legend {
-    background: var(--reception-white);
-    border-radius: var(--reception-radius-md);
-    padding: 0.75rem 1.2rem;
-    border: 1px solid var(--reception-border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-}
-
-.reception-legend-title {
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: var(--reception-midnight-navy);
-}
-
-.reception-legend-items {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-
-.reception-legend-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: var(--reception-text-main);
-}
-
-.reception-legend-color {
-    width: 12px;
-    height: 12px;
-    border-radius: 4px;
-}
-
+.reception-calendar-legend { background: var(--reception-white); border-radius: var(--reception-radius-md); padding: 0.75rem 1.2rem; border: 1px solid var(--reception-border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; }
+.reception-legend-title { font-size: 0.82rem; font-weight: 600; color: var(--reception-midnight-navy); }
+.reception-legend-items { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; }
+.reception-legend-pill { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; font-weight: 500; color: var(--reception-text-main); }
+.reception-legend-color { width: 12px; height: 12px; border-radius: 4px; }
 .reception-color-available { background: var(--reception-success); }
 .reception-color-reserved { background: var(--reception-space-violet); }
 .reception-color-occupied { background: var(--reception-electric-blue); }
 .reception-color-dirty { background: var(--reception-warning); }
 .reception-color-maintenance { background: var(--reception-danger); }
 
-/* 4. Main Hotel Room Timeline Matrix */
-.reception-calendar-panel {
-    padding: 0;
-    overflow: hidden;
-}
-
-.reception-timeline-scroll-container {
-    width: 100%;
-    overflow-x: auto;
-    position: relative;
-}
-
-.reception-timeline-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    min-width: 920px;
-}
-
-.reception-timeline-room-col-header {
-    position: sticky;
-    left: 0;
-    z-index: 5;
-    width: 210px;
-    min-width: 210px;
-    background: var(--reception-midnight-navy);
-    color: var(--reception-white);
-    padding: 0.9rem 1rem;
-    border-right: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.reception-room-col-title {
-    display: flex;
-    flex-direction: column;
-}
-
-.reception-room-col-title span {
-    font-size: 0.9rem;
-    font-weight: 700;
-}
-
-.reception-room-col-title small {
-    font-size: 0.72rem;
-    color: var(--reception-cyber-cyan);
-    font-weight: 400;
-}
-
-.reception-timeline-date-header {
-    background: #0F172A;
-    color: var(--reception-white);
-    text-align: center;
-    padding: 0.65rem 0.4rem;
-    min-width: 115px;
-    border-right: 1px solid rgba(255, 255, 255, 0.08);
-    position: relative;
-}
-
-.reception-timeline-date-header.is-weekend {
-    background: #1E293B;
-}
-
-.reception-timeline-date-header.is-today {
-    background: linear-gradient(180deg, #1D4ED8 0%, #0F172A 100%);
-    border-bottom: 3px solid var(--reception-cyber-cyan);
-}
-
-.reception-date-dayname {
-    display: block;
-    font-size: 0.72rem;
-    color: rgba(255, 255, 255, 0.7);
-}
-
-.reception-date-daynum {
-    display: block;
-    font-size: 1.1rem;
-    font-weight: 700;
-}
-
-.reception-date-month {
-    font-size: 0.7rem;
-    color: rgba(255, 255, 255, 0.65);
-}
-
-.reception-today-marker-badge {
-    display: inline-block;
-    margin-top: 0.15rem;
-    padding: 0.08rem 0.45rem;
-    font-size: 0.65rem;
-    font-weight: 700;
-    border-radius: 999px;
-    background: var(--reception-cyber-cyan);
-    color: var(--reception-midnight-navy);
-}
-
-/* Floor Grouping Banner */
-.reception-timeline-floor-row td {
-    background: #F1F5F9;
-    padding: 0.55rem 1rem;
-    border-bottom: 1px solid var(--reception-border);
-}
-
-.reception-floor-banner {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.84rem;
-    color: var(--reception-midnight-navy);
-}
-
-/* Sticky Left Room Cell */
-.reception-timeline-room-cell {
-    position: sticky;
-    left: 0;
-    z-index: 3;
-    background: var(--reception-white);
-    border-right: 2px solid var(--reception-border);
-    border-bottom: 1px solid #F1F5F9;
-    padding: 0;
-}
-
-.reception-room-select-btn {
-    width: 100%;
-    text-align: left;
-    background: transparent;
-    border: none;
-    padding: 0.75rem 1rem;
-    cursor: pointer;
-    transition: background-color 0.15s ease;
-}
-
-.reception-room-select-btn:hover {
-    background: #F8FAFC;
-}
-
-.reception-room-cell-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 0.2rem;
-}
-
-.reception-room-cell-number {
-    font-weight: 700;
-    font-size: 0.92rem;
-    color: var(--reception-midnight-navy);
-}
-
-.reception-room-mini-dot {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-}
-
+.reception-calendar-panel { padding: 0; overflow: hidden; }
+.reception-timeline-scroll-container { width: 100%; overflow-x: auto; position: relative; }
+.reception-timeline-table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 920px; }
+.reception-timeline-room-col-header { position: sticky; left: 0; z-index: 5; width: 210px; min-width: 210px; background: var(--reception-midnight-navy); color: var(--reception-white); padding: 0.9rem 1rem; border-right: 1px solid rgba(255, 255, 255, 0.15); }
+.reception-room-col-title { display: flex; flex-direction: column; }
+.reception-room-col-title span { font-size: 0.9rem; font-weight: 700; }
+.reception-room-col-title small { font-size: 0.72rem; color: var(--reception-cyber-cyan); font-weight: 400; }
+.reception-timeline-date-header { background: #0F172A; color: var(--reception-white); text-align: center; padding: 0.65rem 0.4rem; min-width: 115px; border-right: 1px solid rgba(255, 255, 255, 0.08); position: relative; }
+.reception-timeline-date-header.is-weekend { background: #1E293B; }
+.reception-timeline-date-header.is-today { background: linear-gradient(180deg, #1D4ED8 0%, #0F172A 100%); border-bottom: 3px solid var(--reception-cyber-cyan); }
+.reception-date-dayname { display: block; font-size: 0.72rem; color: rgba(255, 255, 255, 0.7); }
+.reception-date-daynum { display: block; font-size: 1.1rem; font-weight: 700; }
+.reception-date-month { font-size: 0.7rem; color: rgba(255, 255, 255, 0.65); }
+.reception-today-marker-badge { display: inline-block; margin-top: 0.15rem; padding: 0.08rem 0.45rem; font-size: 0.65rem; font-weight: 700; border-radius: 999px; background: var(--reception-cyber-cyan); color: var(--reception-midnight-navy); }
+.reception-timeline-floor-row td { background: #F1F5F9; padding: 0.55rem 1rem; border-bottom: 1px solid var(--reception-border); }
+.reception-floor-banner { display: flex; align-items: center; gap: 0.5rem; font-size: 0.84rem; color: var(--reception-midnight-navy); }
+.reception-timeline-room-cell { position: sticky; left: 0; z-index: 3; background: var(--reception-white); border-right: 2px solid var(--reception-border); border-bottom: 1px solid #F1F5F9; padding: 0; }
+.reception-room-select-btn { width: 100%; text-align: left; background: transparent; border: none; padding: 0.75rem 1rem; cursor: pointer; }
+.reception-room-select-btn:hover { background: #F8FAFC; }
+.reception-room-cell-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.2rem; }
+.reception-room-cell-number { font-weight: 700; font-size: 0.92rem; color: var(--reception-midnight-navy); }
+.reception-room-mini-dot { width: 9px; height: 9px; border-radius: 50%; }
 .reception-dot-available { background: var(--reception-success); }
 .reception-dot-occupied { background: var(--reception-electric-blue); }
 .reception-dot-dirty { background: var(--reception-warning); }
 .reception-dot-maintenance { background: var(--reception-danger); }
-
-.reception-room-cell-meta {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 0.74rem;
-    color: var(--reception-text-muted);
-}
-
+.reception-room-cell-meta { display: flex; align-items: center; justify-content: space-between; font-size: 0.74rem; color: var(--reception-text-muted); }
 .reception-status-text-available { color: var(--reception-success); font-weight: 600; }
 .reception-status-text-occupied { color: var(--reception-electric-blue); font-weight: 600; }
 .reception-status-text-dirty { color: #D97706; font-weight: 600; }
 .reception-status-text-maintenance { color: var(--reception-danger); font-weight: 600; }
-
-/* Timeline Slots & Booking Bars */
-.reception-timeline-slot-cell {
-    border-right: 1px dashed #E2E8F0;
-    border-bottom: 1px solid #F1F5F9;
-    padding: 0.35rem;
-    vertical-align: middle;
-    position: relative;
-    height: 68px;
-}
-
-.reception-timeline-slot-cell.is-today-col {
-    background: rgba(0, 229, 255, 0.04);
-    border-left: 2px solid rgba(0, 229, 255, 0.45);
-    border-right: 2px solid rgba(0, 229, 255, 0.45);
-}
-
-.reception-empty-slot-btn {
-    width: 100%;
-    height: 100%;
-    min-height: 52px;
-    border: 1px dashed transparent;
-    border-radius: 8px;
-    background: transparent;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.15s ease;
-}
-
-.reception-empty-slot-btn:hover {
-    border-color: var(--reception-electric-blue);
-    background: rgba(37, 99, 235, 0.04);
-}
-
-.reception-slot-available-label {
-    font-size: 0.7rem;
-    color: #94A3B8;
-    opacity: 0;
-    transition: opacity 0.15s ease;
-}
-
-.reception-empty-slot-btn:hover .reception-slot-available-label {
-    opacity: 1;
-}
-
-.reception-slot-status-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    padding: 0.25rem 0.55rem;
-    border-radius: 6px;
-    font-size: 0.72rem;
-    font-weight: 600;
-}
-
+.reception-timeline-slot-cell { border-right: 1px dashed #E2E8F0; border-bottom: 1px solid #F1F5F9; padding: 0.35rem; vertical-align: middle; position: relative; height: 68px; }
+.reception-timeline-slot-cell.is-today-col { background: rgba(0, 229, 255, 0.04); border-left: 2px solid rgba(0, 229, 255, 0.45); border-right: 2px solid rgba(0, 229, 255, 0.45); }
+.reception-empty-slot-btn { width: 100%; height: 100%; min-height: 52px; border: 1px dashed transparent; border-radius: 8px; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.reception-empty-slot-btn:hover { border-color: var(--reception-electric-blue); background: rgba(37, 99, 235, 0.04); }
+.reception-slot-available-label { font-size: 0.7rem; color: #94A3B8; opacity: 0; }
+.reception-empty-slot-btn:hover .reception-slot-available-label { opacity: 1; }
+.reception-slot-status-tag { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.25rem 0.55rem; border-radius: 6px; font-size: 0.72rem; font-weight: 600; }
 .tag-maintenance { background: rgba(239, 68, 68, 0.12); color: var(--reception-danger); }
 .tag-dirty { background: rgba(245, 158, 11, 0.15); color: #D97706; }
 .tag-occupied { background: rgba(37, 99, 235, 0.12); color: var(--reception-electric-blue); }
+.reception-booking-bar { width: 100%; text-align: left; border: none; border-radius: 10px; padding: 0.45rem 0.7rem; color: var(--reception-white); cursor: pointer; box-shadow: 0 4px 10px rgba(7, 13, 30, 0.12); }
+.reception-booking-bar-reserved { background: linear-gradient(135deg, var(--reception-space-violet) 0%, #6D28D9 100%); }
+.reception-booking-bar-occupied { background: linear-gradient(135deg, var(--reception-electric-blue) 0%, #1E40AF 100%); }
+.reception-booking-bar-head { display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; font-size: 0.72rem; }
+.reception-booking-bar-code { font-family: monospace; font-weight: 700; background: rgba(255, 255, 255, 0.2); padding: 0.05rem 0.4rem; border-radius: 4px; }
+.reception-booking-bar-guest { font-size: 0.8rem; font-weight: 600; margin: 0.15rem 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.reception-booking-bar-dates { font-size: 0.68rem; opacity: 0.88; }
 
-/* Booking Bar on Timeline */
-.reception-booking-bar {
-    width: 100%;
-    text-align: left;
-    border: none;
-    border-radius: 10px;
-    padding: 0.45rem 0.7rem;
-    color: var(--reception-white);
-    cursor: pointer;
-    box-shadow: 0 4px 10px rgba(7, 13, 30, 0.12);
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-    animation: receptionBarSlideIn 0.25s ease both;
-}
+/* Side Drawer */
+.reception-info-backdrop { position: fixed; inset: 0; background: rgba(7, 13, 30, 0.55); z-index: 1040; opacity: 0; visibility: hidden; transition: opacity 0.25s ease; }
+.reception-info-backdrop.is-open { opacity: 1; visibility: visible; }
+.reception-info-drawer { position: fixed; top: 0; right: 0; width: 400px; max-width: 92vw; height: 100vh; background: var(--reception-white); z-index: 1050; box-shadow: -8px 0 30px rgba(7, 13, 30, 0.2); display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1); }
+.reception-info-drawer.is-open { transform: translateX(0); }
+.reception-drawer-header { background: var(--reception-midnight-navy); color: var(--reception-white); padding: 1.25rem 1.4rem; display: flex; align-items: center; justify-content: space-between; }
+.reception-drawer-subtitle { font-size: 0.7rem; letter-spacing: 0.06em; color: var(--reception-cyber-cyan); font-weight: 600; }
+.reception-drawer-title { margin: 0.15rem 0 0 0; font-size: 1.25rem; font-weight: 700; }
+.reception-drawer-close { background: rgba(255, 255, 255, 0.1); border: none; color: var(--reception-white); width: 34px; height: 34px; border-radius: 8px; cursor: pointer; }
+.reception-drawer-body { flex: 1; overflow-y: auto; padding: 1.35rem; display: flex; flex-direction: column; gap: 1.25rem; }
+.reception-drawer-section-title { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.75rem; color: var(--reception-midnight-navy); display: flex; align-items: center; gap: 0.45rem; }
+.reception-drawer-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; background: #F8FAFC; padding: 1rem; border-radius: var(--reception-radius-md); border: 1px solid var(--reception-border); }
+.reception-drawer-field { display: flex; flex-direction: column; }
+.reception-field-full { grid-column: span 2; }
+.reception-drawer-field span { font-size: 0.74rem; color: var(--reception-text-muted); }
+.reception-drawer-field strong { font-size: 0.88rem; color: var(--reception-midnight-navy); }
+.reception-drawer-footer { padding: 1.15rem 1.35rem; border-top: 1px solid var(--reception-border); display: flex; flex-direction: column; gap: 0.55rem; }
 
-.reception-booking-bar:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(7, 13, 30, 0.2);
-}
-
-.reception-booking-bar-reserved {
-    background: linear-gradient(135deg, var(--reception-space-violet) 0%, #6D28D9 100%);
-}
-
-.reception-booking-bar-occupied {
-    background: linear-gradient(135deg, var(--reception-electric-blue) 0%, #1E40AF 100%);
-}
-
-.reception-booking-bar-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.4rem;
-    font-size: 0.72rem;
-}
-
-.reception-booking-bar-code {
-    font-family: monospace;
-    font-weight: 700;
-    background: rgba(255, 255, 255, 0.2);
-    padding: 0.05rem 0.4rem;
-    border-radius: 4px;
-}
-
-.reception-booking-bar-tag {
-    font-size: 0.66rem;
-    opacity: 0.9;
-}
-
-.reception-booking-bar-guest {
-    font-size: 0.8rem;
-    font-weight: 600;
-    margin: 0.15rem 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.reception-booking-bar-dates {
-    font-size: 0.68rem;
-    opacity: 0.88;
-}
-
-@keyframes receptionBarSlideIn {
-    from { opacity: 0; transform: translateX(-6px); }
-    to { opacity: 1; transform: translateX(0); }
-}
-
-/* 5. Room Information Side Drawer (Modal Panel) */
-.reception-info-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(7, 13, 30, 0.55);
-    z-index: 1040;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.25s ease, visibility 0.25s ease;
-}
-
-.reception-info-backdrop.is-open {
-    opacity: 1;
-    visibility: visible;
-}
-
-.reception-info-drawer {
-    position: fixed;
-    top: 0;
-    right: 0;
-    width: 400px;
-    max-width: 92vw;
-    height: 100vh;
-    background: var(--reception-white);
-    z-index: 1050;
-    box-shadow: -8px 0 30px rgba(7, 13, 30, 0.2);
-    display: flex;
-    flex-direction: column;
-    transform: translateX(100%);
-    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-    font-family: 'Prompt', sans-serif;
-}
-
-.reception-info-drawer.is-open {
-    transform: translateX(0);
-}
-
-.reception-drawer-header {
-    background: var(--reception-midnight-navy);
-    color: var(--reception-white);
-    padding: 1.25rem 1.4rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.reception-drawer-subtitle {
-    font-size: 0.7rem;
-    letter-spacing: 0.06em;
-    color: var(--reception-cyber-cyan);
-    font-weight: 600;
-}
-
-.reception-drawer-title {
-    margin: 0.15rem 0 0 0;
-    font-size: 1.25rem;
-    font-weight: 700;
-}
-
-.reception-drawer-close {
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
-    color: var(--reception-white);
-    width: 34px;
-    height: 34px;
-    border-radius: 8px;
-    cursor: pointer;
-}
-
-.reception-drawer-body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 1.35rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-}
-
-.reception-drawer-section-title {
-    font-size: 0.9rem;
-    font-weight: 700;
-    margin-bottom: 0.75rem;
-    color: var(--reception-midnight-navy);
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-}
-
-.reception-drawer-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.75rem;
-    background: #F8FAFC;
-    padding: 1rem;
-    border-radius: var(--reception-radius-md);
-    border: 1px solid var(--reception-border);
-}
-
-.reception-drawer-field {
-    display: flex;
-    flex-direction: column;
-}
-
-.reception-field-full {
-    grid-column: span 2;
-}
-
-.reception-drawer-field span {
-    font-size: 0.74rem;
-    color: var(--reception-text-muted);
-}
-
-.reception-drawer-field strong {
-    font-size: 0.88rem;
-    color: var(--reception-midnight-navy);
-}
-
-.reception-drawer-footer {
-    padding: 1.15rem 1.35rem;
-    border-top: 1px solid var(--reception-border);
-    display: flex;
-    flex-direction: column;
-    gap: 0.55rem;
-}
-
-/* Responsive Media Queries for Calendar */
-@media (max-width: 1199.98px) {
-    .reception-calendar-summary-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-@media (max-width: 767.98px) {
-    .reception-calendar-summary-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .reception-timeline-room-col-header {
-        width: 150px;
-        min-width: 150px;
-    }
-}
 /* ==========================================================================
-   PART 3: BOOKING MANAGEMENT, QR SCANNER & BOOKING DETAILS MODAL
-   Append directly to the end of wwwroot/css/reception.css
+   7. BOOKING MANAGEMENT, CHECK-IN, CHECK-OUT & HOUSEKEEPING
    ========================================================================== */
-
-/* Alert Banners */
-.reception-booking-alert {
-    display: flex;
-    align-items: center;
-    gap: 0.65rem;
-    padding: 0.9rem 1.2rem;
-    border-radius: var(--reception-radius-md);
-    font-weight: 600;
-    font-size: 0.9rem;
-}
-
-.reception-alert-success {
-    background: rgba(22, 163, 74, 0.12);
-    color: var(--reception-success);
-    border: 1px solid rgba(22, 163, 74, 0.3);
-}
-
-.reception-alert-danger {
-    background: rgba(239, 68, 68, 0.12);
-    color: var(--reception-danger);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-}
-
-/* QR Trigger Button in Header */
-.reception-qr-trigger-btn {
-    background: linear-gradient(135deg, var(--reception-cyber-cyan) 0%, var(--reception-electric-blue) 100%);
-    color: var(--reception-midnight-navy);
-    font-weight: 700;
-    box-shadow: 0 4px 15px rgba(0, 229, 255, 0.3);
-}
-
-.reception-qr-trigger-btn:hover {
-    color: var(--reception-white);
-    box-shadow: 0 6px 20px rgba(0, 229, 255, 0.45);
-}
-
-/* 1. Booking Summary Cards (6 Columns) */
 .reception-booking-summary-grid {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
@@ -1617,10 +1014,7 @@
     transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
-.reception-booking-stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--reception-shadow-md);
-}
+.reception-booking-stat-card:hover { transform: translateY(-2px); box-shadow: var(--reception-shadow-md); }
 
 .reception-booking-stat-card.is-total { border-left-color: var(--reception-midnight-navy); }
 .reception-booking-stat-card.is-pending { border-left-color: var(--reception-warning); }
@@ -1629,17 +1023,7 @@
 .reception-booking-stat-card.is-checkedout { border-left-color: var(--reception-electric-blue); }
 .reception-booking-stat-card.is-cancelled { border-left-color: var(--reception-danger); }
 
-.reception-booking-stat-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.1rem;
-    flex-shrink: 0;
-}
-
+.reception-booking-stat-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
 .is-total .reception-booking-stat-icon { background: rgba(7, 13, 30, 0.08); color: var(--reception-midnight-navy); }
 .is-pending .reception-booking-stat-icon { background: rgba(245, 158, 11, 0.14); color: var(--reception-warning); }
 .is-confirmed .reception-booking-stat-icon { background: rgba(139, 92, 246, 0.14); color: var(--reception-space-violet); }
@@ -1647,113 +1031,51 @@
 .is-checkedout .reception-booking-stat-icon { background: rgba(37, 99, 235, 0.14); color: var(--reception-electric-blue); }
 .is-cancelled .reception-booking-stat-icon { background: rgba(239, 68, 68, 0.14); color: var(--reception-danger); }
 
-.reception-booking-stat-content {
-    display: flex;
-    flex-direction: column;
-    line-height: 1.2;
-}
+.reception-booking-stat-content { display: flex; flex-direction: column; line-height: 1.2; }
+.reception-booking-stat-content span { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; color: var(--reception-text-muted); }
+.reception-booking-stat-content strong { font-size: 1.4rem; font-weight: 700; color: var(--reception-midnight-navy); margin: 0.15rem 0; }
 
-.reception-booking-stat-content span {
-    font-size: 0.72rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    color: var(--reception-text-muted);
-}
-
-.reception-booking-stat-content strong {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: var(--reception-midnight-navy);
-    margin: 0.15rem 0;
-}
-
-.reception-booking-stat-content small {
-    font-size: 0.7rem;
-    color: var(--reception-text-muted);
-}
-
-/* 2. Search & Advanced Filter Panel */
-.reception-booking-filter-panel {
+/* Filter Bars */
+.reception-booking-filter-panel,
+.reception-checkout-filter-card,
+.reception-hk-filter-card {
     background: var(--reception-white);
     border-radius: var(--reception-radius-lg);
-    padding: 1.25rem 1.35rem;
+    padding: 1.2rem 1.35rem;
     border: 1px solid var(--reception-border);
     box-shadow: var(--reception-shadow-sm);
 }
 
-.reception-booking-search-row {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-    flex-wrap: wrap;
-}
+.reception-booking-search-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.reception-booking-search-input-wrap { flex: 1; min-width: 260px; display: flex; align-items: center; gap: 0.6rem; background: #F8FAFC; border: 1px solid var(--reception-border); border-radius: var(--reception-radius-sm); padding: 0.55rem 0.9rem; }
+.reception-booking-search-input-wrap:focus-within { border-color: var(--reception-electric-blue); background: var(--reception-white); }
+.reception-booking-search-input-wrap input { border: none; background: transparent; width: 100%; font-size: 0.9rem; outline: none; }
+.reception-booking-search-actions { display: flex; align-items: center; gap: 0.5rem; }
 
-.reception-booking-search-input-wrap {
-    flex: 1;
-    min-width: 260px;
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    background: #F8FAFC;
-    border: 1px solid var(--reception-border);
+.reception-booking-advanced-filters { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.75rem; padding-top: 0.9rem; border-top: 1px solid #F1F5F9; }
+.reception-filter-field, .reception-checkout-field { display: flex; flex-direction: column; gap: 0.35rem; }
+.reception-filter-field label, .reception-checkout-field label { font-size: 0.76rem; font-weight: 600; color: var(--reception-text-muted); }
+
+.reception-filter-control {
+    padding: 0.48rem 0.75rem;
     border-radius: var(--reception-radius-sm);
-    padding: 0.55rem 0.9rem;
+    border: 1px solid var(--reception-border);
+    background: #F8FAFC;
+    font-size: 0.84rem;
+    color: var(--reception-text-main);
+    font-family: 'Prompt', sans-serif;
+    outline: none;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
-.reception-booking-search-input-wrap:focus-within {
+.reception-filter-control:focus {
     border-color: var(--reception-electric-blue);
     background: var(--reception-white);
 }
 
-.reception-booking-search-input-wrap input {
-    border: none;
-    background: transparent;
-    width: 100%;
-    font-size: 0.9rem;
-    outline: none;
-}
-
-.reception-booking-search-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.reception-booking-advanced-filters {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 0.75rem;
-    padding-top: 0.9rem;
-    border-top: 1px solid #F1F5F9;
-}
-
-.reception-filter-field {
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-}
-
-.reception-filter-field label {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--reception-text-muted);
-}
-
-.reception-filter-control {
-    padding: 0.45rem 0.65rem;
-    border-radius: var(--reception-radius-sm);
-    border: 1px solid var(--reception-border);
-    background: #F8FAFC;
-    font-size: 0.82rem;
-    color: var(--reception-text-main);
-    font-family: 'Prompt', sans-serif;
-}
-
-/* 3. Booking Table & Status Badges */
 .reception-booking-count-badge {
     background: #F1F5F9;
-    padding: 0.35rem 0.8rem;
+    padding: 0.35rem 0.85rem;
     border-radius: 999px;
     font-size: 0.82rem;
     color: var(--reception-midnight-navy);
@@ -1764,82 +1086,116 @@
     font-weight: 700;
 }
 
-/* Payment Status Badges: Pending (ส้ม), Approved (เขียว), Rejected (แดง) */
-.reception-pay-badge-pending {
-    background: rgba(245, 158, 11, 0.15);
-    color: #D97706;
-    border: 1px solid rgba(245, 158, 11, 0.3);
-}
-
-.reception-pay-badge-approved {
-    background: rgba(22, 163, 74, 0.14);
-    color: var(--reception-success);
-    border: 1px solid rgba(22, 163, 74, 0.3);
-}
-
-.reception-pay-badge-rejected {
-    background: rgba(239, 68, 68, 0.14);
-    color: var(--reception-danger);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-}
-
-/* Booking Status Badges */
-.reception-bstatus-pending { background: #FEF3C7; color: #B45309; }
-.reception-bstatus-confirmed { background: rgba(139, 92, 246, 0.14); color: var(--reception-space-violet); }
-.reception-bstatus-checkedin { background: rgba(22, 163, 74, 0.14); color: var(--reception-success); }
-.reception-bstatus-checkedout { background: rgba(37, 99, 235, 0.14); color: var(--reception-electric-blue); }
-.reception-bstatus-cancelled { background: rgba(239, 68, 68, 0.14); color: var(--reception-danger); }
-
-.reception-btn-qr-mini {
-    background: rgba(0, 229, 255, 0.14);
-    color: #0369A1;
-    border: 1px solid rgba(0, 229, 255, 0.35);
-}
-
-.reception-btn-qr-mini:hover {
-    background: var(--reception-midnight-navy);
-    color: var(--reception-cyber-cyan);
-}
-
 /* Pagination */
-.reception-booking-pagination-bar {
+.reception-booking-pagination-bar { display: flex; align-items: center; justify-content: space-between; padding-top: 1rem; margin-top: 0.75rem; border-top: 1px solid var(--reception-border); flex-wrap: wrap; gap: 0.75rem; }
+.reception-pagination-info { font-size: 0.82rem; color: var(--reception-text-muted); }
+.reception-pagination-controls { display: flex; gap: 0.35rem; }
+.reception-page-btn { padding: 0.35rem 0.75rem; border-radius: 6px; border: 1px solid var(--reception-border); background: var(--reception-white); font-size: 0.8rem; font-weight: 600; cursor: pointer; }
+.reception-page-btn.active { background: var(--reception-midnight-navy); color: var(--reception-white); border-color: var(--reception-midnight-navy); }
+
+/* Check-in Page Header & Search */
+.reception-checkin-header {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-top: 1rem;
-    margin-top: 0.75rem;
-    border-top: 1px solid var(--reception-border);
+    flex-direction: row;
     flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.reception-checkin-waiting-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(0, 229, 255, 0.14);
+    border: 1px solid rgba(0, 229, 255, 0.35);
+    color: var(--reception-cyber-cyan);
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    font-size: 0.86rem;
+}
+
+.reception-checkin-header-search {
+    width: 100%;
+    padding-top: 1.1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.reception-checkin-quick-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
     gap: 0.75rem;
 }
 
-.reception-pagination-info {
-    font-size: 0.82rem;
-    color: var(--reception-text-muted);
-}
-
-.reception-pagination-controls {
+.reception-checkin-input-box {
     display: flex;
-    gap: 0.35rem;
+    align-items: center;
+    gap: 0.6rem;
+    background: rgba(255, 255, 255, 0.09);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: var(--reception-radius-sm);
+    padding: 0.52rem 0.9rem;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
-.reception-page-btn {
-    padding: 0.32rem 0.7rem;
-    border-radius: 6px;
-    border: 1px solid var(--reception-border);
+.reception-checkin-input-box:focus-within {
+    border-color: var(--reception-cyber-cyan);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.reception-checkin-input-box i { color: var(--reception-cyber-cyan); font-size: 0.9rem; }
+.reception-checkin-input-box input { background: transparent; border: none; color: var(--reception-white); width: 100%; font-size: 0.88rem; outline: none; }
+.reception-checkin-input-box input::placeholder { color: rgba(255, 255, 255, 0.6); }
+.reception-checkin-search-btns { display: flex; align-items: center; gap: 0.5rem; }
+
+.reception-checkin-filter-bar {
     background: var(--reception-white);
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
+    border-radius: var(--reception-radius-md);
+    padding: 0.95rem 1.25rem;
+    border: 1px solid var(--reception-border);
+    box-shadow: var(--reception-shadow-sm);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.85rem;
 }
 
-.reception-page-btn.active {
-    background: var(--reception-midnight-navy);
-    color: var(--reception-white);
-    border-color: var(--reception-midnight-navy);
-}
+.reception-checkin-filter-left { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; }
+.reception-filter-bar-title { font-size: 0.85rem; font-weight: 700; color: var(--reception-midnight-navy); }
+.reception-checkin-select-wrap { display: flex; align-items: center; gap: 0.45rem; font-size: 0.82rem; font-weight: 600; color: var(--reception-text-muted); }
 
-/* 4. Modals (QR Scanner & Booking Details) */
+/* Check-in Empty State */
+.reception-checkin-empty-state { text-align: center; padding: 3.25rem 1.5rem; }
+.reception-empty-key-icon { width: 72px; height: 72px; border-radius: 50%; background: rgba(37, 99, 235, 0.1); color: var(--reception-electric-blue); font-size: 1.85rem; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1rem; }
+.reception-checkin-empty-state h4 { font-size: 1.2rem; font-weight: 700; color: var(--reception-midnight-navy); margin-bottom: 0.5rem; }
+.reception-empty-actions { display: inline-flex; gap: 0.65rem; flex-wrap: wrap; justify-content: center; margin-top: 0.75rem; }
+
+/* Check-out & Housekeeping Extras */
+.reception-checkout-title-icon { color: #F97316; }
+.reception-checkout-pending-pill { display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(249, 115, 22, 0.16); border: 1px solid rgba(249, 115, 22, 0.4); color: #FDBA74; padding: 0.5rem 1rem; border-radius: 999px; font-size: 0.88rem; }
+.reception-checkout-filter-grid { display: grid; grid-template-columns: repeat(4, 1fr) auto; gap: 0.85rem; align-items: end; }
+.reception-checkout-filter-actions { display: flex; align-items: center; gap: 0.5rem; }
+.reception-checkout-tabs-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; padding-bottom: 1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--reception-border); }
+.reception-checkout-tabs { display: inline-flex; background: #F1F5F9; padding: 0.3rem; border-radius: var(--reception-radius-md); gap: 0.3rem; }
+.reception-checkout-tab-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.55rem 1.1rem; border-radius: 9px; border: none; background: transparent; color: var(--reception-text-muted); font-size: 0.86rem; font-weight: 600; cursor: pointer; }
+.reception-checkout-tab-btn.active { background: var(--reception-midnight-navy); color: var(--reception-white); box-shadow: 0 4px 10px rgba(7, 13, 30, 0.15); }
+.reception-tab-counter { background: rgba(249, 115, 22, 0.2); color: #EA580C; padding: 0.1rem 0.5rem; border-radius: 999px; font-size: 0.74rem; font-weight: 700; }
+.reception-checkout-tab-btn.active .reception-tab-counter { background: var(--reception-cyber-cyan); color: var(--reception-midnight-navy); }
+.reception-checkout-tab-pane { display: none; }
+.reception-checkout-tab-pane.active { display: block; animation: receptionFadeUp 0.25s ease both; }
+
+.reception-hk-title-icon { color: var(--reception-warning); }
+.reception-hk-total-pill { display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(0, 229, 255, 0.14); border: 1px solid rgba(0, 229, 255, 0.35); color: var(--reception-cyber-cyan); padding: 0.5rem 1rem; border-radius: 999px; font-size: 0.88rem; }
+.reception-hk-filter-grid { display: grid; grid-template-columns: 1fr 1.3fr 1fr 1fr auto; gap: 0.85rem; align-items: end; }
+.reception-hk-booking-ref { font-family: monospace; font-weight: 700; color: var(--reception-electric-blue); background: rgba(37, 99, 235, 0.08); padding: 0.2rem 0.55rem; border-radius: 6px; font-size: 0.82rem; }
+.reception-hk-note-cell { max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.85rem; }
+.reception-hk-staff-chip { display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 600; font-size: 0.83rem; color: var(--reception-midnight-navy); }
+.reception-hk-unassigned { font-size: 0.8rem; color: var(--reception-text-muted); font-style: italic; }
+
+/* ==========================================================================
+   8. MODALS (QR SCANNER, BOOKING DETAILS & CHECK-IN VERIFICATION)
+   ========================================================================== */
 .reception-modal-overlay {
     position: fixed;
     inset: 0;
@@ -1880,6 +1236,8 @@
 
 .reception-qr-modal-lg { max-width: 920px; }
 .reception-details-modal-xl { max-width: 1040px; }
+.reception-checkin-modal-md { max-width: 640px; }
+.reception-pf-modal-sm { max-width: 480px; }
 
 .reception-modal-header {
     background: var(--reception-midnight-navy);
@@ -1901,6 +1259,9 @@
     margin: 0.15rem 0 0 0;
     font-size: 1.2rem;
     font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .reception-modal-close {
@@ -1911,6 +1272,11 @@
     background: rgba(255, 255, 255, 0.12);
     color: var(--reception-white);
     cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.reception-modal-close:hover {
+    background: rgba(255, 255, 255, 0.22);
 }
 
 .reception-modal-body {
@@ -1929,594 +1295,7 @@
     gap: 0.65rem;
 }
 
-/* QR Scanner Layout */
-.reception-qr-layout {
-    display: grid;
-    grid-template-columns: 1.15fr 1fr;
-    gap: 1.5rem;
-}
-
-.reception-qr-viewport-wrap {
-    position: relative;
-    background: #070D1E;
-    border-radius: var(--reception-radius-md);
-    min-height: 310px;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.reception-qr-viewport {
-    width: 100%;
-    height: 100%;
-}
-
-.reception-qr-camera-placeholder {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 1.5rem;
-    text-align: center;
-    color: rgba(255, 255, 255, 0.75);
-}
-
-.reception-qr-camera-placeholder i {
-    font-size: 2.5rem;
-    color: var(--reception-cyber-cyan);
-    margin-bottom: 0.75rem;
-}
-
-.reception-qr-scan-frame {
-    position: absolute;
-    width: 210px;
-    height: 210px;
-    pointer-events: none;
-    z-index: 2;
-}
-
-.reception-qr-corner {
-    position: absolute;
-    width: 24px;
-    height: 24px;
-    border-color: var(--reception-cyber-cyan);
-    border-style: solid;
-}
-
-.reception-qr-corner.tl { top: 0; left: 0; border-width: 3px 0 0 3px; }
-.reception-qr-corner.tr { top: 0; right: 0; border-width: 3px 3px 0 0; }
-.reception-qr-corner.bl { bottom: 0; left: 0; border-width: 0 0 3px 3px; }
-.reception-qr-corner.br { bottom: 0; right: 0; border-width: 0 3px 3px 0; }
-
-.reception-qr-laser {
-    position: absolute;
-    left: 8px;
-    right: 8px;
-    height: 2px;
-    background: var(--reception-cyber-cyan);
-    box-shadow: 0 0 10px var(--reception-cyber-cyan);
-    animation: receptionLaserScan 2s infinite ease-in-out;
-}
-
-@keyframes receptionLaserScan {
-    0%, 100% { top: 12px; }
-    50% { top: calc(100% - 14px); }
-}
-
-.reception-qr-camera-controls {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    margin-top: 0.9rem;
-    flex-wrap: wrap;
-}
-
-.reception-btn-outline-dark {
-    border: 1px solid var(--reception-border);
-    background: var(--reception-white);
-    color: var(--reception-text-main);
-}
-
-.reception-qr-security-note {
-    display: flex;
-    gap: 0.75rem;
-    background: rgba(37, 99, 235, 0.08);
-    border: 1px solid rgba(37, 99, 235, 0.2);
-    padding: 0.9rem 1rem;
-    border-radius: var(--reception-radius-md);
-    font-size: 0.8rem;
-    margin-bottom: 1.1rem;
-}
-
-.reception-qr-security-note i {
-    font-size: 1.25rem;
-    color: var(--reception-electric-blue);
-    margin-top: 0.15rem;
-}
-
-.reception-qr-security-note p {
-    margin: 0.2rem 0 0 0;
-    color: var(--reception-text-muted);
-}
-
-.reception-qr-manual-box label {
-    display: block;
-    font-size: 0.84rem;
-    font-weight: 600;
-    margin-bottom: 0.45rem;
-}
-
-.reception-qr-manual-input-group {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.reception-qr-manual-input-group input {
-    flex: 1;
-    padding: 0.55rem 0.85rem;
-    border-radius: var(--reception-radius-sm);
-    border: 1px solid var(--reception-border);
-    font-size: 0.9rem;
-}
-
-.reception-qr-status-box {
-    margin-top: 1rem;
-    padding: 0.9rem 1rem;
-    border-radius: var(--reception-radius-md);
-    font-size: 0.85rem;
-}
-
-/* Booking Details Grid & Lifecycle Timeline */
-.reception-details-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.1rem;
-    margin-bottom: 1.35rem;
-}
-
-.reception-details-card {
-    background: #F8FAFC;
-    border: 1px solid var(--reception-border);
-    border-radius: var(--reception-radius-md);
-    padding: 1.1rem 1.2rem;
-}
-
-.reception-details-card-title {
-    font-size: 0.92rem;
-    font-weight: 700;
-    color: var(--reception-midnight-navy);
-    margin: 0 0 0.85rem 0;
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-}
-
-.reception-details-kv-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.reception-details-kv {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 0.84rem;
-    border-bottom: 1px dashed #E2E8F0;
-    padding-bottom: 0.35rem;
-}
-
-.reception-details-kv span:first-child {
-    color: var(--reception-text-muted);
-}
-
-.reception-details-kv.is-highlight strong {
-    font-size: 1.05rem;
-    color: var(--reception-electric-blue);
-}
-
-.reception-details-qr-box {
-    margin-top: 0.75rem;
-    display: flex;
-    align-items: center;
-    gap: 0.85rem;
-    background: var(--reception-white);
-    padding: 0.65rem;
-    border-radius: var(--reception-radius-sm);
-    border: 1px solid var(--reception-border);
-}
-
-.reception-details-qr-img {
-    width: 72px;
-    height: 72px;
-    border-radius: 6px;
-}
-
-.reception-details-timeline-section {
-    background: var(--reception-white);
-    border: 1px solid var(--reception-border);
-    border-radius: var(--reception-radius-md);
-    padding: 1.15rem 1.25rem;
-}
-
-.reception-lifecycle-timeline {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 0.6rem;
-}
-
-.reception-timeline-step {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    padding: 0.65rem 0.4rem;
-    border-radius: var(--reception-radius-sm);
-    background: #F8FAFC;
-    border: 1px solid var(--reception-border);
-}
-
-.reception-timeline-step.is-done {
-    background: rgba(22, 163, 74, 0.08);
-    border-color: rgba(22, 163, 74, 0.35);
-}
-
-.reception-step-dot {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    background: #E2E8F0;
-    color: var(--reception-text-muted);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 0.4rem;
-    font-size: 0.85rem;
-}
-
-.reception-timeline-step.is-done .reception-step-dot {
-    background: var(--reception-success);
-    color: var(--reception-white);
-}
-
-.reception-step-text strong {
-    display: block;
-    font-size: 0.75rem;
-    color: var(--reception-midnight-navy);
-}
-
-.reception-step-text small {
-    font-size: 0.7rem;
-    color: var(--reception-text-muted);
-}
-
-.reception-details-footer {
-    justify-content: space-between;
-    flex-wrap: wrap;
-}
-
-.reception-sod-notice {
-    font-size: 0.78rem;
-    color: var(--reception-text-muted);
-}
-
-.reception-details-footer-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-}
-
-/* Responsive Breakpoints */
-@media (max-width: 1199.98px) {
-    .reception-booking-summary-grid,
-    .reception-booking-advanced-filters {
-        grid-template-columns: repeat(3, 1fr);
-    }
-
-    .reception-lifecycle-timeline {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-@media (max-width: 767.98px) {
-    .reception-booking-summary-grid,
-    .reception-booking-advanced-filters,
-    .reception-details-grid,
-    .reception-qr-layout {
-        grid-template-columns: 1fr;
-    }
-
-    .reception-lifecycle-timeline {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    /* Mobile Card View for Booking Table */
-    .reception-booking-table thead {
-        display: none;
-    }
-
-    .reception-booking-table tbody tr {
-        display: block;
-        border: 1px solid var(--reception-border);
-        border-radius: var(--reception-radius-md);
-        margin-bottom: 0.85rem;
-        padding: 0.75rem;
-        background: var(--reception-white);
-    }
-
-    .reception-booking-table tbody td {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.45rem 0.25rem;
-        border-bottom: 1px dashed #F1F5F9;
-    }
-
-    .reception-booking-table tbody td::before {
-        content: attr(data-label);
-        font-weight: 600;
-        font-size: 0.76rem;
-        color: var(--reception-text-muted);
-    }
-
-    .reception-modal-overlay {
-        padding: 0;
-    }
-
-    .reception-modal-dialog {
-        max-height: 100vh;
-        height: 100vh;
-        border-radius: 0;
-    }
-}
-/* ==========================================================================
-   PART 4: GUEST CHECK-IN PAGE STYLES (Views/Reception/CheckIn.cshtml)
-   Append directly to the end of wwwroot/css/Reception.css
-   ========================================================================== */
-
-/* Alert Notifications */
-.reception-checkin-alert {
-    display: flex;
-    align-items: center;
-    gap: 0.85rem;
-    padding: 1rem 1.25rem;
-    border-radius: var(--reception-radius-md);
-    box-shadow: var(--reception-shadow-sm);
-}
-
-.reception-alert-icon {
-    font-size: 1.35rem;
-    flex-shrink: 0;
-}
-
-.reception-alert-content {
-    display: flex;
-    flex-direction: column;
-    font-size: 0.88rem;
-}
-
-/* Header Search Grid (Booking Code / Guest Name / Room Number) */
-.reception-checkin-header {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 1.25rem;
-}
-
-.reception-checkin-header > .reception-header-left,
-.reception-checkin-header > .reception-header-right {
-    width: 100%;
-}
-
-@media (min-width: 992px) {
-    .reception-checkin-header {
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .reception-checkin-header > .reception-header-left {
-        width: auto;
-        flex: 1;
-    }
-    .reception-checkin-header > .reception-header-right {
-        width: auto;
-    }
-}
-
-.reception-checkin-waiting-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: rgba(0, 229, 255, 0.14);
-    border: 1px solid rgba(0, 229, 255, 0.35);
-    color: var(--reception-cyber-cyan);
-    padding: 0.5rem 1rem;
-    border-radius: 999px;
-    font-size: 0.88rem;
-}
-
-.reception-checkin-header-search {
-    width: 100%;
-    padding-top: 1rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.reception-checkin-quick-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr auto;
-    gap: 0.75rem;
-}
-
-.reception-checkin-input-box {
-    display: flex;
-    align-items: center;
-    gap: 0.55rem;
-    background: rgba(255, 255, 255, 0.09);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: var(--reception-radius-sm);
-    padding: 0.5rem 0.85rem;
-    transition: border-color 0.2s ease, background-color 0.2s ease;
-}
-
-.reception-checkin-input-box:focus-within {
-    border-color: var(--reception-cyber-cyan);
-    background: rgba(255, 255, 255, 0.15);
-}
-
-.reception-checkin-input-box i {
-    color: var(--reception-cyber-cyan);
-    font-size: 0.9rem;
-}
-
-.reception-checkin-input-box input {
-    background: transparent;
-    border: none;
-    color: var(--reception-white);
-    width: 100%;
-    font-size: 0.88rem;
-    outline: none;
-}
-
-.reception-checkin-input-box input::placeholder {
-    color: rgba(255, 255, 255, 0.6);
-}
-
-.reception-checkin-search-btns {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-/* KPI Variants for Check-in */
-.reception-kpi-warning::before { background: var(--reception-warning); }
-.reception-kpi-warning .reception-kpi-icon { background: rgba(245, 158, 11, 0.14); color: var(--reception-warning); }
-
-.reception-kpi-cyan::before { background: var(--reception-cyber-cyan); }
-.reception-kpi-cyan .reception-kpi-icon { background: rgba(0, 229, 255, 0.16); color: #0284C7; }
-
-/* Filter & Sort Bar */
-.reception-checkin-filter-bar {
-    background: var(--reception-white);
-    border-radius: var(--reception-radius-md);
-    padding: 0.95rem 1.25rem;
-    border: 1px solid var(--reception-border);
-    box-shadow: var(--reception-shadow-sm);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 0.85rem;
-}
-
-.reception-checkin-filter-left {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-
-.reception-filter-bar-title {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: var(--reception-midnight-navy);
-}
-
-.reception-checkin-select-wrap {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: var(--reception-text-muted);
-}
-
-/* Status Badges according to Check-in Spec:
-   Confirmed = เขียว, Pending = เหลือง, Checked-in = ฟ้า, Cancelled = แดง */
-.reception-cibadge-confirmed {
-    background: rgba(22, 163, 74, 0.14);
-    color: var(--reception-success);
-    border: 1px solid rgba(22, 163, 74, 0.3);
-}
-
-.reception-cibadge-pending {
-    background: rgba(245, 158, 11, 0.16);
-    color: #B45309;
-    border: 1px solid rgba(245, 158, 11, 0.35);
-}
-
-.reception-cibadge-checkedin {
-    background: rgba(0, 229, 255, 0.16);
-    color: #0369A1;
-    border: 1px solid rgba(0, 229, 255, 0.4);
-}
-
-.reception-cibadge-cancelled {
-    background: rgba(239, 68, 68, 0.14);
-    color: var(--reception-danger);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-}
-
-.reception-guest-count-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    background: #F1F5F9;
-    color: var(--reception-midnight-navy);
-    padding: 0.22rem 0.6rem;
-    border-radius: 999px;
-    font-size: 0.78rem;
-    font-weight: 600;
-}
-
-/* Empty State */
-.reception-checkin-empty-state {
-    text-align: center;
-    padding: 3.25rem 1.5rem;
-}
-
-.reception-empty-key-icon {
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    background: rgba(37, 99, 235, 0.1);
-    color: var(--reception-electric-blue);
-    font-size: 1.85rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 1rem;
-}
-
-.reception-checkin-empty-state h4 {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: var(--reception-midnight-navy);
-    margin-bottom: 0.35rem;
-}
-
-.reception-checkin-empty-state p {
-    font-size: 0.88rem;
-    color: var(--reception-text-muted);
-    max-width: 480px;
-    margin: 0 auto 1.25rem auto;
-}
-
-.reception-empty-actions {
-    display: inline-flex;
-    gap: 0.65rem;
-    flex-wrap: wrap;
-    justify-content: center;
-}
-
-/* Check-in Confirmation Modal */
-.reception-checkin-modal-md {
-    max-width: 640px;
-}
-
+/* Check-in Verification Modal Contents */
 .reception-checkin-summary-box {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -2525,12 +1304,13 @@
     border: 1px solid var(--reception-border);
     border-radius: var(--reception-radius-md);
     padding: 1.1rem 1.25rem;
-    margin-bottom: 1.2rem;
+    margin-bottom: 1.1rem;
 }
 
 .reception-checkin-summary-item {
     display: flex;
     flex-direction: column;
+    gap: 0.15rem;
 }
 
 .reception-checkin-summary-item span {
@@ -2548,6 +1328,7 @@
     border: 1px solid var(--reception-border);
     border-radius: var(--reception-radius-md);
     padding: 1.1rem 1.25rem;
+    margin-top: 1rem;
 }
 
 .reception-checklist-title {
@@ -2574,18 +1355,18 @@
     align-items: center;
     gap: 0.55rem;
     font-size: 0.84rem;
-    padding: 0.4rem 0.65rem;
+    padding: 0.45rem 0.75rem;
     border-radius: 8px;
 }
 
 .reception-checkin-checklist li.is-passed {
-    background: rgba(22, 163, 74, 0.08);
+    background: #F0FDF4;
     color: #15803D;
 }
 
 .reception-checkin-checklist li.is-failed {
-    background: rgba(239, 68, 68, 0.1);
-    color: var(--reception-danger);
+    background: #FEF2F2;
+    color: #B91C1C;
     font-weight: 600;
 }
 
@@ -2593,9 +1374,9 @@
     margin-top: 0.9rem;
     padding: 0.75rem 1rem;
     border-radius: var(--reception-radius-sm);
-    background: rgba(239, 68, 68, 0.12);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    color: var(--reception-danger);
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    color: #B91C1C;
     font-size: 0.84rem;
     font-weight: 600;
     display: flex;
@@ -2603,519 +1384,127 @@
     gap: 0.5rem;
 }
 
-/* Responsive Breakpoints */
-@media (max-width: 1199.98px) {
-    .reception-checkin-quick-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
+/* QR Scanner & Booking Details Modal Contents */
+.reception-qr-layout { display: grid; grid-template-columns: 1.15fr 1fr; gap: 1.5rem; }
+.reception-qr-viewport-wrap { position: relative; background: #070D1E; border-radius: var(--reception-radius-md); min-height: 310px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.reception-qr-viewport { width: 100%; height: 100%; }
+.reception-qr-camera-placeholder { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.5rem; text-align: center; color: rgba(255, 255, 255, 0.75); }
+.reception-qr-camera-placeholder i { font-size: 2.5rem; color: var(--reception-cyber-cyan); margin-bottom: 0.75rem; }
+.reception-qr-scan-frame { position: absolute; width: 210px; height: 210px; pointer-events: none; z-index: 2; }
+.reception-qr-corner { position: absolute; width: 24px; height: 24px; border-color: var(--reception-cyber-cyan); border-style: solid; }
+.reception-qr-corner.tl { top: 0; left: 0; border-width: 3px 0 0 3px; }
+.reception-qr-corner.tr { top: 0; right: 0; border-width: 3px 3px 0 0; }
+.reception-qr-corner.bl { bottom: 0; left: 0; border-width: 0 0 3px 3px; }
+.reception-qr-corner.br { bottom: 0; right: 0; border-width: 0 3px 3px 0; }
+.reception-qr-laser { position: absolute; left: 8px; right: 8px; height: 2px; background: var(--reception-cyber-cyan); box-shadow: 0 0 10px var(--reception-cyber-cyan); animation: receptionLaserScan 2s infinite ease-in-out; }
+@keyframes receptionLaserScan { 0%, 100% { top: 12px; } 50% { top: calc(100% - 14px); } }
+.reception-qr-camera-controls { display: flex; align-items: center; gap: 0.6rem; margin-top: 0.9rem; flex-wrap: wrap; }
+.reception-qr-manual-box label { display: block; font-size: 0.84rem; font-weight: 600; margin-bottom: 0.45rem; }
+.reception-qr-manual-input-group { display: flex; gap: 0.5rem; }
+.reception-qr-manual-input-group input { flex: 1; padding: 0.55rem 0.85rem; border-radius: var(--reception-radius-sm); border: 1px solid var(--reception-border); font-size: 0.9rem; }
+.reception-qr-status-box { margin-top: 1rem; padding: 0.9rem 1rem; border-radius: var(--reception-radius-md); font-size: 0.85rem; }
+
+.reception-details-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.1rem; margin-bottom: 1.35rem; }
+.reception-details-card { background: #F8FAFC; border: 1px solid var(--reception-border); border-radius: var(--reception-radius-md); padding: 1.1rem 1.2rem; }
+.reception-details-card-title { font-size: 0.92rem; font-weight: 700; color: var(--reception-midnight-navy); margin: 0 0 0.85rem 0; display: flex; align-items: center; gap: 0.45rem; }
+.reception-details-kv-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.reception-details-kv { display: flex; align-items: center; justify-content: space-between; font-size: 0.84rem; border-bottom: 1px dashed #E2E8F0; padding-bottom: 0.35rem; }
+.reception-details-kv span:first-child { color: var(--reception-text-muted); }
+.reception-details-kv.is-highlight strong { font-size: 1.05rem; color: var(--reception-electric-blue); }
+.reception-details-qr-box { margin-top: 0.75rem; display: flex; align-items: center; gap: 0.85rem; background: var(--reception-white); padding: 0.65rem; border-radius: var(--reception-radius-sm); border: 1px solid var(--reception-border); }
+.reception-details-qr-img { width: 72px; height: 72px; border-radius: 6px; }
+.reception-details-timeline-section { background: var(--reception-white); border: 1px solid var(--reception-border); border-radius: var(--reception-radius-md); padding: 1.15rem 1.25rem; }
+.reception-lifecycle-timeline { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.6rem; }
+.reception-timeline-step { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0.65rem 0.4rem; border-radius: var(--reception-radius-sm); background: #F8FAFC; border: 1px solid var(--reception-border); }
+.reception-timeline-step.is-done { background: #F0FDF4; border-color: #BBF7D0; }
+.reception-step-dot { width: 34px; height: 34px; border-radius: 50%; background: #E2E8F0; color: var(--reception-text-muted); display: flex; align-items: center; justify-content: center; margin-bottom: 0.4rem; font-size: 0.85rem; }
+.reception-timeline-step.is-done .reception-step-dot { background: var(--reception-success); color: var(--reception-white); }
+.reception-step-text strong { display: block; font-size: 0.75rem; color: var(--reception-midnight-navy); }
+.reception-step-text small { font-size: 0.7rem; color: var(--reception-text-muted); }
+.reception-details-footer { justify-content: space-between; flex-wrap: wrap; }
+.reception-details-footer-actions { display: flex; align-items: center; gap: 0.6rem; }
+
+/* ==========================================================================
+   9. PROFILE PAGE
+   ========================================================================== */
+.reception-pf-hero { position: relative; overflow: hidden; }
+.reception-pf-hero-left { display: flex; align-items: center; gap: 1.25rem; position: relative; z-index: 1; }
+.reception-pf-avatar { width: 80px; height: 80px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 700; color: var(--reception-midnight-navy); background: linear-gradient(135deg, var(--reception-cyber-cyan) 0%, var(--reception-electric-blue) 100%); box-shadow: 0 0 0 4px rgba(0, 229, 255, 0.2); }
+.reception-pf-badge-row { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.45rem; }
+.reception-pf-since-pill { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: rgba(255, 255, 255, 0.85); background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.16); padding: 0.28rem 0.75rem; border-radius: 999px; }
+.reception-pf-contact-strip { display: flex; align-items: center; flex-wrap: wrap; gap: 0.6rem; font-size: 0.88rem; color: rgba(255, 255, 255, 0.8); }
+.reception-pf-grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 1.25rem; align-items: start; }
+.reception-pf-side { display: flex; flex-direction: column; gap: 1.25rem; }
+.reception-pf-eyebrow { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em; color: var(--reception-electric-blue); margin-bottom: 0.25rem; }
+.reception-pf-mode-badge { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.85rem; border-radius: 999px; font-size: 0.78rem; font-weight: 600; background: #F1F5F9; color: var(--reception-text-muted); }
+.reception-pf-mode-badge.is-editing { background: rgba(37, 99, 235, 0.12); color: var(--reception-electric-blue); }
+.reception-pf-form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+.reception-pf-field { display: flex; flex-direction: column; gap: 0.35rem; }
+.reception-pf-field label { font-size: 0.78rem; font-weight: 600; color: var(--reception-text-muted); }
+.reception-pf-input-wrap { display: flex; align-items: center; gap: 0.6rem; background: var(--reception-white); border: 1px solid var(--reception-border); border-radius: var(--reception-radius-sm); padding: 0.2rem 0.85rem; }
+.reception-pf-input-wrap:focus-within { border-color: var(--reception-electric-blue); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); }
+.reception-pf-input-wrap input { flex: 1; min-width: 0; border: none; background: transparent; outline: none; padding: 0.5rem 0; font-family: 'Prompt', sans-serif; font-size: 0.9rem; color: var(--reception-text-main); }
+.reception-pf-actions { margin-top: 1.4rem; padding-top: 1.1rem; border-top: 1px solid var(--reception-border); }
+.reception-pf-actions-row { display: flex; align-items: center; flex-wrap: wrap; gap: 0.6rem; }
+.reception-pf-actions-row[hidden] { display: none; }
+.reception-pf-info-list { display: flex; flex-direction: column; }
+.reception-pf-info-item { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.8rem 0; border-bottom: 1px dashed var(--reception-border); font-size: 0.86rem; }
+.reception-pf-info-item:last-child { border-bottom: none; padding-bottom: 0; }
+.reception-pf-logout-card { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+
+/* ==========================================================================
+   10. ANIMATIONS & RESPONSIVE BREAKPOINTS
+   ========================================================================== */
+.reception-fade-in {
+    animation: receptionFadeUp 0.32s ease both;
 }
 
-@media (max-width: 767.98px) {
+@keyframes receptionFadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 1199.98px) {
+    .reception-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .reception-quick-actions-grid,
+    .reception-calendar-summary-grid,
+    .reception-booking-summary-grid,
+    .reception-booking-advanced-filters { grid-template-columns: repeat(3, 1fr); }
     .reception-checkin-quick-grid,
-    .reception-checkin-summary-box {
-        grid-template-columns: 1fr;
-    }
-
-    .reception-checkin-table thead {
-        display: none;
-    }
-
-    .reception-checkin-table tbody tr {
-        display: block;
-        border: 1px solid var(--reception-border);
-        border-radius: var(--reception-radius-md);
-        margin-bottom: 0.85rem;
-        padding: 0.75rem;
-        background: var(--reception-white);
-    }
-
-    .reception-checkin-table tbody td {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.45rem 0.25rem;
-        border-bottom: 1px dashed #F1F5F9;
-    }
-
-    .reception-checkin-table tbody td::before {
-        content: attr(data-label);
-        font-weight: 600;
-        font-size: 0.76rem;
-        color: var(--reception-text-muted);
-    }
-}
-/* ==========================================================================
-   PART 5: CHECK-OUT MANAGEMENT STYLES (Views/Reception/CheckOut.cshtml)
-   Append directly to the end of wwwroot/css/Reception.css
-   ========================================================================== */
-
-.reception-checkout-title-icon {
-    color: #F97316;
-}
-
-.reception-checkout-pending-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: rgba(249, 115, 22, 0.16);
-    border: 1px solid rgba(249, 115, 22, 0.4);
-    color: #FDBA74;
-    padding: 0.5rem 1rem;
-    border-radius: 999px;
-    font-size: 0.88rem;
-}
-
-/* Danger KPI Variant for Late Check-out */
-.reception-kpi-danger::before {
-    background: var(--reception-danger);
-}
-
-.reception-kpi-danger .reception-kpi-icon {
-    background: rgba(239, 68, 68, 0.12);
-    color: var(--reception-danger);
-}
-
-/* Search & Filter Card */
-.reception-checkout-filter-card {
-    background: var(--reception-white);
-    border-radius: var(--reception-radius-lg);
-    padding: 1.2rem 1.35rem;
-    border: 1px solid var(--reception-border);
-    box-shadow: var(--reception-shadow-sm);
-}
-
-.reception-checkout-filter-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr) auto;
-    gap: 0.85rem;
-    align-items: end;
-}
-
-.reception-checkout-field {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-}
-
-.reception-checkout-field label {
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: var(--reception-text-muted);
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-}
-
-.reception-checkout-filter-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-/* Tabs Header (Active Stays vs Completed Check-out History) */
-.reception-checkout-tabs-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 1rem;
-    padding-bottom: 1rem;
-    margin-bottom: 1rem;
-    border-bottom: 1px solid var(--reception-border);
-}
-
-.reception-checkout-tabs {
-    display: inline-flex;
-    background: #F1F5F9;
-    padding: 0.3rem;
-    border-radius: var(--reception-radius-md);
-    gap: 0.3rem;
-}
-
-.reception-checkout-tab-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.55rem 1.1rem;
-    border-radius: 9px;
-    border: none;
-    background: transparent;
-    color: var(--reception-text-muted);
-    font-size: 0.86rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.18s ease;
-}
-
-.reception-checkout-tab-btn.active {
-    background: var(--reception-midnight-navy);
-    color: var(--reception-white);
-    box-shadow: 0 4px 10px rgba(7, 13, 30, 0.15);
-}
-
-.reception-tab-counter {
-    background: rgba(249, 115, 22, 0.2);
-    color: #EA580C;
-    padding: 0.1rem 0.5rem;
-    border-radius: 999px;
-    font-size: 0.74rem;
-    font-weight: 700;
-}
-
-.reception-checkout-tab-btn.active .reception-tab-counter {
-    background: var(--reception-cyber-cyan);
-    color: var(--reception-midnight-navy);
-}
-
-.reception-checkout-policy-hint {
-    font-size: 0.8rem;
-    color: var(--reception-text-muted);
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-}
-
-.reception-checkout-tab-pane {
-    display: none;
-}
-
-.reception-checkout-tab-pane.active {
-    display: block;
-    animation: receptionFadeUp 0.25s ease both;
-}
-
-/* Prominent Orange-Red Check-out CTA Button */
-.reception-btn-checkout-cta {
-    background: linear-gradient(135deg, #F97316 0%, #EA580C 50%, #DC2626 100%);
-    color: var(--reception-white);
-    border: none;
-    font-weight: 600;
-    box-shadow: 0 4px 12px rgba(234, 88, 12, 0.28);
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.reception-btn-checkout-cta:hover {
-    color: var(--reception-white);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(220, 38, 38, 0.38);
-}
-
-/* Status Badges for Check-out */
-.reception-cobadge-staying {
-    background: rgba(37, 99, 235, 0.12);
-    color: var(--reception-electric-blue);
-    border: 1px solid rgba(37, 99, 235, 0.25);
-}
-
-.reception-cobadge-duetoday {
-    background: rgba(245, 158, 11, 0.15);
-    color: #D97706;
-    border: 1px solid rgba(245, 158, 11, 0.35);
-}
-
-.reception-cobadge-overdue {
-    background: rgba(239, 68, 68, 0.14);
-    color: var(--reception-danger);
-    border: 1px solid rgba(239, 68, 68, 0.35);
-}
-
-.reception-cobadge-completed {
-    background: rgba(22, 163, 74, 0.14);
-    color: var(--reception-success);
-    border: 1px solid rgba(22, 163, 74, 0.3);
-}
-
-.reception-checkin-timestamp,
-.reception-checkout-done-time {
-    font-size: 0.82rem;
-    font-weight: 500;
-    white-space: nowrap;
-}
-
-.reception-checkout-modal-banner {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    background: rgba(249, 115, 22, 0.1);
-    border: 1px solid rgba(249, 115, 22, 0.3);
-    padding: 0.9rem 1.1rem;
-    border-radius: var(--reception-radius-md);
-    margin-bottom: 1.1rem;
-    font-size: 0.83rem;
-}
-
-.reception-checkout-modal-banner i {
-    font-size: 1.25rem;
-    color: #EA580C;
-    margin-top: 0.1rem;
-}
-
-.reception-checkout-modal-banner p {
-    margin: 0.2rem 0 0 0;
-    color: var(--reception-text-muted);
-}
-
-/* Responsive Breakpoints */
-@media (max-width: 1199.98px) {
-    .reception-checkout-filter-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
+    .reception-checkout-filter-grid,
+    .reception-hk-filter-grid { grid-template-columns: repeat(2, 1fr); }
+    .reception-bottom-grid,
+    .reception-pf-grid { grid-template-columns: 1fr; }
+    .reception-lifecycle-timeline { grid-template-columns: repeat(3, 1fr); }
 }
 
 @media (max-width: 767.98px) {
-    .reception-checkout-filter-grid {
-        grid-template-columns: 1fr;
-    }
+    .reception-dashboard-wrapper { padding: 1rem; }
+    .reception-kpi-grid,
+    .reception-checkin-quick-grid,
+    .reception-checkout-filter-grid,
+    .reception-hk-filter-grid,
+    .reception-booking-summary-grid,
+    .reception-booking-advanced-filters,
+    .reception-details-grid,
+    .reception-qr-layout,
+    .reception-checkin-summary-box,
+    .reception-pf-form-grid { grid-template-columns: 1fr; }
+    .reception-quick-actions-grid,
+    .reception-calendar-summary-grid,
+    .reception-lifecycle-timeline { grid-template-columns: repeat(2, 1fr); }
+    .reception-header-right, .reception-search-input-group { width: 100%; }
+    .reception-search-input { min-width: 0; width: 100%; }
 
-    .reception-checkout-tabs {
-        width: 100%;
-        flex-direction: column;
-    }
+    /* Responsive Mobile Card Tables */
+    .reception-booking-table thead,
+    .reception-checkin-table thead,
+    .reception-checkout-table thead,
+    .reception-hk-table thead { display: none; }
 
-    .reception-checkout-table thead {
-        display: none;
-    }
-
-    .reception-checkout-table tbody tr {
-        display: block;
-        border: 1px solid var(--reception-border);
-        border-radius: var(--reception-radius-md);
-        margin-bottom: 0.85rem;
-        padding: 0.75rem;
-        background: var(--reception-white);
-    }
-
-    .reception-checkout-table tbody td {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.45rem 0.25rem;
-        border-bottom: 1px dashed #F1F5F9;
-    }
-
-    .reception-checkout-table tbody td::before {
-        content: attr(data-label);
-        font-weight: 600;
-        font-size: 0.76rem;
-        color: var(--reception-text-muted);
-    }
-}
-/* ==========================================================================
-   PART 6: HOUSEKEEPING REQUESTS & TASK TRACKING STYLES
-   Append directly to the end of wwwroot/css/Reception.css
-   ========================================================================== */
-
-.reception-hk-title-icon {
-    color: var(--reception-warning);
-}
-
-.reception-hk-total-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: rgba(0, 229, 255, 0.14);
-    border: 1px solid rgba(0, 229, 255, 0.35);
-    color: var(--reception-cyber-cyan);
-    padding: 0.5rem 1rem;
-    border-radius: 999px;
-    font-size: 0.88rem;
-}
-
-/* Search & Filter Card */
-.reception-hk-filter-card {
-    background: var(--reception-white);
-    border-radius: var(--reception-radius-lg);
-    padding: 1.2rem 1.35rem;
-    border: 1px solid var(--reception-border);
-    box-shadow: var(--reception-shadow-sm);
-}
-
-.reception-hk-filter-grid {
-    display: grid;
-    grid-template-columns: 1fr 1.3fr 1fr 1fr auto;
-    gap: 0.85rem;
-    align-items: end;
-}
-
-.reception-hk-sod-badge {
-    font-size: 0.8rem;
-    color: var(--reception-text-muted);
-    background: #F8FAFC;
-    padding: 0.4rem 0.85rem;
-    border-radius: 999px;
-    border: 1px solid var(--reception-border);
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-}
-
-/* Status Badges according to Spec #6:
-   Pending = ส้ม, In Progress = ฟ้า, Completed = เขียว, Cancelled = แดง */
-.reception-hkbadge-pending {
-    background: rgba(245, 158, 11, 0.15);
-    color: #D97706;
-    border: 1px solid rgba(245, 158, 11, 0.35);
-}
-
-.reception-hkbadge-inprogress {
-    background: rgba(0, 229, 255, 0.16);
-    color: #0284C7;
-    border: 1px solid rgba(0, 229, 255, 0.45);
-}
-
-.reception-hkbadge-completed {
-    background: rgba(22, 163, 74, 0.14);
-    color: var(--reception-success);
-    border: 1px solid rgba(22, 163, 74, 0.32);
-}
-
-.reception-hkbadge-cancelled {
-    background: rgba(239, 68, 68, 0.14);
-    color: var(--reception-danger);
-    border: 1px solid rgba(239, 68, 68, 0.32);
-}
-
-.reception-hk-booking-ref {
-    font-family: monospace;
-    font-weight: 700;
-    color: var(--reception-electric-blue);
-    background: rgba(37, 99, 235, 0.08);
-    padding: 0.2rem 0.55rem;
-    border-radius: 6px;
-    font-size: 0.82rem;
-}
-
-.reception-hk-note-cell {
-    max-width: 260px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-size: 0.85rem;
-    color: var(--reception-text-main);
-}
-
-.reception-hk-staff-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-weight: 600;
-    font-size: 0.83rem;
-    color: var(--reception-midnight-navy);
-}
-
-.reception-hk-unassigned {
-    font-size: 0.8rem;
-    color: var(--reception-text-muted);
-    font-style: italic;
-}
-
-/* Loading State */
-.reception-hk-loading {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.85rem;
-    padding: 2.5rem 1rem;
-    color: var(--reception-text-muted);
-    font-weight: 500;
-}
-
-/* Task Details Modal & History Timeline */
-.reception-hk-detail-note-box {
-    background: var(--reception-white);
-    border: 1px solid var(--reception-border);
-    border-radius: var(--reception-radius-sm);
-    padding: 0.7rem 0.9rem;
-    font-size: 0.88rem;
-    color: var(--reception-text-main);
-}
-
-.reception-hk-timeline-box {
-    background: var(--reception-white);
-    border: 1px solid var(--reception-border);
-    border-radius: var(--reception-radius-md);
-    padding: 1.15rem 1.25rem;
-}
-
-.reception-hk-steps {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-}
-
-.reception-hk-step {
-    display: flex;
-    align-items: center;
-    gap: 0.85rem;
-    padding: 0.7rem 0.9rem;
-    border-radius: var(--reception-radius-sm);
-    background: #F8FAFC;
-    border: 1px solid var(--reception-border);
-}
-
-.reception-hk-step.is-completed {
-    background: rgba(22, 163, 74, 0.08);
-    border-color: rgba(22, 163, 74, 0.3);
-}
-
-.reception-hk-step.is-active {
-    background: rgba(0, 229, 255, 0.12);
-    border-color: rgba(2, 132, 199, 0.35);
-}
-
-.reception-hk-step-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: #E2E8F0;
-    color: var(--reception-text-muted);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.reception-hk-step.is-completed .reception-hk-step-icon {
-    background: var(--reception-success);
-    color: var(--reception-white);
-}
-
-.reception-hk-step.is-active .reception-hk-step-icon {
-    background: #0284C7;
-    color: var(--reception-white);
-}
-
-.reception-hk-step-body {
-    display: flex;
-    flex-direction: column;
-}
-
-.reception-hk-step-body strong {
-    font-size: 0.85rem;
-    color: var(--reception-midnight-navy);
-}
-
-.reception-hk-step-body small {
-    font-size: 0.78rem;
-    color: var(--reception-text-muted);
-}
-
-/* Responsive Breakpoints */
-@media (max-width: 1199.98px) {
-    .reception-hk-filter-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 767.98px) {
-    .reception-hk-filter-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .reception-hk-table thead {
-        display: none;
-    }
-
+    .reception-booking-table tbody tr,
+    .reception-checkin-table tbody tr,
+    .reception-checkout-table tbody tr,
     .reception-hk-table tbody tr {
         display: block;
         border: 1px solid var(--reception-border);
@@ -3125,431 +1514,47 @@
         background: var(--reception-white);
     }
 
+    .reception-booking-table tbody td,
+    .reception-checkin-table tbody td,
+    .reception-checkout-table tbody td,
     .reception-hk-table tbody td {
         display: flex;
         justify-content: space-between;
         align-items: center;
         padding: 0.45rem 0.25rem;
         border-bottom: 1px dashed #F1F5F9;
+        white-space: normal;
     }
 
+    .reception-booking-table tbody td::before,
+    .reception-checkin-table tbody td::before,
+    .reception-checkout-table tbody td::before,
     .reception-hk-table tbody td::before {
         content: attr(data-label);
         font-weight: 600;
         font-size: 0.76rem;
         color: var(--reception-text-muted);
     }
-
-    .reception-hk-note-cell {
-        max-width: 180px;
-    }
 }
-/* ==========================================================================
-   PART 7: RECEPTION PROFILE PAGE STYLES (Views/Reception/Profile.cshtml)
-   Append directly to the end of wwwroot/css/Reception.css
-   ========================================================================== */
-
-/* Hero */
-.reception-pf-hero {
-    position: relative;
-    overflow: hidden;
-}
-
-.reception-pf-hero::after {
-    content: "";
-    position: absolute;
-    right: -70px;
-    top: -90px;
-    width: 260px;
-    height: 260px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(0, 229, 255, 0.22) 0%, transparent 70%);
-    pointer-events: none;
-}
-
-.reception-pf-hero-left {
+#checkInConfirmModal .reception-modal-dialog {
+    max-height: 90vh;
     display: flex;
-    align-items: center;
-    gap: 1.25rem;
-    position: relative;
-    z-index: 1;
+    flex-direction: column;
 }
 
-.reception-pf-hero .reception-header-right {
-    position: relative;
-    z-index: 1;
+#checkInConfirmModal .reception-modal-form,
+#checkInConfirmModal form {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1 1 auto;
 }
 
-.reception-pf-avatar {
-    width: 84px;
-    height: 84px;
-    border-radius: 50%;
+#checkInConfirmModal .reception-modal-body {
+    overflow-y: auto;
+    max-height: calc(90vh - 145px);
+}
+
+#checkInConfirmModal .reception-modal-footer {
     flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2.2rem;
-    font-weight: 700;
-    color: var(--reception-midnight-navy);
-    background: linear-gradient(135deg, var(--reception-cyber-cyan) 0%, var(--reception-electric-blue) 100%);
-    box-shadow: 0 0 0 4px rgba(0, 229, 255, 0.2), 0 8px 24px rgba(0, 229, 255, 0.28);
-}
-
-.reception-pf-badge-row {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 0.45rem;
-}
-
-.reception-pf-badge-row .reception-title-badge {
-    margin-bottom: 0;
-}
-
-.reception-pf-since-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.85);
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    padding: 0.28rem 0.75rem;
-    border-radius: 999px;
-}
-
-.reception-pf-since-pill i {
-    color: var(--reception-cyber-cyan);
-}
-
-.reception-pf-contact-strip {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.6rem;
-    font-size: 0.88rem;
-    color: rgba(255, 255, 255, 0.8);
-}
-
-.reception-pf-contact-strip i {
-    color: var(--reception-cyber-cyan);
-    margin-right: 0.25rem;
-}
-
-.reception-pf-dot {
-    opacity: 0.6;
-}
-
-/* Layout */
-.reception-pf-grid {
-    display: grid;
-    grid-template-columns: 1.35fr 1fr;
-    gap: 1.25rem;
-    align-items: start;
-}
-
-.reception-pf-side {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-}
-
-.reception-pf-eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-size: 0.7rem;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    color: var(--reception-electric-blue);
-    margin-bottom: 0.25rem;
-}
-
-.reception-pf-mode-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.35rem 0.85rem;
-    border-radius: 999px;
-    font-size: 0.78rem;
-    font-weight: 600;
-    background: #F1F5F9;
-    color: var(--reception-text-muted);
-    transition: all 0.2s ease;
-}
-
-.reception-pf-mode-badge.is-editing {
-    background: rgba(37, 99, 235, 0.12);
-    color: var(--reception-electric-blue);
-}
-
-/* Form */
-.reception-pf-form-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-}
-
-.reception-pf-field {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-    margin-bottom: 0;
-}
-
-.reception-modal-body .reception-pf-field {
-    margin-bottom: 1rem;
-}
-
-.reception-pf-field label {
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: var(--reception-text-muted);
-}
-
-.reception-pf-req {
-    color: var(--reception-danger);
-}
-
-.reception-pf-input-wrap {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    background: var(--reception-white);
-    border: 1px solid var(--reception-border);
-    border-radius: var(--reception-radius-sm);
-    padding: 0.2rem 0.85rem;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
-}
-
-.reception-pf-input-wrap:focus-within {
-    border-color: var(--reception-electric-blue);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-}
-
-.reception-pf-input-wrap > i {
-    color: var(--reception-electric-blue);
-    font-size: 0.9rem;
-    width: 16px;
-    text-align: center;
-}
-
-.reception-pf-input-wrap input {
-    flex: 1;
-    min-width: 0;
-    border: none;
-    background: transparent;
-    outline: none;
-    padding: 0.5rem 0;
-    font-family: 'Prompt', sans-serif;
-    font-size: 0.9rem;
-    color: var(--reception-text-main);
-}
-
-.reception-pf-input-wrap input:disabled {
-    color: var(--reception-text-main);
-    -webkit-text-fill-color: var(--reception-text-main);
-    cursor: default;
-}
-
-.reception-pf-input-wrap:has(input:disabled) {
-    background: #F8FAFC;
-}
-
-.reception-pf-input-wrap.is-readonly {
-    background: #F1F5F9;
-}
-
-.reception-pf-input-wrap.is-readonly > i {
-    color: var(--reception-text-muted);
-}
-
-.reception-pf-eye {
-    border: none;
-    background: transparent;
-    color: var(--reception-text-muted);
-    cursor: pointer;
-    padding: 0.25rem;
-}
-
-.reception-pf-eye:hover {
-    color: var(--reception-midnight-navy);
-}
-
-.reception-pf-field-error {
-    color: var(--reception-danger);
-    font-size: 0.78rem;
-    font-weight: 500;
-}
-
-.reception-pf-actions {
-    margin-top: 1.4rem;
-    padding-top: 1.1rem;
-    border-top: 1px solid var(--reception-border);
-}
-
-.reception-pf-actions-row {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.6rem;
-}
-
-.reception-pf-actions-row[hidden] {
-    display: none;
-}
-
-.reception-pf-actions-row.is-end {
-    justify-content: flex-end;
-}
-
-.reception-btn-success-solid {
-    background: var(--reception-success);
-    color: var(--reception-white);
-}
-
-.reception-btn-success-solid:hover {
-    background: #15803D;
-    color: var(--reception-white);
-}
-
-.reception-pf-hint {
-    margin: 0.9rem 0 0 0;
-    font-size: 0.78rem;
-    color: var(--reception-text-muted);
-    display: flex;
-    align-items: flex-start;
-    gap: 0.45rem;
-}
-
-.reception-pf-hint i {
-    color: var(--reception-electric-blue);
-    margin-top: 0.15rem;
-}
-
-/* Account info list */
-.reception-pf-info-list {
-    display: flex;
-    flex-direction: column;
-}
-
-.reception-pf-info-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 0.8rem 0;
-    border-bottom: 1px dashed var(--reception-border);
-    font-size: 0.86rem;
-}
-
-.reception-pf-info-item:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
-}
-
-.reception-pf-info-item > span:first-child {
-    color: var(--reception-text-muted);
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.reception-pf-info-item > span:first-child i {
-    color: var(--reception-electric-blue);
-    width: 16px;
-    text-align: center;
-}
-
-.reception-pf-info-item strong {
-    color: var(--reception-midnight-navy);
-    text-align: right;
-}
-
-/* Logout card */
-.reception-pf-logout-card {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-
-.reception-pf-logout-title {
-    font-size: 1rem;
-    font-weight: 700;
-    margin: 0 0 0.2rem 0;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.reception-pf-logout-title i {
-    color: var(--reception-electric-blue);
-}
-
-/* Password modal */
-.reception-pf-modal-sm {
-    max-width: 480px;
-}
-
-.reception-modal-title i {
-    color: var(--reception-cyber-cyan);
-    margin-right: 0.35rem;
-}
-
-/* Responsive */
-@media (max-width: 1199.98px) {
-    .reception-pf-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 767.98px) {
-    .reception-pf-hero-left {
-        flex-direction: column;
-        text-align: center;
-        width: 100%;
-    }
-
-    .reception-pf-badge-row,
-    .reception-pf-contact-strip {
-        justify-content: center;
-    }
-
-    .reception-pf-hero .reception-main-title {
-        justify-content: center;
-    }
-
-    .reception-pf-hero .reception-header-right,
-    .reception-pf-hero .reception-header-right .reception-btn {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .reception-pf-form-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .reception-pf-actions-row .reception-btn,
-    .reception-pf-logout-card form,
-    .reception-pf-logout-card .reception-btn {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .reception-pf-info-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.3rem;
-    }
-
-    .reception-pf-info-item strong {
-        text-align: left;
-    }
-
-    .reception-pf-modal-sm {
-        max-width: 100%;
-    }
 }

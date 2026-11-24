@@ -1,16 +1,15 @@
 @model StayMate_Kavinvee_0576.ViewModels.ReceptionIndexViewModel
 @{
     Layout = "~/Views/Shared/_ReceptionLayout.cshtml";
-    ViewData["Title"] = "Reception Dashboard";
+    ViewData["Title"] = "Room Calendar";
     var thaiCulture = new System.Globalization.CultureInfo("th-TH");
 
-    // รับค่าวันเริ่มต้นและมุมมองจาก QueryString (รองรับการกดเปลี่ยนวัน/สัปดาห์/เดือน)
     string viewMode = Context.Request.Query["view"].FirstOrDefault()?.ToLowerInvariant() ?? "week";
     int daysCount = viewMode switch
     {
         "day" => 1,
         "month" => 30,
-        _ => 7 // default: week (7 วัน)
+        _ => 7
     };
 
     DateOnly today = DateOnly.FromDateTime(DateTime.Today);
@@ -24,7 +23,6 @@
     DateOnly prevStartDate = startDate.AddDays(-daysCount);
     DateOnly nextStartDate = startDate.AddDays(daysCount);
 
-    // รวมรายการจองและการเข้าพักจาก Model (ไม่ใช้ข้อมูลจำลอง)
     var timelineStays = new List<StayMate_Kavinvee_0576.ViewModels.ReceptionStayViewModel>();
     if (Model?.CheckInList != null)
     {
@@ -41,7 +39,6 @@
         }
     }
 
-    // ดึงรายชื่อประเภทห้องพักจากข้อมูลห้องจริงในระบบ เพื่อสร้างตัวเลือก Filter
     var distinctRoomTypes = Model?.Rooms?
         .Where(r => !string.IsNullOrWhiteSpace(r.RoomTypeName))
         .Select(r => r.RoomTypeName)
@@ -49,37 +46,37 @@
         .OrderBy(t => t)
         .ToList() ?? new List<string>();
 
-    // คำนวณสถิติจาก Model (หาก Controller ไม่ได้ส่งตัวเลขรวมมา ให้คำนวณจาก Model.Rooms จริง)
     int totalRoomsCount = (Model?.TotalRooms ?? 0) > 0 ? Model!.TotalRooms : (Model?.Rooms?.Count ?? 0);
-    int availableCount = (Model?.AvailableRooms ?? 0) > 0 ? Model!.AvailableRooms : (Model?.Rooms?.Count(r => (r.Status ?? "").ToLower() == "available") ?? 0);
-    int occupiedCount = (Model?.OccupiedRooms ?? 0) > 0 ? Model!.OccupiedRooms : (Model?.Rooms?.Count(r => (r.Status ?? "").ToLower() == "occupied") ?? 0);
-    int dirtyCount = (Model?.NeedsCleaningRooms ?? 0) > 0 ? Model!.NeedsCleaningRooms : (Model?.Rooms?.Count(r => (r.Status ?? "").ToLower() == "needs_cleaning" || (r.Status ?? "").ToLower() == "dirty") ?? 0);
-    int maintenanceCount = (Model?.MaintenanceRooms ?? 0) > 0 ? Model!.MaintenanceRooms : (Model?.Rooms?.Count(r => (r.Status ?? "").ToLower() == "maintenance") ?? 0);
+    int availableCount = (Model?.AvailableRooms ?? 0) > 0 ? Model!.AvailableRooms : (Model?.Rooms?.Count(r => (r.Status ?? "").ToLowerInvariant() == "available") ?? 0);
+    int occupiedCount = (Model?.OccupiedRooms ?? 0) > 0 ? Model!.OccupiedRooms : (Model?.Rooms?.Count(r => (r.Status ?? "").ToLowerInvariant() == "occupied") ?? 0);
+    int dirtyCount = (Model?.NeedsCleaningRooms ?? 0) > 0 ? Model!.NeedsCleaningRooms : (Model?.Rooms?.Count(r =>
+    {
+        var s = (r.Status ?? "").ToLowerInvariant();
+        return s == "needs_cleaning" || s == "dirty" || s == "cleaning";
+    }) ?? 0);
+    int maintenanceCount = (Model?.MaintenanceRooms ?? 0) > 0 ? Model!.MaintenanceRooms : (Model?.Rooms?.Count(r => (r.Status ?? "").ToLowerInvariant() == "maintenance") ?? 0);
     int reservedCount = (Model?.ConfirmedBookings ?? 0) > 0 ? Model!.ConfirmedBookings : timelineStays.Count(s => !s.CheckedInAt.HasValue);
 }
 
 @section Styles {
     <link rel="stylesheet" href="~/css/reception.css" asp-append-version="true" />
 }
-<link rel="stylesheet" href="~/css/reception.css" asp-append-version="true" />
 
 <div class="reception-dashboard-wrapper reception-calendar-page" id="receptionCalendarApp">
 
-    <!-- ==========================================
-         ส่วนที่ 3: PAGE HEADER
-         ========================================== -->
+    <!-- Page Header -->
     <section class="reception-page-header reception-fade-in">
         <div class="reception-header-left">
             <div class="reception-title-badge">
                 <span class="reception-live-dot"></span>
-                <span>SMART PMS ROOM TIMELINE · REAL-TIME INVENTORY</span>
+                <span>ROOM INVENTORY &amp; TIMELINE</span>
             </div>
             <h1 class="reception-main-title">
                 <i class="fa-regular fa-calendar-days reception-title-icon"></i>
                 Room Calendar
             </h1>
             <p class="reception-welcome-text">
-                ปฏิทินการจองและตรวจสอบสถานะห้องพัก · ข้อมูลประจำ<span>@today.ToString("วันddddที่ d MMMM yyyy", thaiCulture)</span>
+                ข้อมูลประจำ<strong>@today.ToString("วันddddที่ d MMMM yyyy", thaiCulture)</strong>
             </p>
         </div>
 
@@ -93,7 +90,7 @@
                 <span>Today</span>
             </a>
 
-            <button type="button" id="btnCalendarRefresh" class="reception-btn reception-btn-outline">
+            <button type="button" id="btnCalendarRefresh" class="reception-btn reception-btn-outline" title="รีเฟรชข้อมูล">
                 <i class="fa-solid fa-rotate"></i>
                 <span>Refresh</span>
             </button>
@@ -102,21 +99,18 @@
                asp-action="Bookings"
                class="reception-btn reception-btn-primary">
                 <i class="fa-solid fa-clipboard-list"></i>
-                <span>จัดการการจอง (QR)</span>
+                <span>จัดการการจอง</span>
             </a>
         </div>
     </section>
 
-    <!-- ==========================================
-         ส่วนที่ 9: ROOM SUMMARY CARDS (6 สถานะ)
-         ========================================== -->
+    <!-- Room Summary Cards -->
     <section class="reception-calendar-summary-grid reception-fade-in">
         <article class="reception-calendar-stat-card reception-stat-total">
             <div class="reception-stat-icon"><i class="fa-solid fa-building"></i></div>
             <div class="reception-stat-info">
                 <span class="reception-stat-label">Total Rooms</span>
                 <strong class="reception-stat-value">@totalRoomsCount</strong>
-                <small>ห้องพักทั้งหมดในระบบ</small>
             </div>
         </article>
 
@@ -125,7 +119,6 @@
             <div class="reception-stat-info">
                 <span class="reception-stat-label">Available</span>
                 <strong class="reception-stat-value">@availableCount</strong>
-                <small>ห้องว่างพร้อมเข้าพัก</small>
             </div>
         </article>
 
@@ -134,7 +127,6 @@
             <div class="reception-stat-info">
                 <span class="reception-stat-label">Reserved</span>
                 <strong class="reception-stat-value">@reservedCount</strong>
-                <small>มีการจองที่ยืนยันแล้ว</small>
             </div>
         </article>
 
@@ -143,16 +135,14 @@
             <div class="reception-stat-info">
                 <span class="reception-stat-label">Occupied</span>
                 <strong class="reception-stat-value">@occupiedCount</strong>
-                <small>มีลูกค้ากำลังเข้าพัก</small>
             </div>
         </article>
 
         <article class="reception-calendar-stat-card reception-stat-dirty">
             <div class="reception-stat-icon"><i class="fa-solid fa-broom"></i></div>
             <div class="reception-stat-info">
-                <span class="reception-stat-label">Dirty</span>
+                <span class="reception-stat-label">Cleaning</span>
                 <strong class="reception-stat-value">@dirtyCount</strong>
-                <small>รอแม่บ้านทำความสะอาด</small>
             </div>
         </article>
 
@@ -161,16 +151,12 @@
             <div class="reception-stat-info">
                 <span class="reception-stat-label">Maintenance</span>
                 <strong class="reception-stat-value">@maintenanceCount</strong>
-                <small>ปิดซ่อมบำรุงชั่วคราว</small>
             </div>
         </article>
     </section>
 
-    <!-- ==========================================
-         ส่วนที่ 4 & 8: CALENDAR TOOLBAR & FILTER BAR
-         ========================================== -->
+    <!-- Calendar Toolbar & Filter Bar -->
     <section class="reception-calendar-toolbar reception-fade-in">
-        <!-- แถวบน: ปุ่มเลื่อนวันที่ + เลือกมุมมอง Day / Week / Month + Date Picker -->
         <div class="reception-calendar-nav-row">
             <div class="reception-calendar-nav-group">
                 <a asp-controller="Reception"
@@ -215,75 +201,64 @@
                            id="calendarDatePicker"
                            value="@startDate.ToString("yyyy-MM-dd")"
                            class="reception-calendar-date-input"
-                           aria-label="เลือกวันที่เริ่มต้นปฏิทิน" />
+                           aria-label="เลือกวันที่เริ่มต้น" />
                 </form>
 
-                <div class="reception-view-switcher" role="group" aria-label="สลับมุมมองปฏิทิน">
+                <div class="reception-view-switcher" role="group" aria-label="มุมมองปฏิทิน">
                     <a asp-controller="Reception"
                        asp-action="Calendar"
                        asp-route-view="day"
                        asp-route-startDate="@startDate.ToString("yyyy-MM-dd")"
                        class="reception-view-btn @(viewMode == "day" ? "active" : "")">
-                        Day View
+                        Day
                     </a>
                     <a asp-controller="Reception"
                        asp-action="Calendar"
                        asp-route-view="week"
                        asp-route-startDate="@startDate.ToString("yyyy-MM-dd")"
                        class="reception-view-btn @(viewMode == "week" ? "active" : "")">
-                        Week View
+                        Week
                     </a>
                     <a asp-controller="Reception"
                        asp-action="Calendar"
                        asp-route-view="month"
                        asp-route-startDate="@startDate.ToString("yyyy-MM-dd")"
                        class="reception-view-btn @(viewMode == "month" ? "active" : "")">
-                        Month View
+                        Month
                     </a>
                 </div>
             </div>
         </div>
 
-        <!-- แถวล่าง: Search Room / Booking ID / Guest Name + Filter Room Type + Filter Room Status -->
         <div class="reception-calendar-filter-row">
             <div class="reception-calendar-search-box">
                 <i class="fa-solid fa-magnifying-glass"></i>
                 <input type="text"
                        id="calendarSearchInput"
-                       placeholder="ค้นหาหมายเลขห้อง, Booking ID หรือชื่อผู้เข้าพัก..."
+                       placeholder="ค้นหาเลขห้อง, Booking ID, ชื่อผู้เข้าพัก..."
                        autocomplete="off" />
             </div>
 
             <div class="reception-calendar-select-group">
                 <label for="filterRoomType"><i class="fa-solid fa-layer-group"></i> ประเภทห้อง:</label>
                 <select id="filterRoomType" class="reception-calendar-select">
-                    <option value="all">ทุกประเภทห้อง (All Types)</option>
-                    @if (distinctRoomTypes.Any())
+                    <option value="all">ทั้งหมด</option>
+                    @foreach (var typeName in distinctRoomTypes)
                     {
-                        foreach (var typeName in distinctRoomTypes)
-                        {
-                            <option value="@typeName.ToLowerInvariant()">@typeName</option>
-                        }
-                    }
-                    else
-                    {
-                        <option value="standard">Standard Room</option>
-                        <option value="deluxe">Deluxe Room</option>
-                        <option value="family">Family Room</option>
-                        <option value="suite">Suite Room</option>
+                        <option value="@typeName.ToLowerInvariant()">@typeName</option>
                     }
                 </select>
             </div>
 
             <div class="reception-calendar-select-group">
-                <label for="filterRoomStatus"><i class="fa-solid fa-filter"></i> สถานะห้อง:</label>
+                <label for="filterRoomStatus"><i class="fa-solid fa-filter"></i> สถานะ:</label>
                 <select id="filterRoomStatus" class="reception-calendar-select">
-                    <option value="all">ทุกสถานะ (All Statuses)</option>
-                    <option value="available">Available (ห้องว่าง)</option>
-                    <option value="reserved">Reserved (มีการจองแล้ว)</option>
-                    <option value="occupied">Occupied (มีลูกค้าเข้าพัก)</option>
-                    <option value="dirty">Dirty (รอทำความสะอาด)</option>
-                    <option value="maintenance">Maintenance (ซ่อมบำรุง)</option>
+                    <option value="all">ทั้งหมด</option>
+                    <option value="available">Available</option>
+                    <option value="reserved">Reserved</option>
+                    <option value="occupied">Occupied</option>
+                    <option value="dirty">Cleaning</option>
+                    <option value="maintenance">Maintenance</option>
                 </select>
             </div>
 
@@ -293,38 +268,33 @@
         </div>
     </section>
 
-    <!-- ==========================================
-         ส่วนที่ 5: ROOM STATUS LEGEND
-         ========================================== -->
+    <!-- Status Legend -->
     <section class="reception-calendar-legend reception-fade-in">
-        <span class="reception-legend-title"><i class="fa-solid fa-circle-info"></i> คำอธิบายสถานะ (Status Legend):</span>
         <div class="reception-legend-items">
             <span class="reception-legend-pill">
                 <span class="reception-legend-color reception-color-available"></span>
-                Available = ห้องว่างพร้อมขาย
+                Available (ห้องว่าง)
             </span>
             <span class="reception-legend-pill">
                 <span class="reception-legend-color reception-color-reserved"></span>
-                Reserved = มีการจองแล้ว (รอ Check-in)
+                Reserved (จองแล้ว)
             </span>
             <span class="reception-legend-pill">
                 <span class="reception-legend-color reception-color-occupied"></span>
-                Occupied = มีลูกค้าเข้าพัก
+                Occupied (เข้าพักอยู่)
             </span>
             <span class="reception-legend-pill">
                 <span class="reception-legend-color reception-color-dirty"></span>
-                Dirty = รอทำความสะอาด
+                Cleaning (รอทำความสะอาด)
             </span>
             <span class="reception-legend-pill">
                 <span class="reception-legend-color reception-color-maintenance"></span>
-                Maintenance = ปิดปรับปรุง / ซ่อมบำรุง
+                Maintenance (ซ่อมบำรุง)
             </span>
         </div>
     </section>
 
-    <!-- ==========================================
-         ส่วนที่ 6: MAIN ROOM CALENDAR (HOTEL ROOM TIMELINE)
-         ========================================== -->
+    <!-- Main Room Timeline -->
     <section class="reception-panel reception-calendar-panel reception-fade-in">
         @if (Model?.Rooms != null && Model.Rooms.Any())
         {
@@ -340,7 +310,6 @@
                             <th class="reception-timeline-room-col-header">
                                 <div class="reception-room-col-title">
                                     <span>ห้องพัก / ชั้น</span>
-                                    <small>คลิกเพื่อดูรายละเอียด</small>
                                 </div>
                             </th>
                             @for (int d = 0; d < daysCount; d++)
@@ -363,13 +332,12 @@
                     <tbody>
                         @foreach (var floorGroup in roomsByFloor)
                         {
-                            <!-- แถวคั่นกลุ่มตามชั้น (Floor Header Row) -->
                             <tr class="reception-timeline-floor-row" data-floor="@floorGroup.Key">
                                 <td colspan="@(daysCount + 1)">
                                     <div class="reception-floor-banner">
                                         <i class="fa-solid fa-layer-group"></i>
-                                        <strong>Floor @floorGroup.Key (ชั้นที่ @floorGroup.Key)</strong>
-                                        <span>· จำนวน @floorGroup.Count() ห้อง</span>
+                                        <strong>ชั้น @floorGroup.Key</strong>
+                                        <span>· @floorGroup.Count() ห้อง</span>
                                     </div>
                                 </td>
                             </tr>
@@ -381,12 +349,11 @@
                                 {
                                     "available" => "available",
                                     "occupied" => "occupied",
-                                    "needs_cleaning" or "dirty" => "dirty",
+                                    "needs_cleaning" or "dirty" or "cleaning" => "dirty",
                                     "maintenance" => "maintenance",
                                     _ => "available"
                                 };
 
-                                // ค้นหารายการจองของห้องนี้ที่อยู่ในช่วงวันที่แสดงผล
                                 var roomBookings = timelineStays
                                     .Where(b => (b.RoomId == room.RoomId || b.RoomNumber == room.RoomNumber) &&
                                                 b.CheckOutDate >= startDate &&
@@ -400,24 +367,23 @@
                                     : roomNormStatus;
 
                                 string roomStatusBadgeText = roomNormStatus switch
-                                    {
-                                        "available" => "Available",
-                                        "occupied" => "Occupied",
-                                        "dirty" => "Dirty",
-                                        "maintenance" => "Maintenance",
-                                        _ => room.Status ?? "Unknown"
-                                    };
+                                {
+                                    "available" => "Available",
+                                    "occupied" => "Occupied",
+                                    "dirty" => "Cleaning",
+                                    "maintenance" => "Maintenance",
+                                    _ => room.Status ?? "Available"
+                                };
 
-                                // สร้างข้อความค้นหาสำหรับ Search Input (หมายเลขห้อง + Booking ID + ชื่อผู้เข้าพัก)
                                 var searchableBookingText = string.Join(" ", roomBookings.Select(b => $"{b.BookingCode} {b.GuestName}"));
 
                                 <tr class="reception-timeline-room-row"
+                                    data-floor="@floorGroup.Key"
                                     data-room-number="@room.RoomNumber.ToLowerInvariant()"
                                     data-room-type="@room.RoomTypeName.ToLowerInvariant()"
                                     data-room-status="@effectiveFilterStatus"
                                     data-search-text="@($"{room.RoomNumber} {room.RoomTypeName} {searchableBookingText}".ToLowerInvariant())">
 
-                                    <!-- คอลัมน์ซ้าย: ข้อมูลห้องพัก (คลิกเพื่อเปิด Room Info Panel ได้) -->
                                     <td class="reception-timeline-room-cell">
                                         <button type="button"
                                                 class="reception-room-select-btn js-open-room-panel"
@@ -448,7 +414,6 @@
                                         </button>
                                     </td>
 
-                                    <!-- คอลัมน์แนวนอน: วันที่และ Booking Bar -->
                                     @{
                                         int dayIndex = 0;
                                         while (dayIndex < daysCount)
@@ -456,7 +421,6 @@
                                             var cellDate = startDate.AddDays(dayIndex);
                                             bool isTodayCell = cellDate == today;
 
-                                            // ตรวจสอบว่ามีรายการจองที่เริ่มแสดงในช่องวันนี้หรือไม่
                                             var matchingBooking = roomBookings.FirstOrDefault(b =>
                                                 b.CheckInDate == cellDate ||
                                                 (dayIndex == 0 && b.CheckInDate < startDate && b.CheckOutDate > startDate));
@@ -473,8 +437,9 @@
 
                                                 bool isCheckedIn = matchingBooking.CheckedInAt.HasValue && !matchingBooking.CheckedOutAt.HasValue;
                                                 string barStateClass = isCheckedIn ? "reception-booking-bar-occupied" : "reception-booking-bar-reserved";
-                                                string barStateLabel = isCheckedIn ? "Occupied · เข้าพักอยู่" : "Reserved · ยืนยันแล้ว";
+                                                string barStateLabel = isCheckedIn ? "Occupied" : "Reserved";
                                                 bool canCheckInNow = !isCheckedIn && roomNormStatus == "available" && matchingBooking.CheckInDate <= today;
+                                                string codeDisplay = string.IsNullOrWhiteSpace(matchingBooking.BookingCode) ? $"#{matchingBooking.BookingId}" : matchingBooking.BookingCode;
 
                                                 <td colspan="@spanDays" class="reception-timeline-slot-cell has-booking @(isTodayCell ? "is-today-col" : "")">
                                                     <button type="button"
@@ -483,27 +448,25 @@
                                                             data-room-number="@room.RoomNumber"
                                                             data-room-type="@room.RoomTypeName"
                                                             data-room-floor="@room.FloorNo"
-                                                            data-room-status="@(isCheckedIn ? "Occupied" : "Reserved")"
+                                                            data-room-status="@barStateLabel"
                                                             data-booking-id="@matchingBooking.BookingId"
-                                                            data-booking-code="@(string.IsNullOrWhiteSpace(matchingBooking.BookingCode) ? $"#BK{matchingBooking.BookingId}" : matchingBooking.BookingCode)"
+                                                            data-booking-code="@codeDisplay"
                                                             data-guest-name="@matchingBooking.GuestName"
-                                                            data-checkin="@matchingBooking.CheckInDate.ToString("dd/MM/yyyy") (14:00 น.)"
-                                                            data-checkout="@matchingBooking.CheckOutDate.ToString("dd/MM/yyyy") (12:00 น.)"
-                                                            data-payment-status="อนุมัติแล้ว (Confirmed)"
+                                                            data-checkin="@matchingBooking.CheckInDate.ToString("dd/MM/yyyy")"
+                                                            data-checkout="@matchingBooking.CheckOutDate.ToString("dd/MM/yyyy")"
+                                                            data-payment-status="@(string.IsNullOrWhiteSpace(matchingBooking.PaymentStatus) ? "Approved" : matchingBooking.PaymentStatus)"
                                                             data-can-checkin="@(canCheckInNow ? "true" : "false")"
                                                             data-can-checkout="@(isCheckedIn ? "true" : "false")"
                                                             data-stay-id="@matchingBooking.StayId">
                                                         <div class="reception-booking-bar-head">
-                                                            <span class="reception-booking-bar-code">
-                                                                @(string.IsNullOrWhiteSpace(matchingBooking.BookingCode) ? $"#BK{matchingBooking.BookingId}" : matchingBooking.BookingCode)
-                                                            </span>
+                                                            <span class="reception-booking-bar-code">@codeDisplay</span>
                                                             <span class="reception-booking-bar-tag">@barStateLabel</span>
                                                         </div>
                                                         <div class="reception-booking-bar-guest">
                                                             <i class="fa-solid fa-user"></i> @matchingBooking.GuestName
                                                         </div>
                                                         <div class="reception-booking-bar-dates">
-                                                            In: @matchingBooking.CheckInDate.ToString("dd/MM") (14:00) · Out: @matchingBooking.CheckOutDate.ToString("dd/MM") (12:00)
+                                                            @matchingBooking.CheckInDate.ToString("dd/MM") – @matchingBooking.CheckOutDate.ToString("dd/MM")
                                                         </div>
                                                     </button>
                                                 </td>
@@ -529,7 +492,7 @@
                                                             data-can-checkin="false"
                                                             data-can-checkout="false"
                                                             data-stay-id="0"
-                                                            title="ห้อง @room.RoomNumber (@roomStatusBadgeText) - วันที่ @cellDate.ToString("dd/MM/yyyy")">
+                                                            title="ห้อง @room.RoomNumber (@roomStatusBadgeText) · @cellDate.ToString("dd/MM/yyyy")">
                                                         @if (roomNormStatus == "maintenance")
                                                         {
                                                             <span class="reception-slot-status-tag tag-maintenance">
@@ -539,7 +502,7 @@
                                                         else if (roomNormStatus == "dirty" && isTodayCell)
                                                         {
                                                             <span class="reception-slot-status-tag tag-dirty">
-                                                                <i class="fa-solid fa-broom"></i> Dirty
+                                                                <i class="fa-solid fa-broom"></i> Cleaning
                                                             </span>
                                                         }
                                                         else if (roomNormStatus == "occupied" && isTodayCell)
@@ -564,37 +527,39 @@
                     </tbody>
                 </table>
             </div>
+
+            <div id="calendarFloorPagination" class="d-flex justify-content-between align-items-center flex-wrap gap-2 p-3 border-top">
+                <small id="calendarFloorSummary" class="text-muted"></small>
+                <div id="calendarFloorButtons" class="d-flex align-items-center flex-wrap gap-1"></div>
+            </div>
         }
         else
         {
             <div class="reception-empty-state">
                 <i class="fa-regular fa-calendar-xmark"></i>
-                <p>ไม่พบข้อมูลห้องพักที่เปิดใช้งานในระบบ</p>
+                <p>ไม่พบข้อมูลห้องพักในระบบ</p>
             </div>
         }
     </section>
 </div>
 
-<!-- ==========================================
-     ส่วนที่ 7: ROOM & BOOKING INFORMATION PANEL (SIDE DRAWER MODAL)
-     ========================================== -->
+<!-- Room & Booking Information Drawer -->
 <div class="reception-info-backdrop" id="roomInfoBackdrop" aria-hidden="true"></div>
 <aside class="reception-info-drawer" id="roomInfoDrawer" aria-labelledby="drawerRoomTitle" aria-hidden="true">
     <div class="reception-drawer-header">
         <div>
-            <span class="reception-drawer-subtitle">ROOM & BOOKING INSPECTOR</span>
+            <span class="reception-drawer-subtitle">ROOM &amp; BOOKING DETAILS</span>
             <h3 class="reception-drawer-title" id="drawerRoomTitle">Room -</h3>
         </div>
-        <button type="button" class="reception-drawer-close" id="btnCloseDrawer" aria-label="ปิดหน้าต่างข้อมูล">
+        <button type="button" class="reception-drawer-close" id="btnCloseDrawer" aria-label="ปิด">
             <i class="fa-solid fa-xmark"></i>
         </button>
     </div>
 
     <div class="reception-drawer-body">
-        <!-- ข้อมูลห้องพัก -->
         <div class="reception-drawer-section">
             <h4 class="reception-drawer-section-title">
-                <i class="fa-solid fa-door-closed text-primary"></i> ข้อมูลห้องพัก (Room Information)
+                <i class="fa-solid fa-door-closed text-primary"></i> ข้อมูลห้องพัก
             </h4>
             <div class="reception-drawer-grid">
                 <div class="reception-drawer-field">
@@ -616,15 +581,14 @@
             </div>
         </div>
 
-        <!-- ข้อมูลการจอง (แสดงเฉพาะข้อมูลที่ Reception มีสิทธิ์เห็นตามหลัก SoD) -->
         <div class="reception-drawer-section">
             <h4 class="reception-drawer-section-title">
-                <i class="fa-solid fa-file-invoice text-info"></i> ข้อมูลการจอง (Booking Details)
+                <i class="fa-solid fa-file-invoice text-info"></i> ข้อมูลการจอง
             </h4>
             <div class="reception-drawer-grid">
                 <div class="reception-drawer-field">
                     <span>Booking ID</span>
-                    <strong id="infoBookingCode">ไม่มีการจองในช่วงนี้</strong>
+                    <strong id="infoBookingCode">-</strong>
                 </div>
                 <div class="reception-drawer-field">
                     <span>Guest Name</span>
@@ -639,7 +603,7 @@
                     <strong id="infoCheckOutDate">-</strong>
                 </div>
                 <div class="reception-drawer-field reception-field-full">
-                    <span>Payment Status (สิทธิ์ตรวจสอบเท่านั้น)</span>
+                    <span>Payment Status</span>
                     <strong id="infoPaymentStatus">-</strong>
                 </div>
             </div>
@@ -651,7 +615,7 @@
            asp-action="Bookings"
            id="btnDrawerViewDetails"
            class="reception-btn reception-btn-primary w-100 justify-content-center">
-            <i class="fa-regular fa-eye"></i> View Booking Details
+            <i class="fa-regular fa-eye"></i> ดูรายละเอียดการจอง
         </a>
 
         <a asp-controller="Reception"
@@ -669,7 +633,7 @@
         </a>
 
         <button type="button" id="btnDrawerCloseFooter" class="reception-btn reception-btn-ghost w-100 justify-content-center">
-            Close
+            ปิด
         </button>
     </div>
 </aside>

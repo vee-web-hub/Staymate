@@ -1,11 +1,4 @@
-/**
- * StayMate Guest Check-in Verification & Filter Script
- * File: wwwroot/js/reception-checkin.js
- * Note: Submits real POST form to ReceptionController.ProcessCheckInFromBooking
- */
 document.addEventListener("DOMContentLoaded", function () {
-
-    // 1. ระบบค้นหา กรอง และเรียงลำดับ (Client-side Instant Filter + Server GET Fallback)
     const inputCode = document.getElementById("searchBookingCodeInput");
     const inputGuest = document.getElementById("searchGuestNameInput");
     const inputRoom = document.getElementById("searchRoomNoInput");
@@ -26,7 +19,6 @@ document.addEventListener("DOMContentLoaded", function () {
         const statusVal = (selectStatus?.value || "all").toLowerCase();
         const sortDir = selectSort?.value || "asc";
 
-        // เรียงลำดับตามวันที่ Check-in
         const sortedRows = [...rows].sort((a, b) => {
             const dateA = a.getAttribute("data-checkin-sort") || "";
             const dateB = b.getAttribute("data-checkin-sort") || "";
@@ -81,7 +73,10 @@ document.addEventListener("DOMContentLoaded", function () {
         applyCheckInFiltersAndSort();
     });
 
-    // 2. ระบบตรวจสอบเงื่อนไข 6 ข้อใน Modal ก่อนยืนยัน Check-in
+    // กรองทันทีเมื่อโหลดหน้า (รองรับการกด Check-in มาจากหน้า Bookings)
+    applyCheckInFiltersAndSort();
+
+    // Modal ตรวจสอบและยืนยัน Check-in
     const modal = document.getElementById("checkInConfirmModal");
     const btnCloseModal = document.getElementById("btnCloseCheckInModal");
     const btnCancelModal = document.getElementById("btnCancelCheckInModal");
@@ -89,6 +84,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const inputBookingId = document.getElementById("modalInputBookingId");
     const warningBanner = document.getElementById("modalCiWarningBanner");
     const warningText = document.getElementById("modalCiWarningText");
+    const assignRoomBox = document.getElementById("modalAssignRoomBox");
+    const selectRoomId = document.getElementById("modalSelectRoomId");
 
     function updateChecklistRow(elementId, isPassed) {
         const li = document.getElementById(elementId);
@@ -116,6 +113,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const numGuests = this.getAttribute("data-num-guests") || "1";
 
             const canCheckIn = this.getAttribute("data-can-checkin") === "true";
+            const needsRoom = this.getAttribute("data-needs-room") === "true";
             const passPay = this.getAttribute("data-check-pay") === "true";
             const passConfirmed = this.getAttribute("data-check-confirmed") === "true";
             const passNotDup = this.getAttribute("data-check-notdup") === "true";
@@ -132,6 +130,26 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById("modalCiCheckOutDate").textContent = checkOutDate;
 
             if (inputBookingId) inputBookingId.value = bookingId;
+
+            if (assignRoomBox && selectRoomId) {
+                if (needsRoom && canCheckIn) {
+                    assignRoomBox.classList.remove("d-none");
+                    selectRoomId.required = true;
+                    selectRoomId.value = "";
+
+                    const wantType = (roomType || "").trim().toLowerCase();
+                    Array.from(selectRoomId.options).forEach((opt) => {
+                        if (!opt.value) return;
+                        const ok = !wantType || (opt.getAttribute("data-room-type") || "").trim() === wantType;
+                        opt.hidden = !ok;
+                        opt.disabled = !ok;
+                    });
+                } else {
+                    assignRoomBox.classList.add("d-none");
+                    selectRoomId.required = false;
+                    selectRoomId.value = "";
+                }
+            }
 
             updateChecklistRow("chkItemPayment", passPay);
             updateChecklistRow("chkItemConfirmed", passConfirmed);

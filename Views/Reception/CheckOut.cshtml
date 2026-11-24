@@ -4,12 +4,12 @@
     Layout = "~/Views/Shared/_ReceptionLayout.cshtml";
 
     var thaiCulture = new System.Globalization.CultureInfo("th-TH");
+    var now = DateTime.Now;
     var today = DateOnly.FromDateTime(DateTime.Today);
-    var currentDateText = DateTime.Now.ToString("วันddddที่ d MMMM yyyy", thaiCulture);
+    var currentDateText = now.ToString("วันddddที่ d MMMM yyyy", thaiCulture);
 
     var allStayItems = Model?.CheckOutList ?? new List<StayMate_Kavinvee_0576.ViewModels.ReceptionStayViewModel>();
 
-    // แยกรายการจาก ViewModel ออกเป็น 2 กลุ่ม: 1) รอ Check-out และ 2) ประวัติ Check-out สำเร็จแล้ว
     var activeCheckOuts = allStayItems
         .Where(s => !s.CheckedOutAt.HasValue)
         .OrderBy(s => s.CheckOutDate)
@@ -21,7 +21,6 @@
         .OrderByDescending(s => s.CheckedOutAt)
         .ToList();
 
-    // คำนวณตัวเลข Summary Cards ทั้ง 4 ใบจากข้อมูลจริงใน ViewModel
     int occupiedRoomsCount = (Model?.OccupiedRooms ?? 0) > 0
         ? Model!.OccupiedRooms
         : activeCheckOuts.Count;
@@ -30,23 +29,25 @@
         ? Model!.TodayCheckOuts
         : activeCheckOuts.Count(s => s.CheckOutDate == today);
 
-    int overdueCheckOutCount = activeCheckOuts.Count(s => s.CheckOutDate < today);
+    int overdueCheckOutCount = activeCheckOuts.Count(s =>
+        s.CheckOutDate < today ||
+        (s.CheckOutDate == today && now > s.CheckOutDate.ToDateTime(new TimeOnly(12, 0))));
+
     int completedCheckOutCount = historyCheckOuts.Count;
 }
 
 @section Styles {
-    <link rel="stylesheet" href="~/css/Reception.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/reception.css" asp-append-version="true" />
 }
 
 <div class="reception-dashboard-wrapper reception-checkout-page" id="receptionCheckOutApp">
 
-    <!-- แจ้งผลการทำงานจาก TempData (เมื่อ Check-out สำเร็จ หรือเกิดข้อผิดพลาด) -->
     @if (TempData["SuccessMessage"] != null)
     {
         <div class="reception-checkin-alert reception-alert-success reception-fade-in" role="alert">
             <div class="reception-alert-icon"><i class="fa-solid fa-circle-check"></i></div>
             <div class="reception-alert-content">
-                <strong>ดำเนินการ Check-out สำเร็จ!</strong>
+                <strong>ดำเนินการสำเร็จ</strong>
                 <span>@TempData["SuccessMessage"]</span>
             </div>
             <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -58,35 +59,33 @@
         <div class="reception-checkin-alert reception-alert-danger reception-fade-in" role="alert">
             <div class="reception-alert-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
             <div class="reception-alert-content">
-                <strong>ไม่สามารถดำเนินการได้!</strong>
+                <strong>ไม่สามารถดำเนินการได้</strong>
                 <span>@TempData["ErrorMessage"]</span>
             </div>
             <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }
 
-    <!-- ==========================================
-         1. ส่วนหัวหน้าเว็บ (PAGE HEADER)
-         ========================================== -->
+    <!-- Page Header -->
     <section class="reception-page-header reception-checkout-header reception-fade-in">
         <div class="reception-header-left">
             <div class="reception-title-badge">
                 <span class="reception-live-dot"></span>
-                <span>DEPARTURE & ROOM HANDOVER · AUTO HOUSEKEEPING DISPATCH</span>
+                <span>FRONT DESK CHECK-OUT</span>
             </div>
             <h1 class="reception-main-title">
                 <i class="fa-solid fa-arrow-right-from-bracket reception-checkout-title-icon"></i>
-                Check-out Management
+                Guest Check-out
             </h1>
             <p class="reception-welcome-text">
-                จัดการรายการลูกค้าที่กำลังจะ Check-out และตรวจสอบการคืนห้องพัก · ข้อมูลประจำ<span>@currentDateText</span>
+                ข้อมูลประจำ<strong>@currentDateText</strong>
             </p>
         </div>
 
         <div class="reception-header-right">
             <div class="reception-checkout-pending-pill">
                 <i class="fa-solid fa-suitcase-rolling"></i>
-                <span>รอดำเนินการคืนห้อง: <strong>@activeCheckOuts.Count</strong> รายการ</span>
+                <span>รอ Check-out: <strong>@activeCheckOuts.Count</strong> รายการ</span>
             </div>
 
             <a asp-controller="Reception" asp-action="CheckOut" class="reception-btn reception-btn-outline" title="รีเฟรชข้อมูล">
@@ -96,11 +95,8 @@
         </div>
     </section>
 
-    <!-- ==========================================
-         2. SUMMARY CARDS (4 ใบจากข้อมูลจริง)
-         ========================================== -->
+    <!-- Summary Cards -->
     <section class="reception-kpi-grid reception-checkout-kpi-grid reception-fade-in">
-        <!-- Card 1: จำนวนห้องที่กำลังมีผู้เข้าพัก -->
         <article class="reception-kpi-card reception-kpi-primary">
             <div class="reception-kpi-top">
                 <div>
@@ -111,12 +107,8 @@
                     <i class="fa-solid fa-bed"></i>
                 </div>
             </div>
-            <div class="reception-kpi-footer">
-                <span class="reception-kpi-desc">จำนวนห้องที่กำลังมีผู้เข้าพักอยู่ในระบบขณะนี้</span>
-            </div>
         </article>
 
-        <!-- Card 2: รายการที่ต้อง Check-out วันนี้ -->
         <article class="reception-kpi-card reception-kpi-warning">
             <div class="reception-kpi-top">
                 <div>
@@ -127,28 +119,20 @@
                     <i class="fa-solid fa-calendar-day"></i>
                 </div>
             </div>
-            <div class="reception-kpi-footer">
-                <span class="reception-kpi-desc">รายการที่ครบกำหนดต้อง Check-out ภายในวันนี้ (ก่อน 12:00 น.)</span>
-            </div>
         </article>
 
-        <!-- Card 3: รายการที่ Check-out ล่าช้า -->
         <article class="reception-kpi-card reception-kpi-danger">
             <div class="reception-kpi-top">
                 <div>
-                    <span class="reception-kpi-title">Late / Overdue Check-out</span>
+                    <span class="reception-kpi-title">Overdue Check-out</span>
                     <h2 class="reception-kpi-number">@overdueCheckOutCount</h2>
                 </div>
                 <div class="reception-kpi-icon">
                     <i class="fa-solid fa-bell"></i>
                 </div>
             </div>
-            <div class="reception-kpi-footer">
-                <span class="reception-kpi-desc">รายการที่เลยกำหนดวัน Check-out และยังไม่ได้บันทึกคืนห้อง</span>
-            </div>
         </article>
 
-        <!-- Card 4: รายการที่ Check-out สำเร็จแล้ว -->
         <article class="reception-kpi-card reception-kpi-success">
             <div class="reception-kpi-top">
                 <div>
@@ -159,36 +143,31 @@
                     <i class="fa-solid fa-circle-check"></i>
                 </div>
             </div>
-            <div class="reception-kpi-footer">
-                <span class="reception-kpi-desc">รายการที่ Check-out สำเร็จและส่งงานแม่บ้านทำความสะอาดแล้ว</span>
-            </div>
         </article>
     </section>
 
-    <!-- ==========================================
-         3. ส่วนค้นหาและตัวกรอง (SEARCH & FILTER PANEL)
-         ========================================== -->
+    <!-- Search & Filter Bar -->
     <section class="reception-checkout-filter-card reception-fade-in">
         <form asp-controller="Reception" asp-action="CheckOut" method="get" id="checkOutFilterForm" class="reception-checkout-filter-grid">
             <div class="reception-checkout-field">
-                <label for="coSearchGuest"><i class="fa-regular fa-user"></i> ชื่อลูกค้า</label>
+                <label for="coSearchGuest"><i class="fa-regular fa-user"></i> ชื่อผู้เข้าพัก</label>
                 <input type="text"
                        name="guestName"
                        id="coSearchGuest"
                        value="@Context.Request.Query["guestName"]"
                        class="reception-filter-control"
-                       placeholder="ค้นหาชื่อลูกค้า..."
+                       placeholder="ค้นหาชื่อผู้เข้าพัก..."
                        autocomplete="off" />
             </div>
 
             <div class="reception-checkout-field">
-                <label for="coSearchCode"><i class="fa-solid fa-barcode"></i> Booking Code</label>
+                <label for="coSearchCode"><i class="fa-solid fa-barcode"></i> Booking ID</label>
                 <input type="text"
                        name="bookingCode"
                        id="coSearchCode"
                        value="@Context.Request.Query["bookingCode"]"
                        class="reception-filter-control"
-                       placeholder="เช่น BK2026..."
+                       placeholder="ค้นหา Booking ID..."
                        autocomplete="off" />
             </div>
 
@@ -199,18 +178,18 @@
                        id="coSearchRoom"
                        value="@Context.Request.Query["roomNumber"]"
                        class="reception-filter-control"
-                       placeholder="เช่น 101, 205..."
+                       placeholder="ค้นหาหมายเลขห้อง..."
                        autocomplete="off" />
             </div>
 
             <div class="reception-checkout-field">
-                <label for="coFilterStatus"><i class="fa-solid fa-filter"></i> สถานะการเข้าพัก</label>
+                <label for="coFilterStatus"><i class="fa-solid fa-filter"></i> สถานะ</label>
                 <select name="statusFilter" id="coFilterStatus" class="reception-filter-control">
-                    <option value="all">ทุกสถานะ (All Statuses)</option>
-                    <option value="due_today">ครบกำหนดออกวันนี้ (Due Today)</option>
-                    <option value="overdue">เกินกำหนด Check-out (Overdue / Late)</option>
-                    <option value="staying">กำลังเข้าพักปกติ (Staying)</option>
-                    <option value="completed">Check-out สำเร็จแล้ว (Completed)</option>
+                    <option value="all">ทั้งหมด</option>
+                    <option value="due_today">ครบกำหนดวันนี้</option>
+                    <option value="overdue">เกินกำหนด</option>
+                    <option value="staying">กำลังเข้าพัก</option>
+                    <option value="completed">Check-out แล้ว</option>
                 </select>
             </div>
 
@@ -219,17 +198,14 @@
                     <i class="fa-solid fa-magnifying-glass"></i> ค้นหา
                 </button>
                 <a asp-controller="Reception" asp-action="CheckOut" id="btnResetCheckOutFilters" class="reception-btn reception-btn-ghost">
-                    <i class="fa-solid fa-rotate-left"></i> ล้างตัวกรอง
+                    <i class="fa-solid fa-rotate-left"></i> ล้างค่า
                 </a>
             </div>
         </form>
     </section>
 
-    <!-- ==========================================
-         4 & 6. ตารางรายการ CHECK-OUT พร้อม TAB แยก "รอ Check-out" และ "ประวัติ Check-out"
-         ========================================== -->
+    <!-- Check-out Tables with Tabs -->
     <section class="reception-panel reception-checkout-main-panel reception-fade-in">
-        <!-- แถบสลับ Tab -->
         <div class="reception-checkout-tabs-header">
             <div class="reception-checkout-tabs" role="tablist">
                 <button type="button"
@@ -238,7 +214,7 @@
                         role="tab"
                         aria-selected="true">
                     <i class="fa-solid fa-hourglass-half"></i>
-                    <span>รอ Check-out (Active Stays)</span>
+                    <span>รอ Check-out</span>
                     <span class="reception-tab-counter" id="badgePendingCount">@activeCheckOuts.Count</span>
                 </button>
 
@@ -248,20 +224,18 @@
                         role="tab"
                         aria-selected="false">
                     <i class="fa-solid fa-clock-rotate-left"></i>
-                    <span>ประวัติ Check-out (Completed History)</span>
+                    <span>ประวัติ Check-out</span>
                     <span class="reception-tab-counter is-history" id="badgeHistoryCount">@historyCheckOuts.Count</span>
                 </button>
             </div>
 
             <div class="reception-checkout-policy-hint">
                 <i class="fa-solid fa-broom text-warning"></i>
-                <span>เมื่อยืนยัน Check-out ระบบจะเปลี่ยนห้องเป็น <strong>Dirty</strong> และแจ้งงานแม่บ้านอัตโนมัติ</span>
+                <span>Check-out แล้วห้องจะเปลี่ยนเป็น <strong>Cleaning</strong> และแจ้งแม่บ้านอัตโนมัติ</span>
             </div>
         </div>
 
-        <!-- ==========================================
-             TAB 1: รอ CHECK-OUT (ACTIVE / PENDING CHECK-OUT)
-             ========================================== -->
+        <!-- Tab 1: Active Stays -->
         <div class="reception-checkout-tab-pane active" id="tabPendingCheckOut" role="tabpanel">
             @if (activeCheckOuts.Any())
             {
@@ -269,22 +243,26 @@
                     <table class="reception-table reception-checkout-table">
                         <thead>
                             <tr>
-                                <th>Booking Code</th>
-                                <th>ชื่อลูกค้า</th>
+                                <th>Booking ID</th>
+                                <th>ชื่อผู้เข้าพัก</th>
                                 <th>หมายเลขห้อง</th>
                                 <th>ประเภทห้อง</th>
-                                <th>วันที่ Check-in</th>
-                                <th>วันที่ Check-out</th>
-                                <th>เวลาเข้าพัก</th>
+                                <th>วันเข้าพัก</th>
+                                <th>วันออก</th>
+                                <th>เวลา Check-in</th>
                                 <th>สถานะ</th>
-                                <th class="text-end">ปุ่มดำเนินการ</th>
+                                <th class="text-end">Action</th>
                             </tr>
                         </thead>
                         <tbody id="pendingCheckOutBody">
                             @foreach (var stay in activeCheckOuts)
                             {
+                                var codeDisplay = string.IsNullOrWhiteSpace(stay.BookingCode) ? $"#{stay.BookingId}" : stay.BookingCode;
+                                var checkOutCutoff = stay.CheckOutDate.ToDateTime(new TimeOnly(12, 0));
+                                bool canCheckOutNow = now >= checkOutCutoff;
+
                                 bool isDueToday = stay.CheckOutDate == today;
-                                bool isOverdue = stay.CheckOutDate < today;
+                                bool isOverdue = stay.CheckOutDate < today || (stay.CheckOutDate == today && now > checkOutCutoff);
 
                                 string stayStateKey = isOverdue ? "overdue" : (isDueToday ? "due_today" : "staying");
                                 string statusBadgeClass = isOverdue
@@ -292,28 +270,26 @@
                                     : (isDueToday ? "reception-cobadge-duetoday" : "reception-cobadge-staying");
 
                                 string statusBadgeText = isOverdue
-                                    ? "เกินกำหนด Check-out (Late)"
-                                    : (isDueToday ? "ครบกำหนดออกวันนี้" : "กำลังเข้าพัก (Checked-in)");
+                                    ? "Overdue"
+                                    : (isDueToday ? "Due Today" : "Checked-in");
 
                                 string checkInTimeText = stay.CheckedInAt.HasValue
-                                    ? stay.CheckedInAt.Value.ToString("dd/MM/yyyy HH:mm น.")
-                                    : $"{stay.CheckInDate:dd/MM/yyyy} (14:00 น.)";
+                                    ? stay.CheckedInAt.Value.ToString("dd/MM/yyyy HH:mm")
+                                    : stay.CheckInDate.ToString("dd/MM/yyyy");
 
                                 <tr class="reception-checkout-row"
                                     data-guest="@stay.GuestName.ToLowerInvariant()"
-                                    data-code="@stay.BookingCode.ToLowerInvariant()"
+                                    data-code="@codeDisplay.ToLowerInvariant()"
                                     data-room="@stay.RoomNumber.ToLowerInvariant()"
                                     data-status="@stayStateKey">
 
-                                    <td data-label="Booking Code">
-                                        <span class="reception-code-badge">
-                                            @(string.IsNullOrWhiteSpace(stay.BookingCode) ? $"#{stay.BookingId}" : stay.BookingCode)
-                                        </span>
+                                    <td data-label="Booking ID">
+                                        <span class="reception-code-badge">@codeDisplay</span>
                                     </td>
-                                    <td data-label="ชื่อลูกค้า">
+                                    <td data-label="ชื่อผู้เข้าพัก">
                                         <div class="reception-guest-cell">
                                             <strong>@stay.GuestName</strong>
-                                            <small><i class="fa-solid fa-phone"></i> @stay.GuestPhone · ผู้เข้าพัก @(stay.ActualGuests ?? stay.NumGuests) ท่าน</small>
+                                            <small><i class="fa-solid fa-phone"></i> @stay.GuestPhone · @(stay.ActualGuests ?? stay.NumGuests) ท่าน</small>
                                         </div>
                                     </td>
                                     <td data-label="หมายเลขห้อง">
@@ -324,15 +300,15 @@
                                     <td data-label="ประเภทห้อง">
                                         <span>@stay.RoomTypeName</span>
                                     </td>
-                                    <td data-label="วันที่ Check-in">
+                                    <td data-label="วันเข้าพัก">
                                         <span class="reception-time-text">@stay.CheckInDate.ToString("dd/MM/yyyy")</span>
                                     </td>
-                                    <td data-label="วันที่ Check-out">
+                                    <td data-label="วันออก">
                                         <span class="reception-time-text fw-semibold @(isOverdue ? "text-danger" : (isDueToday ? "text-warning" : ""))">
                                             @stay.CheckOutDate.ToString("dd/MM/yyyy")
                                         </span>
                                     </td>
-                                    <td data-label="เวลาเข้าพัก">
+                                    <td data-label="เวลา Check-in">
                                         <span class="reception-checkin-timestamp">
                                             <i class="fa-regular fa-clock text-info me-1"></i>@checkInTimeText
                                         </span>
@@ -342,32 +318,44 @@
                                             @statusBadgeText
                                         </span>
                                     </td>
-                                    <td data-label="ปุ่มดำเนินการ" class="text-end">
+                                    <td data-label="Action" class="text-end">
                                         <div class="reception-action-group justify-content-end">
                                             <a asp-controller="Reception"
-                                               asp-action="BookingManagement"
-                                               asp-route-search="@stay.BookingCode"
+                                               asp-action="Bookings"
+                                               asp-route-search="@codeDisplay"
                                                class="reception-btn-sm reception-btn-ghost"
-                                               title="ดูข้อมูลการจอง">
+                                               title="ดูรายละเอียด">
                                                 <i class="fa-regular fa-eye"></i> รายละเอียด
                                             </a>
 
-                                            <button type="button"
-                                                    class="reception-btn-sm reception-btn-checkout-cta js-open-checkout-modal"
-                                                    data-booking-id="@stay.BookingId"
-                                                    data-stay-id="@stay.StayId"
-                                                    data-booking-code="@(string.IsNullOrWhiteSpace(stay.BookingCode) ? $"#{stay.BookingId}" : stay.BookingCode)"
-                                                    data-guest-name="@stay.GuestName"
-                                                    data-guest-phone="@stay.GuestPhone"
-                                                    data-room-number="@stay.RoomNumber"
-                                                    data-room-type="@stay.RoomTypeName"
-                                                    data-checkin-date="@stay.CheckInDate.ToString("dd/MM/yyyy")"
-                                                    data-checkout-date="@stay.CheckOutDate.ToString("dd/MM/yyyy")"
-                                                    data-checkin-time="@checkInTimeText"
-                                                    data-guests="@(stay.ActualGuests ?? stay.NumGuests)"
-                                                    data-status-text="@statusBadgeText">
-                                                <i class="fa-solid fa-arrow-right-from-bracket"></i> Check-out
-                                            </button>
+                                            @if (canCheckOutNow)
+                                            {
+                                                <button type="button"
+                                                        class="reception-btn-sm reception-btn-checkout-cta js-open-checkout-modal"
+                                                        data-booking-id="@stay.BookingId"
+                                                        data-stay-id="@stay.StayId"
+                                                        data-booking-code="@codeDisplay"
+                                                        data-guest-name="@stay.GuestName"
+                                                        data-guest-phone="@stay.GuestPhone"
+                                                        data-room-number="@stay.RoomNumber"
+                                                        data-room-type="@stay.RoomTypeName"
+                                                        data-checkin-date="@stay.CheckInDate.ToString("dd/MM/yyyy")"
+                                                        data-checkout-date="@stay.CheckOutDate.ToString("dd/MM/yyyy")"
+                                                        data-checkin-time="@checkInTimeText"
+                                                        data-guests="@(stay.ActualGuests ?? stay.NumGuests)"
+                                                        data-status-text="@statusBadgeText">
+                                                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Check-out
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="button"
+                                                        class="reception-btn-sm reception-btn-ghost"
+                                                        disabled
+                                                        title="กด Check-out ได้ตั้งแต่ @checkOutCutoff.ToString("dd/MM/yyyy HH:mm") น.">
+                                                    <i class="fa-solid fa-clock"></i> รอ @checkOutCutoff.ToString("dd/MM HH:mm")
+                                                </button>
+                                            }
                                         </div>
                                     </td>
                                 </tr>
@@ -382,15 +370,12 @@
                     <div class="reception-empty-key-icon">
                         <i class="fa-solid fa-suitcase-rolling"></i>
                     </div>
-                    <h4>ไม่มีรายการที่รอ Check-out ในขณะนี้</h4>
-                    <p>ห้องพักทั้งหมดยังไม่มีรายการค้างส่งคืนห้อง หรือดำเนินการ Check-out ครบถ้วนเรียบร้อยแล้ว</p>
+                    <h4>ไม่มีรายการรอ Check-out</h4>
                 </div>
             }
         </div>
 
-        <!-- ==========================================
-             TAB 2: ประวัติ CHECK-OUT (COMPLETED CHECK-OUT HISTORY)
-             ========================================== -->
+        <!-- Tab 2: Completed History -->
         <div class="reception-checkout-tab-pane" id="tabHistoryCheckOut" role="tabpanel">
             @if (historyCheckOuts.Any())
             {
@@ -398,41 +383,40 @@
                     <table class="reception-table reception-checkout-table">
                         <thead>
                             <tr>
-                                <th>Booking Code</th>
-                                <th>ชื่อลูกค้า</th>
+                                <th>Booking ID</th>
+                                <th>ชื่อผู้เข้าพัก</th>
                                 <th>หมายเลขห้อง</th>
                                 <th>ประเภทห้อง</th>
-                                <th>วันที่ Check-in</th>
-                                <th>วันที่ Check-out</th>
-                                <th>เวลาเข้าพักจริง</th>
-                                <th>วันและเวลาที่ Check-out สำเร็จ</th>
+                                <th>วันเข้าพัก</th>
+                                <th>วันออก</th>
+                                <th>เวลา Check-in</th>
+                                <th>เวลา Check-out</th>
                                 <th>สถานะ</th>
-                                <th class="text-end">การดำเนินการ</th>
+                                <th class="text-end">Action</th>
                             </tr>
                         </thead>
                         <tbody id="historyCheckOutBody">
                             @foreach (var done in historyCheckOuts)
                             {
+                                var codeDisplay = string.IsNullOrWhiteSpace(done.BookingCode) ? $"#{done.BookingId}" : done.BookingCode;
                                 string checkInTimeText = done.CheckedInAt.HasValue
-                                    ? done.CheckedInAt.Value.ToString("dd/MM/yyyy HH:mm น.")
+                                    ? done.CheckedInAt.Value.ToString("dd/MM/yyyy HH:mm")
                                     : done.CheckInDate.ToString("dd/MM/yyyy");
 
                                 string checkOutDoneText = done.CheckedOutAt.HasValue
-                                    ? done.CheckedOutAt.Value.ToString("dd/MM/yyyy HH:mm น.")
+                                    ? done.CheckedOutAt.Value.ToString("dd/MM/yyyy HH:mm")
                                     : "-";
 
                                 <tr class="reception-checkout-row"
                                     data-guest="@done.GuestName.ToLowerInvariant()"
-                                    data-code="@done.BookingCode.ToLowerInvariant()"
+                                    data-code="@codeDisplay.ToLowerInvariant()"
                                     data-room="@done.RoomNumber.ToLowerInvariant()"
                                     data-status="completed">
 
-                                    <td data-label="Booking Code">
-                                        <span class="reception-code-badge">
-                                            @(string.IsNullOrWhiteSpace(done.BookingCode) ? $"#{done.BookingId}" : done.BookingCode)
-                                        </span>
+                                    <td data-label="Booking ID">
+                                        <span class="reception-code-badge">@codeDisplay</span>
                                     </td>
-                                    <td data-label="ชื่อลูกค้า">
+                                    <td data-label="ชื่อผู้เข้าพัก">
                                         <div class="reception-guest-cell">
                                             <strong>@done.GuestName</strong>
                                             <small>@done.GuestPhone</small>
@@ -444,31 +428,31 @@
                                     <td data-label="ประเภทห้อง">
                                         <span>@done.RoomTypeName</span>
                                     </td>
-                                    <td data-label="วันที่ Check-in">
+                                    <td data-label="วันเข้าพัก">
                                         <span>@done.CheckInDate.ToString("dd/MM/yyyy")</span>
                                     </td>
-                                    <td data-label="วันที่ Check-out">
+                                    <td data-label="วันออก">
                                         <span>@done.CheckOutDate.ToString("dd/MM/yyyy")</span>
                                     </td>
-                                    <td data-label="เวลาเข้าพักจริง">
+                                    <td data-label="เวลา Check-in">
                                         <span class="reception-time-text">@checkInTimeText</span>
                                     </td>
-                                    <td data-label="เวลาที่ Check-out สำเร็จ">
+                                    <td data-label="เวลา Check-out">
                                         <span class="reception-checkout-done-time">
                                             <i class="fa-solid fa-circle-check text-success me-1"></i>@checkOutDoneText
                                         </span>
                                     </td>
                                     <td data-label="สถานะ">
                                         <span class="reception-status-badge reception-cobadge-completed">
-                                            Check-out สำเร็จแล้ว
+                                            Checked-out
                                         </span>
                                     </td>
-                                    <td data-label="การดำเนินการ" class="text-end">
+                                    <td data-label="Action" class="text-end">
                                         <a asp-controller="Reception"
-                                           asp-action="BookingManagement"
-                                           asp-route-search="@done.BookingCode"
+                                           asp-action="Bookings"
+                                           asp-route-search="@codeDisplay"
                                            class="reception-btn-sm reception-btn-ghost">
-                                            <i class="fa-regular fa-file-lines"></i> ดูประวัติใบจอง
+                                            <i class="fa-regular fa-file-lines"></i> รายละเอียด
                                         </a>
                                     </td>
                                 </tr>
@@ -483,56 +467,44 @@
                     <div class="reception-empty-key-icon">
                         <i class="fa-solid fa-clock-rotate-left"></i>
                     </div>
-                    <h4>ยังไม่มีประวัติรายการที่ Check-out สำเร็จ</h4>
-                    <p>เมื่อดำเนินการ Check-out ลูกค้าแล้ว ประวัติวันและเวลาที่คืนห้องพักจะแสดงในแท็บนี้โดยอัตโนมัติ</p>
+                    <h4>ไม่มีประวัติการ Check-out</h4>
                 </div>
             }
         </div>
     </section>
 </div>
 
-<!-- ==========================================================================
-     5. MODAL ยืนยันการ CHECK-OUT (ส่งคำสั่ง POST ไปยัง ProcessCheckOutFromBooking)
-     ========================================================================== -->
+<!-- Check-out Confirmation Modal -->
 <div class="reception-modal-overlay" id="checkOutConfirmModal" aria-hidden="true">
     <div class="reception-modal-dialog reception-checkin-modal-md" role="dialog" aria-labelledby="checkOutModalTitle">
         <div class="reception-modal-header">
             <div>
-                <span class="reception-modal-kicker">ROOM RETURN & HOUSEKEEPING DISPATCH</span>
+                <span class="reception-modal-kicker">ROOM RETURN &amp; HOUSEKEEPING</span>
                 <h3 class="reception-modal-title" id="checkOutModalTitle">
-                    <i class="fa-solid fa-arrow-right-from-bracket text-warning"></i> ยืนยันการดำเนินการ Check-out
+                    <i class="fa-solid fa-arrow-right-from-bracket text-warning"></i> ยืนยันการ Check-out
                 </h3>
             </div>
-            <button type="button" class="reception-modal-close" id="btnCloseCheckOutModal" aria-label="ปิดหน้าต่าง">
+            <button type="button" class="reception-modal-close" id="btnCloseCheckOutModal" aria-label="ปิด">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
 
         <div class="reception-modal-body">
-            <div class="reception-checkout-modal-banner">
-                <i class="fa-solid fa-circle-info"></i>
-                <div>
-                    <strong>ตรวจสอบความเรียบร้อยก่อนยืนยันการคืนห้องพัก</strong>
-                    <p>เมื่อกดยืนยัน ระบบจะบันทึกเวลา Check-out จริง เปลี่ยนสถานะห้องพักเป็น <strong>Dirty (รอทำความสะอาด)</strong> และสร้างงานให้แผนกแม่บ้านทันที</p>
-                </div>
-            </div>
-
-            <!-- รายละเอียดลูกค้าและห้องพักก่อนยืนยัน -->
             <div class="reception-checkin-summary-box">
                 <div class="reception-checkin-summary-item">
-                    <span>Booking Code</span>
+                    <span>Booking ID</span>
                     <strong id="modalCoBookingCode" class="text-primary">-</strong>
                 </div>
                 <div class="reception-checkin-summary-item">
-                    <span>ชื่อลูกค้า (Guest Name)</span>
+                    <span>ชื่อผู้เข้าพัก</span>
                     <strong id="modalCoGuestName">-</strong>
                 </div>
                 <div class="reception-checkin-summary-item">
-                    <span>หมายเลขห้องพัก</span>
+                    <span>ห้องพัก</span>
                     <strong id="modalCoRoomNumber">-</strong>
                 </div>
                 <div class="reception-checkin-summary-item">
-                    <span>เบอร์โทรศัพท์ติดต่อ</span>
+                    <span>เบอร์โทรศัพท์</span>
                     <strong id="modalCoGuestPhone">-</strong>
                 </div>
                 <div class="reception-checkin-summary-item">
@@ -540,11 +512,11 @@
                     <strong id="modalCoStayDates">-</strong>
                 </div>
                 <div class="reception-checkin-summary-item">
-                    <span>เวลาที่เข้าพัก (Check-in Time)</span>
+                    <span>เวลา Check-in</span>
                     <strong id="modalCoCheckInTime">-</strong>
                 </div>
                 <div class="reception-checkin-summary-item">
-                    <span>จำนวนผู้เข้าพักจริง</span>
+                    <span>จำนวนผู้เข้าพัก</span>
                     <strong id="modalCoGuests">-</strong>
                 </div>
                 <div class="reception-checkin-summary-item">
@@ -567,7 +539,7 @@
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="bookingId" id="modalCoInputBookingId" value="" />
                 <button type="submit" class="reception-btn reception-btn-checkout-cta">
-                    <i class="fa-solid fa-check-double"></i> ยืนยัน Check-out และส่งงานแม่บ้าน
+                    <i class="fa-solid fa-check-double"></i> ยืนยัน Check-out
                 </button>
             </form>
         </div>

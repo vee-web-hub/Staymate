@@ -40,30 +40,76 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // 3. ตัวกรองสถานะห้องพัก (Room Status Overview Filter)
+   // 3. ตัวกรองสถานะห้องพัก + แบ่งหน้า (Room Status Overview Filter & Pagination)
     const filterButtons = document.querySelectorAll(".reception-filter-chip[data-filter]");
-    const roomCards = document.querySelectorAll("#receptionRoomGrid .reception-room-card");
+    const allRoomCards = Array.from(document.querySelectorAll("#receptionRoomGrid .reception-room-card"));
+    const roomPageSummary = document.getElementById("roomPageSummary");
+    const roomPageButtons = document.getElementById("roomPageButtons");
 
-    if (filterButtons.length > 0 && roomCards.length > 0) {
+    if (allRoomCards.length > 0) {
+        const roomsPerPage = 18; // 2 แถว x 9 ห้อง พอดีกับความสูงของกล่อง Recent Bookings ด้านขวา
+        let currentRoomFilter = "all";
+        let currentRoomPage = 1;
+
+        function renderRoomOverview() {
+            const matchedCards = allRoomCards.filter((card) => {
+                const status = card.getAttribute("data-room-status");
+                return currentRoomFilter === "all" || status === currentRoomFilter;
+            });
+
+            const totalItems = matchedCards.length;
+            const totalPages = Math.max(1, Math.ceil(totalItems / roomsPerPage));
+            if (currentRoomPage > totalPages) currentRoomPage = totalPages;
+
+            const startIdx = (currentRoomPage - 1) * roomsPerPage;
+            const endIdx = startIdx + roomsPerPage;
+
+            // ซ่อนการ์ดทั้งหมดก่อน แล้วแสดงเฉพาะรายการในหน้าปัจจุบัน
+            allRoomCards.forEach((card) => (card.style.display = "none"));
+            matchedCards.slice(startIdx, endIdx).forEach((card) => {
+                card.style.display = "";
+            });
+
+            // อัปเดตข้อความสรุปจำนวน
+            if (roomPageSummary) {
+                roomPageSummary.textContent = totalItems > 0
+                    ? `แสดงห้องที่ ${startIdx + 1} - ${Math.min(endIdx, totalItems)} จาก ${totalItems} ห้อง`
+                    : "ไม่พบห้องพักในสถานะที่เลือก";
+            }
+
+            // สร้างปุ่มเลขหน้า
+            if (roomPageButtons) {
+                roomPageButtons.innerHTML = "";
+                if (totalPages > 1) {
+                    for (let p = 1; p <= totalPages; p++) {
+                        const btn = document.createElement("button");
+                        btn.type = "button";
+                        btn.className = `reception-page-btn ${p === currentRoomPage ? "active" : ""}`;
+                        btn.textContent = p.toString();
+                        btn.addEventListener("click", () => {
+                            currentRoomPage = p;
+                            renderRoomOverview();
+                        });
+                        roomPageButtons.appendChild(btn);
+                    }
+                }
+            }
+        }
+
         filterButtons.forEach((btn) => {
             btn.addEventListener("click", function () {
-                const selectedFilter = this.getAttribute("data-filter");
+                currentRoomFilter = this.getAttribute("data-filter") || "all";
+                currentRoomPage = 1;
 
                 filterButtons.forEach((b) => b.classList.remove("active"));
                 this.classList.add("active");
 
-                roomCards.forEach((card) => {
-                    const roomStatus = card.getAttribute("data-room-status");
-                    if (selectedFilter === "all" || roomStatus === selectedFilter) {
-                        card.style.display = "";
-                    } else {
-                        card.style.display = "none";
-                    }
-                });
+                renderRoomOverview();
             });
         });
-    }
 
+        renderRoomOverview();
+    }
     // 4. ยืนยันก่อนดำเนินการ Check-in / Check-out (รองรับ SweetAlert2 หากติดตั้งไว้ใน Layout)
     const confirmLinks = document.querySelectorAll(".js-confirm-checkin, .js-confirm-checkout");
     confirmLinks.forEach((link) => {
