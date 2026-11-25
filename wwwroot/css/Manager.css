@@ -4063,3 +4063,756 @@
     max-height: calc(100vh - 12rem);
     padding: 1.5rem 1.75rem;
 }
+/* ═════════════════════════════════════════════════════════════════════════════
+   MANAGER PROFILE PAGE (Matches Profile.cshtml classes with --manager-* theme)
+   ═════════════════════════════════════════════════════════════════════════════ */
+.owner-dashboard-wrapper.owner-pf-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: 100%;
+    max-width: 1560px;
+    margin: 0 auto;
+    padding: 1.5rem 1.5rem 3rem;
+}
+
+/* Alerts */
+.owner-pf-alert {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.9rem 1.25rem;
+    border-radius: var(--manager-radius-md);
+    font-size: 0.88rem;
+    font-weight: 500;
+    border: 1px solid transparent;
+    box-shadow: var(--manager-shadow-sm);
+}
+
+.owner-pf-alert-success {
+    background: rgba(16, 185, 129, 0.1);
+    color: #065F46;
+    border-color: rgba(16, 185, 129, 0.28);
+}
+
+.owner-pf-alert-danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: #991B1B;
+    border-color: rgba(239, 68, 68, 0.28);
+}
+
+/* Hero Banner */
+.owner-pf-hero {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    background: linear-gradient(135deg, var(--manager-navy) 0%, var(--manager-navy-light) 55%, #1E1B4B 100%);
+    color: #FFFFFF;
+    border-radius: var(--manager-radius-lg);
+    padding: 2rem 2.25rem;
+    box-shadow: var(--manager-shadow-lg);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.owner-pf-hero::after {
+    content: "";
+    position: absolute;
+    right: -70px;
+    top: -90px;
+    width: 260px;
+    height: 260px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0, 229, 255, 0.22) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.owner-pf-hero-left {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    position: relative;
+    z-index: 1;
+}
+
+.owner-pf-avatar {
+    width: 82px;
+    height: 82px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.1rem;
+    font-weight: 700;
+    color: var(--manager-navy);
+    background: linear-gradient(135deg, var(--manager-cyan) 0%, var(--manager-blue) 100%);
+    box-shadow: 0 0 0 4px rgba(0, 229, 255, 0.22), 0 8px 24px rgba(0, 229, 255, 0.28);
+}
+
+.owner-pf-badge-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    margin-bottom: 0.5rem;
+}
+
+.owner-eyebrow-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--manager-cyan);
+    background: rgba(0, 229, 255, 0.1);
+    border: 1px solid rgba(0, 229, 255, 0.25);
+    padding: 0.3rem 0.8rem;
+    border-radius: 999px;
+}
+
+.owner-pulse-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--manager-cyan);
+    box-shadow: 0 0 0 0 rgba(0, 229, 255, 0.65);
+    animation: managerLivePulse 1.8s infinite;
+}
+
+.owner-pf-since-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.76rem;
+    color: rgba(255, 255, 255, 0.86);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    padding: 0.3rem 0.8rem;
+    border-radius: 999px;
+}
+
+.owner-pf-since-pill i {
+    color: var(--manager-cyan);
+}
+
+.owner-pf-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0 0 0.4rem;
+    color: #FFFFFF;
+    letter-spacing: -0.02em;
+}
+
+.owner-pf-contact-strip {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    font-size: 0.88rem;
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.owner-pf-contact-strip i {
+    color: var(--manager-cyan);
+    margin-right: 0.25rem;
+}
+
+.owner-pf-sep {
+    opacity: 0.55;
+}
+
+.owner-pf-hero-right {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    position: relative;
+    z-index: 1;
+}
+
+.owner-pf-role-crown {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.45rem 1rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    background: rgba(139, 92, 246, 0.2);
+    border: 1px solid rgba(139, 92, 246, 0.4);
+    color: #EDE9FE;
+}
+
+.owner-pf-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.38rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.owner-pf-status-badge.is-success {
+    background: rgba(16, 185, 129, 0.14);
+    color: #10B981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.owner-pf-status-badge.is-danger {
+    background: rgba(239, 68, 68, 0.14);
+    color: #F87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.owner-panel .owner-pf-status-badge.is-success {
+    background: rgba(16, 185, 129, 0.1);
+    color: #047857;
+}
+
+.owner-panel .owner-pf-status-badge.is-danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: #B91C1C;
+}
+
+/* Quick Stats */
+.owner-pf-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+}
+
+.owner-pf-stat {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--manager-card);
+    border: 1px solid var(--manager-border);
+    border-radius: var(--manager-radius-lg);
+    padding: 1.25rem 1.5rem;
+    box-shadow: var(--manager-shadow-sm);
+    transition: var(--manager-transition);
+}
+
+.owner-pf-stat:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--manager-shadow-md);
+}
+
+.owner-pf-stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.owner-pf-stat-icon.is-cyan {
+    background: rgba(14, 165, 233, 0.1);
+    color: var(--manager-cyan-dark);
+}
+
+.owner-pf-stat-icon.is-violet {
+    background: rgba(139, 92, 246, 0.1);
+    color: var(--manager-violet);
+}
+
+.owner-pf-stat-icon.is-green {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--manager-success);
+}
+
+.owner-pf-stat-icon.is-red {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--manager-danger);
+}
+
+.owner-pf-stat-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--manager-text-main);
+    line-height: 1.2;
+}
+
+.owner-pf-stat-label {
+    font-size: 0.8rem;
+    color: var(--manager-text-muted);
+    margin-top: 0.15rem;
+}
+
+/* Main Grid & Panels */
+.owner-pf-grid {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.owner-pf-side {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.owner-panel {
+    background: var(--manager-card);
+    border: 1px solid var(--manager-border);
+    border-radius: var(--manager-radius-lg);
+    padding: 1.65rem;
+    box-shadow: var(--manager-shadow-sm);
+}
+
+.owner-panel-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.35rem;
+}
+
+.owner-section-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--manager-blue);
+    margin-bottom: 0.25rem;
+}
+
+.owner-panel-title {
+    font-size: 1.12rem;
+    font-weight: 700;
+    color: var(--manager-navy);
+    margin: 0;
+}
+
+.owner-pf-mode-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    background: var(--manager-border-light);
+    color: var(--manager-text-muted);
+    border: 1px solid var(--manager-border);
+    transition: var(--manager-transition);
+}
+
+.owner-pf-mode-badge.is-editing {
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--manager-blue);
+    border-color: rgba(37, 99, 235, 0.25);
+}
+
+/* Form Fields */
+.owner-pf-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.owner-pf-field-edit {
+    display: flex;
+    flex-direction: column;
+    gap: 0.38rem;
+}
+
+.owner-pf-field-edit label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--manager-text-secondary);
+}
+
+.owner-pf-req {
+    color: var(--manager-danger);
+}
+
+.owner-pf-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: var(--manager-card);
+    border: 1px solid var(--manager-border);
+    border-radius: var(--manager-radius-sm);
+    padding: 0.22rem 0.85rem;
+    transition: var(--manager-transition);
+}
+
+.owner-pf-input-wrap:focus-within {
+    border-color: var(--manager-blue);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.owner-pf-input-wrap > i {
+    color: var(--manager-blue);
+    font-size: 0.9rem;
+    width: 16px;
+    text-align: center;
+}
+
+.owner-pf-input-wrap input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    outline: none;
+    padding: 0.5rem 0;
+    font-family: 'Prompt', sans-serif;
+    font-size: 0.9rem;
+    color: var(--manager-text-main);
+}
+
+.owner-pf-input-wrap input:disabled {
+    color: var(--manager-text-main);
+    -webkit-text-fill-color: var(--manager-text-main);
+    cursor: default;
+}
+
+.owner-pf-input-wrap:has(input:disabled) {
+    background: var(--manager-bg);
+}
+
+.owner-pf-input-wrap.is-readonly {
+    background: var(--manager-border-light);
+}
+
+.owner-pf-input-wrap.is-readonly > i {
+    color: var(--manager-text-muted);
+}
+
+.owner-pf-role-chips.owner-pf-role-box {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    min-height: 43px;
+    padding: 0.4rem 0.75rem;
+    background: var(--manager-border-light);
+    border: 1px solid var(--manager-border);
+    border-radius: var(--manager-radius-sm);
+}
+
+.owner-pf-role-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.22rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--manager-blue);
+    border: 1px solid rgba(37, 99, 235, 0.2);
+}
+
+.owner-pf-field-value {
+    color: var(--manager-text-muted);
+    font-size: 0.86rem;
+}
+
+.owner-pf-eye {
+    border: none;
+    background: transparent;
+    color: var(--manager-text-muted);
+    cursor: pointer;
+    padding: 0.25rem;
+}
+
+.owner-pf-eye:hover {
+    color: var(--manager-navy);
+}
+
+.owner-pf-field-error {
+    color: var(--manager-danger);
+    font-size: 0.78rem;
+    font-weight: 500;
+}
+
+/* Actions & Buttons */
+.owner-pf-actions {
+    margin-top: 1.4rem;
+    padding-top: 1.15rem;
+    border-top: 1px solid var(--manager-border);
+}
+
+.owner-pf-actions-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+}
+
+.owner-pf-actions-row[hidden] {
+    display: none;
+}
+
+.owner-pf-actions-row.is-end {
+    justify-content: flex-end;
+}
+
+.owner-pf-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    font-family: 'Prompt', sans-serif;
+    font-size: 0.86rem;
+    font-weight: 600;
+    padding: 0.6rem 1.15rem;
+    border-radius: var(--manager-radius-sm);
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    transition: var(--manager-transition);
+}
+
+.owner-pf-btn-primary {
+    background: var(--manager-blue);
+    color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.18);
+}
+
+.owner-pf-btn-primary:hover {
+    background: var(--manager-blue-hover);
+    color: #FFFFFF;
+    transform: translateY(-1px);
+}
+
+.owner-pf-btn-outline {
+    background: var(--manager-card);
+    border-color: var(--manager-border);
+    color: var(--manager-text-secondary);
+}
+
+.owner-pf-btn-outline:hover {
+    border-color: var(--manager-blue);
+    color: var(--manager-blue);
+    background: rgba(37, 99, 235, 0.03);
+}
+
+.owner-pf-btn-success {
+    background: var(--manager-success);
+    color: #FFFFFF;
+}
+
+.owner-pf-btn-success:hover {
+    background: #059669;
+    color: #FFFFFF;
+}
+
+.owner-pf-btn-danger {
+    background: var(--manager-danger);
+    color: #FFFFFF;
+}
+
+.owner-pf-btn-danger:hover {
+    background: #DC2626;
+    color: #FFFFFF;
+    transform: translateY(-1px);
+}
+
+/* Account Info & Logout Card */
+.owner-pf-info-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.owner-pf-info-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.8rem 0;
+    border-bottom: 1px dashed var(--manager-border);
+    font-size: 0.86rem;
+}
+
+.owner-pf-info-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.owner-pf-info-item > span:first-child {
+    color: var(--manager-text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.owner-pf-info-item > span:first-child i {
+    color: var(--manager-blue);
+    width: 16px;
+    text-align: center;
+}
+
+.owner-pf-info-item strong {
+    color: var(--manager-navy);
+    text-align: right;
+}
+
+.owner-pf-logout-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.owner-pf-logout-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--manager-navy);
+    margin: 0 0 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.owner-pf-logout-title i {
+    color: var(--manager-blue);
+}
+
+.owner-pf-logout-sub {
+    font-size: 0.82rem;
+    color: var(--manager-text-muted);
+    margin: 0;
+}
+
+/* Password Modal */
+.owner-pf-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(7, 13, 30, 0.62);
+    backdrop-filter: blur(5px);
+}
+
+.owner-pf-modal-overlay.is-open {
+    display: flex;
+}
+
+.owner-pf-modal {
+    width: 100%;
+    max-width: 480px;
+    max-height: 92vh;
+    overflow-y: auto;
+    background: var(--manager-card);
+    border-radius: var(--manager-radius-lg);
+    box-shadow: var(--manager-shadow-lg);
+    animation: managerTabFadeIn 0.25s ease both;
+}
+
+.owner-pf-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    background: var(--manager-navy);
+    color: #FFFFFF;
+    padding: 1.2rem 1.5rem;
+}
+
+.owner-pf-modal-kicker {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--manager-cyan);
+    margin-bottom: 0.2rem;
+}
+
+.owner-pf-modal-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    margin: 0;
+}
+
+.owner-pf-modal-title i {
+    color: var(--manager-cyan);
+    margin-right: 0.35rem;
+}
+
+.owner-pf-modal-close {
+    border: none;
+    background: rgba(255, 255, 255, 0.12);
+    color: #FFFFFF;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: var(--manager-transition);
+}
+
+.owner-pf-modal-close:hover {
+    background: var(--manager-danger);
+}
+
+.owner-pf-modal-body {
+    padding: 1.35rem 1.5rem 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.owner-pf-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.6rem;
+    padding: 1rem 1.5rem 1.35rem;
+}
+
+/* Responsive */
+@media (max-width: 1199.98px) {
+    .owner-pf-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .owner-pf-stats {
+        grid-template-columns: 1fr;
+    }
+    .owner-pf-hero {
+        padding: 1.5rem;
+    }
+    .owner-pf-hero-left {
+        flex-direction: column;
+        text-align: center;
+        width: 100%;
+    }
+    .owner-pf-badge-row,
+    .owner-pf-contact-strip,
+    .owner-pf-hero-right {
+        justify-content: center;
+    }
+    .owner-pf-form-grid {
+        grid-template-columns: 1fr;
+    }
+    .owner-pf-actions-row .owner-pf-btn,
+    .owner-pf-logout-card form,
+    .owner-pf-logout-card .owner-pf-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+.manager-chart-footer { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin-top: 0.75rem; padding-top: 0.65rem; border-top: 1px dashed var(--manager-border, #E2E8F0); font-size: 0.78rem; }

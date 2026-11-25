@@ -1,0 +1,442 @@
+@model StayMate_Kavinvee_0576.Models.ViewModels.ManagerProfileViewModel
+@using System.Globalization
+@{
+    // *** ถ้าชื่อไฟล์ Layout ของ Manager ไม่ตรง ให้แก้บรรทัดนี้ ***
+    Layout = "~/Views/Shared/_ManagerLayout.cshtml";
+    ViewData["Title"] = "โปรไฟล์ของฉัน";
+
+    var successMessage = TempData["SuccessMessage"] as string;
+    var errorMessage = TempData["ErrorMessage"] as string;
+    var openPasswordModal = TempData["OpenPasswordModal"] != null;
+
+    var fullName = !string.IsNullOrWhiteSpace(Model?.FullName)
+        ? Model!.FullName!.Trim()
+        : (!string.IsNullOrWhiteSpace(Model?.Username)
+            ? Model!.Username
+            : (User.Identity?.Name ?? "Manager"));
+
+    var nameParts = fullName.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
+    var firstName = nameParts.Length > 0 ? nameParts[0] : fullName;
+    var lastName = nameParts.Length > 1 ? nameParts[1] : "";
+    var avatarInitial = fullName.Length > 0 ? fullName.Substring(0, 1).ToUpperInvariant() : "M";
+
+    var username = !string.IsNullOrWhiteSpace(Model?.Username) ? Model!.Username : "-";
+    var emailRaw = Model?.Email ?? "";
+    var email = !string.IsNullOrWhiteSpace(emailRaw) ? emailRaw : "-";
+    var phoneRaw = Model?.Phone ?? "";
+    var phone = !string.IsNullOrWhiteSpace(phoneRaw) ? phoneRaw : "-";
+    var isActive = Model?.IsActive ?? false;
+
+    // ใช้ InvariantCulture เพื่อให้เป็นปี ค.ศ. เหมือนทุกหน้าในระบบ
+    DateTime? createdAt = Model?.CreatedAt;
+    var memberSince = createdAt.HasValue && createdAt.Value != default
+        ? createdAt.Value.ToString("dd MMM yyyy", CultureInfo.InvariantCulture)
+        : "-";
+
+    var roleCodes = Model?.RoleCodes ?? new List<string>();
+    var roleCount = roleCodes.Count;
+}
+
+<div class="owner-dashboard-wrapper owner-pf-page">
+
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="owner-pf-alert owner-pf-alert-success" role="alert">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>@successMessage</span>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="owner-pf-alert owner-pf-alert-danger" role="alert">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span>@errorMessage</span>
+        </div>
+    }
+
+    <!-- ───── PROFILE HERO ───── -->
+    <header class="owner-pf-hero">
+        <div class="owner-pf-hero-left">
+            <div class="owner-pf-avatar" aria-hidden="true">@avatarInitial</div>
+
+            <div>
+                <div class="owner-pf-badge-row">
+                    <span class="owner-eyebrow-badge">
+                        <span class="owner-pulse-dot"></span> STAYMATE OPERATIONS
+                    </span>
+                    <span class="owner-pf-since-pill">
+                        <i class="fa-regular fa-calendar-check"></i> เข้าร่วมเมื่อ: @memberSince
+                    </span>
+                </div>
+
+                <h1 class="owner-pf-title">@fullName</h1>
+
+                <div class="owner-pf-contact-strip">
+                    <span><i class="fa-regular fa-envelope"></i> @email</span>
+                    <span class="owner-pf-sep">·</span>
+                    <span><i class="fa-solid fa-phone"></i> @phone</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="owner-pf-hero-right">
+            <span class="owner-pf-role-crown">
+                <i class="fa-solid fa-user-tie"></i> MANAGER
+            </span>
+
+            @if (isActive)
+            {
+                <span class="owner-pf-status-badge is-success">
+                    <i class="fa-solid fa-circle-check"></i> ใช้งานอยู่ (Active)
+                </span>
+            }
+            else
+            {
+                <span class="owner-pf-status-badge is-danger">
+                    <i class="fa-solid fa-circle-xmark"></i> ปิดใช้งาน (Inactive)
+                </span>
+            }
+        </div>
+    </header>
+
+    <!-- ───── QUICK STATS ───── -->
+    <div class="owner-pf-stats">
+        <div class="owner-pf-stat">
+            <div class="owner-pf-stat-icon is-cyan"><i class="fa-solid fa-id-badge"></i></div>
+            <div>
+                <div class="owner-pf-stat-value">#@(Model?.UserId.ToString() ?? "-")</div>
+                <div class="owner-pf-stat-label">รหัสผู้ใช้ (User ID)</div>
+            </div>
+        </div>
+
+        <div class="owner-pf-stat">
+            <div class="owner-pf-stat-icon is-violet"><i class="fa-solid fa-user-shield"></i></div>
+            <div>
+                <div class="owner-pf-stat-value">@roleCount.ToString("N0")</div>
+                <div class="owner-pf-stat-label">บทบาทในระบบ (Roles)</div>
+            </div>
+        </div>
+
+        <div class="owner-pf-stat">
+            <div class="owner-pf-stat-icon @(isActive ? "is-green" : "is-red")">
+                <i class="fa-solid @(isActive ? "fa-toggle-on" : "fa-toggle-off")"></i>
+            </div>
+            <div>
+                <div class="owner-pf-stat-value">@(isActive ? "Active" : "Inactive")</div>
+                <div class="owner-pf-stat-label">สถานะบัญชี</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ───── MAIN GRID ───── -->
+    <div class="owner-pf-grid">
+
+        <!-- LEFT: PERSONAL INFORMATION -->
+        <section class="owner-panel">
+            <div class="owner-panel-header">
+                <div>
+                    <span class="owner-section-tag"><i class="fa-regular fa-id-card"></i> PERSONAL INFORMATION</span>
+                    <h2 class="owner-panel-title">ข้อมูลส่วนตัวและตั้งค่าบัญชี</h2>
+                </div>
+                <span class="owner-pf-mode-badge" id="pfModeBadge">
+                    <i class="fa-solid fa-lock"></i> โหมดแสดงผล
+                </span>
+            </div>
+
+            <form id="pfForm" asp-controller="Manager" asp-action="UpdateProfile" method="post" novalidate>
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="fullName" id="pfFullName" value="@fullName" />
+
+                <div class="owner-pf-form-grid">
+                    <div class="owner-pf-field-edit">
+                        <label for="pfFirstName">ชื่อ (First Name) <span class="owner-pf-req">*</span></label>
+                        <div class="owner-pf-input-wrap">
+                            <i class="fa-regular fa-user"></i>
+                            <input type="text" id="pfFirstName" value="@firstName" maxlength="60" disabled required />
+                        </div>
+                    </div>
+
+                    <div class="owner-pf-field-edit">
+                        <label for="pfLastName">นามสกุล (Last Name)</label>
+                        <div class="owner-pf-input-wrap">
+                            <i class="fa-regular fa-user"></i>
+                            <input type="text" id="pfLastName" value="@lastName" maxlength="60" disabled />
+                        </div>
+                    </div>
+
+                    <div class="owner-pf-field-edit">
+                        <label for="pfPhone">เบอร์โทรศัพท์ (Phone Number)</label>
+                        <div class="owner-pf-input-wrap">
+                            <i class="fa-solid fa-phone"></i>
+                            <input type="tel" id="pfPhone" name="phone" value="@phoneRaw" placeholder="กรอกเบอร์โทรศัพท์" maxlength="20" disabled />
+                        </div>
+                    </div>
+
+                    <div class="owner-pf-field-edit">
+                        <label for="pfEmail">อีเมล (Email Address)</label>
+                        <div class="owner-pf-input-wrap is-readonly">
+                            <i class="fa-regular fa-envelope"></i>
+                            <input type="email" id="pfEmail" value="@emailRaw" disabled readonly />
+                        </div>
+                    </div>
+
+                    <div class="owner-pf-field-edit">
+                        <label for="pfUsername">ชื่อบัญชีผู้ใช้ (Username)</label>
+                        <div class="owner-pf-input-wrap is-readonly">
+                            <i class="fa-solid fa-at"></i>
+                            <input type="text" id="pfUsername" value="@username" disabled readonly />
+                        </div>
+                    </div>
+
+                    <div class="owner-pf-field-edit">
+                        <label>ตำแหน่ง / บทบาท (Role)</label>
+                        <div class="owner-pf-role-chips owner-pf-role-box">
+                            @if (roleCount == 0)
+                            {
+                                <span class="owner-pf-field-value">-</span>
+                            }
+                            else
+                            {
+                                foreach (var code in roleCodes)
+                                {
+                                    <span class="owner-pf-role-chip">
+                                        <i class="fa-solid @(string.Equals(code, "MANAGER", StringComparison.OrdinalIgnoreCase) ? "fa-user-tie" : "fa-user-gear")"></i>
+                                        @code
+                                    </span>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="owner-pf-actions">
+                    <div id="pfDefaultActions" class="owner-pf-actions-row">
+                        <button type="button" class="owner-pf-btn owner-pf-btn-primary" onclick="pfToggleEdit(true)">
+                            <i class="fa-solid fa-pen-to-square"></i> Edit Profile
+                        </button>
+                        <button type="button" class="owner-pf-btn owner-pf-btn-outline" onclick="pfOpenPassword()">
+                            <i class="fa-solid fa-key"></i> Change Password
+                        </button>
+                    </div>
+
+                    <div id="pfEditingActions" class="owner-pf-actions-row is-end" hidden>
+                        <button type="button" class="owner-pf-btn owner-pf-btn-outline" onclick="pfCancelEdit()">
+                            <i class="fa-solid fa-xmark"></i> ยกเลิก
+                        </button>
+                        <button type="submit" class="owner-pf-btn owner-pf-btn-success">
+                            <i class="fa-solid fa-floppy-disk"></i> Save Changes
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </section>
+
+        <!-- RIGHT: ACCOUNT STATUS + ACTIONS -->
+        <div class="owner-pf-side">
+
+            <section class="owner-panel">
+                <div class="owner-panel-header">
+                    <div>
+                        <span class="owner-section-tag"><i class="fa-solid fa-shield-halved"></i> ACCOUNT STATUS</span>
+                        <h3 class="owner-panel-title">ข้อมูลบัญชีผู้ใช้</h3>
+                    </div>
+                </div>
+
+                <div class="owner-pf-info-list">
+                    <div class="owner-pf-info-item">
+                        <span><i class="fa-solid fa-user-tie"></i> ตำแหน่งงาน</span>
+                        <strong>ผู้จัดการโรงแรม (Manager)</strong>
+                    </div>
+
+                    <div class="owner-pf-info-item">
+                        <span><i class="fa-solid fa-toggle-on"></i> สถานะบัญชี</span>
+                        @if (isActive)
+                        {
+                            <span class="owner-pf-status-badge is-success"><i class="fa-solid fa-circle-check"></i> Active</span>
+                        }
+                        else
+                        {
+                            <span class="owner-pf-status-badge is-danger"><i class="fa-solid fa-circle-xmark"></i> Inactive</span>
+                        }
+                    </div>
+
+                    <div class="owner-pf-info-item">
+                        <span><i class="fa-solid fa-at"></i> Username</span>
+                        <strong>@username</strong>
+                    </div>
+
+                    <div class="owner-pf-info-item">
+                        <span><i class="fa-regular fa-calendar"></i> สร้างบัญชีเมื่อ</span>
+                        <strong>@memberSince</strong>
+                    </div>
+                </div>
+            </section>
+
+            <section class="owner-panel owner-pf-logout-card">
+                <div>
+                    <h4 class="owner-pf-logout-title"><i class="fa-solid fa-shield-halved"></i> Account Actions</h4>
+                    <p class="owner-pf-logout-sub">ออกจากระบบเมื่อใช้งานเสร็จ เพื่อความปลอดภัยของข้อมูลการดำเนินงาน</p>
+                </div>
+
+                <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="owner-pf-btn owner-pf-btn-danger">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout (ออกจากระบบ)
+                    </button>
+                </form>
+            </section>
+
+        </div>
+    </div>
+</div>
+
+<!-- ───── CHANGE PASSWORD MODAL ───── -->
+<div class="owner-pf-modal-overlay" id="pfPasswordModal" aria-hidden="true">
+    <div class="owner-pf-modal" role="dialog" aria-modal="true" aria-labelledby="pfPasswordTitle">
+        <div class="owner-pf-modal-header">
+            <div>
+                <div class="owner-pf-modal-kicker">SECURITY</div>
+                <h5 class="owner-pf-modal-title" id="pfPasswordTitle"><i class="fa-solid fa-key"></i> เปลี่ยนรหัสผ่าน</h5>
+            </div>
+            <button type="button" class="owner-pf-modal-close" onclick="pfClosePassword()" aria-label="ปิด">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <form id="pfPasswordForm" asp-controller="Manager" asp-action="ChangePassword" method="post" novalidate>
+            @Html.AntiForgeryToken()
+            <div class="owner-pf-modal-body">
+                <div class="owner-pf-field-edit">
+                    <label for="oldPassword">รหัสผ่านเดิม <span class="owner-pf-req">*</span></label>
+                    <div class="owner-pf-input-wrap">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" id="oldPassword" name="oldPassword" autocomplete="current-password" placeholder="กรอกรหัสผ่านเดิม" required />
+                        <button type="button" class="owner-pf-eye" onclick="pfTogglePw('oldPassword', this)" aria-label="แสดงหรือซ่อนรหัสผ่าน"><i class="fa-regular fa-eye"></i></button>
+                    </div>
+                </div>
+
+                <div class="owner-pf-field-edit">
+                    <label for="newPassword">รหัสผ่านใหม่ <span class="owner-pf-req">*</span></label>
+                    <div class="owner-pf-input-wrap">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" id="newPassword" name="newPassword" autocomplete="new-password" minlength="6" placeholder="อย่างน้อย 6 ตัวอักษร" required />
+                        <button type="button" class="owner-pf-eye" onclick="pfTogglePw('newPassword', this)" aria-label="แสดงหรือซ่อนรหัสผ่าน"><i class="fa-regular fa-eye"></i></button>
+                    </div>
+                </div>
+
+                <div class="owner-pf-field-edit">
+                    <label for="confirmPassword">ยืนยันรหัสผ่านใหม่ <span class="owner-pf-req">*</span></label>
+                    <div class="owner-pf-input-wrap">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" id="confirmPassword" name="confirmPassword" autocomplete="new-password" minlength="6" placeholder="กรอกรหัสผ่านใหม่อีกครั้ง" required />
+                        <button type="button" class="owner-pf-eye" onclick="pfTogglePw('confirmPassword', this)" aria-label="แสดงหรือซ่อนรหัสผ่าน"><i class="fa-regular fa-eye"></i></button>
+                    </div>
+                    <small class="owner-pf-field-error" id="pfPwError" hidden></small>
+                </div>
+            </div>
+
+            <div class="owner-pf-modal-footer">
+                <button type="button" class="owner-pf-btn owner-pf-btn-outline" onclick="pfClosePassword()">ยกเลิก</button>
+                <button type="submit" class="owner-pf-btn owner-pf-btn-success">
+                    <i class="fa-solid fa-check"></i> บันทึกรหัสผ่านใหม่
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const editableIds = ["pfFirstName", "pfLastName", "pfPhone"];
+            let initial = {};
+
+            function capture() {
+                editableIds.forEach(id => initial[id] = document.getElementById(id).value);
+            }
+
+            window.pfToggleEdit = function (editing) {
+                editableIds.forEach(id => document.getElementById(id).disabled = !editing);
+                document.getElementById("pfDefaultActions").hidden = editing;
+                document.getElementById("pfEditingActions").hidden = !editing;
+
+                const badge = document.getElementById("pfModeBadge");
+                badge.classList.toggle("is-editing", editing);
+                badge.innerHTML = editing
+                    ? '<i class="fa-solid fa-pen"></i> โหมดกำลังแก้ไข'
+                    : '<i class="fa-solid fa-lock"></i> โหมดแสดงผล';
+
+                if (editing) {
+                    document.getElementById("pfFirstName").focus();
+                }
+            };
+
+            window.pfCancelEdit = function () {
+                editableIds.forEach(id => document.getElementById(id).value = initial[id]);
+                pfToggleEdit(false);
+            };
+
+            document.getElementById("pfForm").addEventListener("submit", function (e) {
+                const first = document.getElementById("pfFirstName").value.trim();
+                const last = document.getElementById("pfLastName").value.trim();
+                if (!first) {
+                    e.preventDefault();
+                    document.getElementById("pfFirstName").focus();
+                    return;
+                }
+                document.getElementById("pfFullName").value = (first + " " + last).trim();
+            });
+
+            // Password modal
+            const modal = document.getElementById("pfPasswordModal");
+
+            window.pfOpenPassword = function () {
+                modal.classList.add("is-open");
+                modal.setAttribute("aria-hidden", "false");
+                setTimeout(() => document.getElementById("oldPassword").focus(), 150);
+            };
+
+            window.pfClosePassword = function () {
+                modal.classList.remove("is-open");
+                modal.setAttribute("aria-hidden", "true");
+                document.getElementById("pfPasswordForm").reset();
+                document.getElementById("pfPwError").hidden = true;
+            };
+
+            modal.addEventListener("click", e => { if (e.target === modal) pfClosePassword(); });
+            document.addEventListener("keydown", e => { if (e.key === "Escape") pfClosePassword(); });
+
+            window.pfTogglePw = function (id, btn) {
+                const input = document.getElementById(id);
+                const icon = btn.querySelector("i");
+                const show = input.type === "password";
+                input.type = show ? "text" : "password";
+                icon.className = show ? "fa-regular fa-eye-slash" : "fa-regular fa-eye";
+            };
+
+            document.getElementById("pfPasswordForm").addEventListener("submit", function (e) {
+                const nw = document.getElementById("newPassword").value;
+                const cf = document.getElementById("confirmPassword").value;
+                const err = document.getElementById("pfPwError");
+
+                if (nw.length < 6) {
+                    e.preventDefault();
+                    err.textContent = "รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร";
+                    err.hidden = false;
+                } else if (nw !== cf) {
+                    e.preventDefault();
+                    err.textContent = "รหัสผ่านใหม่และการยืนยันรหัสผ่านไม่ตรงกัน";
+                    err.hidden = false;
+                } else {
+                    err.hidden = true;
+                }
+            });
+
+            capture();
+
+            if (@(openPasswordModal ? "true" : "false")) {
+                pfOpenPassword();
+            }
+        })();
+    </script>
+}

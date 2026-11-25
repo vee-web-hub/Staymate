@@ -265,35 +265,53 @@
         <!-- กราฟสรุปผลการดำเนินงาน -->
         <div class="manager-charts-grid">
             <div class="manager-card manager-chart-card manager-chart-wide">
-                <div class="manager-card-header">
+                <div class="manager-card-header manager-card-header-responsive">
                     <div>
                         <h3 class="manager-card-title">
                             <i class="fa-solid fa-coins text-success"></i>
                             แนวโน้มรายรับรายวัน
                         </h3>
-                        <p class="manager-card-subtitle">ยอดรับชำระเงินที่ได้รับการอนุมัติแล้วในแต่ละวัน</p>
+                        <p class="manager-card-subtitle">ยอดรับชำระเงินที่ได้รับการอนุมัติแล้วในแต่ละวัน · เลื่อนเมาส์หรือคลิกจุดเพื่อดูตัวเลข</p>
                     </div>
-                    <span class="manager-badge manager-badge-success">
-                        รวมในช่วงนี้: <strong data-kpi="periodRevenue" data-format="currency">฿@Model.PeriodRevenue.ToString("N2")</strong>
-                    </span>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <button type="button"
+                                class="manager-btn manager-btn-outline manager-btn-sm active"
+                                data-chart-toggle-values="managerRevenueChart">
+                            <i class="fa-solid fa-tag"></i>
+                            <span>ตัวเลขบนจุด</span>
+                        </button>
+                        <span class="manager-badge manager-badge-success">
+                            รวมในช่วงนี้: <strong data-kpi="periodRevenue" data-format="currency">฿@Model.PeriodRevenue.ToString("N2")</strong>
+                        </span>
+                    </div>
                 </div>
-                <div class="manager-chart-container">
-                    <canvas id="managerRevenueChart" data-height="250"></canvas>
+                <div class="manager-chart-container" style="height: 260px;">
+                    <canvas id="managerRevenueChart" data-height="260"></canvas>
                 </div>
             </div>
 
             <div class="manager-card manager-chart-card">
-                <div class="manager-card-header">
+                <div class="manager-card-header manager-card-header-responsive">
                     <div>
                         <h3 class="manager-card-title">
                             <i class="fa-solid fa-calendar-day text-primary"></i>
                             จำนวนการจองรายวัน
                         </h3>
-                        <p class="manager-card-subtitle">จำนวนรายการจองใหม่ที่เกิดขึ้นในแต่ละวัน</p>
+                        <p class="manager-card-subtitle">จำนวนรายการจองใหม่ที่เกิดขึ้นในแต่ละวัน · เลื่อนเมาส์ดูรายละเอียด</p>
                     </div>
+                    <button type="button"
+                            class="manager-btn manager-btn-outline manager-btn-sm active"
+                            data-chart-toggle-values="managerBookingChart"
+                            title="แสดงหรือซ่อนตัวเลขบนแท่ง">
+                        <i class="fa-solid fa-hashtag"></i>
+                    </button>
                 </div>
-                <div class="manager-chart-container">
+                <div class="manager-chart-container" style="height: 220px;">
                     <canvas id="managerBookingChart" data-height="220"></canvas>
+                </div>
+                <div class="manager-chart-footer">
+                    <span>ช่วงนี้รวม: <strong data-kpi="periodBookings" data-format="number">@Model.PeriodBookings.ToString("N0")</strong> รายการ</span>
+                    <span class="manager-text-muted">คลิก/ชี้แท่งเพื่อดูเลข</span>
                 </div>
             </div>
 
@@ -307,8 +325,12 @@
                         <p class="manager-card-subtitle">จำแนกตามสถานะห้องที่เปิดให้บริการปัจจุบัน</p>
                     </div>
                 </div>
-                <div class="manager-chart-container">
-                    <canvas id="managerRoomChart" data-height="200"></canvas>
+                <div class="manager-chart-container" style="height: 220px;">
+                    <canvas id="managerRoomChart" data-height="220"></canvas>
+                </div>
+                <div class="manager-chart-footer">
+                    <span>ว่างพร้อมพัก: <strong data-kpi="availableRooms" data-format="number">@Model.AvailableRooms</strong> / <strong data-kpi="totalRooms" data-format="number">@Model.TotalRooms</strong> ห้อง</span>
+                    <span class="manager-text-muted">ชี้วงแหวนเพื่อดู %</span>
                 </div>
             </div>
 
@@ -322,8 +344,12 @@
                         <p class="manager-card-subtitle">ภาพรวมสถานะใบจองทั้งหมดในระบบ</p>
                     </div>
                 </div>
-                <div class="manager-chart-container">
-                    <canvas id="managerBookingStatusChart" data-height="200"></canvas>
+                <div class="manager-chart-container" style="height: 220px;">
+                    <canvas id="managerBookingStatusChart" data-height="220"></canvas>
+                </div>
+                <div class="manager-chart-footer">
+                    <span>ใบจองทั้งหมด: <strong data-kpi="totalBookings" data-format="number">@Model.TotalBookings.ToString("N0")</strong> รายการ</span>
+                    <span class="manager-text-muted">ชี้วงแหวนเพื่อดู %</span>
                 </div>
             </div>
         </div>
@@ -750,7 +776,6 @@
         (function () {
             'use strict';
 
-            // อัปเดตความกว้างแถบอัตราการเข้าพัก
             function updateOccupancyBar() {
                 var occBars = document.querySelectorAll('[data-occupancy-bar]');
                 var kpiEl = document.querySelector('[data-kpi="occupancyRate"]');
@@ -763,13 +788,11 @@
 
             updateOccupancyBar();
 
-            // สังเกตการเปลี่ยนแปลงค่า Occupancy Rate เมื่อ manager.js โหลดข้อมูลผ่าน AJAX
             var occKpi = document.querySelector('[data-kpi="occupancyRate"]');
             if (occKpi && window.MutationObserver) {
                 new MutationObserver(updateOccupancyBar).observe(occKpi, { childList: true, characterData: true, subtree: true });
             }
 
-            // ระบบสลับแท็บภายในหน้า Dashboard
             var tabButtons = document.querySelectorAll('[data-manager-tab-target]');
             var tabPanes = document.querySelectorAll('.manager-tab-content');
 
