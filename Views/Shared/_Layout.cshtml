@@ -8,6 +8,34 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/StayMate_Kavinvee_0576.styles.css" asp-append-version="true" />
+    <script>
+    (function () {
+        // 1. ดึงสถานะการ Login จากฝั่งเซิร์ฟเวอร์
+        var isAuthenticated = @(User.Identity?.IsAuthenticated == true ? "true" : "false");
+        var currentUser = "@(User.Identity?.Name ?? "")";
+
+        if (isAuthenticated) {
+            // ดึงข้อมูล Tab Session ที่ถูกบันทึกไว้ในเบราว์เซอร์ของ Tab นี้
+            var localSessionUser = sessionStorage.getItem("ActiveTabUser");
+
+            // 2. ถ้าใน Tab นี้ยังไม่มีการบันทึกผู้ใช้ หรือชื่อผู้ใช้ไม่ตรงกับบัญชีที่ใช้งานอยู่ปัจจุบัน (เกิดจาก Tab อื่นสลับ Account)
+            if (!localSessionUser) {
+                // บันทึกสถานะผู้ใช้งานลงใน sessionStorage ของ Tab นี้เพื่อเคลมความเป็นเจ้าของสิทธิ์
+                sessionStorage.setItem("ActiveTabUser", currentUser);
+            } 
+            else if (localSessionUser !== currentUser) {
+                // กรณีเปลี่ยน Account ใน Tab อื่น แล้ว Tab นี้ถูก Refresh: บังคับให้ออกจากเซสชันของ Tab นี้
+                sessionStorage.clear();
+                alert("มีการเปลี่ยนบัญชีผู้ใช้งานในแท็บอื่น ระบบจะนำคุณไปหน้าเข้าสู่ระบบ");
+                window.location.href = "/Account/Login";
+            }
+        } else {
+            // ถ้าหลุดล็อกอินแล้ว ให้ล้างค่า sessionStorage ของ Tab นี้ทิ้งทันที
+            sessionStorage.removeItem("ActiveTabUser");
+        }
+    })();
+</script>
+
 </head>
 <body>
     <header>
@@ -26,6 +54,39 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                         </li>
+                    </ul>
+                    <ul class="navbar-nav align-items-center gap-2">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            var displayName = User.FindFirst("FullName")?.Value ?? User.Identity.Name;
+                            var dashboardController = User.IsInRole("OWNER") ? "Owner"
+                                : User.IsInRole("MANAGER") ? "Manager"
+                                : User.IsInRole("FINANCE") ? "Finance"
+                                : User.IsInRole("HOUSEKEEPING") ? "Housekeeping"
+                                : User.IsInRole("FRONT_ADMIN") ? "Reception"
+                                : "Customer";
+
+                            <li class="nav-item">
+                                <a class="nav-link text-dark fw-semibold" asp-controller="@dashboardController" asp-action="Index">
+                                    @displayName
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">ออกจากระบบ</button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Login">เข้าสู่ระบบ</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="btn btn-sm btn-primary" asp-controller="Account" asp-action="Register">สมัครสมาชิก</a>
+                            </li>
+                        }
                     </ul>
                 </div>
             </div>

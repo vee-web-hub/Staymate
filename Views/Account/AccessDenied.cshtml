@@ -1,8 +1,30 @@
 @{
     ViewData["Title"] = "ไม่มีสิทธิ์เข้าถึง";
+    var dashboardController = User.IsInRole("OWNER") ? "Owner"
+        : User.IsInRole("MANAGER") ? "Manager"
+        : User.IsInRole("FINANCE") ? "Finance"
+        : User.IsInRole("HOUSEKEEPING") ? "Housekeeping"
+        : User.IsInRole("FRONT_ADMIN") ? "Reception"
+        : User.IsInRole("CUSTOMER") ? "Customer"
+        : "Home";
 }
 <div class="container py-5 text-center">
-    <h2>ไม่มีสิทธิ์เข้าถึงหน้านี้</h2>
-    <p class="text-muted">บัญชีของคุณไม่ได้รับอนุญาตให้ใช้งานส่วนนี้</p>
-    <a asp-action="Login" class="btn btn-primary">กลับหน้าเข้าสู่ระบบ</a>
+    <h2 class="mb-3">ไม่มีสิทธิ์เข้าถึงหน้านี้</h2>
+    <p class="text-muted mb-4">บัญชีของคุณไม่ได้รับอนุญาตให้ใช้งานส่วนนี้</p>
+
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <a asp-controller="@dashboardController" asp-action="Index" class="btn btn-primary me-2">
+            กลับสู่หน้าแดชบอร์ดของคุณ
+        </a>
+        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
+            กลับหน้าแรก
+        </a>
+    }
+    else
+    {
+        <a asp-controller="Account" asp-action="Login" class="btn btn-primary">
+            กลับหน้าเข้าสู่ระบบ
+        </a>
+    }
 </div>

@@ -1,6 +1,6 @@
-
 @{
     var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+    var displayName = User.FindFirst("FullName")?.Value ?? User.Identity?.Name ?? "Owner";
 }
 
 <!DOCTYPE html>
@@ -53,45 +53,52 @@
     </div>
 
     <div class="header-actions">
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <div class="notification-btn-wrapper">
+                <button type="button"
+                        class="btn-header-notification"
+                        title="รายงานผลประกอบการประจำวัน">
 
-        <div class="notification-btn-wrapper">
-            <button type="button"
-                    class="btn-header-notification"
-                    title="รายงานผลประกอบการประจำวัน">
+                    <i class="fa-regular fa-bell"></i>
+                    <span class="notification-pulse-dot"></span>
 
-                <i class="fa-regular fa-bell"></i>
-                <span class="notification-pulse-dot"></span>
+                </button>
+            </div>
 
-            </button>
-        </div>
+            <a asp-controller="Owner"
+               asp-action="Profile"
+               class="user-badge-chip text-decoration-none">
 
-        <a asp-controller="Owner"
-           asp-action="Profile"
-           class="user-badge-chip text-decoration-none">
+                <i class="fa-solid fa-gem text-warning"></i>
 
-            <i class="fa-solid fa-gem text-warning"></i>
+                <span>
+                    @displayName
+                </span>
 
-            <span>
-                @(User.Identity?.Name ?? "Owner")
-            </span>
+            </a>
 
-            
-        </a>
+            <form asp-controller="Account"
+                  asp-action="Logout"
+                  method="post"
+                  class="d-inline m-0">
 
-        <form asp-controller="Account"
-              asp-action="Logout"
-              method="post"
-              class="d-inline m-0">
+                @Html.AntiForgeryToken()
 
-            @Html.AntiForgeryToken()
+                <button type="submit" class="btn-header-logout">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    ออกจากระบบ
+                </button>
 
-            <button type="submit" class="btn-header-logout">
-                <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                ออกจากระบบ
-            </button>
-
-        </form>
-
+            </form>
+        }
+        else
+        {
+            <a asp-controller="Account" asp-action="Login"
+               class="btn btn-sm btn-outline-light rounded-pill px-3">
+                <i class="fa-regular fa-user me-1"></i> เข้าสู่ระบบ
+            </a>
+        }
     </div>
 
 </header>
@@ -154,16 +161,14 @@
             </a>
         </nav>
 
-        
-
     </aside>
 
     <main class="staff-content">
 
         <div class="readonly-notice">
             <i class="fa-solid fa-lock text-primary fs-5"></i>
-
-            
+            <span>โหมดผู้บริหาร (ดูข้อมูลภาพรวม)</span>
+        </div>
 
         @RenderBody()
 

@@ -1,22 +1,23 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>@ViewData["Title"] - StayMate Reception</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - StayMate Reception</title>
 
-<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-<link rel="stylesheet" href="~/css/staymate-layout.css" asp-append-version="true" />
-<link rel="stylesheet" href="~/css/Reception.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/staymate-layout.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/Reception.css" asp-append-version="true" />
 
-@await RenderSectionAsync("Styles", required: false)
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 
 <body class="staff-page">
 
 @{
     var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+    var displayName = User.FindFirst("FullName")?.Value ?? User.Identity?.Name ?? "Front Desk Staff";
 }
 
 <header class="staff-header">
@@ -40,37 +41,46 @@
     </div>
 
     <div class="header-actions">
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <div class="notification-btn-wrapper">
+                <button type="button"
+                        class="btn-header-notification"
+                        title="การแจ้งเตือน">
 
-        <div class="notification-btn-wrapper">
-            <button type="button"
-                    class="btn-header-notification"
-                    title="การแจ้งเตือน">
+                    <i class="fa-regular fa-bell"></i>
+                    <span class="notification-pulse-dot"></span>
+                </button>
+            </div>
 
-                <i class="fa-regular fa-bell"></i>
-                <span class="notification-pulse-dot"></span>
-            </button>
-        </div>
+            <a asp-controller="Reception"
+               asp-action="Profile"
+               class="user-badge-chip text-decoration-none"
+               title="โปรไฟล์ของฉัน">
 
-        <a asp-controller="Reception"
-           asp-action="Profile"
-           class="user-badge-chip text-decoration-none"
-           title="โปรไฟล์ของฉัน">
+                <i class="fa-solid fa-user-check text-info"></i>
+                <span>@displayName</span>
+            </a>
 
-            <i class="fa-solid fa-user-check text-info"></i>
-            <span>@(User.Identity?.Name ?? "Front Desk Staff")</span>
-        </a>
+            <form asp-controller="Account"
+                  asp-action="Logout"
+                  method="post"
+                  class="d-inline m-0">
+                @Html.AntiForgeryToken()
 
-        <form asp-controller="Account"
-              asp-action="Logout"
-              method="post"
-              class="d-inline m-0">
-
-            <button type="submit" class="btn-header-logout">
-                <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                ออกจากระบบ
-            </button>
-        </form>
-
+                <button type="submit" class="btn-header-logout">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    ออกจากระบบ
+                </button>
+            </form>
+        }
+        else
+        {
+            <a asp-controller="Account" asp-action="Login"
+               class="btn btn-sm btn-outline-light rounded-pill px-3">
+                <i class="fa-regular fa-user me-1"></i> เข้าสู่ระบบ
+            </a>
+        }
     </div>
 </header>
 

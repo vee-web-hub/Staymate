@@ -47,13 +47,13 @@
                             และดูประวัติการเข้าพักของคุณ
                         </p>
 
-                       <div class="room-preview-box">
-    <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1000&q=80"
-         alt="ห้องพักและสระว่ายน้ำของโรงแรม"
-         class="room-preview-img"
-         loading="lazy"
-         onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=1000&q=80';" />
-</div>
+                        <div class="room-preview-box">
+                            <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1000&q=80"
+                                 alt="ห้องพักและสระว่ายน้ำของโรงแรม"
+                                 class="room-preview-img"
+                                 loading="lazy"
+                                 onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=1000&q=80';" />
+                        </div>
                     </div>
 
                     <ul class="trust-list">
@@ -80,6 +80,7 @@
 
                     <form id="loginForm" asp-controller="Account" asp-action="Login"
                           asp-route-returnUrl="@returnUrl" method="post" novalidate>
+                        @Html.AntiForgeryToken()
 
                         <div asp-validation-summary="ModelOnly" class="alert-custom-error" role="alert"></div>
 

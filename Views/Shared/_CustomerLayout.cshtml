@@ -1,4 +1,3 @@
-
 @{
     ViewData["Title"] ??= "Customer";
 
@@ -166,6 +165,8 @@
 
             @if (User.Identity?.IsAuthenticated == true)
             {
+                var displayName = User.FindFirst("FullName")?.Value ?? User.Identity.Name;
+
                 <!-- User Profile -->
                 <a asp-controller="@C"
                    asp-action="Profile"
@@ -175,7 +176,7 @@
                     <i class="fa-regular fa-circle-user text-info"></i>
 
                     <span>
-                        @User.Identity.Name
+                        @displayName
                     </span>
                 </a>
 
@@ -184,6 +185,7 @@
                       asp-action="Logout"
                       method="post"
                       class="d-inline m-0">
+                    @Html.AntiForgeryToken()
 
                     <button type="submit"
                             class="btn-header-logout">
@@ -197,7 +199,7 @@
             }
             else
             {
-                <!-- Login -->
+                <!-- Login & Register -->
                 <a asp-controller="Account"
                    asp-action="Login"
                    class="btn btn-sm btn-outline-light rounded-pill px-3">
@@ -205,6 +207,11 @@
                     <i class="fa-regular fa-user me-1"></i>
                     เข้าสู่ระบบ
 
+                </a>
+                <a asp-controller="Account"
+                   asp-action="Register"
+                   class="btn-header-register d-none d-sm-inline-flex">
+                    สมัครสมาชิก
                 </a>
             }
 
@@ -321,18 +328,21 @@
 
                 @if (User.Identity?.IsAuthenticated == true)
                 {
+                    var displayName = User.FindFirst("FullName")?.Value ?? User.Identity.Name;
+
                     <a asp-controller="@C"
                        asp-action="Profile"
                        class="btn btn-outline-light rounded-pill">
 
                         <i class="fa-regular fa-user me-1"></i>
-                        ข้อมูลส่วนตัว
+                        @displayName
 
                     </a>
 
                     <form asp-controller="Account"
                           asp-action="Logout"
                           method="post">
+                        @Html.AntiForgeryToken()
 
                         <button type="submit"
                                 class="btn-header-logout w-100 justify-content-center">
@@ -353,6 +363,11 @@
                         <i class="fa-solid fa-right-to-bracket me-1"></i>
                         เข้าสู่ระบบ
 
+                    </a>
+                    <a asp-controller="Account"
+                       asp-action="Register"
+                       class="btn-header-register justify-content-center">
+                        สมัครสมาชิก
                     </a>
                 }
 

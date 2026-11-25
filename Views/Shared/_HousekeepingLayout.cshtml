@@ -1,6 +1,7 @@
 @{
     var currentController = ViewContext.RouteData.Values["Controller"]?.ToString() ?? "";
     var currentAction = ViewContext.RouteData.Values["Action"]?.ToString() ?? "";
+    var displayName = User.FindFirst("FullName")?.Value ?? User.Identity?.Name ?? "Housekeeper";
 }
 <!DOCTYPE html>
 <html lang="th">
@@ -53,38 +54,48 @@
         </div>
 
         <div class="header-actions">
-            <!-- Notification (ลิงก์ไปหน้ารายการงานที่มอบหมาย) -->
-            <div class="notification-btn-wrapper">
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <!-- Notification (ลิงก์ไปหน้ารายการงานที่มอบหมาย) -->
+                <div class="notification-btn-wrapper">
+                    <a asp-controller="Housekeeping"
+                       asp-action="CleaningTasks"
+                       class="btn-header-notification text-decoration-none d-inline-flex align-items-center justify-content-center"
+                       title="ดูงานทำความสะอาดล่าสุด">
+                        <i class="fa-regular fa-bell"></i>
+                        <span class="notification-pulse-dot"></span>
+                    </a>
+                </div>
+
+                <!-- Profile Link -->
                 <a asp-controller="Housekeeping"
-                   asp-action="CleaningTasks"
-                   class="btn-header-notification text-decoration-none d-inline-flex align-items-center justify-content-center"
-                   title="ดูงานทำความสะอาดล่าสุด">
-                    <i class="fa-regular fa-bell"></i>
-                    <span class="notification-pulse-dot"></span>
+                   asp-action="Profile"
+                   class="user-badge-chip text-decoration-none">
+                    <i class="fa-solid fa-circle-user text-info"></i>
+                    <span>
+                        @displayName
+                    </span>
                 </a>
-            </div>
 
-            <!-- Profile Link -->
-            <a asp-controller="Housekeeping"
-               asp-action="Profile"
-               class="user-badge-chip text-decoration-none">
-                <i class="fa-solid fa-circle-user text-info"></i>
-                <span>
-                    @(User.Identity?.Name ?? "Housekeeper")
-                </span>
-            </a>
-
-            <!-- Logout -->
-            <form asp-controller="Account"
-                  asp-action="Logout"
-                  method="post"
-                  class="d-inline m-0">
-                @Html.AntiForgeryToken()
-                <button type="submit" class="btn-header-logout">
-                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                    <span class="d-none d-md-inline">ออกจากระบบ</span>
-                </button>
-            </form>
+                <!-- Logout -->
+                <form asp-controller="Account"
+                      asp-action="Logout"
+                      method="post"
+                      class="d-inline m-0">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn-header-logout">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                        <span class="d-none d-md-inline">ออกจากระบบ</span>
+                    </button>
+                </form>
+            }
+            else
+            {
+                <a asp-controller="Account" asp-action="Login"
+                   class="btn btn-sm btn-outline-light rounded-pill px-3">
+                    <i class="fa-regular fa-user me-1"></i> เข้าสู่ระบบ
+                </a>
+            }
         </div>
     </header>
 
@@ -106,7 +117,7 @@
                     <span>กระดานรวม (Dashboard)</span>
                 </a>
 
-                <!-- 2. Cleaning Tasks (แก้ไขจาก Tasks -> CleaningTasks ให้ตรงกับ Controller) -->
+                <!-- 2. Cleaning Tasks -->
                 <a asp-controller="Housekeeping"
                    asp-action="CleaningTasks"
                    class="@(currentAction == "CleaningTasks" || currentAction == "Tasks" || currentAction == "TaskDetails" ? "active" : "")">
@@ -122,7 +133,7 @@
                     <span>อัปเดตสถานะห้องพัก</span>
                 </a>
 
-                <!-- 4. History (ประวัติงานของฉันที่มีอยู่ใน HousekeepingController) -->
+                <!-- 4. History -->
                 <a asp-controller="Housekeeping"
                    asp-action="History"
                    class="@(currentAction == "History" ? "active" : "")">
@@ -162,7 +173,7 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- SweetAlert2 (สำหรับ Confirmation Dialog และ Toast Notification ที่สวยงาม) -->
+    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>

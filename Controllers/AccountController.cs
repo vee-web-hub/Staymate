@@ -1,10 +1,10 @@
-using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using StayMate_Kavinvee_0576.Models;
 using StayMate_Kavinvee_0576.Models.ViewModels;
@@ -41,7 +41,7 @@ public class AccountController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [EnableRateLimiting("auth")]  
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> Login(
         LoginViewModel model,
         string? returnUrl = null)
@@ -124,12 +124,10 @@ public class AccountController : Controller
                 ClaimTypes.NameIdentifier,
                 user.UserId.ToString()
             ),
-
             new Claim(
                 ClaimTypes.Name,
                 user.Username
             ),
-
             new Claim(
                 "FullName",
                 user.FullName
@@ -143,39 +141,26 @@ public class AccountController : Controller
         );
 
         // สร้าง Authentication Cookie
-       var identity = new ClaimsIdentity(
-    claims,
-    CookieAuthenticationDefaults.AuthenticationScheme);
+        var identity = new ClaimsIdentity(
+            claims,
+            CookieAuthenticationDefaults.AuthenticationScheme
+        );
 
-var principal = new ClaimsPrincipal(identity);
+        var principal = new ClaimsPrincipal(identity);
 
-await HttpContext.SignInAsync(
-    CookieAuthenticationDefaults.AuthenticationScheme,
-    principal,
-    new AuthenticationProperties
-    {
-        IsPersistent = model.RememberMe,
-        ExpiresUtc = model.RememberMe
-            ? DateTimeOffset.UtcNow.AddDays(14)
-            : null
-    });
+        await HttpContext.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            principal,
+            new AuthenticationProperties
+            {
+                IsPersistent = model.RememberMe,
+                ExpiresUtc = model.RememberMe
+                    ? DateTimeOffset.UtcNow.AddDays(14)
+                    : null
+            }
+        );
 
-        // Redirect CUSTOMER ไปหน้าลูกค้าเสมอ
-        if (roleCodes.Contains("CUSTOMER"))
-        {
-            return RedirectToAction(
-                "Index",
-                "Customer"
-            );
-        }
-
-        // Role อื่นสามารถใช้ ReturnUrl ได้
-        if (!string.IsNullOrEmpty(returnUrl)
-            && Url.IsLocalUrl(returnUrl))
-        {
-            return Redirect(returnUrl);
-        }
-
+        // บังคับเข้า Dashboard ตาม Role ของบัญชีโดยอัตโนมัติ
         return RedirectByRole(roleCodes);
     }
 
@@ -225,7 +210,7 @@ await HttpContext.SignInAsync(
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [EnableRateLimiting("auth")]  
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> Register(
         RegisterViewModel model)
     {
@@ -261,9 +246,9 @@ await HttpContext.SignInAsync(
     // USER LIST
     // =========================================================
 
- [HttpGet]
-[Authorize(Roles = "OWNER,MANAGER")]
-public async Task<IActionResult> UserList(string? q)
+    [HttpGet]
+    [Authorize(Roles = "OWNER,MANAGER")]
+    public async Task<IActionResult> UserList(string? q)
     {
         var query = _db.Users
             .Include(u => u.UserRoles)
@@ -291,13 +276,10 @@ public async Task<IActionResult> UserList(string? q)
                 FullName = u.FullName,
                 Email = u.Email,
                 Phone = u.Phone,
-
                 IsActive = u.IsActive ?? false,
-
                 RoleCode = u.UserRoles
                     .Select(ur => ur.Role.RoleCode)
                     .FirstOrDefault(),
-
                 RoleName = u.UserRoles
                     .Select(ur => ur.Role.RoleName)
                     .FirstOrDefault()
@@ -321,58 +303,40 @@ public async Task<IActionResult> UserList(string? q)
         // CUSTOMER
         if (roles.Contains("CUSTOMER"))
         {
-            return RedirectToAction(
-                "Index",
-                "Customer"
-            );
+            return RedirectToAction("Index", "Customer");
         }
 
-        // RECEPTION
-    if (roles.Contains("FRONT_ADMIN"))
-    {
-        return RedirectToAction("Index", "Reception");
-    }
+        // RECEPTION (FRONT_ADMIN)
+        if (roles.Contains("FRONT_ADMIN"))
+        {
+            return RedirectToAction("Index", "Reception");
+        }
 
         // FINANCE
         if (roles.Contains("FINANCE"))
         {
-            return RedirectToAction(
-                "Index",
-                "Finance"
-            );
+            return RedirectToAction("Index", "Finance");
         }
 
         // HOUSEKEEPING
         if (roles.Contains("HOUSEKEEPING"))
         {
-            return RedirectToAction(
-                "Index",
-                "Housekeeping"
-            );
+            return RedirectToAction("Index", "Housekeeping");
         }
 
         // MANAGER
         if (roles.Contains("MANAGER"))
         {
-            return RedirectToAction(
-                "Index",
-                "Manager"
-            );
+            return RedirectToAction("Index", "Manager");
         }
 
         // OWNER
         if (roles.Contains("OWNER"))
         {
-            return RedirectToAction(
-                "Index",
-                "Owner"
-            );
+            return RedirectToAction("Index", "Owner");
         }
 
-        return RedirectToAction(
-            "Index",
-            "Home"
-        );
+        return RedirectToAction("Index", "Home");
     }
 
     // =========================================================
@@ -424,11 +388,9 @@ public async Task<IActionResult> UserList(string? q)
             Username = model.Username.Trim(),
             Email = model.Email.Trim(),
             FullName = model.FullName.Trim(),
-
             Phone = string.IsNullOrWhiteSpace(model.Phone)
                 ? null
                 : model.Phone.Trim(),
-
             IsActive = true
         };
 
